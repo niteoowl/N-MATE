@@ -217,8 +217,8 @@
         <!-- 계정 확인 모달 (초기에는 숨김) -->
         <div id="accountCheckModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden z-50">
             <div class="bg-white p-8 rounded-xl shadow-lg w-11/12 max-w-sm text-center">
-                <!-- 경고 아이콘 (요청에 따라 /image/waring.png로 변경) -->
-                <img src="/image/waring.png" alt="경고 아이콘" class="mx-auto mb-4 w-16 h-16">
+                <!-- 경고 아이콘 (요청에 따라 /image/warning.png로 변경) -->
+                <img src="/image/warning.png" alt="경고 아이콘" class="mx-auto mb-4 w-16 h-16">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">계정이 있으신가요?</h2>
                 <!-- 버튼을 가로로 정렬하기 위한 새로운 컨테이너 -->
                 <div class="modal-buttons-container">
@@ -231,15 +231,18 @@
 
     <script>
         // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
+        // __firebase_config 변수가 정의되어 있지 않다면 기본 플레이스홀더 설정을 사용합니다.
+        // **중요**: 실제 배포 환경에서는 이 플레이스홀더 대신 올바른 Firebase 프로젝트 설정이
+        // __firebase_config를 통해 주입되어야 합니다. 그렇지 않으면 Firebase 기능이 작동하지 않을 수 있습니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
-            "apiKey": "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
-            "authDomain": "n-mate.firebaseapp.com",
-            "projectId": "n-mate",
-            "storageBucket": "n-mate.firebasestorage.app",
-            "messagingSenderId": "691313471077",
-            "appId": "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            "measurementId": "G-0LCGVBKXLQ"
+            "apiKey": "YOUR_FIREBASE_API_KEY",
+            "authDomain": "YOUR_FIREBASE_AUTH_DOMAIN",
+            "projectId": "YOUR_FIREBASE_PROJECT_ID",
+            "storageBucket": "YOUR_FIREBASE_STORAGE_BUCKET",
+            "messagingSenderId": "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+            "appId": "YOUR_FIREBASE_APP_ID",
+            "measurementId": "YOUR_FIREBASE_MEASUREMENT_ID"
         }`);
 
         // Firebase app 및 auth 인스턴스
@@ -279,6 +282,7 @@
                 // Tailwind CSS 클래스를 사용하여 스타일 적용
                 messageBox.className = isError ? 'text-red-500 font-medium mt-4 text-center' : 'text-green-500 font-medium mt-4 text-center';
                 messageBox.classList.remove('hidden');
+                console.log(`UI 메시지: ${message} (에러: ${isError})`); // UI 메시지 로깅
             }
         }
 
@@ -287,43 +291,63 @@
             if (messageBox) {
                 messageBox.classList.add('hidden');
                 messageBox.textContent = ''; // 내용 지우기
+                console.log('메시지 박스 숨김');
             }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded 이벤트 발생. 앱 초기화 시작.');
+
             // Firebase 초기화
             // firebaseConfig 객체가 유효한지 확인
-            if (firebaseConfig && Object.keys(firebaseConfig).length > 0 && firebase.apps.length === 0) {
-                app = firebase.initializeApp(firebaseConfig);
-                auth = firebase.auth(); // Firebase Auth 서비스 가져오기
+            if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth(); // Firebase Auth 서비스 가져오기
+                        console.log('Firebase 앱 초기화 성공.');
 
-                console.log('Firebase 초기화됨. 자동 로그인 시도 없음. 사용자는 명시적으로 로그인해야 합니다.');
-
-                // 인증 상태 변경 리스너 (사용자 로그인/로그아웃 상태 추적)
-                auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        console.log('사용자 로그인됨:', user.uid);
-                    } else {
-                        console.log('사용자 로그아웃됨.');
+                        // 인증 상태 변경 리스너 (사용자 로그인/로그아웃 상태 추적)
+                        auth.onAuthStateChanged((user) => {
+                            if (user) {
+                                console.log('사용자 로그인됨 (UID):', user.uid);
+                            } else {
+                                console.log('사용자 로그아웃됨.');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Firebase 앱 초기화 실패:', error);
+                        showMessage('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.', true);
                     }
-                });
+                } else {
+                    app = firebase.app(); // 이미 초기화된 앱 인스턴스 가져오기
+                    auth = firebase.auth();
+                    console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
+                }
             } else {
-                console.warn('Firebase 설정이 제공되지 않았거나 이미 초기화되었습니다. 로그인 기능이 작동하지 않을 수 있습니다.');
+                console.warn('Firebase 설정이 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. __firebase_config 변수를 확인하세요.');
+                showMessage('Firebase 설정이 없습니다. 앱 기능에 제한이 있을 수 있습니다.', true);
             }
 
             // "이메일로 계속할게요" 버튼 클릭 이벤트
             if (emailLoginButton) {
+                console.log('이메일 로그인 버튼에 이벤트 리스너 등록 시도.');
                 emailLoginButton.addEventListener('click', () => {
+                    console.log('이메일 로그인 버튼 클릭됨.');
                     initialButtons.classList.add('hidden'); // 초기 버튼 섹션 숨기기
                     accountCheckModal.classList.remove('hidden'); // 계정 확인 모달 표시
                     subtitleText.textContent = '계정이 있으신가요?'; // 서브타이틀 텍스트 변경
                     hideMessageBox(); // 이전 메시지 지우기
                 });
+            } else {
+                console.error('오류: emailLoginButton 요소를 찾을 수 없습니다.');
             }
+
 
             // 모달의 "네" 버튼 클릭 이벤트 (계정이 있는 경우)
             if (modalYesButton) {
                 modalYesButton.addEventListener('click', () => {
+                    console.log('모달 "네" 버튼 클릭됨.');
                     accountCheckModal.classList.add('hidden'); // 모달 숨기기
                     emailInputSection.classList.remove('hidden'); // 이메일 입력 섹션 표시
                     subtitleText.textContent = '이메일 주소를 입력하세요.'; // 서브타이틀 텍스트 변경
@@ -335,6 +359,7 @@
             // 모달의 "아니요" 버튼 클릭 이벤트 (계정이 없는 경우)
             if (modalNoButton) {
                 modalNoButton.addEventListener('click', () => {
+                    console.log('모달 "아니요" 버튼 클릭됨. 회원가입 섹션으로 이동.');
                     accountCheckModal.classList.add('hidden'); // 모달 숨기기
                     initialButtons.classList.add('hidden'); // 초기 버튼 숨기기
                     signUpSection.classList.remove('hidden'); // 회원가입 섹션 표시
@@ -347,6 +372,7 @@
             // 이메일 입력 섹션의 "다음" 버튼 클릭 이벤트
             if (emailNextButton) {
                 emailNextButton.addEventListener('click', () => {
+                    console.log('이메일 입력 섹션 "다음" 버튼 클릭됨.');
                     const email = emailInput.value.trim();
                     if (!email) {
                         showMessage('이메일 주소를 입력해주세요.', true);
@@ -369,11 +395,18 @@
             // 최종 "로그인" 버튼 클릭 이벤트
             if (loginFinalButton) {
                 loginFinalButton.addEventListener('click', async () => {
+                    console.log('최종 "로그인" 버튼 클릭됨.');
                     const email = emailInput.value.trim();
                     const password = passwordInput.value.trim();
 
                     if (!email || !password) {
                         showMessage('이메일과 비밀번호를 모두 입력해주세요.', true);
+                        return;
+                    }
+
+                    if (!auth) {
+                        console.error('Firebase Auth 인스턴스를 사용할 수 없습니다. 초기화 실패.');
+                        showMessage('로그인 서비스를 이용할 수 없습니다. 관리자에게 문의하세요.', true);
                         return;
                     }
 
@@ -412,6 +445,7 @@
             // 회원가입 버튼 클릭 이벤트
             if (signUpButton) {
                 signUpButton.addEventListener('click', async () => {
+                    console.log('회원가입 버튼 클릭됨.');
                     const email = signUpEmailInput.value.trim();
                     const password = signUpPasswordInput.value.trim();
                     const confirmPassword = signUpConfirmPasswordInput.value.trim();
@@ -428,6 +462,12 @@
 
                     if (password !== confirmPassword) {
                         showMessage('비밀번호가 일치하지 않습니다.', true);
+                        return;
+                    }
+
+                    if (!auth) {
+                        console.error('Firebase Auth 인스턴스를 사용할 수 없습니다. 초기화 실패.');
+                        showMessage('회원가입 서비스를 이용할 수 없습니다. 관리자에게 문의하세요.', true);
                         return;
                     }
 
@@ -466,6 +506,7 @@
             // "로그인 화면으로 돌아가기" 버튼 클릭 이벤트
             if (backToLoginButton) {
                 backToLoginButton.addEventListener('click', () => {
+                    console.log('"로그인 화면으로 돌아가기" 버튼 클릭됨.');
                     signUpSection.classList.add('hidden'); // 회원가입 섹션 숨기기
                     initialButtons.classList.remove('hidden'); // 초기 버튼 섹션 표시
                     subtitleText.textContent = '로그인 방식을 선택하세요.'; // 서브타이틀 텍스트 변경
