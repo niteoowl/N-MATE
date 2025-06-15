@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Inter 폰트를 기본으로 사용합니다. */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2f8; /* 배경색을 이미지와 동일하게 설정 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 뷰포트 높이 전체를 차지하도록 설정 */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* 스크롤바가 생기지 않도록 숨김 */
+        }
+
+        /* 컨테이너의 최대 너비를 설정하여 좌우 여백을 시뮬레이션합니다. */
+        .container {
+            width: 100%;
+            max-width: 1200px; /* 이미지에서 보이는 콘텐츠 영역의 대략적인 너비 */
+            padding: 0 20px; /* 좌우 패딩으로 여백을 만듭니다. */
+            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* 컨테이너가 뷰포트 높이의 100%를 차지하도록 설정 */
+            position: relative; /* 자식 요소의 절대 위치를 위한 기준 */
+        }
+
+        /* 로고 및 텍스트 블록의 위치 조정 */
+        .logo-text-block {
+            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
+            top: 25%; /* 이미지에서 보이는 대략적인 상단 위치 조정 */
+            transform: translateY(-50%); /* 정확한 중앙 정렬을 위해 */
+            text-align: center; /* 텍스트 중앙 정렬 */
+            line-height: 1.4; /* 줄 간격 조정 */
+        }
+
+        /* 로그인 버튼의 위치 조정 */
+        .login-button-block {
+            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
+            bottom: 25%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
+            transform: translateY(50%); /* 정확한 중앙 정렬을 위해 */
+            width: 100%;
+            max-width: 300px; /* 버튼의 최대 너비 */
+        }
+
+        /* 이미지 아이콘 스타일 */
+        .logo-image {
+            width: 48px; /* 이미지 아이콘 너비 */
+            height: 48px; /* 이미지 아이콘 높이 */
+            margin-bottom: 12px; /* 로고와 텍스트 사이 간격 */
+        }
+
+        /* 로그인 버튼 스타일 */
+        .login-button {
+            background-color: #3B82F6; /* 버튼 배경색 */
+            color: white;
+            font-weight: 500; /* Medium */
+            padding: 14px 28px; /* 패딩 */
+            border-radius: 14px; /* 모서리 둥글기 조정 (약간 둥글게) */
+            width: 100%;
+            /* box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.1); 그림자 효과 제거 */
+            transition: background-color 0.3s ease; /* 호버 효과를 위한 트랜지션 */
+        }
+
+        .login-button:hover {
+            background-color: #2563EB; /* 호버 시 버튼 색상 변경 */
+        }
+
+        /* 텍스트 크기 및 색상 조정 */
+        .main-title {
+            font-size: 1.5rem; /* 24px */
+            font-weight: 600; /* SemiBold */
+            color: #333333; /* 짙은 회색으로 변경 */
+            margin-bottom: 0.5rem; /* 8px */
+        }
+
+        .subtitle {
+            font-size: 0.875rem; /* 14px */
+            color: #666666; /* 중간 회색으로 변경 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 로고 및 텍스트 블록 -->
+        <div class="logo-text-block">
+            <!-- 부산남중학교 로고 이미지 -->
+            <img src="/image/simbol.png" alt="부산남중학교 N-MATE 로고 심볼" class="logo-image mx-auto">
+            <h1 class="main-title">부산남중학교 N-MATE</h1>
+            <p class="subtitle">시간표/학사일정/급식까지 한곳에서 한눈에!</p>
+        </div>
+
+        <!-- 로그인 버튼 블록 -->
+        <div class="login-button-block">
+            <button class="login-button">로그인</button>
+        </div>
+    </div>
+</body>
+</html>
