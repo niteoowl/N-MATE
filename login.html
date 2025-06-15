@@ -7,9 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Inter 폰트를 기본으로 사용합니다. */
+        /* Pretendard 웹폰트 적용 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        /* Pretendard 폰트를 기본으로 사용하고, Inter 및 sans-serif를 폴백으로 설정합니다. */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Pretendard-Regular', 'Inter', sans-serif;
             background-color: #ffffff; /* 배경색을 이미지와 동일하게 설정 */
             display: flex;
             justify-content: center;
