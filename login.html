@@ -58,7 +58,7 @@
             bottom: 10%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
             transform: translateY(50%); /* 정확한 중앙 정렬을 위해 */
             width: 100%;
-            max-width: 300px; /* 버튼의 최대 너비 */
+            max-width: 400px; /* 버튼의 최대 너비를 300px에서 400px로 증가 */
         }
 
         /* 이미지 아이콘 스타일 */
@@ -109,8 +109,31 @@
 
         <!-- 로그인 버튼 블록 -->
         <div class="login-button-block">
-            <button class="login-button">로그인</button>
+            <!-- 로그인 버튼에 ID 추가 (Add ID to login button) -->
+            <button id="loginButton" class="login-button">로그인</button>
         </div>
     </div>
+
+    <script>
+        // DOMContentLoaded 이벤트 리스너를 사용하여 문서가 완전히 로드된 후 스크립트를 실행합니다.
+        // (Use DOMContentLoaded event listener to run the script after the document is fully loaded.)
+        document.addEventListener('DOMContentLoaded', () => {
+            // ID를 사용하여 로그인 버튼 요소를 가져옵니다.
+            // (Get the login button element using its ID.)
+            const loginButton = document.getElementById('loginButton');
+
+            // 로그인 버튼이 존재하면 클릭 이벤트 리스너를 추가합니다.
+            // (If the login button exists, add a click event listener.)
+            if (loginButton) {
+                loginButton.addEventListener('click', () => {
+                    // 현재 탭에서 '/auth' 경로로 이동합니다.
+                    // (Navigate to the '/auth' path in the current tab.)
+                    window.location.href = '/auth';
+                });
+            } else {
+                console.error('로그인 버튼을 찾을 수 없습니다. (Login button not found.)');
+            }
+        });
+    </script>
 </body>
 </html>
