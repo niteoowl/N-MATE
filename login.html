@@ -42,14 +42,14 @@
             position: relative; /* 자식 요소의 절대 위치를 위한 기준 */
         }
 
-        /* 로고 및 텍스트 블록의 위치 조정 */
+        /* 로고 및 텍스트 블록의 위치 조정 - 완벽한 중앙 정렬 */
         .logo-text-block {
             position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
             top: 25%; /* 대략적인 상단 위치 조정 */
             transform: translateY(-50%); /* 정확한 중앙 정렬을 위해 */
             text-align: center; /* 텍스트 중앙 정렬 */
             line-height: 1.4; /* 줄 간격 조정 */
-            margin-right: 20px; /* 로고 블록을 왼쪽으로 조금 이동 */
+            /* margin-right: 20px; 속성을 삭제하여 완벽한 중앙 정렬 */
         }
 
         /* 로그인 버튼의 위치 조정 */
@@ -101,10 +101,10 @@
     <div class="container">
         <!-- 로고 및 텍스트 블록 -->
         <div class="logo-text-block">
-            <!-- 부산남중학교 로고 이미지 -->
+            <!-- 부산남중학교 로고 이미지 (실제 이미지 경로로 대체 필요) -->
             <img src="/image/simbol.png" alt="부산남중학교 로고" class="logo-image mx-auto">
             <h1 class="main-title">부산남중학교 N-MATE</h1>
-            <p class="subtitle">시간표/학사일정/급식까지 한곳에 한눈에!</p> <!-- 원래 텍스트로 복원 -->
+            <p class="subtitle">시간표/학사일정/급식까지 한곳에 한눈에!</p>
         </div>
 
         <!-- 로그인 버튼 블록 -->
