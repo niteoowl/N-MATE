@@ -31,7 +31,7 @@
         /* 컨테이너의 최대 너비를 설정하여 좌우 여백을 시뮬레이션합니다. */
         .container {
             width: 100%;
-            max-width: 1920px; /* 콘텐츠 영역의 최대 너비를 1920px로 더욱 증가 */
+            max-width: 1920px; /* 콘텐츠 영역의 최대 너비를 1920px로 설정 */
             padding: 0; /* 좌우 패딩 제거 */
             box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
             display: flex;
@@ -52,13 +52,15 @@
             line-height: 1.4; /* 줄 간격 조정 */
         }
 
-        /* 로그인 버튼의 위치 조정 */
+        /* 로그인 버튼 블록의 위치 조정 및 버튼 정렬 */
         .login-button-block {
             position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            bottom: 10%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
-            transform: translateY(50%); /* 정확한 중앙 정렬을 위해 */
+            bottom: 50px; /* 고정된 하단 여백으로 '로그인' 버튼의 위치를 제어 */
             width: 100%;
             max-width: 400px; /* 버튼의 최대 너비를 300px에서 400px로 증가 */
+            display: flex; /* 버튼을 세로로 나열하기 위해 flexbox 사용 */
+            flex-direction: column; /* 세로 방향 정렬 */
+            gap: 12px; /* 버튼 사이 간격 추가 */
         }
 
         /* 이미지 아이콘 스타일 */
@@ -68,32 +70,51 @@
             margin-bottom: 12px; /* 로고와 텍스트 사이 간격 */
         }
 
-        /* 로그인 버튼 스타일 */
-        .login-button {
+        /* 기본 액션 버튼 스타일 (회원가입 버튼에 적용) */
+        .action-button {
             background-color: #3B82F6; /* 버튼 배경색 */
             color: white;
             font-weight: 500; /* Medium */
-            padding: 10px 28px; /* 패딩 조정 (세로 패딩을 줄여 높이 낮춤) */
-            border-radius: 14px; /* 모서리 둥글기 조정 (약간 둥글게) */
+            padding: 10px 28px; /* 패딩 조정 */
+            border-radius: 14px; /* 모서리 둥글기 조정 */
             width: 100%;
             transition: background-color 0.3s ease; /* 호버 효과를 위한 트랜지션 */
         }
 
-        .login-button:hover {
+        .action-button:hover {
             background-color: #2563EB; /* 호버 시 버튼 색상 변경 */
+        }
+
+        /* 로그인 버튼의 새로운 스타일 (투명 배경, 파란색 글자/테두리) */
+        .login-button-alt {
+            background-color: transparent; /* 투명한 배경 */
+            color: #3B82F6; /* 파란색 글자 */
+            border: 1px solid #3B82F6; /* 파란색 테두리 */
+            font-weight: 500; /* Medium */
+            padding: 10px 28px; /* 패딩 조정 */
+            border-radius: 14px; /* 모서리 둥글기 조정 */
+            width: 100%;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* 로그인 버튼 호버 효과 삭제 */
+        .login-button-alt:hover {
+            background-color: transparent; /* 호버 시에도 투명 배경 유지 */
+            color: #3B82F6; /* 호버 시에도 파란색 글자 유지 */
+            border-color: #3B82F6; /* 호버 시에도 파란색 테두리 유지 */
         }
 
         /* 텍스트 크기 및 색상 조정 */
         .main-title {
             font-size: 1.5rem; /* 24px */
             font-weight: 600; /* SemiBold */
-            color: #333333; /* 짙은 회색으로 변경 */
+            color: #333333; /* 짙은 회색 */
             margin-bottom: 0.5rem; /* 8px */
         }
 
         .subtitle {
             font-size: 0.875rem; /* 14px */
-            color: #666666; /* 중간 회색으로 변경 */
+            color: #666666; /* 중간 회색 */
         }
     </style>
 </head>
@@ -104,31 +125,16 @@
             <!-- 부산남중학교 로고 이미지 (실제 이미지 경로로 대체 필요) -->
             <img src="/image/simbol.png" alt="부산남중학교 로고" class="logo-image mx-auto">
             <h1 class="main-title">부산남중학교 N-MATE</h1>
-            <p class="subtitle">시간표/학사일정/급식까지 한곳에 한눈에!</p>
+            <p class="subtitle">로그인 방식을 선택하세요.</p>
         </div>
 
         <!-- 로그인 버튼 블록 -->
         <div class="login-button-block">
-            <button id="loginButton" class="login-button">로그인</button>
+            <!-- 회원가입 버튼 (기존 스타일 유지) -->
+            <button class="action-button">구글로 계속할게요</button>
+            <!-- 로그인 버튼 (새로운 스타일 적용, 호버 효과 제거) -->
+            <button class="login-button-alt">이메일로 계속할게요</button>
         </div>
     </div>
-
-    <script>
-        // DOMContentLoaded 이벤트 리스너를 사용하여 문서가 완전히 로드된 후 스크립트를 실행합니다.
-        document.addEventListener('DOMContentLoaded', () => {
-            // ID를 사용하여 로그인 버튼 요소를 가져옵니다.
-            const loginButton = document.getElementById('loginButton');
-
-            // 로그인 버튼이 존재하면 클릭 이벤트 리스너를 추가합니다.
-            if (loginButton) {
-                loginButton.addEventListener('click', () => {
-                    // 현재 탭에서 '/auth' 경로로 이동합니다.
-                    window.location.href = '/auth';
-                });
-            } else {
-                console.error('로그인 버튼을 찾을 수 없습니다.');
-            }
-        });
-    </script>
 </body>
 </html>
