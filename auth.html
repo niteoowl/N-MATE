@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE</title>
+    <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Google Fonts - Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Optional: Firebase Firestore if you plan to use it -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> -->
     <style>
         /* Pretendard 웹폰트 적용 */
         @font-face {
@@ -53,7 +60,7 @@
         }
 
         /* 로그인 버튼 블록의 위치 조정 및 버튼 정렬 */
-        .login-button-block {
+        .button-section {
             position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
             bottom: 10%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
             left: 50%; /* 가운데 정렬을 위해 왼쪽에서 50% 이동 */
@@ -126,6 +133,43 @@
             overflow: hidden; /* 넘치는 내용 숨기기 */
             text-overflow: ellipsis; /* 넘치는 내용 말줄임표 처리 */
         }
+
+        /* 입력 필드 스타일 */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #D1D5DB; /* Light gray border */
+            border-radius: 14px;
+            font-size: 1rem;
+            box-sizing: border-box; /* padding and border included in element's total width and height */
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3B82F6; /* Blue border on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Light blue shadow on focus */
+        }
+
+        /* 숨김 클래스 */
+        .hidden {
+            display: none;
+        }
+
+        /* 모달 버튼 컨테이너 스타일 - 가로 정렬 및 간격 */
+        .modal-buttons-container {
+            display: flex;
+            justify-content: space-evenly; /* 버튼을 균등하게 분배 */
+            gap: 1rem; /* 버튼 사이 간격 */
+            width: 100%; /* 너비 100% */
+        }
+
+        /* 모달 내 버튼 너비 조정 */
+        .modal-buttons-container .action-button,
+        .modal-buttons-container .login-button-alt {
+            width: auto; /* 고정 너비 대신 내용에 따라 자동 조정 */
+            flex-grow: 1; /* 남은 공간을 채우도록 성장 */
+            max-width: 150px; /* 각 버튼의 최대 너비 제한 (조정 가능) */
+        }
     </style>
 </head>
 <body>
@@ -135,16 +179,300 @@
             <!-- 부산남중학교 로고 이미지 (실제 이미지 경로로 대체 필요) -->
             <img src="/image/simbol.png" alt="부산남중학교 로고" class="logo-image mx-auto">
             <h1 class="main-title">부산남중학교 N-MATE</h1>
-            <p class="subtitle">로그인 방식을 선택하세요.</p>
+            <p class="subtitle" id="subtitleText">로그인 방식을 선택하세요.</p>
         </div>
 
-        <!-- 로그인 버튼 블록 -->
-        <div class="login-button-block">
+        <!-- 초기 버튼 섹션 -->
+        <div id="initialButtons" class="button-section">
             <!-- 회원가입 버튼 (기존 스타일 유지) -->
             <button class="action-button">구글로 계속할게요</button>
             <!-- 로그인 버튼 (새로운 스타일 적용, 호버 효과 제거) -->
-            <button class="login-button-alt">이메일로 계속할게요</button>
+            <button id="emailLoginButton" class="login-button-alt">이메일로 계속할게요</button>
+        </div>
+
+        <!-- 이메일 입력 섹션 (초기에는 숨김) -->
+        <div id="emailInputSection" class="button-section hidden">
+            <input type="email" id="emailInput" placeholder="이메일 주소를 입력하세요" class="input-field">
+            <button id="emailNextButton" class="action-button">다음</button>
+        </div>
+
+        <!-- 비밀번호 입력 섹션 (초기에는 숨김) -->
+        <div id="passwordInputSection" class="button-section hidden">
+            <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" class="input-field">
+            <button id="loginFinalButton" class="action-button">로그인</button>
+        </div>
+
+        <!-- 회원가입 섹션 (초기에는 숨김) -->
+        <div id="signUpSection" class="button-section hidden">
+            <input type="email" id="signUpEmailInput" placeholder="이메일 주소를 입력하세요" class="input-field mb-3">
+            <input type="password" id="signUpPasswordInput" placeholder="비밀번호를 입력하세요 (6자 이상)" class="input-field mb-3">
+            <input type="password" id="signUpConfirmPasswordInput" placeholder="비밀번호를 다시 입력하세요" class="input-field">
+            <button id="signUpButton" class="action-button mt-4">회원가입</button>
+            <button id="backToLoginButton" class="login-button-alt mt-2">로그인 화면으로 돌아가기</button>
+        </div>
+
+        <!-- 메시지 표시 영역 -->
+        <div id="messageBox" class="hidden text-center mt-4"></div>
+
+        <!-- 계정 확인 모달 (초기에는 숨김) -->
+        <div id="accountCheckModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden z-50">
+            <div class="bg-white p-8 rounded-xl shadow-lg w-11/12 max-w-sm text-center">
+                <!-- 경고 아이콘 (요청에 따라 /image/waring.png로 변경) -->
+                <img src="/image/waring.png" alt="경고 아이콘" class="mx-auto mb-4 w-16 h-16">
+                <h2 class="text-xl font-semibold text-gray-800 mb-6">계정이 있으신가요?</h2>
+                <!-- 버튼을 가로로 정렬하기 위한 새로운 컨테이너 -->
+                <div class="modal-buttons-container">
+                    <button id="modalYesButton" class="action-button">네</button>
+                    <button id="modalNoButton" class="login-button-alt">아니요</button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+        // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
+            "apiKey": "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            "authDomain": "n-mate.firebaseapp.com",
+            "projectId": "n-mate",
+            "storageBucket": "n-mate.firebasestorage.app",
+            "messagingSenderId": "691313471077",
+            "appId": "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            "measurementId": "G-0LCGVBKXLQ"
+        }`);
+
+        // Firebase app 및 auth 인스턴스
+        let app;
+        let auth;
+
+        // DOM 요소 가져오기
+        const emailLoginButton = document.getElementById('emailLoginButton');
+        const initialButtons = document.getElementById('initialButtons');
+        const emailInputSection = document.getElementById('emailInputSection');
+        const emailNextButton = document.getElementById('emailNextButton');
+        const passwordInputSection = document.getElementById('passwordInputSection');
+        const loginFinalButton = document.getElementById('loginFinalButton');
+        const subtitleText = document.getElementById('subtitleText');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const messageBox = document.getElementById('messageBox'); // 메시지 박스 요소
+
+        // 새 모달 요소들
+        const accountCheckModal = document.getElementById('accountCheckModal');
+        const modalYesButton = document.getElementById('modalYesButton');
+        const modalNoButton = document.getElementById('modalNoButton');
+
+        // 회원가입 관련 DOM 요소
+        const signUpSection = document.getElementById('signUpSection');
+        const signUpEmailInput = document.getElementById('signUpEmailInput');
+        const signUpPasswordInput = document.getElementById('signUpPasswordInput');
+        const signUpConfirmPasswordInput = document.getElementById('signUpConfirmPasswordInput');
+        const signUpButton = document.getElementById('signUpButton');
+        const backToLoginButton = document.getElementById('backToLoginButton');
+
+
+        // 메시지를 표시하는 유틸리티 함수
+        function showMessage(message, isError = false) {
+            if (messageBox) {
+                messageBox.textContent = message;
+                // Tailwind CSS 클래스를 사용하여 스타일 적용
+                messageBox.className = isError ? 'text-red-500 font-medium mt-4 text-center' : 'text-green-500 font-medium mt-4 text-center';
+                messageBox.classList.remove('hidden');
+            }
+        }
+
+        // 메시지 박스를 숨기는 유틸리티 함수
+        function hideMessageBox() {
+            if (messageBox) {
+                messageBox.classList.add('hidden');
+                messageBox.textContent = ''; // 내용 지우기
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase 초기화
+            // firebaseConfig 객체가 유효한지 확인
+            if (firebaseConfig && Object.keys(firebaseConfig).length > 0 && firebase.apps.length === 0) {
+                app = firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth(); // Firebase Auth 서비스 가져오기
+
+                console.log('Firebase 초기화됨. 자동 로그인 시도 없음. 사용자는 명시적으로 로그인해야 합니다.');
+
+                // 인증 상태 변경 리스너 (사용자 로그인/로그아웃 상태 추적)
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        console.log('사용자 로그인됨:', user.uid);
+                    } else {
+                        console.log('사용자 로그아웃됨.');
+                    }
+                });
+            } else {
+                console.warn('Firebase 설정이 제공되지 않았거나 이미 초기화되었습니다. 로그인 기능이 작동하지 않을 수 있습니다.');
+            }
+
+            // "이메일로 계속할게요" 버튼 클릭 이벤트
+            if (emailLoginButton) {
+                emailLoginButton.addEventListener('click', () => {
+                    initialButtons.classList.add('hidden'); // 초기 버튼 섹션 숨기기
+                    accountCheckModal.classList.remove('hidden'); // 계정 확인 모달 표시
+                    subtitleText.textContent = '계정이 있으신가요?'; // 서브타이틀 텍스트 변경
+                    hideMessageBox(); // 이전 메시지 지우기
+                });
+            }
+
+            // 모달의 "네" 버튼 클릭 이벤트 (계정이 있는 경우)
+            if (modalYesButton) {
+                modalYesButton.addEventListener('click', () => {
+                    accountCheckModal.classList.add('hidden'); // 모달 숨기기
+                    emailInputSection.classList.remove('hidden'); // 이메일 입력 섹션 표시
+                    subtitleText.textContent = '이메일 주소를 입력하세요.'; // 서브타이틀 텍스트 변경
+                    emailInput.focus(); // 이메일 입력 필드에 포커스
+                    hideMessageBox(); // 이전 메시지 지우기
+                });
+            }
+
+            // 모달의 "아니요" 버튼 클릭 이벤트 (계정이 없는 경우)
+            if (modalNoButton) {
+                modalNoButton.addEventListener('click', () => {
+                    accountCheckModal.classList.add('hidden'); // 모달 숨기기
+                    initialButtons.classList.add('hidden'); // 초기 버튼 숨기기
+                    signUpSection.classList.remove('hidden'); // 회원가입 섹션 표시
+                    subtitleText.textContent = '회원가입 정보를 입력하세요.'; // 서브타이틀 텍스트 변경
+                    signUpEmailInput.focus(); // 회원가입 이메일 필드에 포커스
+                    hideMessageBox(); // 이전 메시지 지우기
+                });
+            }
+
+            // 이메일 입력 섹션의 "다음" 버튼 클릭 이벤트
+            if (emailNextButton) {
+                emailNextButton.addEventListener('click', () => {
+                    const email = emailInput.value.trim();
+                    if (!email) {
+                        showMessage('이메일 주소를 입력해주세요.', true);
+                        return;
+                    }
+                    // 간단한 이메일 형식 유효성 검사
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                        showMessage('유효한 이메일 주소를 입력해주세요.', true);
+                        return;
+                    }
+
+                    emailInputSection.classList.add('hidden'); // 이메일 입력 섹션 숨기기
+                    passwordInputSection.classList.remove('hidden'); // 비밀번호 입력 섹션 표시
+                    subtitleText.textContent = '비밀번호를 입력하세요.'; // 서브타이틀 텍스트 변경
+                    passwordInput.focus(); // 비밀번호 입력 필드에 포커스
+                    hideMessageBox(); // 이전 메시지 지우기
+                });
+            }
+
+            // 최종 "로그인" 버튼 클릭 이벤트
+            if (loginFinalButton) {
+                loginFinalButton.addEventListener('click', async () => {
+                    const email = emailInput.value.trim();
+                    const password = passwordInput.value.trim();
+
+                    if (!email || !password) {
+                        showMessage('이메일과 비밀번호를 모두 입력해주세요.', true);
+                        return;
+                    }
+
+                    try {
+                        // Firebase 이메일/비밀번호 로그인 시도
+                        await auth.signInWithEmailAndPassword(email, password);
+                        showMessage('로그인 성공!', false);
+                        console.log('이메일 로그인 성공:', email);
+                        // 여기에 로그인 성공 후 다음 페이지로 리디렉션 또는 UI 업데이트 로직 추가
+                        // 예: window.location.href = '/dashboard';
+                    } catch (error) {
+                        console.error('로그인 오류:', error);
+                        let errorMessage = '로그인 실패. 다시 시도해주세요.';
+                        switch (error.code) {
+                            case 'auth/user-not-found':
+                            case 'auth/wrong-password':
+                                errorMessage = '잘못된 이메일 또는 비밀번호입니다.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = '유효하지 않은 이메일 주소입니다.';
+                                break;
+                            case 'auth/user-disabled':
+                                errorMessage = '사용이 정지된 계정입니다.';
+                                break;
+                            case 'auth/too-many-requests':
+                                errorMessage = '로그인 시도 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.';
+                                break;
+                            default:
+                                errorMessage = `로그인 오류: ${error.message}`;
+                        }
+                        showMessage(errorMessage, true);
+                    }
+                });
+            }
+
+            // 회원가입 버튼 클릭 이벤트
+            if (signUpButton) {
+                signUpButton.addEventListener('click', async () => {
+                    const email = signUpEmailInput.value.trim();
+                    const password = signUpPasswordInput.value.trim();
+                    const confirmPassword = signUpConfirmPasswordInput.value.trim();
+
+                    if (!email || !password || !confirmPassword) {
+                        showMessage('모든 필드를 입력해주세요.', true);
+                        return;
+                    }
+
+                    if (password.length < 6) {
+                        showMessage('비밀번호는 6자 이상이어야 합니다.', true);
+                        return;
+                    }
+
+                    if (password !== confirmPassword) {
+                        showMessage('비밀번호가 일치하지 않습니다.', true);
+                        return;
+                    }
+
+                    try {
+                        // Firebase 이메일/비밀번호로 사용자 생성 시도
+                        await auth.createUserWithEmailAndPassword(email, password);
+                        showMessage('회원가입 성공! 로그인 해주세요.', false);
+                        console.log('회원가입 성공:', email);
+                        // 회원가입 성공 후 로그인 섹션으로 다시 이동
+                        signUpSection.classList.add('hidden');
+                        initialButtons.classList.remove('hidden'); // 또는 이메일 로그인 섹션으로 바로 이동
+                        subtitleText.textContent = '로그인 방식을 선택하세요.';
+                        emailInput.value = email; // 가입한 이메일을 로그인 필드에 미리 채워넣기
+                        passwordInput.value = ''; // 비밀번호 필드 초기화
+                    } catch (error) {
+                        console.error('회원가입 오류:', error);
+                        let errorMessage = '회원가입 실패. 다시 시도해주세요.';
+                        switch (error.code) {
+                            case 'auth/email-already-in-use':
+                                errorMessage = '이미 사용 중인 이메일 주소입니다.';
+                                break;
+                            case 'auth/invalid-email':
+                                errorMessage = '유효하지 않은 이메일 주소입니다.';
+                                break;
+                            case 'auth/weak-password':
+                                errorMessage = '비밀번호가 너무 취약합니다. 더 강력한 비밀번호를 사용해주세요.';
+                                break;
+                            default:
+                                errorMessage = `회원가입 오류: ${error.message}`;
+                        }
+                        showMessage(errorMessage, true);
+                    }
+                });
+            }
+
+            // "로그인 화면으로 돌아가기" 버튼 클릭 이벤트
+            if (backToLoginButton) {
+                backToLoginButton.addEventListener('click', () => {
+                    signUpSection.classList.add('hidden'); // 회원가입 섹션 숨기기
+                    initialButtons.classList.remove('hidden'); // 초기 버튼 섹션 표시
+                    subtitleText.textContent = '로그인 방식을 선택하세요.'; // 서브타이틀 텍스트 변경
+                    hideMessageBox(); // 메시지 지우기
+                });
+            }
+        });
+    </script>
 </body>
 </html>
