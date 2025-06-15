@@ -170,6 +170,23 @@
             flex-grow: 1; /* 남은 공간을 채우도록 성장 */
             max-width: 150px; /* 각 버튼의 최대 너비 제한 (조정 가능) */
         }
+
+        /* 모달 애니메이션을 위한 초기 상태 (숨겨진 상태) */
+        .modal-hidden-state {
+            opacity: 0;
+            transform: scale(0.95); /* 중앙에서 약간 축소된 상태 (translate 제거) */
+        }
+
+        /* 모달 애니메이션을 위한 최종 상태 (보여지는 상태) */
+        .modal-visible-state {
+            opacity: 1;
+            transform: scale(1); /* 중앙에서 원래 크기로 확장된 상태 (translate 제거) */
+        }
+
+        /* 모달 트랜지션 */
+        .modal-transition {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -216,8 +233,9 @@
 
         <!-- 계정 확인 모달 (초기에는 숨김) -->
         <div id="accountCheckModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden z-50">
-            <div class="bg-white p-8 rounded-xl shadow-lg w-11/12 max-w-sm text-center">
-                <!-- 경고 아이콘 (요청에 따라 /image/warning.png로 변경) -->
+            <!-- 모달 콘텐츠 박스 -->
+            <div id="modalContentBox" class="bg-white p-8 rounded-xl shadow-lg w-11/12 max-w-sm text-center modal-transition modal-hidden-state">
+                <!-- 경고 아이콘 -->
                 <img src="/image/warning.png" alt="경고 아이콘" class="mx-auto mb-4 w-16 h-16">
                 <h2 class="text-xl font-semibold text-gray-800 mb-6">계정이 있으신가요?</h2>
                 <!-- 버튼을 가로로 정렬하기 위한 새로운 컨테이너 -->
@@ -265,6 +283,7 @@
         const accountCheckModal = document.getElementById('accountCheckModal');
         const modalYesButton = document.getElementById('modalYesButton');
         const modalNoButton = document.getElementById('modalNoButton');
+        const modalContentBox = document.getElementById('modalContentBox'); // 모달 콘텐츠 박스
 
         // 회원가입 관련 DOM 요소
         const signUpSection = document.getElementById('signUpSection');
@@ -295,11 +314,34 @@
             }
         }
 
+        // 모달을 표시하는 함수 (애니메이션 포함)
+        function showModal() {
+            accountCheckModal.classList.remove('hidden');
+            // DOM이 업데이트된 후 애니메이션 클래스를 추가하기 위해 setTimeout 사용
+            // 이렇게 하면 브라우저가 hidden 클래스 제거를 처리한 후 애니메이션을 적용할 준비가 됩니다.
+            setTimeout(() => {
+                modalContentBox.classList.remove('modal-hidden-state');
+                modalContentBox.classList.add('modal-visible-state');
+            }, 10); // 작은 지연 시간
+        }
+
+        // 모달을 숨기는 함수 (애니메이션 포함)
+        function hideModal() {
+            modalContentBox.classList.remove('modal-visible-state');
+            modalContentBox.classList.add('modal-hidden-state');
+            // 애니메이션이 끝난 후 hidden 클래스 추가
+            // transitionend 이벤트를 사용하여 애니메이션이 완전히 끝난 후에만 모달을 숨깁니다.
+            modalContentBox.addEventListener('transitionend', function handler() {
+                accountCheckModal.classList.add('hidden');
+                modalContentBox.removeEventListener('transitionend', handler);
+            }, { once: true }); // 이 리스너는 한 번만 실행되도록 설정
+        }
+
+
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOMContentLoaded 이벤트 발생. 앱 초기화 시작.');
 
             // Firebase 초기화
-            // firebaseConfig 객체가 유효한지 확인
             if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
                 if (firebase.apps.length === 0) {
                     try {
@@ -307,7 +349,6 @@
                         auth = firebase.auth(); // Firebase Auth 서비스 가져오기
                         console.log('Firebase 앱 초기화 성공.');
 
-                        // 인증 상태 변경 리스너 (사용자 로그인/로그아웃 상태 추적)
                         auth.onAuthStateChanged((user) => {
                             if (user) {
                                 console.log('사용자 로그인됨 (UID):', user.uid);
@@ -320,7 +361,7 @@
                         showMessage('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.', true);
                     }
                 } else {
-                    app = firebase.app(); // 이미 초기화된 앱 인스턴스 가져오기
+                    app = firebase.app();
                     auth = firebase.auth();
                     console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
                 }
@@ -334,25 +375,24 @@
                 console.log('이메일 로그인 버튼에 이벤트 리스너 등록 시도.');
                 emailLoginButton.addEventListener('click', () => {
                     console.log('이메일 로그인 버튼 클릭됨.');
-                    initialButtons.classList.add('hidden'); // 초기 버튼 섹션 숨기기
-                    accountCheckModal.classList.remove('hidden'); // 계정 확인 모달 표시
-                    subtitleText.textContent = '계정이 있으신가요?'; // 서브타이틀 텍스트 변경
-                    hideMessageBox(); // 이전 메시지 지우기
+                    initialButtons.classList.add('hidden');
+                    showModal(); // 애니메이션 포함된 모달 표시 함수 호출
+                    subtitleText.textContent = '계정이 있으신가요?';
+                    hideMessageBox();
                 });
             } else {
                 console.error('오류: emailLoginButton 요소를 찾을 수 없습니다.');
             }
 
-
             // 모달의 "네" 버튼 클릭 이벤트 (계정이 있는 경우)
             if (modalYesButton) {
                 modalYesButton.addEventListener('click', () => {
                     console.log('모달 "네" 버튼 클릭됨.');
-                    accountCheckModal.classList.add('hidden'); // 모달 숨기기
-                    emailInputSection.classList.remove('hidden'); // 이메일 입력 섹션 표시
-                    subtitleText.textContent = '이메일 주소를 입력하세요.'; // 서브타이틀 텍스트 변경
-                    emailInput.focus(); // 이메일 입력 필드에 포커스
-                    hideMessageBox(); // 이전 메시지 지우기
+                    hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
+                    emailInputSection.classList.remove('hidden');
+                    subtitleText.textContent = '이메일 주소를 입력하세요.';
+                    emailInput.focus();
+                    hideMessageBox();
                 });
             }
 
@@ -360,12 +400,12 @@
             if (modalNoButton) {
                 modalNoButton.addEventListener('click', () => {
                     console.log('모달 "아니요" 버튼 클릭됨. 회원가입 섹션으로 이동.');
-                    accountCheckModal.classList.add('hidden'); // 모달 숨기기
-                    initialButtons.classList.add('hidden'); // 초기 버튼 숨기기
-                    signUpSection.classList.remove('hidden'); // 회원가입 섹션 표시
-                    subtitleText.textContent = '회원가입 정보를 입력하세요.'; // 서브타이틀 텍스트 변경
-                    signUpEmailInput.focus(); // 회원가입 이메일 필드에 포커스
-                    hideMessageBox(); // 이전 메시지 지우기
+                    hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
+                    initialButtons.classList.add('hidden');
+                    signUpSection.classList.remove('hidden');
+                    subtitleText.textContent = '회원가입 정보를 입력하세요.';
+                    signUpEmailInput.focus();
+                    hideMessageBox();
                 });
             }
 
@@ -378,17 +418,16 @@
                         showMessage('이메일 주소를 입력해주세요.', true);
                         return;
                     }
-                    // 간단한 이메일 형식 유효성 검사
                     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                         showMessage('유효한 이메일 주소를 입력해주세요.', true);
                         return;
                     }
 
-                    emailInputSection.classList.add('hidden'); // 이메일 입력 섹션 숨기기
-                    passwordInputSection.classList.remove('hidden'); // 비밀번호 입력 섹션 표시
-                    subtitleText.textContent = '비밀번호를 입력하세요.'; // 서브타이틀 텍스트 변경
-                    passwordInput.focus(); // 비밀번호 입력 필드에 포커스
-                    hideMessageBox(); // 이전 메시지 지우기
+                    emailInputSection.classList.add('hidden');
+                    passwordInputSection.classList.remove('hidden');
+                    subtitleText.textContent = '비밀번호를 입력하세요.';
+                    passwordInput.focus();
+                    hideMessageBox();
                 });
             }
 
@@ -411,12 +450,9 @@
                     }
 
                     try {
-                        // Firebase 이메일/비밀번호 로그인 시도
                         await auth.signInWithEmailAndPassword(email, password);
                         showMessage('로그인 성공!', false);
                         console.log('이메일 로그인 성공:', email);
-                        // 여기에 로그인 성공 후 다음 페이지로 리디렉션 또는 UI 업데이트 로직 추가
-                        // 예: window.location.href = '/dashboard';
                     } catch (error) {
                         console.error('로그인 오류:', error);
                         let errorMessage = '로그인 실패. 다시 시도해주세요.';
@@ -472,16 +508,14 @@
                     }
 
                     try {
-                        // Firebase 이메일/비밀번호로 사용자 생성 시도
                         await auth.createUserWithEmailAndPassword(email, password);
                         showMessage('회원가입 성공! 로그인 해주세요.', false);
                         console.log('회원가입 성공:', email);
-                        // 회원가입 성공 후 로그인 섹션으로 다시 이동
                         signUpSection.classList.add('hidden');
-                        initialButtons.classList.remove('hidden'); // 또는 이메일 로그인 섹션으로 바로 이동
+                        initialButtons.classList.remove('hidden');
                         subtitleText.textContent = '로그인 방식을 선택하세요.';
-                        emailInput.value = email; // 가입한 이메일을 로그인 필드에 미리 채워넣기
-                        passwordInput.value = ''; // 비밀번호 필드 초기화
+                        emailInput.value = email;
+                        passwordInput.value = '';
                     } catch (error) {
                         console.error('회원가입 오류:', error);
                         let errorMessage = '회원가입 실패. 다시 시도해주세요.';
@@ -507,10 +541,10 @@
             if (backToLoginButton) {
                 backToLoginButton.addEventListener('click', () => {
                     console.log('"로그인 화면으로 돌아가기" 버튼 클릭됨.');
-                    signUpSection.classList.add('hidden'); // 회원가입 섹션 숨기기
-                    initialButtons.classList.remove('hidden'); // 초기 버튼 섹션 표시
-                    subtitleText.textContent = '로그인 방식을 선택하세요.'; // 서브타이틀 텍스트 변경
-                    hideMessageBox(); // 메시지 지우기
+                    signUpSection.classList.add('hidden');
+                    initialButtons.classList.remove('hidden');
+                    subtitleText.textContent = '로그인 방식을 선택하세요.';
+                    hideMessageBox();
                 });
             }
         });
