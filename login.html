@@ -55,7 +55,8 @@
         /* 로그인 버튼의 위치 조정 및 너비 조정 */
         .login-button-block {
             position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            bottom: 10%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
+            /* 기존 bottom: 10% 에 safe-area-inset-bottom을 더하여 하단 UI에 가리지 않도록 합니다. */
+            bottom: calc(10% + env(safe-area-inset-bottom, 20px)); /* 최소 20px 안전 여백 보장 */
             left: 50%; /* 가운데 정렬을 위해 왼쪽에서 50% 이동 */
             transform: translate(-50%, 0); /* 자신의 너비의 50%만큼 이동하여 정확히 중앙 정렬 */
             width: calc(100% - 40px); /* 좌우 20px 패딩을 고려하여 너비 조정 */
