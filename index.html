@@ -46,13 +46,13 @@
             border-radius: 4px;
         }
 
-        /* 중앙 정렬 컨테이너: 패딩 제거, 최대 너비 유지 */
+        /* 중앙 정렬 컨테이너: 패딩 제거, 최대 너비 재조정 */
         .main-content-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: flex-start; /* 기존 좌측 정렬 유지 */
-            max-width: 32rem; /* max-w-lg */
+            max-width: 36rem; /* max-w-xl (42rem에서 36rem으로 축소) */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
@@ -129,16 +129,21 @@
             <!-- 상단 가로 직사각형 (두 부분으로 분할) -->
             <div class="w-full h-40 bg-white rounded-xl border border-gray-300 flex overflow-hidden">
                 <!-- 왼쪽 절반 - 시간표 정보 표시를 위해 id 추가 -->
-                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex items-center justify-center text-gray-800 text-xl font-bold p-4 border-r border-gray-300">
+                <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
+                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex items-start p-4 border-r border-gray-300">
                     <!-- Skeleton Loader for Timetable -->
+                    <!-- flex w-full h-full text-left 컨테이너는 유지 -->
                     <div class="flex w-full h-full text-left">
-                        <div class="w-1/2 flex flex-col justify-center items-start p-2">
+                        <!-- w-1/2 대신 flex-1 적용 및 pr-2 추가 -->
+                        <div class="flex-1 flex flex-col items-start pr-2">
                             <div class="skeleton skeleton-text w-3/4"></div>
                             <div class="skeleton skeleton-text"></div>
                             <div class="skeleton skeleton-text w-1/2"></div>
                             <div class="skeleton skeleton-text w-2/3"></div>
                         </div>
-                        <div class="w-1/2 flex flex-col justify-center items-start p-2 border-l border-gray-200">
+                        <!-- w-1/2 대신 flex-1 적용 및 pl-2 추가 -->
+                        <!-- 4교시씩 구분되는 선 제거 (border-l border-gray-200 클래스 제거됨) -->
+                        <div class="flex-1 flex flex-col items-start pl-2">
                             <div class="skeleton skeleton-text w-3/4"></div>
                             <div class="skeleton skeleton-text"></div>
                             <div class="skeleton skeleton-text w-1/2"></div>
@@ -146,7 +151,8 @@
                     </div>
                 </div>
                 <!-- 오른쪽 절반 - 급식 정보 표시를 위해 id 추가 -->
-                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-center justify-center text-gray-800 text-xl font-bold p-4">
+                <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
+                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4">
                     <!-- Skeleton Loader for Meal -->
                     <div class="w-full text-left">
                         <div class="skeleton skeleton-text w-full"></div>
@@ -174,7 +180,7 @@
     </div>
 
     <!-- 하단 내비게이션 바 컨테이너 -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-lg mx-auto w-full">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full">
         <div class="flex justify-around items-center h-12">
             <!-- 내비게이션 항목: 홈 -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="홈" data-path="/">
@@ -318,8 +324,18 @@
                     timetable.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
 
                     timetable.forEach(period => {
-                        const content = period.ITRT_CNTNT.replace('(자)주제선택활동', '주제선택');
-                        const periodHtml = `<p class="text-sm font-medium text-gray-800">${period.PERIO}교시 ${content}</p>`;
+                        // (자)주제선택활동은 주제선택으로 변환
+                        let content = period.ITRT_CNTNT.replace('(자)주제선택활동', '주제선택');
+                        // (자)진로탐색활동은 진로탐색으로 변환
+                        content = content.replace('(자)진로탐색활동', '진로탐색');
+
+                        // 교시 부분을 flex 컨테이너로 변경하여 줄바꿈 문제 해결
+                        const periodHtml = `<p class="flex text-base font-medium text-gray-800 items-baseline">
+                                            <span class="flex-shrink-0 min-w-[48px] text-right pr-2">
+                                                <strong class="text-gray-400 font-semibold">${period.PERIO}교시</strong>
+                                            </span>
+                                            <span class="flex-grow text-left">${content}</span>
+                                        </p>`;
                         if (parseInt(period.PERIO) <= 4) {
                             leftColumnHtml += periodHtml;
                         } else {
@@ -329,11 +345,13 @@
 
                     timetableDisplaySection.innerHTML = `
                         <div class="flex w-full h-full text-left">
-                            <div class="w-1/2 flex flex-col justify-center items-start p-2">
-                                ${leftColumnHtml || '<p class="text-sm text-gray-500">오전 시간표 없음</p>'}
+                            <!-- w-1/2 대신 flex-1 적용 -->
+                            <div class="flex-1 flex flex-col items-start pr-2">
+                                ${leftColumnHtml || '<p class="text-base text-gray-500">오전 시간표 없음</p>'}
                             </div>
-                            <div class="w-1/2 flex flex-col justify-center items-start p-2 border-l border-gray-200">
-                                ${rightColumnHtml || '<p class="text-sm text-gray-500">오후 시간표 없음</p>'}
+                            <!-- w-1/2 대신 flex-1 적용 -->
+                            <div class="flex-1 flex flex-col items-start pl-2">
+                                ${rightColumnHtml || '<p class="text-base text-gray-500">오후 시간표 없음</p>'}
                             </div>
                         </div>
                     `;
