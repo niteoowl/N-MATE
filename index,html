@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>하단 내비게이션 바</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            /* Flexbox를 사용하여 콘텐츠와 내비게이션 바를 세로로 정렬 */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* 뷰포트 높이 전체를 차지하도록 설정 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 본문 콘텐츠 -->
+    <!-- 'items-center'를 'items-start'로 변경하여 내용을 왼쪽 정렬했습니다. -->
+    <div class="flex-grow flex flex-col items-start p-4 mt-8 gap-y-8 max-w-md mx-auto w-full">
+
+        <!-- 로고 추가 -->
+        <!-- 로고를 왼쪽으로 정렬하고 하단에 마진을 줄였습니다 (justify-center -> justify-start). -->
+        <div class="w-full flex justify-start mb-2">
+            <!-- 로고 이미지 크기를 w-16 h-16으로 줄였습니다. -->
+            <!-- 로고를 가로형으로 변경하고 소스를 '/image/logo.png'로 수정했습니다. -->
+            <img src="/image/logo.png" alt="가로형 로고" class="h-16 shadow-lg">
+        </div>
+
+        <!-- 새로 추가된 직사각형 박스 -->
+        <div class="w-full flex flex-col items-start gap-y-2">
+            <!-- h-20을 h-16으로 변경하여 높이를 줄였습니다. -->
+            <div class="w-full h-16 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
+                <p>새로운 내용이 여기에 표시됩니다.</p>
+            </div>
+        </div>
+
+        <!-- 시간표 섹션 컨테이너 (제목과 직사각형을 함께 묶음) -->
+        <div class="w-full flex flex-col items-start gap-y-2">
+            <!-- 시간표 섹션 제목 -->
+            <h2 class="text-left text-xl font-bold text-gray-800">시간표/급식</h2>
+            <!-- 상단 가로 직사각형 (두 부분으로 분할) -->
+            <div class="w-full h-40 bg-white rounded-xl border border-gray-300 flex overflow-hidden">
+                <!-- 왼쪽 절반 -->
+                <div class="w-1/2 bg-white rounded-l-xl flex items-center justify-center text-gray-800 text-xl font-bold p-4 border-r border-gray-300">
+                    <p>왼쪽 섹션</p>
+                </div>
+                <!-- 오른쪽 절반 -->
+                <div class="w-1/2 bg-white rounded-r-xl flex items-center justify-center text-gray-800 text-xl font-bold p-4">
+                    <p>오른쪽 섹션</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 알림 섹션 컨테이너 (제목과 직사각형을 함께 묶음) -->
+        <div class="w-full flex flex-col items-start gap-y-2">
+            <!-- 알림 섹션 제목 (글자 크기 조정됨) -->
+            <h2 class="text-left text-xl font-bold text-gray-800">알림</h2>
+            <!-- 알림 내용 직사각형 (높이 조정됨) -->
+            <div class="w-full h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
+                <p>알림 내용이 여기에 표시됩니다.</p>
+            </div>
+        </div>
+
+        <!-- 기존 콘텐츠 -->
+        <p class="text-2xl text-gray-700">이곳에 다양한 정보가 표시됩니다.</p>
+    </div>
+
+    <!-- 하단 내비게이션 바 컨테이너 -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-lg mx-auto w-full">
+        <div class="flex justify-around items-center h-12">
+            <!-- 내비게이션 항목: 홈 -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="홈" data-path="/">
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- 내비게이션 항목: 시간표 -->
+            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="시간표" data-path="/timetable">
+                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">시간표</span>
+            </button>
+
+            <!-- 내비게이션 항목: 급식 -->
+            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
+                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">급식</span>
+            </button>
+
+            <!-- 내비게이션 항목: 학사일정 -->
+            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
+                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">학사일정</span>
+            </button>
+
+            <!-- 내비게이션 항목: 더보기 -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="더보기" data-path="/plus">
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // DOM 콘텐츠가 로드된 후 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            // 모든 내비게이션 항목 버튼을 가져옴
+            const navItems = document.querySelectorAll('.nav-item');
+            // Lucide 아이콘 초기화 (페이지 로드 후 아이콘을 렌더링)
+            lucide.createIcons();
+
+            // 현재 URL 경로를 기반으로 초기 활성 탭 설정
+            const currentPath = window.location.pathname;
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                if (currentPath === itemPath) {
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    item.classList.add('text-blue-600');
+                }
+            });
+
+            // 각 내비게이션 항목에 클릭 이벤트 리스너 추가
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    // 모든 항목에서 비활성화된 스타일로 초기화
+                    navItems.forEach(nav => {
+                        nav.classList.remove('text-blue-600', 'bg-blue-50');
+                        nav.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    });
+
+                    // 클릭된 항목에 활성화된 스타일 적용
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    item.classList.add('text-blue-600');
+
+                    // data-path 속성에 저장된 경로로 페이지 이동
+                    const path = item.dataset.path;
+                    if (path) {
+                        window.location.href = path;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
