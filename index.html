@@ -15,6 +15,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
+        /* Body styles for overall layout */
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -25,7 +26,7 @@
             min-height: 100vh;
             background-color: #ffffff; /* Light gray background */
         }
-        /* Skeleton Loader 애니메이션 */
+        /* Skeleton Loader animation for loading states */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
             background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
@@ -46,31 +47,31 @@
             border-radius: 4px;
         }
 
-        /* 중앙 정렬 컨테이너: 패딩 제거, 최대 너비 재조정 */
+        /* Main content container for centering and max-width */
         .main-content-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; /* 기존 좌측 정렬 유지 */
-            max-width: 36rem; /* max-w-xl (42rem에서 36rem으로 축소) */
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
-            position: relative; /* 드롭다운 메뉴의 절대 위치 지정을 위한 기준 */
+            position: relative; /* For absolute positioning of dropdown menu */
         }
 
-        /* 드롭다운 메뉴 스타일 */
+        /* Dropdown menu styles */
         .dropdown-menu {
-            position: absolute; /* 버튼 기준 상대적 위치 */
+            position: absolute; /* Relative to the parent with position: relative */
             background-color: white;
             border-radius: 0.5rem; /* rounded-md */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             padding-top: 0.25rem; /* py-1 */
             padding-bottom: 0.25rem;
             min-width: 8rem; /* w-40 */
-            right: 0; /* 계정 탭 버튼 기준 오른쪽 정렬 */
-            top: calc(100% + 0.5rem); /* 버튼 아래로 0.5rem 간격 */
-            z-index: 20; /* 다른 콘텐츠 위에 표시 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
         }
 
         .dropdown-menu button {
@@ -89,71 +90,64 @@
 </head>
 <body>
 
-    <!-- 본문 콘텐츠 -->
+    <!-- Main content area -->
     <div class="main-content-container">
 
-        <!-- 로고와 계정/로그인 섹션을 포함하는 새로운 헤더 -->
-        <!-- px-6으로 좌우 여백, pt-4로 상단 여백 설정 -->
+        <!-- Header: Logo and Account/Login section -->
         <div class="w-full flex justify-between items-center px-6 pt-4">
-            <!-- 로고 -->
+            <!-- Logo -->
             <div class="flex items-center">
                 <img src="/image/logo.png" alt="가로형 로고" class="h-12">
             </div>
 
-            <!-- 계정/로그인 섹션 -->
-            <div class="relative"> <!-- 드롭다운의 상대적 위치 지정을 위해 relative 추가 -->
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
-                    <!-- Conditional content will be injected here by JavaScript -->
+                    <!-- Conditional content injected by JavaScript -->
                 </div>
-                <!-- 드롭다운 메뉴 (초기에는 숨김) -->
-                <!-- 드롭다운 메뉴는 계정 탭 버튼에 대한 상대적 위치를 유지 -->
+                <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
                     <button id="logoutButton" class="block">로그아웃</button>
                 </div>
             </div>
         </div>
 
-        <!-- 새로 추가된 직사각형 박스 -->
-        <!-- mt-8로 헤더와 간격 확보, px-6으로 좌우 패딩 설정, 아래 박스와는 가깝게 (mb-4) -->
+        <!-- New rectangular box for general content -->
         <div class="w-full flex flex-col items-start gap-y-4 px-6 mt-8 mb-4">
             <div class="w-full h-16 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <p>새로운 내용이 여기에 표시됩니다.</p>
             </div>
         </div>
 
-        <!-- 시간표 섹션 컨테이너 (제목과 직사각형을 함께 묶음) -->
-        <!-- 위 박스와는 가깝게 (mt-1), 아래 박스와는 가깝게 (mb-4) -->
+        <!-- Timetable/Meal section container -->
         <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
-            <!-- 시간표 섹션 제목 -->
+            <!-- Section title -->
             <h2 class="text-left text-xl font-bold text-gray-800">시간표/급식</h2>
-            <!-- 상단 가로 직사각형 (두 부분으로 분할) -->
+            <!-- Horizontal rectangular box split into two parts -->
+            <!-- Using flex to always arrange children horizontally -->
             <div class="w-full min-h-40 bg-white rounded-xl border border-gray-300 flex">
-                <!-- 왼쪽 절반 - 시간표 정보 표시를 위해 id 추가 -->
-                <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
-                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 border-r border-gray-300 overflow-y-auto">
-                    <!-- Skeleton Loader for Timetable -->
-                    <!-- flex w-full h-full text-left 컨테이너는 유지 -->
+                <!-- Left half: Timetable information -->
+                <!-- Fixed 1/2 width, right border, and both overflow-y/x for scrolling -->
+                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 border-r border-gray-300 overflow-y-auto overflow-x-auto">
+                    <!-- Skeleton Loader for Timetable content -->
                     <div class="flex w-full h-full text-left">
-                        <!-- w-1/2 대신 flex-1 적용 및 pr-2 추가 -->
-                        <div class="flex-1 flex flex-col items-start pr-2">
+                        <div class="flex-1 flex flex-col items-start">
                             <div class="skeleton skeleton-text w-3/4"></div>
                             <div class="skeleton skeleton-text"></div>
                             <div class="skeleton skeleton-text w-1/2"></div>
                             <div class="skeleton skeleton-text w-2/3"></div>
                         </div>
-                        <!-- w-1/2 대신 flex-1 적용 및 pl-2 추가 -->
-                        <!-- 4교시씩 구분되는 선 제거 (border-l border-gray-200 클래스 제거됨) -->
-                        <div class="flex-1 flex flex-col items-start pl-2">
+                        <div class="flex-1 flex flex-col items-start">
                             <div class="skeleton skeleton-text w-3/4"></div>
                             <div class="skeleton skeleton-text"></div>
                             <div class="skeleton skeleton-text w-1/2"></div>
                         </div>
                     </div>
                 </div>
-                <!-- 오른쪽 절반 - 급식 정보 표시를 위해 id 추가 -->
-                <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
-                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto">
-                    <!-- Skeleton Loader for Meal -->
+                <!-- Right half: Meal information -->
+                <!-- Fixed 1/2 width, and both overflow-y/x for scrolling -->
+                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto overflow-x-auto">
+                    <!-- Skeleton Loader for Meal content -->
                     <div class="w-full text-left">
                         <div class="skeleton skeleton-text w-full"></div>
                         <div class="skeleton skeleton-text w-5/6"></div>
@@ -163,50 +157,48 @@
             </div>
         </div>
 
-        <!-- 알림 섹션 컨테이너 (제목과 직사각형을 함께 묶음) -->
-        <!-- 위 박스와는 가깝게 (mt-1), 아래 박스와는 가깝게 (mb-4) -->
+        <!-- Notification section container -->
         <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
-            <!-- 알림 섹션 제목 (글자 크기 조정됨) -->
+            <!-- Section title -->
             <h2 class="text-left text-xl font-bold text-gray-800">알림</h2>
-            <!-- 알림 내용 직사각형 (높이 조정됨) -->
+            <!-- Notification content box -->
             <div class="w-full h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <p>알림 내용이 여기에 표시됩니다.</p>
             </div>
         </div>
 
-        <!-- 기존 콘텐츠 -->
-        <!-- 위 박스와는 가깝게 (mt-1) -->
+        <!-- Placeholder for additional content -->
         <p class="text-2xl text-gray-700 px-6 mt-1">이곳에 다양한 정보가 표시됩니다.</p>
     </div>
 
-    <!-- 하단 내비게이션 바 컨테이너 -->
+    <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full">
         <div class="flex justify-around items-center h-12">
-            <!-- 내비게이션 항목: 홈 -->
+            <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="홈" data-path="/">
                 <i data-lucide="home" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
-            <!-- 내비게이션 항목: 시간표 -->
+            <!-- Schedule Navigation Item -->
             <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="시간표" data-path="/timetable">
                 <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">시간표</span>
             </button>
 
-            <!-- 내비게이션 항목: 급식 -->
+            <!-- Meal Navigation Item -->
             <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
                 <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">급식</span>
             </button>
 
-            <!-- 내비게이션 항목: 학사일정 -->
+            <!-- Academic Schedule Navigation Item -->
             <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
                 <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">학사일정</span>
             </button>
 
-            <!-- 내비게이션 항목: 더보기 -->
+            <!-- More Navigation Item -->
             <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="더보기" data-path="/plus">
                 <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">더보기</span>
@@ -215,8 +207,8 @@
     </nav>
 
     <script>
-        // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
-        // 로컬 환경에서 테스트 시에는 실제 Firebase 프로젝트 설정으로 변경해야 합니다.
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        // For local testing, replace with actual Firebase project settings.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -228,55 +220,54 @@
             messagingSenderId: "691313471077"
         };
 
-        // Firebase app 및 auth, firestore 인스턴스
+        // Firebase app, auth, and firestore instances
         let app;
         let auth;
         let db;
 
-        // DOM 요소 가져오기
+        // DOM elements
         const mealDisplaySection = document.getElementById('meal-display-section');
         const timetableDisplaySection = document.getElementById('timetable-display-section');
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
 
+        // NEIS API common information
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
+        const eduCode = "C10"; // Replace with your school's education office code
+        const schoolCode = "7171018"; // Replace with your school's standard code
 
-        // NEIS API 공통 정보
-        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // 발급받은 인증키로 변경하세요
-        const eduCode = "C10"; // 해당 학교의 시도교육청코드로 변경하세요 (예: 서울특별시교육청)
-        const schoolCode = "7171018"; // 해당 학교의 행정표준코드로 변경하세요 (예: 서울삼성초등학교)
-
-        // 오늘 날짜를YYYYMMDD 형식으로 가져오는 함수
+        // Function to get today's date in YYYYMMDD format
         function getTodayDate() {
             const today = new Date();
             const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 +1
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed, so add 1
             const day = String(today.getDate()).padStart(2, '0');
             return `${year}${month}${day}`;
         }
 
-        // 사용자 정보를 Firestore에서 가져오는 함수
+        // Function to fetch user profile from Firestore
         async function getUserProfile(userId) {
             if (!db) {
-                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                console.error('Firestore instance is not initialized.');
                 return null;
             }
-            // Firestore 보안 규칙에 따라 artifacts/{appId}/users/{userId}/profile/user_data 경로 사용
+            // Using Firestore security rules path: artifacts/{appId}/users/{userId}/profile/user_data
             const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
             try {
                 const doc = await userProfileRef.get();
                 if (doc.exists) {
                     return doc.data();
                 } else {
-                    console.log('사용자 프로필 데이터가 없습니다.');
+                    console.log('User profile data not found.');
                     return null;
                 }
             } catch (error) {
-                console.error('사용자 프로필 가져오기 오류:', error);
+                console.error('Error fetching user profile:', error);
                 return null;
             }
         }
 
-        // NEIS API에서 급식 데이터를 가져와 표시하는 함수
+        // Function to fetch and display meal data from NEIS API
         async function fetchMealData() {
             const date = getTodayDate();
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`;
@@ -298,16 +289,16 @@
                     mealDisplaySection.innerHTML = '<p class="text-lg text-gray-800">등록된 급식이 없어요.</p>';
                 } else {
                     mealDisplaySection.innerHTML = '<p class="text-lg text-red-500">급식 정보를 가져오는 데 실패했습니다.</p>';
-                    console.error('API 응답 오류 (급식):', data);
+                    console.error('API response error (meal):', data);
                 }
             } catch (error) {
-                console.error('급식 정보를 가져오는 중 오류 발생:', error);
+                console.error('Error fetching meal data:', error);
                 mealDisplaySection.innerHTML = '<p class="text-lg text-red-500">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
-        // NEIS API에서 시간표 데이터를 가져와 표시하는 함수
-        // grade와 classNum을 인자로 받도록 수정
+        // Function to fetch and display timetable data from NEIS API
+        // Modified to take grade and classNum as arguments
         async function fetchTimetableData(grade, classNum) {
             const date = getTodayDate();
             const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
@@ -323,18 +314,22 @@
 
                     timetable.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
 
+                    // Determine if it's a mobile view based on screen width
+                    const isMobileView = window.innerWidth < 768; // Tailwind's 'md' breakpoint
+
                     timetable.forEach(period => {
-                        // (자)주제선택활동은 주제선택으로 변환
+                        // Transform special activity names
                         let content = period.ITRT_CNTNT.replace('(자)주제선택활동', '주제선택');
-                        // (자)진로탐색활동은 진로탐색으로 변환
                         content = content.replace('(자)진로탐색활동', '진로탐색');
 
-                        // 과목 이름 폰트 크기를 text-base에서 text-sm으로 변경하여 모바일 화면에서 공간 확보
+                        // Conditionally render "교시" based on device type
+                        const periodNumberDisplay = isMobileView ? period.PERIO : `${period.PERIO}교시`;
+
+                        // Apply whitespace-nowrap and text-sm to both period number and content
+                        // Removed fixed width for period number and added mr-1 for spacing
                         const periodHtml = `<p class="flex text-sm font-medium text-gray-800 items-baseline">
-                                            <span class="flex-shrink-0 min-w-[48px] text-right pr-2">
-                                                <strong class="text-gray-400 font-semibold whitespace-nowrap">${period.PERIO}교시</strong>
-                                            </span>
-                                            <span class="flex-grow text-left">${content}</span>
+                                            <strong class="text-gray-400 font-semibold whitespace-nowrap text-sm text-left mr-1">${periodNumberDisplay}</strong>
+                                            <span class="flex-grow whitespace-nowrap text-sm">${content}</span>
                                         </p>`;
                         if (parseInt(period.PERIO) <= 4) {
                             leftColumnHtml += periodHtml;
@@ -345,12 +340,10 @@
 
                     timetableDisplaySection.innerHTML = `
                         <div class="flex w-full h-full text-left">
-                            <!-- w-1/2 대신 flex-1 적용 -->
-                            <div class="flex-1 flex flex-col items-start pr-2">
+                            <div class="flex-1 flex flex-col items-start">
                                 ${leftColumnHtml || '<p class="text-sm text-gray-500">오전 시간표 없음</p>'}
                             </div>
-                            <!-- w-1/2 대신 flex-1 적용 -->
-                            <div class="flex-1 flex flex-col items-start pl-2">
+                            <div class="flex-1 flex flex-col items-start">
                                 ${rightColumnHtml || '<p class="text-sm text-gray-500">오후 시간표 없음</p>'}
                             </div>
                         </div>
@@ -359,38 +352,38 @@
                     timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-800">등록된 시간표가 없어요.</p>';
                 } else {
                     timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">시간표 정보를 가져오는 데 실패했습니다.</p>';
-                    console.error('API 응답 오류 (시간표):', data);
+                    console.error('API response error (timetable):', data);
                 }
             } catch (error) {
-                console.error('시간표 정보를 가져오는 중 오류 발생:', error);
+                console.error('Error fetching timetable data:', error);
                 timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
-        // 드롭다운 메뉴 토글 함수
+        // Function to toggle dropdown menu visibility
         function toggleDropdown() {
             accountDropdown.classList.toggle('hidden');
         }
 
-        // 로그아웃 처리 함수
+        // Function to handle user logout
         async function handleLogout() {
             if (auth) {
                 try {
                     await auth.signOut();
-                    console.log('로그아웃 성공.');
-                    // 로그아웃 후 로그인 페이지로 리다이렉트
+                    console.log('Logout successful.');
+                    // Redirect to login page after logout
                     window.location.href = '/login';
                 } catch (error) {
-                    console.error('로그아웃 오류:', error);
-                    // 사용자에게 오류 메시지를 표시할 수 있음
+                    console.error('Logout error:', error);
+                    // Display error message to user
                 }
             }
         }
 
-        // 계정 UI 업데이트 함수
+        // Function to update account UI based on user authentication status
         async function updateAccountUI(user) {
             if (user) {
-                // 사용자 로그인됨
+                // User is logged in
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-700 text-sm font-medium">내 계정</span>
@@ -398,79 +391,92 @@
                     </button>
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
-                // 로그아웃 버튼 이벤트 리스너는 드롭다운 메뉴가 생성될 때 한 번만 추가
+                // Attach logout button event listener only once when dropdown is created
                 if (!document.getElementById('logoutButton').dataset.listenerAdded) {
                      document.getElementById('logoutButton').addEventListener('click', handleLogout);
                      document.getElementById('logoutButton').dataset.listenerAdded = 'true';
                 }
 
-
-                // 사용자 프로필 가져오기 및 시간표 로드
+                // Fetch user profile and load timetable
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
                     fetchTimetableData(profile.grade, profile.classNum);
                 } else {
-                    // 로그인했지만 프로필 정보가 없으면 기본값으로 로드
-                    console.warn('사용자 로그인 상태이나 프로필 정보 불완전. 기본 1학년 1반 시간표 로드.');
+                    // If logged in but profile info is incomplete, load default timetable
+                    console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class timetable.');
                     fetchTimetableData("1", "1");
                 }
 
             } else {
-                // 사용자 로그아웃됨
+                // User is logged out
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
                     </button>
                 `;
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
-                    window.location.href = '/login'; // 로그인 페이지로 리다이렉트
+                    window.location.href = '/login'; // Redirect to login page
                 });
-                accountDropdown.classList.add('hidden'); // 드롭다운 숨기기
-                fetchTimetableData("1", "1"); // 로그아웃 상태에서는 기본값으로 로드
+                accountDropdown.classList.add('hidden'); // Hide dropdown
+                fetchTimetableData("1", "1"); // Load default timetable when logged out
             }
-            lucide.createIcons(); // 아이콘 새로고침
+            lucide.createIcons(); // Refresh Lucide icons
         }
 
+        // Function to initialize data fetching based on user profile
+        async function initializeDataFetching() {
+            if (auth.currentUser) {
+                const user = auth.currentUser;
+                const profile = await getUserProfile(user.uid);
+                if (profile && profile.grade && profile.classNum) {
+                    fetchTimetableData(profile.grade, profile.classNum);
+                } else {
+                    console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class timetable.');
+                    fetchTimetableData("1", "1");
+                }
+            } else {
+                fetchTimetableData("1", "1"); // Load default timetable if not authenticated
+            }
+            fetchMealData(); // Fetch meal data regardless of user authentication
+        }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Firebase 초기화
+            // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth();
                     db = firebase.firestore();
-                    console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+                    console.log('Firebase app, auth, Firestore initialized successfully.');
 
-                    // 인증 상태 변화 리스너 등록
+                    // Auth state change listener
                     auth.onAuthStateChanged(async (user) => {
-                        await updateAccountUI(user); // 사용자 UI 업데이트
-                        fetchMealData(); // 급식 정보도 사용자 상태와 무관하게 로드
+                        await updateAccountUI(user); // Update UI based on user status
+                        initializeDataFetching(); // Fetch initial data
                     });
 
                 } catch (error) {
-                    console.error('Firebase 초기화 실패:', error);
-                    // 초기화 실패 시 기본 시간표/급식 로드 시도
-                    fetchTimetableData("1", "1");
-                    fetchMealData();
+                    console.error('Firebase initialization failed:', error);
+                    // Attempt to load default timetable/meal even if Firebase init fails
+                    initializeDataFetching();
                 }
             } else if (firebase.apps.length > 0) {
                 app = firebase.app();
                 auth = firebase.auth();
                 db = firebase.firestore();
-                console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
+                console.log('Firebase app already initialized. Using existing instance.');
 
                 auth.onAuthStateChanged(async (user) => {
                     await updateAccountUI(user);
-                    fetchMealData();
+                    initializeDataFetching();
                 });
             } else {
-                console.warn('Firebase 설정이 올바르게 제공되지 않았습니다.');
-                // 설정이 없으면 기본 시간표/급식 로드
-                fetchTimetableData("1", "1");
-                fetchMealData();
+                console.warn('Firebase configuration not properly provided.');
+                // Load default timetable/meal if no config
+                initializeDataFetching();
             }
 
-            // 전역적으로 드롭다운 외부 클릭 감지하여 닫기
+            // Global click listener to close dropdown when clicking outside
             window.addEventListener('click', function(e) {
                 const accountTabButton = document.getElementById('accountTabButton');
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
@@ -478,7 +484,16 @@
                 }
             });
 
-            // 초기 로딩 시 아이콘 생성
+            // Re-render timetable on window resize to adjust "교시" text
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    initializeDataFetching(); // Re-fetch or re-render timetable based on new window size
+                }, 200); // Debounce for performance
+            });
+
+            // Initial icon creation
             lucide.createIcons();
         });
     </script>
