@@ -331,11 +331,12 @@
 
                         // 교시 부분을 flex 컨테이너로 변경하여 줄바꿈 문제 해결
                         // whitespace-nowrap 클래스를 strong 태그에 추가하여 "N교시"가 한 줄로 유지되도록 함
+                        // 과목 이름 span에도 whitespace-nowrap 추가
                         const periodHtml = `<p class="flex text-base font-medium text-gray-800 items-baseline">
                                             <span class="flex-shrink-0 min-w-[48px] text-right pr-2">
                                                 <strong class="text-gray-400 font-semibold whitespace-nowrap">${period.PERIO}교시</strong>
                                             </span>
-                                            <span class="flex-grow text-left">${content}</span>
+                                            <span class="flex-grow text-left whitespace-nowrap">${content}</span>
                                         </p>`;
                         if (parseInt(period.PERIO) <= 4) {
                             leftColumnHtml += periodHtml;
