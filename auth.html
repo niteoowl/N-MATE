@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부산남중학교 N-MATE</title>
+    <title>N-MATE - 계정</title>
     <!-- Tailwind CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- Google Fonts - Inter -->
@@ -269,9 +269,9 @@
             authDomain: "n-mate.firebaseapp.com",
             projectId: "n-mate",
             storageBucket: "n-mate.firebasestorage.app",
-            messagingSenderId: "691313471077",
             appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            measurementId: "G-0LCGVBKXLQ"
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077" // messagingSenderId가 누락되어 추가
         };
 
 
@@ -373,6 +373,7 @@
                 console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
                 return null;
             }
+            // Firestore 보안 규칙에 따라 artifacts/{appId}/users/{userId}/profile/user_data 경로 사용
             const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
             try {
                 const doc = await userProfileRef.get();
@@ -395,6 +396,7 @@
                 console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
                 return false;
             }
+            // Firestore 보안 규칙에 따라 artifacts/{appId}/users/{userId}/profile/user_data 경로 사용
             const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
             try {
                 await userProfileRef.set({
@@ -424,30 +426,28 @@
                     db = firebase.firestore(); // Firebase Firestore 서비스 가져오기
                     console.log('Firebase 앱 및 Firestore 초기화 성공.');
 
-                    // __initial_auth_token이 정의되어 있으면 커스텀 토큰으로 로그인 시도
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await auth.signInWithCustomToken(__initial_auth_token);
-                            console.log('초기 커스텀 토큰으로 로그인 성공.');
-                            // 로그인 성공 후 사용자 프로필 확인 및 리다이렉션
-                            const currentUser = auth.currentUser;
-                            if (currentUser) {
-                                const profile = await getUserProfile(currentUser.uid);
-                                if (profile) {
-                                    window.location.href = '/'; // 프로필 있으면 메인으로
-                                } else {
-                                    hideAllAuthSections();
-                                    userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
-                                    subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
-                                }
+                    // onAuthStateChanged는 로그인 상태 변화를 감지하므로 여기서 초기 UI 결정을 함.
+                    auth.onAuthStateChanged(async (user) => {
+                        if (user) {
+                            console.log('onAuthStateChanged: 사용자 로그인됨 (UID):', user.uid);
+                            const profile = await getUserProfile(user.uid);
+                            if (profile) {
+                                // 프로필이 있으면 메인으로 이동 (로그인 완료)
+                                window.location.href = '/';
+                            } else {
+                                // 프로필이 없으면 정보 설정 화면으로 이동 (최초 로그인/회원가입 후)
+                                hideAllAuthSections();
+                                userInfoSetupSection.classList.remove('hidden');
+                                subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
                             }
-                            return; // 로그인 성공 시 더 이상 로직 실행하지 않고 종료
-                        } catch (tokenError) {
-                            console.error('커스텀 토큰 로그인 실패:', tokenError);
+                        } else {
+                            console.log('onAuthStateChanged: 사용자 로그아웃됨.');
+                            // 사용자 로그아웃 상태이므로 초기 로그인 UI 표시
+                            hideAllAuthSections();
+                            initialButtons.classList.remove('hidden');
+                            subtitleText.textContent = '로그인 방식을 선택하세요.';
                         }
-                    }
-                    // onAuthStateChanged는 로그인 상태 변화를 감지하므로 여기서 초기 UI 결정을 할 필요 없음.
-                    // 로그인/회원가입 버튼이 보여지고 사용자가 액션을 취할 때까지 기다림.
+                    });
 
                 } catch (error) {
                     console.error('Firebase 앱 초기화 실패:', error);
@@ -458,29 +458,12 @@
                 db = firebase.firestore(); // 기존 앱 인스턴스에서 Firestore 가져오기
                 console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
 
-                // 페이지 로드 시 이미 로그인된 사용자인지 확인
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        console.log('onAuthStateChanged: 사용자 로그인됨 (UID):', user.uid);
-                        const profile = await getUserProfile(user.uid);
-                        if (profile) {
-                            window.location.href = '/'; // 프로필 있으면 메인으로
-                        } else {
-                            hideAllAuthSections();
-                            userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
-                            subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
-                        }
-                    } else {
-                        console.log('onAuthStateChanged: 사용자 로그아웃됨.');
-                        // 사용자 로그아웃 상태이므로 초기 로그인 UI 표시
-                        hideAllAuthSections();
-                        initialButtons.classList.remove('hidden');
-                        subtitleText.textContent = '로그인 방식을 선택하세요.';
-                    }
-                });
+                // 페이지 로드 시 이미 로그인된 사용자인지 onAuthStateChanged로 확인
+                // (DOMContentLoaded에서 직접 리다이렉트하지 않고 onAuthStateChanged에게 위임)
             } else {
                 console.warn('Firebase 설정이 올바르게 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. firebaseConfig 변수를 확인하세요.');
             }
+
 
             // "이메일로 계속할게요" 버튼 클릭 이벤트
             if (emailLoginButton) {
@@ -560,16 +543,8 @@
                         showMessage('로그인 성공!', false);
                         console.log('이메일 로그인 성공:', email);
 
-                        // 로그인 성공 후 사용자 프로필 확인
-                        const profile = await getUserProfile(user.uid);
-                        if (profile) {
-                            window.location.href = '/'; // 프로필 있으면 메인으로
-                        } else {
-                            hideAllAuthSections();
-                            userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
-                            subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
-                            gradeSelect.focus();
-                        }
+                        // onAuthStateChanged에서 프로필 확인 및 리다이렉트 처리
+
                     } catch (error) {
                         console.error('로그인 오류:', error);
                         let errorMessage = '로그인 실패. 다시 시도해주세요.';
@@ -630,7 +605,7 @@
                         showMessage('회원가입 성공!', false);
                         console.log('회원가입 성공:', email);
 
-                        // 회원가입 성공 후 사용자 정보 설정 화면으로 이동
+                        // 회원가입 성공 후 항상 사용자 정보 설정 화면으로 이동 (최초 1회)
                         hideAllAuthSections();
                         userInfoSetupSection.classList.remove('hidden');
                         subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
@@ -691,8 +666,15 @@
 
                     if (success) {
                         showMessage('학생 정보가 성공적으로 저장되었습니다!', false);
-                        console.log('학생 정보 저장 완료. 메인 페이지로 이동.');
-                        window.location.href = '/'; // 저장 성공 시 메인 페이지로 이동
+                        console.log('학생 정보 저장 완료. 로그인 탭으로 이동.');
+                        // 저장 성공 시 메인 페이지 대신 초기 로그인 화면으로 돌아감
+                        hideAllAuthSections();
+                        initialButtons.classList.remove('hidden');
+                        subtitleText.textContent = '로그인 방식을 선택하세요.';
+                        // 입력 필드 초기화
+                        gradeSelect.value = '';
+                        classInput.value = '';
+                        studentNumInput.value = '';
                     }
                     // 실패 메시지는 saveUserProfile 함수 내에서 처리
                 });
