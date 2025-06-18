@@ -249,9 +249,10 @@
 
     <script>
         // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
-        // __firebase_config 변수가 정의되어 있지 않다면 기본 플레이스홀더 설정을 사용합니다.
-        // **중요**: 실제 배포 환경에서는 이 플레이스홀더 대신 올바른 Firebase 프로젝트 설정이
-        // __firebase_config를 통해 주입되어야 합니다. 그렇지 않으면 Firebase 기능이 작동하지 않을 수 있습니다.
+        // **중요**: 이 플레이스홀더 설정은 Firebase 기능이 작동하지 않습니다.
+        // 실제 Firebase 프로젝트를 설정하고, 그 설정을 __firebase_config 변수에 할당해야 합니다.
+        // 예를 들어, Canvas 환경에서 이 코드를 실행하면 __firebase_config가 자동으로 채워집니다.
+        // 로컬 환경에서 테스트 시에는 'YOUR_FIREBASE_API_KEY' 등을 실제 값으로 변경해야 합니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
             "apiKey": "YOUR_FIREBASE_API_KEY",
@@ -342,32 +343,55 @@
             console.log('DOMContentLoaded 이벤트 발생. 앱 초기화 시작.');
 
             // Firebase 초기화
-            if (firebaseConfig && Object.keys(firebaseConfig).length > 0) {
-                if (firebase.apps.length === 0) {
-                    try {
-                        app = firebase.initializeApp(firebaseConfig);
-                        auth = firebase.auth(); // Firebase Auth 서비스 가져오기
-                        console.log('Firebase 앱 초기화 성공.');
+            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+                try {
+                    app = firebase.initializeApp(firebaseConfig);
+                    auth = firebase.auth(); // Firebase Auth 서비스 가져오기
+                    console.log('Firebase 앱 초기화 성공.');
 
-                        auth.onAuthStateChanged((user) => {
-                            if (user) {
-                                console.log('사용자 로그인됨 (UID):', user.uid);
-                            } else {
-                                console.log('사용자 로그아웃됨.');
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Firebase 앱 초기화 실패:', error);
-                        showMessage('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.', true);
+                    // __initial_auth_token이 정의되어 있으면 커스텀 토큰으로 로그인 시도
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            await auth.signInWithCustomToken(__initial_auth_token);
+                            console.log('초기 커스텀 토큰으로 로그인 성공. 메인 페이지로 이동.');
+                            window.location.href = '/';
+                            return; // 로그인 성공 시 더 이상 로직 실행하지 않고 종료
+                        } catch (tokenError) {
+                            console.error('커스텀 토큰 로그인 실패:', tokenError);
+                            // 자동 로그인 실패 시 사용자에게 알림을 표시하지 않음
+                        }
                     }
-                } else {
-                    app = firebase.app();
-                    auth = firebase.auth();
-                    console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
+                    // 익명 로그인 시도 부분 제거
+                    // 익명 로그인 실패 시 사용자에게 알림을 표시하지 않음
+
+                    auth.onAuthStateChanged((user) => {
+                        if (user) {
+                            console.log('사용자 로그인됨 (UID):', user.uid);
+                            // 이미 로그인된 경우 (커스텀 토큰이 없거나 실패했어도 onAuthStateChanged를 통해 확인될 수 있음)
+                            // 이메일/비밀번호 로그인 시에도 여기로 들어옴.
+                            // 로그인 성공 시 /로 리다이렉트가 필요하다면 signInWithEmailAndPassword 성공 콜백에서 처리
+                        } else {
+                            console.log('사용자 로그아웃됨.');
+                            // 사용자가 로그인되어 있지 않으므로 로그인/회원가입 UI 표시를 위한 준비
+                        }
+                    });
+                } catch (error) {
+                    console.error('Firebase 앱 초기화 실패:', error);
+                    // Firebase 초기화 실패 시 사용자에게 알림을 표시하지 않음
+                }
+            } else if (firebase.apps.length > 0) {
+                app = firebase.app();
+                auth = firebase.auth();
+                console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
+                // 이미 로그인되어 있는지 확인하여 필요한 경우 리다이렉션
+                if (auth.currentUser) {
+                    console.log('기존 로그인 사용자 감지, 메인 페이지로 이동.');
+                    window.location.href = '/';
+                    return; // 로그인된 사용자면 더 이상 로직 실행하지 않고 종료
                 }
             } else {
-                console.warn('Firebase 설정이 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. __firebase_config 변수를 확인하세요.');
-                showMessage('Firebase 설정이 없습니다. 앱 기능에 제한이 있을 수 있습니다.', true);
+                console.warn('Firebase 설정이 올바르게 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. __firebase_config 변수를 확인하세요.');
+                // Firebase 설정 없음 알림 제거
             }
 
             // "이메일로 계속할게요" 버튼 클릭 이벤트
@@ -401,7 +425,7 @@
                 modalNoButton.addEventListener('click', () => {
                     console.log('모달 "아니요" 버튼 클릭됨. 회원가입 섹션으로 이동.');
                     hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
-                    initialButtons.classList.add('hidden');
+                    initialButtons.classList.add('hidden'); // 이 부분이 필요 없을 수도 있지만, 명시적으로 숨김
                     signUpSection.classList.remove('hidden');
                     subtitleText.textContent = '회원가입 정보를 입력하세요.';
                     signUpEmailInput.focus();
@@ -453,6 +477,8 @@
                         await auth.signInWithEmailAndPassword(email, password);
                         showMessage('로그인 성공!', false);
                         console.log('이메일 로그인 성공:', email);
+                        // 로그인 성공 시 / 경로로 이동
+                        window.location.href = '/';
                     } catch (error) {
                         console.error('로그인 오류:', error);
                         let errorMessage = '로그인 실패. 다시 시도해주세요.';
@@ -509,13 +535,19 @@
 
                     try {
                         await auth.createUserWithEmailAndPassword(email, password);
-                        showMessage('회원가입 성공! 로그인 해주세요.', false);
+                        showMessage('회원가입 성공! 이제 로그인해주세요.', false);
                         console.log('회원가입 성공:', email);
+
+                        // 회원가입 성공 후 초기 로그인 화면으로 돌아가기
                         signUpSection.classList.add('hidden');
-                        initialButtons.classList.remove('hidden');
+                        initialButtons.classList.remove('hidden'); // 초기 버튼 섹션 표시
                         subtitleText.textContent = '로그인 방식을 선택하세요.';
-                        emailInput.value = email;
-                        passwordInput.value = '';
+                        emailInput.value = ''; // 이메일 필드 초기화
+                        passwordInput.value = ''; // 비밀번호 필드 초기화
+                        signUpEmailInput.value = ''; // 회원가입 이메일 필드 초기화
+                        signUpPasswordInput.value = ''; // 회원가입 비밀번호 필드 초기화
+                        signUpConfirmPasswordInput.value = ''; // 회원가입 비밀번호 확인 필드 초기화
+                        hideMessageBox();
                     } catch (error) {
                         console.error('회원가입 오류:', error);
                         let errorMessage = '회원가입 실패. 다시 시도해주세요.';
