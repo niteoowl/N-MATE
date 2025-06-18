@@ -11,8 +11,7 @@
     <!-- Firebase SDK CDN -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <!-- Optional: Firebase Firestore if you plan to use it -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> <!-- Firestore 추가 -->
     <style>
         /* Pretendard 웹폰트 적용 */
         @font-face {
@@ -228,6 +227,21 @@
             <button id="backToLoginButton" class="login-button-alt mt-2">로그인 화면으로 돌아가기</button>
         </div>
 
+        <!-- 사용자 정보 설정 섹션 (초기에는 숨김) -->
+        <div id="userInfoSetupSection" class="button-section hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">학생 정보 설정</h2>
+            <select id="gradeSelect" class="input-field mb-3">
+                <option value="">학년 선택</option>
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+            </select>
+            <input type="number" id="classInput" placeholder="반 (예: 1)" class="input-field mb-3">
+            <input type="number" id="studentNumInput" placeholder="번 (예: 10)" class="input-field mb-3">
+            <button id="saveUserInfoButton" class="action-button mt-4">저장</button>
+        </div>
+
+
         <!-- 메시지 표시 영역 -->
         <div id="messageBox" class="hidden text-center mt-4"></div>
 
@@ -249,10 +263,6 @@
 
     <script>
         // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
-        // **중요**: 이 플레이스홀더 설정은 Firebase 기능이 작동하지 않습니다.
-        // 실제 Firebase 프로젝트를 설정하고, 그 설정을 __firebase_config 변수에 할당해야 합니다.
-        // 예를 들어, Canvas 환경에서 이 코드를 실행하면 __firebase_config가 자동으로 채워집니다.
-        // 로컬 환경에서 테스트 시에는 'YOUR_FIREBASE_API_KEY' 등을 실제 값으로 변경해야 합니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -265,9 +275,10 @@
         };
 
 
-        // Firebase app 및 auth 인스턴스
+        // Firebase app 및 auth, firestore 인스턴스
         let app;
         let auth;
+        let db; // Firestore 인스턴스 추가
 
         // DOM 요소 가져오기
         const emailLoginButton = document.getElementById('emailLoginButton');
@@ -294,6 +305,13 @@
         const signUpConfirmPasswordInput = document.getElementById('signUpConfirmPasswordInput');
         const signUpButton = document.getElementById('signUpButton');
         const backToLoginButton = document.getElementById('backToLoginButton');
+
+        // 사용자 정보 설정 관련 DOM 요소
+        const userInfoSetupSection = document.getElementById('userInfoSetupSection');
+        const gradeSelect = document.getElementById('gradeSelect');
+        const classInput = document.getElementById('classInput');
+        const studentNumInput = document.getElementById('studentNumInput');
+        const saveUserInfoButton = document.getElementById('saveUserInfoButton');
 
 
         // 메시지를 표시하는 유틸리티 함수
@@ -339,6 +357,61 @@
             }, { once: true }); // 이 리스너는 한 번만 실행되도록 설정
         }
 
+        // 모든 로그인/회원가입 섹션을 숨기는 함수
+        function hideAllAuthSections() {
+            initialButtons.classList.add('hidden');
+            emailInputSection.classList.add('hidden');
+            passwordInputSection.classList.add('hidden');
+            signUpSection.classList.add('hidden');
+            userInfoSetupSection.classList.add('hidden');
+            hideMessageBox();
+        }
+
+        // 사용자 정보를 Firestore에서 가져오는 함수
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                return null;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    console.log('사용자 프로필 데이터:', doc.data());
+                    return doc.data();
+                } else {
+                    console.log('사용자 프로필 데이터가 없습니다.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('사용자 프로필 가져오기 오류:', error);
+                return null;
+            }
+        }
+
+        // 사용자 정보를 Firestore에 저장하는 함수
+        async function saveUserProfile(userId, grade, classNum, studentNum) {
+            if (!db) {
+                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                return false;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                await userProfileRef.set({
+                    grade: parseInt(grade),
+                    classNum: parseInt(classNum),
+                    studentNum: parseInt(studentNum),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 서버 타임스탬프 추가
+                }, { merge: true }); // 기존 데이터가 있다면 병합
+                console.log('사용자 프로필 저장 성공:', { userId, grade, classNum, studentNum });
+                return true;
+            } catch (error) {
+                console.error('사용자 프로필 저장 오류:', error);
+                showMessage('정보 저장에 실패했습니다. 다시 시도해주세요.', true);
+                return false;
+            }
+        }
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOMContentLoaded 이벤트 발생. 앱 초기화 시작.');
@@ -348,65 +421,75 @@
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth(); // Firebase Auth 서비스 가져오기
-                    console.log('Firebase 앱 초기화 성공.');
+                    db = firebase.firestore(); // Firebase Firestore 서비스 가져오기
+                    console.log('Firebase 앱 및 Firestore 초기화 성공.');
 
                     // __initial_auth_token이 정의되어 있으면 커스텀 토큰으로 로그인 시도
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         try {
                             await auth.signInWithCustomToken(__initial_auth_token);
-                            console.log('초기 커스텀 토큰으로 로그인 성공. 메인 페이지로 이동.');
-                            window.location.href = '/';
+                            console.log('초기 커스텀 토큰으로 로그인 성공.');
+                            // 로그인 성공 후 사용자 프로필 확인 및 리다이렉션
+                            const currentUser = auth.currentUser;
+                            if (currentUser) {
+                                const profile = await getUserProfile(currentUser.uid);
+                                if (profile) {
+                                    window.location.href = '/'; // 프로필 있으면 메인으로
+                                } else {
+                                    hideAllAuthSections();
+                                    userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
+                                    subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
+                                }
+                            }
                             return; // 로그인 성공 시 더 이상 로직 실행하지 않고 종료
                         } catch (tokenError) {
                             console.error('커스텀 토큰 로그인 실패:', tokenError);
-                            // 자동 로그인 실패 시 사용자에게 알림을 표시하지 않음
                         }
                     }
-                    // 익명 로그인 시도 부분 제거
-                    // 익명 로그인 실패 시 사용자에게 알림을 표시하지 않음
+                    // onAuthStateChanged는 로그인 상태 변화를 감지하므로 여기서 초기 UI 결정을 할 필요 없음.
+                    // 로그인/회원가입 버튼이 보여지고 사용자가 액션을 취할 때까지 기다림.
 
-                    auth.onAuthStateChanged((user) => {
-                        if (user) {
-                            console.log('사용자 로그인됨 (UID):', user.uid);
-                            // 이미 로그인된 경우 (커스텀 토큰이 없거나 실패했어도 onAuthStateChanged를 통해 확인될 수 있음)
-                            // 이메일/비밀번호 로그인 시에도 여기로 들어옴.
-                            // 로그인 성공 시 /로 리다이렉트가 필요하다면 signInWithEmailAndPassword 성공 콜백에서 처리
-                        } else {
-                            console.log('사용자 로그아웃됨.');
-                            // 사용자가 로그인되어 있지 않으므로 로그인/회원가입 UI 표시를 위한 준비
-                        }
-                    });
                 } catch (error) {
                     console.error('Firebase 앱 초기화 실패:', error);
-                    // Firebase 초기화 실패 시 사용자에게 알림을 표시하지 않음
                 }
             } else if (firebase.apps.length > 0) {
                 app = firebase.app();
                 auth = firebase.auth();
+                db = firebase.firestore(); // 기존 앱 인스턴스에서 Firestore 가져오기
                 console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
-                // 이미 로그인되어 있는지 확인하여 필요한 경우 리다이렉션
-                if (auth.currentUser) {
-                    console.log('기존 로그인 사용자 감지, 메인 페이지로 이동.');
-                    window.location.href = '/';
-                    return; // 로그인된 사용자면 더 이상 로직 실행하지 않고 종료
-                }
+
+                // 페이지 로드 시 이미 로그인된 사용자인지 확인
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        console.log('onAuthStateChanged: 사용자 로그인됨 (UID):', user.uid);
+                        const profile = await getUserProfile(user.uid);
+                        if (profile) {
+                            window.location.href = '/'; // 프로필 있으면 메인으로
+                        } else {
+                            hideAllAuthSections();
+                            userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
+                            subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
+                        }
+                    } else {
+                        console.log('onAuthStateChanged: 사용자 로그아웃됨.');
+                        // 사용자 로그아웃 상태이므로 초기 로그인 UI 표시
+                        hideAllAuthSections();
+                        initialButtons.classList.remove('hidden');
+                        subtitleText.textContent = '로그인 방식을 선택하세요.';
+                    }
+                });
             } else {
-                console.warn('Firebase 설정이 올바르게 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. __firebase_config 변수를 확인하세요.');
-                // Firebase 설정 없음 알림 제거
+                console.warn('Firebase 설정이 올바르게 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. firebaseConfig 변수를 확인하세요.');
             }
 
             // "이메일로 계속할게요" 버튼 클릭 이벤트
             if (emailLoginButton) {
-                console.log('이메일 로그인 버튼에 이벤트 리스너 등록 시도.');
                 emailLoginButton.addEventListener('click', () => {
                     console.log('이메일 로그인 버튼 클릭됨.');
-                    initialButtons.classList.add('hidden');
+                    hideAllAuthSections();
                     showModal(); // 애니메이션 포함된 모달 표시 함수 호출
                     subtitleText.textContent = '계정이 있으신가요?';
-                    hideMessageBox();
                 });
-            } else {
-                console.error('오류: emailLoginButton 요소를 찾을 수 없습니다.');
             }
 
             // 모달의 "네" 버튼 클릭 이벤트 (계정이 있는 경우)
@@ -417,7 +500,6 @@
                     emailInputSection.classList.remove('hidden');
                     subtitleText.textContent = '이메일 주소를 입력하세요.';
                     emailInput.focus();
-                    hideMessageBox();
                 });
             }
 
@@ -426,11 +508,10 @@
                 modalNoButton.addEventListener('click', () => {
                     console.log('모달 "아니요" 버튼 클릭됨. 회원가입 섹션으로 이동.');
                     hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
-                    initialButtons.classList.add('hidden'); // 이 부분이 필요 없을 수도 있지만, 명시적으로 숨김
+                    hideAllAuthSections();
                     signUpSection.classList.remove('hidden');
                     subtitleText.textContent = '회원가입 정보를 입력하세요.';
                     signUpEmailInput.focus();
-                    hideMessageBox();
                 });
             }
 
@@ -448,11 +529,10 @@
                         return;
                     }
 
-                    emailInputSection.classList.add('hidden');
+                    hideAllAuthSections();
                     passwordInputSection.classList.remove('hidden');
                     subtitleText.textContent = '비밀번호를 입력하세요.';
                     passwordInput.focus();
-                    hideMessageBox();
                 });
             }
 
@@ -475,11 +555,21 @@
                     }
 
                     try {
-                        await auth.signInWithEmailAndPassword(email, password);
+                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
                         showMessage('로그인 성공!', false);
                         console.log('이메일 로그인 성공:', email);
-                        // 로그인 성공 시 / 경로로 이동
-                        window.location.href = '/';
+
+                        // 로그인 성공 후 사용자 프로필 확인
+                        const profile = await getUserProfile(user.uid);
+                        if (profile) {
+                            window.location.href = '/'; // 프로필 있으면 메인으로
+                        } else {
+                            hideAllAuthSections();
+                            userInfoSetupSection.classList.remove('hidden'); // 프로필 없으면 설정 화면으로
+                            subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
+                            gradeSelect.focus();
+                        }
                     } catch (error) {
                         console.error('로그인 오류:', error);
                         let errorMessage = '로그인 실패. 다시 시도해주세요.';
@@ -535,20 +625,17 @@
                     }
 
                     try {
-                        await auth.createUserWithEmailAndPassword(email, password);
-                        showMessage('회원가입 성공! 이제 로그인해주세요.', false);
+                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+                        showMessage('회원가입 성공!', false);
                         console.log('회원가입 성공:', email);
 
-                        // 회원가입 성공 후 초기 로그인 화면으로 돌아가기
-                        signUpSection.classList.add('hidden');
-                        initialButtons.classList.remove('hidden'); // 초기 버튼 섹션 표시
-                        subtitleText.textContent = '로그인 방식을 선택하세요.';
-                        emailInput.value = ''; // 이메일 필드 초기화
-                        passwordInput.value = ''; // 비밀번호 필드 초기화
-                        signUpEmailInput.value = ''; // 회원가입 이메일 필드 초기화
-                        signUpPasswordInput.value = ''; // 회원가입 비밀번호 필드 초기화
-                        signUpConfirmPasswordInput.value = ''; // 회원가입 비밀번호 확인 필드 초기화
-                        hideMessageBox();
+                        // 회원가입 성공 후 사용자 정보 설정 화면으로 이동
+                        hideAllAuthSections();
+                        userInfoSetupSection.classList.remove('hidden');
+                        subtitleText.textContent = '학년, 반, 번호를 설정해주세요.';
+                        gradeSelect.focus();
+
                     } catch (error) {
                         console.error('회원가입 오류:', error);
                         let errorMessage = '회원가입 실패. 다시 시도해주세요.';
@@ -574,10 +661,40 @@
             if (backToLoginButton) {
                 backToLoginButton.addEventListener('click', () => {
                     console.log('"로그인 화면으로 돌아가기" 버튼 클릭됨.');
-                    signUpSection.classList.add('hidden');
+                    hideAllAuthSections();
                     initialButtons.classList.remove('hidden');
                     subtitleText.textContent = '로그인 방식을 선택하세요.';
-                    hideMessageBox();
+                });
+            }
+
+            // 사용자 정보 저장 버튼 클릭 이벤트
+            if (saveUserInfoButton) {
+                saveUserInfoButton.addEventListener('click', async () => {
+                    console.log('사용자 정보 저장 버튼 클릭됨.');
+                    const grade = gradeSelect.value;
+                    const classNum = classInput.value;
+                    const studentNum = studentNumInput.value;
+
+                    if (!grade || !classNum || !studentNum) {
+                        showMessage('학년, 반, 번호를 모두 입력해주세요.', true);
+                        return;
+                    }
+
+                    if (!auth.currentUser) {
+                        showMessage('로그인된 사용자 정보가 없습니다. 다시 로그인해주세요.', true);
+                        console.error('현재 로그인된 사용자가 없습니다.');
+                        return;
+                    }
+
+                    const userId = auth.currentUser.uid;
+                    const success = await saveUserProfile(userId, grade, classNum, studentNum);
+
+                    if (success) {
+                        showMessage('학생 정보가 성공적으로 저장되었습니다!', false);
+                        console.log('학생 정보 저장 완료. 메인 페이지로 이동.');
+                        window.location.href = '/'; // 저장 성공 시 메인 페이지로 이동
+                    }
+                    // 실패 메시지는 saveUserProfile 함수 내에서 처리
                 });
             }
         });
