@@ -127,10 +127,10 @@
             <!-- 시간표 섹션 제목 -->
             <h2 class="text-left text-xl font-bold text-gray-800">시간표/급식</h2>
             <!-- 상단 가로 직사각형 (두 부분으로 분할) -->
-            <div class="w-full h-40 bg-white rounded-xl border border-gray-300 flex overflow-hidden">
+            <div class="w-full min-h-40 bg-white rounded-xl border border-gray-300 flex">
                 <!-- 왼쪽 절반 - 시간표 정보 표시를 위해 id 추가 -->
                 <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
-                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex items-start p-4 border-r border-gray-300">
+                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 border-r border-gray-300 overflow-y-auto">
                     <!-- Skeleton Loader for Timetable -->
                     <!-- flex w-full h-full text-left 컨테이너는 유지 -->
                     <div class="flex w-full h-full text-left">
@@ -152,7 +152,7 @@
                 </div>
                 <!-- 오른쪽 절반 - 급식 정보 표시를 위해 id 추가 -->
                 <!-- items-center 대신 items-start로 변경하여 내용 상단 정렬 -->
-                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4">
+                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto">
                     <!-- Skeleton Loader for Meal -->
                     <div class="w-full text-left">
                         <div class="skeleton skeleton-text w-full"></div>
@@ -329,14 +329,12 @@
                         // (자)진로탐색활동은 진로탐색으로 변환
                         content = content.replace('(자)진로탐색활동', '진로탐색');
 
-                        // 교시 부분을 flex 컨테이너로 변경하여 줄바꿈 문제 해결
-                        // whitespace-nowrap 클래스를 strong 태그에 추가하여 "N교시"가 한 줄로 유지되도록 함
-                        // 과목 이름 span에도 whitespace-nowrap 추가
-                        const periodHtml = `<p class="flex text-base font-medium text-gray-800 items-baseline">
+                        // 과목 이름 폰트 크기를 text-base에서 text-sm으로 변경하여 모바일 화면에서 공간 확보
+                        const periodHtml = `<p class="flex text-sm font-medium text-gray-800 items-baseline">
                                             <span class="flex-shrink-0 min-w-[48px] text-right pr-2">
                                                 <strong class="text-gray-400 font-semibold whitespace-nowrap">${period.PERIO}교시</strong>
                                             </span>
-                                            <span class="flex-grow text-left whitespace-nowrap">${content}</span>
+                                            <span class="flex-grow text-left">${content}</span>
                                         </p>`;
                         if (parseInt(period.PERIO) <= 4) {
                             leftColumnHtml += periodHtml;
@@ -349,11 +347,11 @@
                         <div class="flex w-full h-full text-left">
                             <!-- w-1/2 대신 flex-1 적용 -->
                             <div class="flex-1 flex flex-col items-start pr-2">
-                                ${leftColumnHtml || '<p class="text-base text-gray-500">오전 시간표 없음</p>'}
+                                ${leftColumnHtml || '<p class="text-sm text-gray-500">오전 시간표 없음</p>'}
                             </div>
                             <!-- w-1/2 대신 flex-1 적용 -->
                             <div class="flex-1 flex flex-col items-start pl-2">
-                                ${rightColumnHtml || '<p class="text-base text-gray-500">오후 시간표 없음</p>'}
+                                ${rightColumnHtml || '<p class="text-sm text-gray-500">오후 시간표 없음</p>'}
                             </div>
                         </div>
                     `;
