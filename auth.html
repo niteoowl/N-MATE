@@ -254,15 +254,16 @@
         // 예를 들어, Canvas 환경에서 이 코드를 실행하면 __firebase_config가 자동으로 채워집니다.
         // 로컬 환경에서 테스트 시에는 'YOUR_FIREBASE_API_KEY' 등을 실제 값으로 변경해야 합니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
-            "apiKey": "YOUR_FIREBASE_API_KEY",
-            "authDomain": "YOUR_FIREBASE_AUTH_DOMAIN",
-            "projectId": "YOUR_FIREBASE_PROJECT_ID",
-            "storageBucket": "YOUR_FIREBASE_STORAGE_BUCKET",
-            "messagingSenderId": "YOUR_FIREBASE_MESSAGING_SENDER_ID",
-            "appId": "YOUR_FIREBASE_APP_ID",
-            "measurementId": "YOUR_FIREBASE_MEASUREMENT_ID"
-        }`);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+
 
         // Firebase app 및 auth 인스턴스
         let app;
