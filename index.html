@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부산남중학교 N-MATE</title>
+    <title>부산남중학교 N-MATE - 홈</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter 폰트 설정 -->
@@ -58,6 +59,7 @@
             margin-right: auto;
             width: 100%;
             position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
         }
 
         /* Dropdown menu styles */
@@ -208,7 +210,6 @@
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
-        // For local testing, replace with actual Firebase project settings.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -269,6 +270,15 @@
 
         // Function to fetch and display meal data from NEIS API
         async function fetchMealData() {
+            // Skeleton loader for meal section (Home page specific)
+            mealDisplaySection.innerHTML = `
+                <div class="w-full text-left">
+                    <div class="skeleton skeleton-text w-full"></div>
+                    <div class="skeleton skeleton-text w-5/6"></div>
+                    <div class="skeleton skeleton-text w-3/4"></div>
+                </div>
+            `;
+
             const date = getTodayDate();
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`;
 
@@ -300,6 +310,23 @@
         // Function to fetch and display timetable data from NEIS API
         // Modified to take grade and classNum as arguments
         async function fetchTimetableData(grade, classNum) {
+            // Skeleton loader for timetable section (Home page specific)
+            timetableDisplaySection.innerHTML = `
+                <div class="flex w-full h-full text-left">
+                    <div class="flex-1 flex flex-col items-start">
+                        <div class="skeleton skeleton-text w-3/4"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text w-1/2"></div>
+                        <div class="skeleton skeleton-text w-2/3"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col items-start">
+                        <div class="skeleton skeleton-text w-3/4"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text w-1/2"></div>
+                    </div>
+                </div>
+            `;
+
             const date = getTodayDate();
             const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
 
@@ -321,6 +348,8 @@
                         // Transform special activity names
                         let content = period.ITRT_CNTNT.replace('(자)주제선택활동', '주제선택');
                         content = content.replace('(자)진로탐색활동', '진로탐색');
+                        content = content.replace('(창)동아리활동', '동아리');
+
 
                         // Conditionally render "교시" based on device type
                         const periodNumberDisplay = isMobileView ? period.PERIO : `${period.PERIO}교시`;
@@ -396,17 +425,6 @@
                      document.getElementById('logoutButton').addEventListener('click', handleLogout);
                      document.getElementById('logoutButton').dataset.listenerAdded = 'true';
                 }
-
-                // Fetch user profile and load timetable
-                const profile = await getUserProfile(user.uid);
-                if (profile && profile.grade && profile.classNum) {
-                    fetchTimetableData(profile.grade, profile.classNum);
-                } else {
-                    // If logged in but profile info is incomplete, load default timetable
-                    console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class timetable.');
-                    fetchTimetableData("1", "1");
-                }
-
             } else {
                 // User is logged out
                 accountStatusArea.innerHTML = `
@@ -418,26 +436,68 @@
                     window.location.href = '/login'; // Redirect to login page
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown
-                fetchTimetableData("1", "1"); // Load default timetable when logged out
             }
             lucide.createIcons(); // Refresh Lucide icons
         }
 
-        // Function to initialize data fetching based on user profile
-        async function initializeDataFetching() {
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                // Reset classes
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+
+                // Set active class if path matches
+                if (currentPath === itemPath) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    if (window.location.pathname !== path) {
+                        window.location.href = path;
+                    }
+                    // No need to update active state here, as page reload will trigger DOMContentLoaded and update it.
+                });
+            });
+        }
+
+        // Function to initialize data fetching for home page
+        async function initializeHomePageData() {
+            let userGrade = "1";
+            let userClassNum = "1";
+
             if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
-                    fetchTimetableData(profile.grade, profile.classNum);
+                    userGrade = profile.grade;
+                    userClassNum = profile.classNum;
+                    console.log(`Loading data for: ${userGrade}학년 ${userClassNum}반`);
                 } else {
-                    console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class timetable.');
-                    fetchTimetableData("1", "1");
+                    console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class data.');
                 }
             } else {
-                fetchTimetableData("1", "1"); // Load default timetable if not authenticated
+                console.log('Not authenticated. Loading default 1st grade, 1st class data.');
             }
-            fetchMealData(); // Fetch meal data regardless of user authentication
+
+            fetchTimetableData(userGrade, userClassNum);
+            fetchMealData();
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -449,16 +509,16 @@
                     db = firebase.firestore();
                     console.log('Firebase app, auth, Firestore initialized successfully.');
 
-                    // Auth state change listener
+                    // onAuthStateChanged will automatically handle session persistence
                     auth.onAuthStateChanged(async (user) => {
-                        await updateAccountUI(user); // Update UI based on user status
-                        initializeDataFetching(); // Fetch initial data
+                        await updateAccountUI(user);
+                        initializeHomePageData(); // Only initialize home page data here
                     });
 
                 } catch (error) {
                     console.error('Firebase initialization failed:', error);
-                    // Attempt to load default timetable/meal even if Firebase init fails
-                    initializeDataFetching();
+                    await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
+                    initializeHomePageData();
                 }
             } else if (firebase.apps.length > 0) {
                 app = firebase.app();
@@ -468,12 +528,12 @@
 
                 auth.onAuthStateChanged(async (user) => {
                     await updateAccountUI(user);
-                    initializeDataFetching();
+                    initializeHomePageData();
                 });
             } else {
                 console.warn('Firebase configuration not properly provided.');
-                // Load default timetable/meal if no config
-                initializeDataFetching();
+                await updateAccountUI(null);
+                initializeHomePageData();
             }
 
             // Global click listener to close dropdown when clicking outside
@@ -484,13 +544,18 @@
                 }
             });
 
-            // Re-render timetable on window resize to adjust "교시" text
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Re-render timetable/meal sections on window resize (for "교시" text adjustment)
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    initializeDataFetching(); // Re-fetch or re-render timetable based on new window size
-                }, 200); // Debounce for performance
+                    initializeHomePageData(); // Re-fetch or re-render data based on new window size
+                }, 200);
             });
 
             // Initial icon creation
