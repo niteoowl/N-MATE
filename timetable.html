@@ -476,6 +476,43 @@
         }
 
         /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                // Reset classes
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+
+                // Set active class if path matches
+                if (currentPath === itemPath) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    if (window.location.pathname !== path) {
+                        window.location.href = path;
+                    }
+                    // No need to update active state here, as page reload will trigger DOMContentLoaded and update it.
+                });
+            });
+        }
+
+        /**
          * Initializes data fetching (timetable) based on user profile or default values.
          */
         async function initializeDataFetching() {
@@ -512,15 +549,14 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // `onAuthStateChanged` automatically handles session persistence
                         auth.onAuthStateChanged(async (user) => {
-                            await updateAccountUI(user);
-                            initializeDataFetching();
+                            await updateAccountUI(user); // Update UI based on user status
+                            initializeDataFetching(); // Fetch initial data
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
+                        await updateAccountUI(null);
                         initializeDataFetching();
                     }
                 } else {
@@ -535,7 +571,7 @@
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null); // Ensure UI shows "Login" if no Firebase config
+                await updateAccountUI(null);
                 initializeDataFetching();
             }
 
@@ -547,7 +583,12 @@
                 }
             });
 
-            // Re-render timetable on window resize to adjust layout
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Re-render timetable on window resize to adjust "교시" text
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
