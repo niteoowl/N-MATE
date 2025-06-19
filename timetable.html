@@ -526,8 +526,11 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // OnAuthStateChanged handles session persistence automatically.
-                        // No explicit signInWithCustomToken or signInAnonymously calls needed here for auto-login.
+                        // auth.onAuthStateChanged will automatically handle session persistence
+                        // If a user was previously logged in (e.g., via email/password), Firebase SDK will
+                        // automatically restore their session and the `user` object in the callback
+                        // will be non-null. No explicit signInWith... calls are needed here for "auto-login"
+                        // in the sense of session persistence.
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user); // Update UI based on user status (logged in or not)
                             initializeDataFetching(); // Fetch initial data based on auth state
@@ -535,7 +538,9 @@
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        // Attempt to load default timetable even if Firebase init fails
+                        // If Firebase initialization fails, still attempt to load default timetable.
+                        // The UI will show a login button as `user` will be null.
+                        await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
                         initializeDataFetching();
                     }
                 } else {
@@ -552,6 +557,7 @@
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 // Load default timetable if no config
+                await updateAccountUI(null); // Ensure UI shows "Login" if no Firebase config
                 initializeDataFetching();
             }
 
