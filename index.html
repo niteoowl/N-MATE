@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -109,6 +108,7 @@
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
                     <button id="logoutButton" class="block">로그아웃</button>
                 </div>
             </div>
@@ -237,7 +237,7 @@
         const eduCode = "C10"; // Replace with your school's education office code
         const schoolCode = "7171018"; // Replace with your school's standard code
 
-        // Function to get today's date in YYYYMMDD format
+        // Function to get today's date inYYYYMMDD format
         function getTodayDate() {
             const today = new Date();
             const year = today.getFullYear();
@@ -409,24 +409,39 @@
             }
         }
 
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
         // Function to update account UI based on user authentication status
         async function updateAccountUI(user) {
-            if (user) {
-                // User is logged in
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <span class="text-gray-700 text-sm font-medium">내 계정</span>
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
-                // Attach logout button event listener only once when dropdown is created
-                if (!document.getElementById('logoutButton').dataset.listenerAdded) {
-                     document.getElementById('logoutButton').addEventListener('click', handleLogout);
-                     document.getElementById('logoutButton').dataset.listenerAdded = 'true';
+
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
                 }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
             } else {
-                // User is logged out
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -435,7 +450,7 @@
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login'; // Redirect to login page
                 });
-                accountDropdown.classList.add('hidden'); // Hide dropdown
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
             lucide.createIcons(); // Refresh Lucide icons
         }
