@@ -457,7 +457,7 @@
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user) { // Check if a user is logged in (including non-anonymous)
+            if (user) { // Check if a user is logged in
                 // User is logged in
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -495,7 +495,7 @@
             let userClassNum = "1"; // Default class
 
             // Check if there's an authenticated user to fetch profile
-            if (auth.currentUser) { // If auth.currentUser exists, it means a user (non-anonymous, since anonymous login is removed) is logged in.
+            if (auth.currentUser) { // If auth.currentUser exists, it means a user is logged in.
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
@@ -526,8 +526,8 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // No automatic sign-in (neither custom token nor anonymous).
-                        // Rely on onAuthStateChanged to detect existing sessions or user-initiated logins.
+                        // OnAuthStateChanged handles session persistence automatically.
+                        // No explicit signInWithCustomToken or signInAnonymously calls needed here for auto-login.
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user); // Update UI based on user status (logged in or not)
                             initializeDataFetching(); // Fetch initial data based on auth state
