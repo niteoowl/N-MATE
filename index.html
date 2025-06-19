@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -387,8 +388,7 @@
         // Now accepts userGrade as a parameter
         function updateNotifications(timetableData, userGrade) {
             // Only display notifications for 1st grade students
-            // Ensure userGrade is consistently treated as a string for comparison
-            if (String(userGrade) !== "1") {
+            if (userGrade !== "1") {
                 notificationMessages = []; // Clear messages if not 1st grade
                 notificationContentBox.innerHTML = '<p class="text-xl text-gray-800">알림 내용이 여기에 표시됩니다.</p>';
                 notificationContentBox.classList.add('justify-center', 'items-center');
@@ -465,11 +465,7 @@
         // Modified to take grade and classNum as arguments
         async function fetchTimetableData(grade, classNum) {
             const date = getTodayDate();
-            // Ensure grade and classNum are valid for the API call
-            const apiGrade = grade ? String(grade) : "";
-            const apiClassNum = classNum ? String(classNum) : "";
-
-            const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${apiGrade}&CLASS_NM=${apiClassNum}`;
+            const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -573,7 +569,7 @@
                 // Fetch user profile and load timetable
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
-                    currentUserGrade = String(profile.grade); // Ensure grade is a string
+                    currentUserGrade = profile.grade; // Set the global current user grade
                     fetchTimetableData(profile.grade, profile.classNum);
                 } else {
                     // If logged in but profile info is incomplete, load default timetable
@@ -605,7 +601,7 @@
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
-                    currentUserGrade = String(profile.grade); // Ensure grade is a string
+                    currentUserGrade = profile.grade;
                     fetchTimetableData(profile.grade, profile.classNum);
                 } else {
                     console.warn('User logged in but profile information incomplete. Loading default 1st grade, 1st class timetable.');
