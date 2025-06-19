@@ -145,6 +145,7 @@
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
                     <button id="logoutButton" class="block">로그아웃</button>
                 </div>
             </div>
@@ -202,7 +203,6 @@
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
-        // Using the exact Firebase config from the provided "home" code.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -282,6 +282,7 @@
          * @returns {string} The HTML string for the skeleton loader.
          */
         function generateTimetableSkeleton() {
+            // maxPeriods in skeleton should also reflect the actual maxPeriods
             const maxPeriodsSkeleton = 7;
 
             let skeletonHtml = `
@@ -298,7 +299,7 @@
                     <tbody>
             `;
 
-            for (let i = 1; i <= maxPeriodsSkeleton; i++) {
+            for (let i = 1; i <= maxPeriodsSkeleton; i++) { // Loop up to 7 periods
                 if (i === 5) { // Lunch break
                     skeletonHtml += `
                         <tr>
@@ -444,24 +445,42 @@
         }
 
         /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
          * Updates the account UI based on user authentication status.
-         * This function mirrors the logic from the provided home page.
+         * Displays email prefix if logged in, otherwise "로그인" button.
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user) {
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <span class="text-gray-700 text-sm font-medium">내 계정</span>
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
-                if (!document.getElementById('logoutButton').dataset.listenerAdded) {
-                     document.getElementById('logoutButton').addEventListener('click', handleLogout);
-                     document.getElementById('logoutButton').dataset.listenerAdded = 'true';
+
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
                 }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
             } else {
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -470,9 +489,9 @@
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden');
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            lucide.createIcons();
+            lucide.createIcons(); // Refresh Lucide icons
         }
 
         /**
@@ -550,8 +569,8 @@
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
                         auth.onAuthStateChanged(async (user) => {
-                            await updateAccountUI(user); // Update UI based on user status
-                            initializeDataFetching(); // Fetch initial data
+                            await updateAccountUI(user);
+                            initializeDataFetching();
                         });
 
                     } catch (error) {
