@@ -202,15 +202,16 @@
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
+        // Using the exact Firebase config from the provided "home" code.
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // These values are placeholders for local testing if __firebase_config is not available.
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
         };
 
         // Firebase app, auth, and firestore instances
@@ -281,8 +282,7 @@
          * @returns {string} The HTML string for the skeleton loader.
          */
         function generateTimetableSkeleton() {
-            // maxPeriods in skeleton should also reflect the actual maxPeriods
-            const maxPeriodsSkeleton = 7; // Changed from 8 to 7
+            const maxPeriodsSkeleton = 7;
 
             let skeletonHtml = `
                 <table class="timetable-table w-full">
@@ -298,7 +298,7 @@
                     <tbody>
             `;
 
-            for (let i = 1; i <= maxPeriodsSkeleton; i++) { // Loop up to 7 periods
+            for (let i = 1; i <= maxPeriodsSkeleton; i++) {
                 if (i === 5) { // Lunch break
                     skeletonHtml += `
                         <tr>
@@ -348,23 +348,17 @@
 
                     if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
                         data.misTimetable[1].row.forEach(period => {
-                            // Get the day of the week (1=Monday, ..., 5=Friday)
-                            // Date.getDay() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-                            // We map 1(Mon) to 1, ..., 5(Fri) to 5.
                             const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
                             if (!weeklyTimetableData[currentDay]) {
                                 weeklyTimetableData[currentDay] = {};
                             }
-                            // Transform special activity names for cleaner display
                             let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
                                 return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
-                            // Added transformation for (창)동아리활동 to 동아리
                             content = content.replace(/\(창\)동아리활동/g, '동아리');
                             weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
                         });
                     } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        // No timetable for this specific day, leave it empty in the data structure
                         console.log(`No timetable for ${date}`);
                     } else {
                         console.error(`API response error for date ${date}:`, data);
@@ -381,23 +375,22 @@
          * @param {Object} weeklyTimetableData - The object containing timetable data.
          */
         function renderWeeklyTimetable(weeklyTimetableData) {
-            const daysHeaders = ['월', '화', '수', '목', '금']; // Display headers
-            const daysMapping = [1, 2, 3, 4, 5]; // Corresponds to getDay() values for Mon-Fri
-            const maxPeriods = 7; // Changed from 8 to 7 periods
+            const daysHeaders = ['월', '화', '수', '목', '금'];
+            const daysMapping = [1, 2, 3, 4, 5];
+            const maxPeriods = 7;
 
             let tableHtml = `
                 <table class="timetable-table">
                     <thead>
-                        <tr class="bg-white"> <!-- Changed to bg-white -->
+                        <tr class="bg-white">
                             ${daysHeaders.map(day => `<th>${day}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody>
             `;
 
-            for (let i = 1; i <= maxPeriods; i++) { // Loop up to 7 periods
-                // Insert lunch break row after the 4th period
-                if (i === 5) {
+            for (let i = 1; i <= maxPeriods; i++) {
+                if (i === 5) { // Lunch break
                     tableHtml += `
                         <tr>
                             <td colspan="5" class="lunch-break">점심시간</td>
@@ -408,8 +401,8 @@
                 tableHtml += `
                     <tr>
                 `;
-                for (let j = 0; j < daysMapping.length; j++) { // Loop for Monday (0) to Friday (4) based on daysMapping index
-                    const dayKey = daysMapping[j]; // Actual day value (1 for Mon, etc.)
+                for (let j = 0; j < daysMapping.length; j++) {
+                    const dayKey = daysMapping[j];
                     const subject = weeklyTimetableData[dayKey] && weeklyTimetableData[dayKey][i] ? weeklyTimetableData[dayKey][i] : '';
                     tableHtml += `
                         <td>
@@ -443,22 +436,20 @@
                 try {
                     await auth.signOut();
                     console.log('로그아웃 성공.');
-                    // Redirect to login page after logout
                     window.location.href = '/login';
                 } catch (error) {
                     console.error('로그아웃 오류:', error);
-                    // Display error message to user (e.g., a custom modal)
                 }
             }
         }
 
         /**
          * Updates the account UI based on user authentication status.
+         * This function mirrors the logic from the provided home page.
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user) { // Check if a user is logged in
-                // User is logged in
+            if (user) {
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-700 text-sm font-medium">내 계정</span>
@@ -466,36 +457,32 @@
                     </button>
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
-                // Attach logout button event listener only once when dropdown is created
                 if (!document.getElementById('logoutButton').dataset.listenerAdded) {
                      document.getElementById('logoutButton').addEventListener('click', handleLogout);
                      document.getElementById('logoutButton').dataset.listenerAdded = 'true';
                 }
-
             } else {
-                // User is logged out (no user object)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
                     </button>
                 `;
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
-                    window.location.href = '/login'; // Redirect to login page
+                    window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden'); // Hide dropdown
+                accountDropdown.classList.add('hidden');
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            lucide.createIcons();
         }
 
         /**
          * Initializes data fetching (timetable) based on user profile or default values.
          */
         async function initializeDataFetching() {
-            let userGrade = "1"; // Default grade
-            let userClassNum = "1"; // Default class
+            let userGrade = "1";
+            let userClassNum = "1";
 
-            // Check if there's an authenticated user to fetch profile
-            if (auth.currentUser) { // If auth.currentUser exists, it means a user is logged in.
+            if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
                 if (profile && profile.grade && profile.classNum) {
@@ -509,7 +496,6 @@
                 console.log('인증되지 않았습니다. 기본 1학년 1반 시간표를 로드합니다.');
             }
 
-            // Fetch timetable data
             fetchTimetableData(userGrade, userClassNum);
         }
 
@@ -526,20 +512,14 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // auth.onAuthStateChanged will automatically handle session persistence
-                        // If a user was previously logged in (e.g., via email/password), Firebase SDK will
-                        // automatically restore their session and the `user` object in the callback
-                        // will be non-null. No explicit signInWith... calls are needed here for "auto-login"
-                        // in the sense of session persistence.
+                        // `onAuthStateChanged` automatically handles session persistence
                         auth.onAuthStateChanged(async (user) => {
-                            await updateAccountUI(user); // Update UI based on user status (logged in or not)
-                            initializeDataFetching(); // Fetch initial data based on auth state
+                            await updateAccountUI(user);
+                            initializeDataFetching();
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        // If Firebase initialization fails, still attempt to load default timetable.
-                        // The UI will show a login button as `user` will be null.
                         await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
                         initializeDataFetching();
                     }
@@ -548,7 +528,6 @@
                     auth = firebase.auth();
                     db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
-                    // Ensure data fetching happens even if listener already fired
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
                         initializeDataFetching();
@@ -556,7 +535,6 @@
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                // Load default timetable if no config
                 await updateAccountUI(null); // Ensure UI shows "Login" if no Firebase config
                 initializeDataFetching();
             }
@@ -574,8 +552,8 @@
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    initializeDataFetching(); // Re-fetch or re-render timetable based on new window size
-                }, 200); // Debounce for performance
+                    initializeDataFetching();
+                }, 200);
             });
 
             // Initial icon creation
