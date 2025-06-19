@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 시간표</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+        /* Skeleton Loader animation for loading states */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+            background-size: 200% 100%;
+        }
+        @keyframes pulse {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-text {
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
+            border-radius: 4px;
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* Table specific styles for the timetable */
+        .timetable-table {
+            border-collapse: collapse; /* Ensure cells collapse borders */
+            width: 100%; /* Make table fill its container */
+            border-radius: 0.75rem; /* rounded-xl on parent, this will be handled by overflow hidden */
+        }
+        .timetable-table thead th {
+            border-bottom: 1px solid #e2e8f0; /* Only bottom border */
+            padding: 1rem 0.75rem; /* Increased vertical padding to 1rem */
+            text-align: center;
+            font-size: 1rem; /* Updated: Increased font size to 1rem */
+            font-weight: 700; /* Updated: Applied bold font weight */
+            color: #4b5563; /* text-gray-600 */
+            background-color: #ffffff; /* White background for headers */
+        }
+        .timetable-table tbody td {
+            border-bottom: 1px solid #e2e8f0; /* Only bottom border */
+            vertical-align: top; /* Align content to the top within cells */
+            padding: 1rem 0.75rem; /* Increased vertical padding to 1rem */
+            word-break: keep-all; /* Prevents long words from overflowing */
+            white-space: normal; /* Allows text to wrap */
+            text-align: center; /* Center content in cells */
+            font-size: 0.875rem; /* text-sm, increased font size */
+            color: #374151; /* text-gray-800 */
+        }
+        .timetable-table tbody tr:last-child td {
+            border-bottom: none; /* Remove bottom border for the last row */
+        }
+        .timetable-table .lunch-break {
+            background-color: #ffffff; /* White background for lunch break */
+            color: #374151; /* Black text for lunch break */
+            font-weight: 600; /* font-semibold */
+            border-top: 1px solid #cbd5e1; /* Only top border for lunch break */
+            border-bottom: 1px solid #cbd5e1; /* Only bottom border for lunch break */
+            padding: 1rem 0.75rem; /* Maintain increased padding */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timetable section container -->
+        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-8 mb-4">
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800">시간표</h2>
+
+            <!-- Timetable display area -->
+            <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
+                <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
+                    <!-- Skeleton Loader for Timetable content (now without the "loading..." text) -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- Schedule Navigation Item -->
+            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="시간표" data-path="/timetable">
+                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">시간표</span>
+            </button>
+
+            <!-- Meal Navigation Item -->
+            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
+                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">급식</span>
+            </button>
+
+            <!-- Academic Schedule Navigation Item -->
+            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
+                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">학사일정</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // These values are placeholders for local testing if __firebase_config is not available.
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const timetableDisplaySection = document.getElementById('timetable-display-section');
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+
+        // NEIS API common information
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
+        const eduCode = "C10"; // Replace with your school's education office code
+        const schoolCode = "7171018"; // Replace with your school's standard code
+
+        /**
+         * Calculates the dates for Monday to Friday of the current week.
+         * @returns {string[]} An array of dates in `YYYYMMDD` format (e.g., ["20231023", "20231024", ...]).
+         */
+        function getWeekDates() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust to Monday
+            const monday = new Date(today.setDate(diff));
+
+            const weekDates = [];
+            for (let i = 0; i < 5; i++) { // Monday to Friday
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                weekDates.push(`${year}${month}${day}`);
+            }
+            return weekDates;
+        }
+
+        /**
+         * Fetches user profile from Firestore.
+         * @param {string} userId - The unique ID of the current user.
+         * @returns {Object|null} The user profile data or null if not found/error.
+         */
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore instance is not initialized.');
+                return null;
+            }
+            // Firestore security rules path: artifacts/{appId}/users/{userId}/profile/user_data
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log('User profile data not found.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Generates the HTML for the timetable skeleton loader.
+         * @returns {string} The HTML string for the skeleton loader.
+         */
+        function generateTimetableSkeleton() {
+            // maxPeriods in skeleton should also reflect the actual maxPeriods
+            const maxPeriodsSkeleton = 7; // Changed from 8 to 7
+
+            let skeletonHtml = `
+                <table class="timetable-table w-full">
+                    <thead>
+                        <tr class="bg-white">
+                            <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                            <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                            <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                            <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                            <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (let i = 1; i <= maxPeriodsSkeleton; i++) { // Loop up to 7 periods
+                if (i === 5) { // Lunch break
+                    skeletonHtml += `
+                        <tr>
+                            <td colspan="5" class="lunch-break"><div class="skeleton skeleton-text w-24 h-4 mx-auto"></div></td>
+                        </tr>
+                    `;
+                }
+                skeletonHtml += `
+                    <tr>
+                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                    </tr>
+                `;
+            }
+
+            skeletonHtml += `
+                    </tbody>
+                </table>
+            `;
+            return skeletonHtml;
+        }
+
+
+        /**
+         * Fetches and displays weekly timetable data from the NEIS API.
+         * @param {string} grade - The selected grade.
+         * @param {string} classNum - The selected class number.
+         */
+        async function fetchTimetableData(grade, classNum) {
+            if (!grade || !classNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-600">학년과 반 정보가 유효하지 않습니다.</p>';
+                return;
+            }
+
+            const weekDates = getWeekDates();
+            const weeklyTimetableData = {}; // Stores timetable organized by day (1=Mon, 5=Fri) and period
+
+            // Fetch data for each day of the week
+            for (const date of weekDates) {
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
+                        data.misTimetable[1].row.forEach(period => {
+                            // Get the day of the week (1=Monday, ..., 5=Friday)
+                            // Date.getDay() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday
+                            // We map 1(Mon) to 1, ..., 5(Fri) to 5.
+                            const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
+                            if (!weeklyTimetableData[currentDay]) {
+                                weeklyTimetableData[currentDay] = {};
+                            }
+                            // Transform special activity names for cleaner display
+                            let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
+                                return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
+                            });
+                            // Added transformation for (창)동아리활동 to 동아리
+                            content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
+                        });
+                    } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                        // No timetable for this specific day, leave it empty in the data structure
+                        console.log(`No timetable for ${date}`);
+                    } else {
+                        console.error(`API response error for date ${date}:`, data);
+                    }
+                } catch (error) {
+                    console.error(`Error fetching timetable data for date ${date}:`, error);
+                }
+            }
+            renderWeeklyTimetable(weeklyTimetableData);
+        }
+
+        /**
+         * Renders the fetched weekly timetable data into an HTML table.
+         * @param {Object} weeklyTimetableData - The object containing timetable data.
+         */
+        function renderWeeklyTimetable(weeklyTimetableData) {
+            const daysHeaders = ['월', '화', '수', '목', '금']; // Display headers
+            const daysMapping = [1, 2, 3, 4, 5]; // Corresponds to getDay() values for Mon-Fri
+            const maxPeriods = 7; // Changed from 8 to 7 periods
+
+            let tableHtml = `
+                <table class="timetable-table">
+                    <thead>
+                        <tr class="bg-white"> <!-- Changed to bg-white -->
+                            ${daysHeaders.map(day => `<th>${day}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            for (let i = 1; i <= maxPeriods; i++) { // Loop up to 7 periods
+                // Insert lunch break row after the 4th period
+                if (i === 5) {
+                    tableHtml += `
+                        <tr>
+                            <td colspan="5" class="lunch-break">점심시간</td>
+                        </tr>
+                    `;
+                }
+
+                tableHtml += `
+                    <tr>
+                `;
+                for (let j = 0; j < daysMapping.length; j++) { // Loop for Monday (0) to Friday (4) based on daysMapping index
+                    const dayKey = daysMapping[j]; // Actual day value (1 for Mon, etc.)
+                    const subject = weeklyTimetableData[dayKey] && weeklyTimetableData[dayKey][i] ? weeklyTimetableData[dayKey][i] : '';
+                    tableHtml += `
+                        <td>
+                            <div class="whitespace-normal">${subject}</div>
+                        </td>
+                    `;
+                }
+                tableHtml += `</tr>`;
+            }
+
+            tableHtml += `
+                    </tbody>
+                </table>
+            `;
+
+            timetableDisplaySection.innerHTML = tableHtml;
+        }
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    // Redirect to login page after logout
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                    // Display error message to user (e.g., a custom modal)
+                }
+            }
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user) { // Check if a user is logged in (including non-anonymous)
+                // User is logged in
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">내 계정</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+                // Attach logout button event listener only once when dropdown is created
+                if (!document.getElementById('logoutButton').dataset.listenerAdded) {
+                     document.getElementById('logoutButton').addEventListener('click', handleLogout);
+                     document.getElementById('logoutButton').dataset.listenerAdded = 'true';
+                }
+
+            } else {
+                // User is logged out (no user object)
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login'; // Redirect to login page
+                });
+                accountDropdown.classList.add('hidden'); // Hide dropdown
+            }
+            lucide.createIcons(); // Refresh Lucide icons
+        }
+
+        /**
+         * Initializes data fetching (timetable) based on user profile or default values.
+         */
+        async function initializeDataFetching() {
+            let userGrade = "1"; // Default grade
+            let userClassNum = "1"; // Default class
+
+            // Check if there's an authenticated user to fetch profile
+            if (auth.currentUser) { // If auth.currentUser exists, it means a user (non-anonymous, since anonymous login is removed) is logged in.
+                const user = auth.currentUser;
+                const profile = await getUserProfile(user.uid);
+                if (profile && profile.grade && profile.classNum) {
+                    userGrade = profile.grade;
+                    userClassNum = profile.classNum;
+                    console.log(`계정 프로필에서 시간표 로드: ${userGrade}학년 ${userClassNum}반`);
+                } else {
+                    console.warn('로그인했지만 프로필 정보가 불완전합니다. 기본 1학년 1반 시간표를 로드합니다.');
+                }
+            } else {
+                console.log('인증되지 않았습니다. 기본 1학년 1반 시간표를 로드합니다.');
+            }
+
+            // Fetch timetable data
+            fetchTimetableData(userGrade, userClassNum);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Display skeleton loader immediately when DOM is ready
+            timetableDisplaySection.innerHTML = generateTimetableSkeleton();
+
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        // No automatic sign-in (neither custom token nor anonymous).
+                        // Rely on onAuthStateChanged to detect existing sessions or user-initiated logins.
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user); // Update UI based on user status (logged in or not)
+                            initializeDataFetching(); // Fetch initial data based on auth state
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        // Attempt to load default timetable even if Firebase init fails
+                        initializeDataFetching();
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    // Ensure data fetching happens even if listener already fired
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializeDataFetching();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                // Load default timetable if no config
+                initializeDataFetching();
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Re-render timetable on window resize to adjust layout
+            let resizeTimeout;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    initializeDataFetching(); // Re-fetch or re-render timetable based on new window size
+                }, 200); // Debounce for performance
+            });
+
+            // Initial icon creation
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
