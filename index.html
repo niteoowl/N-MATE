@@ -88,7 +88,7 @@
             background-color: #f3f4f6; /* hover:bg-gray-100 */
         }
 
-        /* Bottom Navigation Bar Styles (Copied from empty_code_canvas_2) */
+        /* Bottom Navigation Bar Styles */
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -199,7 +199,7 @@
         <p class="text-2xl text-gray-700 px-6 mt-1"></p>
     </div>
 
-    <!-- Bottom Navigation Bar (Copied from empty_code_canvas_2) -->
+    <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
@@ -211,7 +211,7 @@
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -494,7 +494,6 @@
 
         /**
          * Updates the active state of the navigation bar buttons based on the current URL path.
-         * (Copied from empty_code_canvas_2)
          */
         function updateNavigationActiveState() {
             const currentPath = window.location.pathname;
@@ -517,9 +516,9 @@
                     svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
                 }
 
-                // Check for exact path match or if it's the school-life button and current path is one of the sub-paths
-                // This correctly applies the active state if the current path is /sclife or starts with /sclife/
-                if (currentPath === itemPath || (itemPath === '/sclife' && currentPath.startsWith('/sclife'))) {
+                // Check for exact path match or if it's the school-life button and current path is within /sclife section
+                // The nav-school-life itemPath is now /sclife/timetable
+                if (currentPath === itemPath || (item.id === 'nav-school-life' && currentPath.startsWith('/sclife'))) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -536,7 +535,6 @@
 
         /**
          * Sets up click event listeners for navigation items.
-         * (Copied from empty_code_canvas_2)
          */
         function setupNavigationEvents() {
             const navItems = document.querySelectorAll('.nav-item');
@@ -545,31 +543,19 @@
                     const path = item.dataset.path;
                     const currentPathname = window.location.pathname;
 
-                    // Special handling for School Life button
-                    if (item.id === 'nav-school-life') {
-                        // If already on /sclife or any of its sub-paths, do nothing unless it's a direct click on /sclife and not already there
-                        if (currentPathname === '/sclife' || currentPathname.startsWith('/sclife/')) {
-                            if (currentPathname === '/sclife') {
-                                // If already at base /sclife, do nothing
-                                return;
-                            } else {
-                                // If on a sub-path (e.g., /sclife/meal), navigate to base /sclife
-                                window.location.href = '/sclife';
-                                // Store the specific tab to activate (academicScheduleContent as default for /sclife)
-                                localStorage.setItem('initialSchoolLifeTab', 'academicScheduleContent');
-                            }
+                    // If the target path is different from the current path, navigate.
+                    if (currentPathname !== path) {
+                        // Special handling for School Life button to set initial tab in localStorage
+                        if (item.id === 'nav-school-life') {
+                            // When the "School Life" nav button is clicked, always go to the timetable tab
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
                         } else {
-                            // If coming from another root path, navigate to /sclife
-                            window.location.href = path;
-                            // Store the specific tab to activate (academicScheduleContent as default for /sclife)
-                            localStorage.setItem('initialSchoolLifeTab', 'academicScheduleContent');
+                            // For other navigation items, clear any stored school life tab state
+                            localStorage.removeItem('initialSchoolLifeTab');
                         }
-                    } else if (currentPathname !== path) {
-                        // For other buttons, navigate if path is different
                         window.location.href = path;
-                        // Clear school life tab state if navigating away from school life section
-                        localStorage.removeItem('initialSchoolLifeTab');
                     }
+                    // If clicking on the currently active page's nav item, do nothing
                 });
             });
         }
