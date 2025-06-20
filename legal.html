@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-MATE 개인정보처리방침 및 이용약관</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (consistent with existing design) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles (consistent with existing design) */
+        .dropdown-menu {
+            position: absolute;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            min-width: 8rem;
+            right: 0;
+            top: calc(100% + 0.5rem);
+            z-index: 20;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #374151;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Policy content styles */
+        .policy-section {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem; /* Increased padding for better readability */
+            width: 100%;
+            line-height: 1.6;
+            color: #374151;
+            font-size: 0.9375rem; /* Slightly larger text for content */
+            overflow-y: auto; /* Enable scrolling for long content */
+            max-height: calc(100vh - 250px); /* Adjust based on header/footer height */
+        }
+
+        .policy-section h3, .policy-section h4 {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600; /* font-semibold */
+            color: #1a202c; /* text-gray-900 */
+            margin-bottom: 0.75rem;
+        }
+
+        .policy-section h4 {
+            font-size: 1.125rem; /* text-lg */
+            margin-top: 1.5rem;
+        }
+
+        .policy-section p {
+            margin-bottom: 1rem;
+        }
+
+        .policy-section ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .policy-section ol {
+            list-style-type: decimal;
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .policy-section li {
+            margin-bottom: 0.5rem;
+        }
+
+        .policy-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        .policy-section th, .policy-section td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .policy-section th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        /* Tab buttons for switching policies */
+        .policy-tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            color: #6b7280; /* text-gray-500 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .policy-tab-button.active {
+            color: #2563eb; /* text-blue-600 */
+            background-color: #e0f2fe; /* bg-blue-50 */
+            border-color: #bfdbfe; /* border-blue-200 */
+        }
+
+        .policy-tab-button:hover:not(.active) {
+            background-color: #e5e7eb; /* hover:bg-gray-200 */
+        }
+
+        /* Navigation item styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+            color: #6b7280; /* text-gray-500 */
+        }
+
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+            font-weight: 700; /* font-bold */
+        }
+
+        .nav-item span {
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500; /* font-medium */
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policy Content Section -->
+        <div class="w-full flex flex-col items-start gap-y-4 px-6 mt-8 mb-4">
+            <!-- Back button and title container -->
+            <div class="flex items-center w-full mb-2">
+                <!-- Changed mr-2 to mr-1 for closer spacing -->
+                <button id="backButton" class="p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150 ease-in-out mr-1">
+                    <i data-lucide="chevron-left" class="w-6 h-6 text-gray-600"></i>
+                </button>
+                <h2 class="text-left text-xl font-bold text-gray-800 flex-grow">법적 고지</h2>
+            </div>
+
+            <!-- Policy Tab Buttons -->
+            <div class="flex gap-x-3 w-full">
+                <button id="tab-privacy" class="policy-tab-button active">개인정보처리방침</button>
+                <button id="tab-terms" class="policy-tab-button">이용약관</button>
+            </div>
+
+            <!-- Policy Content Display Area -->
+            <div id="policy-content" class="policy-section w-full">
+                <!-- Policy content will be injected here by JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300" data-tab="홈" data-path="/">
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- Schedule Navigation Item -->
+            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300" data-tab="시간표" data-path="/timetable">
+                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">시간표</span>
+            </button>
+
+            <!-- Meal Navigation Item -->
+            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300" data-tab="급식" data-path="/meal">
+                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">급식</span>
+            </button>
+
+            <!-- Academic Schedule Navigation Item -->
+            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300" data-tab="학사일정" data-path="/schedule">
+                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">학사일정</span>
+            </button>
+
+            <!-- More Navigation Item (Active for this page's parent section) -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 active" data-tab="더보기" data-path="/plus">
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const policyContentDiv = document.getElementById('policy-content');
+        const tabPrivacy = document.getElementById('tab-privacy');
+        const tabTerms = document.getElementById('tab-terms');
+        const backButton = document.getElementById('backButton'); // Get the new back button
+
+        // Policy content data (placeholder for demonstration)
+        const privacyPolicyContent = `
+            <h3>N-MATE 개인정보처리방침</h3>
+            <p>N-MATE(이하 ‘플랫폼’)는 「개인정보 보호법」 등 관련 법령에 따라 이용자의 개인정보를 보호하고, 이를 안전하게 관리하기 위해 다음과 같이 개인정보처리방침을 수립·공개합니다.<br>본 방침은 2025년 6월 20일부터 시행됩니다.</p>
+
+            <h4>1. 개인정보의 처리 목적</h4>
+            <p>플랫폼은 다음의 목적을 위해 개인정보를 처리하며, 처리한 개인정보는 다음 목적 외의 용도로는 사용되지 않습니다.</p>
+            <ul>
+                <li>회원 가입 및 관리: 회원 가입 의사 확인, 본인 확인, 회원 식별 및 관리, 부정 이용 방지</li>
+                <li>서비스 제공: 급식 정보, 학사일정, 시간표, 커뮤니티 등 맞춤형 정보 제공</li>
+                <li>고객 지원 및 공지사항 안내: 문의 처리, 공지사항 전달, 이용 관련 고지</li>
+            </ul>
+
+            <h4>2. 처리하는 개인정보 항목</h4>
+            <p>플랫폼은 회원가입, 서비스 이용을 위해 다음의 개인정보를 수집 및 처리합니다.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>수집 항목</th>
+                        <th>필수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>필수</td>
+                        <td>이름, 학년/반, 학번, 아이디(이메일 또는 학생번호), 비밀번호</td>
+                        <td>O</td>
+                    </tr>
+                    <tr>
+                        <td>선택</td>
+                        <td>프로필 사진, 휴대전화번호, 학부모 연락처</td>
+                        <td>X</td>
+                    </tr>
+                    <tr>
+                        <td>자동 수집</td>
+                        <td>서비스 이용 기록, 접속 로그, 쿠키, IP주소, 기기 정보 등</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>3. 개인정보의 처리 및 보유 기간</h4>
+            <p>플랫폼은 개인정보를 수집 및 이용 목적 달성 시까지 보유하며, 관련 법령에 따라 보관이 필요한 경우에는 해당 기간 동안 보관합니다.</p>
+            <ul>
+                <li>회원정보 : 회원 탈퇴 시까지</li>
+                <li>서비스 이용 기록 : 서비스 제공 종료 시까지</li>
+                <li>관련 법령에 따라 보존할 필요가 있는 경우 : 해당 법령에서 정한 기간</li>
+            </ul>
+
+            <h4>4. 개인정보의 제3자 제공</h4>
+            <p>플랫폼은 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만 다음의 경우는 예외로 합니다.</p>
+            <ul>
+                <li>이용자가 사전에 동의한 경우</li>
+                <li>법령에 근거가 있거나 수사기관의 요청이 있는 경우</li>
+            </ul>
+
+            <h4>5. 정보주체의 권리와 그 행사 방법</h4>
+            <p>이용자는 언제든지 플랫폼에 대해 다음 권리를 행사할 수 있습니다.</p>
+            <ul>
+                <li>개인정보 열람 요청</li>
+                <li>오류 등이 있을 경우 정정 요청</li>
+                <li>삭제 요청</li>
+                <li>처리 정지 요청</li>
+            </ul>
+            <p>권리는 이메일(support@onebox.kro.kr) 등을 통해 요청할 수 있으며, 플랫폼은 지체 없이 조치하겠습니다.</p>
+
+            <h4>6. 개인정보의 파기 절차 및 방법</h4>
+            <p>플랫폼은 개인정보 보유기간이 경과하거나 처리 목적이 달성된 경우에는 지체 없이 파기합니다.</p>
+            <ul>
+                <li>파기 절차 : 목적 달성 후 즉시 삭제하거나 별도 DB로 옮겨 법령에 따라 보관 후 파기</li>
+                <li>파기 방법 : 전자적 파일은 복구 불가능한 기술적 방법으로 영구 삭제, 종이는 분쇄 또는 소각</li>
+            </ul>
+
+            <h4>7. 개인정보의 안전성 확보 조치</h4>
+            <p>플랫폼은 개인정보의 안전성을 확보하기 위해 다음과 같은 조치를 취하고 있습니다.</p>
+            <ul>
+                <li>관리적 조치 : 내부 관리계획 수립, 임직원 교육</li>
+                <li>기술적 조치 : 접근권한 관리, 비밀번호 암호화, 보안프로그램 설치</li>
+                <li>물리적 조치 : 서버 접근 제한</li>
+            </ul>
+
+            <h4>8. 개인정보 보호책임자</h4>
+            <p>플랫폼은 개인정보 처리에 관한 업무를 총괄하여 책임지고, 개인정보 관련 문의와 불만 처리, 피해 구제를 위하여 아래와 같이 개인정보 보호책임자를 지정하고 있습니다.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>구분</th>
+                        <th>내용</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>개인정보 보호책임자</td>
+                        <td>강기훈</td>
+                    </tr>
+                    <tr>
+                        <td>이메일</td>
+                        <td>support@onebox.kro.kr</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>9. 권익침해 구제 방법</h4>
+            <p>정보주체는 아래 기관에 개인정보 침해에 대한 상담이나 분쟁 조정을 신청할 수 있습니다.</p>
+            <ul>
+                <li>개인정보분쟁조정위원회: <a href="http://www.kopico.go.kr" target="_blank" class="text-blue-600 hover:underline">www.kopico.go.kr</a> / ☎ 1833-6972</li>
+                <li>개인정보침해신고센터: <a href="http://privacy.kisa.or.kr" target="_blank" class="text-blue-600 hover:underline">privacy.kisa.or.kr</a> / ☎ 118</li>
+                <li>대검찰청: <a href="http://www.spo.go.kr" target="_blank" class="text-blue-600 hover:underline">www.spo.go.kr</a> / ☎ 1301</li>
+                <li>경찰청: <a href="http://ecrm.cyber.go.kr" target="_blank" class="text-blue-600 hover:underline">ecrm.cyber.go.kr</a> / ☎ 182</li>
+            </ul>
+
+            <h4>10. 개인정보처리방침 변경</h4>
+            <p>본 개인정보처리방침은 시행일로부터 적용되며, 관련 법령이나 내부 방침 변경에 따라 내용이 추가·삭제·수정될 수 있습니다. 변경 시 사전에 공지합니다.</p>
+        `;
+
+        const termsOfServiceContent = `
+            <h3>N-MATE 이용약관</h3>
+            <p>본 약관은 부산남중 학생 및 학부모를 위한 플랫폼 N-MATE(이하 ‘플랫폼’)의 서비스 이용조건 및 절차, 이용자와 플랫폼 간의 권리·의무 및 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
+            
+            <h4>제1조 (목적)</h4>
+            <p>이 약관은 N-MATE가 제공하는 모든 서비스의 이용과 관련하여 플랫폼과 이용자의 권리, 의무 및 책임사항 등을 규정함을 목적으로 합니다.</p>
+            
+            <h4>제2조 (정의)</h4>
+            <ul>
+                <li>‘플랫폼’이라 함은 N-MATE가 제공하는 웹사이트 및 관련 서비스를 말합니다.</li>
+                <li>‘이용자’라 함은 본 약관에 동의하고 플랫폼이 제공하는 서비스를 이용하는 회원 및 비회원을 말합니다.</li>
+                <li>‘회원’이라 함은 플랫폼에 회원등록을 하고 지속적으로 서비스를 이용할 수 있는 자를 말합니다.</li>
+            </ul>
+            
+            <h4>제3조 (약관의 게시와 개정)</h4>
+            <p>플랫폼은 본 약관의 내용을 이용자가 쉽게 알 수 있도록 서비스 화면에 게시합니다.</p>
+            <p>플랫폼은 관련 법령을 위배하지 않는 범위에서 약관을 개정할 수 있습니다.</p>
+            <p>약관이 개정되는 경우 플랫폼은 개정 사항을 사전에 공지합니다.</p>
+            <p>이용자는 개정 약관에 동의하지 않을 권리가 있으며, 동의하지 않을 경우 회원 탈퇴를 요청할 수 있습니다.</p>
+            
+            <h4>제4조 (서비스의 제공 및 변경)</h4>
+            <p>플랫폼은 다음과 같은 서비스를 제공합니다.</p>
+            <ol>
+                <li>학교 급식 정보 제공</li>
+                <li>학사일정 제공</li>
+                <li>개인 시간표 관리</li>
+                <li>커뮤니티 서비스</li>
+                <li>기타 학교 생활과 관련된 정보 제공</li>
+            </ol>
+            <p>플랫폼은 필요에 따라 서비스의 내용을 추가·변경할 수 있으며, 변경사항은 사전에 공지합니다.</p>
+            
+            <h4>제5조 (서비스 이용시간)</h4>
+            <p>서비스 이용은 연중무휴 24시간 가능함을 원칙으로 합니다.</p>
+            <p>다만 시스템 점검, 장애 발생 등 불가피한 경우에는 서비스 제공이 일시 중단될 수 있습니다.</p>
+            
+            <h4>제6조 (회원가입)</h4>
+            <p>이용자는 플랫폼이 정한 가입 양식에 따라 정보를 입력하고 약관에 동의함으로써 회원가입을 신청합니다.</p>
+            <p>플랫폼은 이용자의 신청에 대해 승낙함으로써 회원가입이 성립됩니다.</p>
+            
+            <h4>제7조 (회원 탈퇴 및 자격 상실)</h4>
+            <p>회원은 언제든지 탈퇴를 요청할 수 있으며, 플랫폼은 지체 없이 탈퇴를 처리합니다.</p>
+            <p>회원이 다음 각 호의 사유에 해당하는 경우, 플랫폼은 회원자격을 제한 또는 상실시킬 수 있습니다.</p>
+            <ul>
+                <li>가입 신청 시 허위 정보를 기재한 경우</li>
+                <li>타인의 개인정보를 도용한 경우</li>
+                <li>서비스를 부정한 목적으로 이용한 경우</li>
+                <li>공공질서 및 미풍양속에 반하는 행위를 한 경우</li>
+            </ul>
+            
+            <h4>제8조 (회원의 의무)</h4>
+            <p>회원은 관계 법령, 본 약관의 규정, 이용안내 및 주의사항 등 플랫폼이 공지하는 사항을 준수해야 합니다.</p>
+            <p>회원은 서비스를 이용할 때 다음 행위를 해서는 안 됩니다.</p>
+            <ul>
+                <li>허위 정보 등록 또는 타인 정보 도용</li>
+                <li>플랫폼의 운영을 방해하는 행위</li>
+                <li>공공질서 및 미풍양속에 반하는 행위</li>
+                <li>기타 불법적이거나 부당한 행위</li>
+            </ul>
+            
+            <h4>제9조 (개인정보 보호)</h4>
+            <p>플랫폼은 이용자의 개인정보를 보호하기 위해 개인정보처리방침을 별도로 제정하여 운영하며, 관련 법령과 개인정보처리방침에 따라 이용자의 개인정보를 보호합니다.</p>
+            
+            <h4>제10조 (저작권)</h4>
+            <p>플랫폼이 작성한 저작물에 대한 저작권 기타 지적재산권은 플랫폼에 귀속됩니다.</p>
+            <p>이용자는 서비스를 이용함으로써 얻은 정보를 플랫폼의 사전 승낙 없이 복제, 송신, 출판, 배포 등 상업적으로 이용하거나 제3자에게 이용하게 해서는 안 됩니다.</p>
+            
+            <h4>제11조 (면책조항)</h4>
+            <p>플랫폼은 천재지변, 불가항력, 이용자의 귀책사유로 인한 서비스 이용 장애에 대하여 책임을 지지 않습니다.</p>
+            <p>플랫폼은 이용자가 서비스에 게재한 정보, 자료, 사실의 신뢰도나 정확성 등에 대해서는 책임을 지지 않습니다.</p>
+            
+            <h4>제12조 (분쟁 해결)</h4>
+            <p>본 약관에 따른 분쟁은 플랫폼과 이용자가 상호 협의하여 원만히 해결하도록 노력합니다.</p>
+            <p>협의가 이루어지지 않을 경우 관할 법원은 플랫폼 소재지를 관할하는 법원으로 합니다.</p>
+            
+            <h4>부칙</h4>
+            <p>본 약관은 2025년 6월 20일부터 시행됩니다.</p>
+        `;
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login'; // Redirect to login page after logout
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings'; // Redirect to settings page
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) {
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+            } else {
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden');
+            }
+            lucide.createIcons(); // Re-create Lucide icons after DOM manipulation
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         * For policy pages, the '더보기' tab should be active.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+
+                // Reset all nav items to default state
+                item.classList.remove('active', 'text-blue-600', 'font-bold');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+
+                // Activate '더보기' if the current path indicates a sub-page of '더보기' (like '/user-center', '/policy')
+                // or if it's explicitly the '/plus' path.
+                if (itemPath === '/plus' || currentPath.startsWith('/user-center') || currentPath.startsWith('/policy')) {
+                    item.classList.add('active', 'text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                }
+            });
+            lucide.createIcons(); // Re-create icons after class changes
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    // Prevent navigating if already on the same path
+                    if (window.location.pathname !== path) {
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        /**
+         * Displays the selected policy content.
+         * @param {string} policyType - 'privacy' or 'terms'.
+         */
+        function displayPolicyContent(policyType) {
+            tabPrivacy.classList.remove('active');
+            tabTerms.classList.remove('active');
+
+            if (policyType === 'privacy') {
+                policyContentDiv.innerHTML = privacyPolicyContent;
+                tabPrivacy.classList.add('active');
+            } else if (policyType === 'terms') {
+                policyContentDiv.innerHTML = termsOfServiceContent;
+                tabTerms.classList.add('active');
+            }
+            policyContentDiv.scrollTop = 0; // Scroll to top of content
+        }
+
+        /**
+         * Initializes data fetching/page specific logic for this page.
+         */
+        async function initializePageData() {
+            // Set initial policy content based on URL hash if present, otherwise default to privacy policy
+            const hash = window.location.hash.substring(1); // Get hash without '#'
+            if (hash === 'terms') {
+                displayPolicyContent('terms');
+            } else {
+                displayPolicyContent('privacy'); // Default
+            }
+
+            // Add event listeners for policy tabs
+            tabPrivacy.addEventListener('click', () => displayPolicyContent('privacy'));
+            tabTerms.addEventListener('click', () => displayPolicyContent('terms'));
+
+            // Add event listener for the back button
+            backButton.addEventListener('click', () => {
+                window.history.back(); // Go back to the previous page
+            });
+
+            console.log("개인정보처리방침 및 이용약관 페이지 초기화 완료.");
+        }
+
+        // Event listener for when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            initializePageData(); // Call after auth UI is updated
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null); // Ensure UI reflects logged out state on error
+                        initializePageData(); // Still initialize page-specific logic
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializePageData(); // Call after auth UI is updated
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null); // Ensure UI reflects logged out state
+                initializePageData(); // Still initialize page-specific logic
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation for all static Lucide icons
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
