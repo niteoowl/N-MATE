@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 더보기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* General content box style for "더보기" items */
+        .content-box-item {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem; /* py-5 */
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1rem; /* text-base */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* text-gray-700 */
+            cursor: pointer;
+            /* 애니메이션 삭제: transform 관련 속성 제거, transition을 background-color로만 설정 */
+            transition: background-color 0.2s ease;
+        }
+
+        .content-box-item:hover {
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+            /* transform: translateY(-2px); 제거 */
+        }
+        .content-box-item:active {
+            /* transform: translateY(0); 제거 (이제 불필요) */
+        }
+        .content-box-item + .content-box-item {
+            margin-top: 0.5rem; /* Space between items */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- More section container -->
+        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-8 mb-4">
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800 mb-2">더보기</h2>
+
+            <!-- Placeholder content for More page -->
+            <div class="w-full flex flex-col gap-y-3">
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>공지사항</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>학교 안내</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>버전 정보</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>문의하기</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>개인정보처리방침</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+                <button class="content-box-item" onclick="window.location.href='/legal'">
+                    <span>이용 약관</span>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- Schedule Navigation Item -->
+            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="시간표" data-path="/timetable">
+                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">시간표</span>
+            </button>
+
+            <!-- Meal Navigation Item -->
+            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
+                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">급식</span>
+            </button>
+
+            <!-- Academic Schedule Navigation Item -->
+            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
+                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">학사일정</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="더보기" data-path="/plus">
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
+            } else {
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+            }
+            lucide.createIcons(); // Refresh Lucide icons
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                // Reset classes
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+
+                // Set active class if path matches
+                if (currentPath === itemPath) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    if (window.location.pathname !== path) {
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        // Initialize data fetching/page specific logic for this page
+        async function initializePageData() {
+            // No specific data fetching for this page currently
+            console.log("더보기 페이지 초기화 완료.");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            initializePageData();
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        initializePageData();
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializePageData();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                initializePageData();
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
