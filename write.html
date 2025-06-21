@@ -357,7 +357,7 @@
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user && user.email) {
+            if (user && user.email) { // Check if a user is logged in and has an email
                 const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -367,6 +367,7 @@
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
+                // Attach event listeners for dropdown buttons
                 const settingsButton = document.getElementById('settingsButton');
                 if (settingsButton && !settingsButton.dataset.listenerAdded) {
                     settingsButton.addEventListener('click', handleSettingsClick);
@@ -377,7 +378,9 @@
                     logoutButton.addEventListener('click', handleLogout);
                     logoutButton.dataset.listenerAdded = 'true';
                 }
+
             } else {
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -386,9 +389,9 @@
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden');
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            lucide.createIcons(); // Still need to create Lucide icons for the account status area (user-circle-2)
+            lucide.createIcons(); // Refresh Lucide icons
         }
 
         /**
@@ -403,7 +406,7 @@
                 const spanElement = item.querySelector('span');
                 const svgElement = item.querySelector('svg');
 
-                // Reset all nav items to default (inactive) state
+                // Reset classes
                 item.classList.remove('text-blue-600');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
@@ -424,7 +427,7 @@
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
+                        svgElement.classList.add('text-blue-600');
                         svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
@@ -584,15 +587,6 @@
                         db = getFirestore(app);
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // Firebase 인증 상태 변경 리스너
-                        onAuthStateChanged(auth, async (user) => {
-                            await updateAccountUI(user);
-                            if (!user) {
-                                showMessageBox('로그인해야 글을 작성할 수 있습니다.');
-                                window.location.href = '/login'; // Redirect to login if not authenticated
-                            }
-                        });
-
                         // Canvas 환경에서 제공되는 초기 인증 토큰 사용
                         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                         if (initialAuthToken) {
@@ -601,23 +595,41 @@
                                 console.log('Custom token을 사용하여 로그인 성공.');
                             } catch (error) {
                                 console.error('Custom token 로그인 실패:', error);
-                                // Fallback to anonymous if custom token fails (or just stay logged out)
-                                await signInAnonymously(auth);
+                                await signInAnonymously(auth); // Fallback to anonymous
                             }
                         } else {
-                            await signInAnonymously(auth);
+                            await signInAnonymously(auth); // Sign in anonymously if no token
                         }
+
+                        // THEN, set up the state change listener to handle both initial state and future changes
+                        onAuthStateChanged(auth, async (user) => {
+                            await updateAccountUI(user);
+                            if (!user) { // If user is logged out, redirect
+                                showMessageBox('로그인해야 글을 작성할 수 있습니다.');
+                                window.location.href = '/login'; // Redirect to login if not authenticated
+                            }
+                        });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
                         showMessageBox('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.');
-                        await updateAccountUI(null);
+                        await updateAccountUI(null); // Ensure UI updates even on init failure
+                    }
+                } else {
+                    // If app is already initialized, ensure auth and db are referenced
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    await updateAccountUI(auth.currentUser); // Update UI with current user state immediately
+                    if (!auth.currentUser) { // If user is logged out, redirect
+                        showMessageBox('로그인해야 글을 작성할 수 있습니다.');
+                        window.location.href = '/login'; // Redirect to login if not authenticated
                     }
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
-                await updateAccountUI(null);
+                await updateAccountUI(null); // Ensure UI updates if no config
             }
 
             // Define custom sizes for Quill editor
