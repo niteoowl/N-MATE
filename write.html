@@ -84,7 +84,7 @@
             position: absolute; /* Relative to the parent with position: relative */
             background-color: white;
             border-radius: 0.5rem; /* rounded-md */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2 px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             padding-top: 0.25rem; /* py-1 */
             padding-bottom: 0.25rem;
             min-width: 8rem; /* w-40 */
@@ -595,41 +595,68 @@
                                 console.log('Custom token을 사용하여 로그인 성공.');
                             } catch (error) {
                                 console.error('Custom token 로그인 실패:', error);
-                                await signInAnonymously(auth); // Fallback to anonymous
+                                // If custom token fails, try anonymous sign-in or handle as logged out.
+                                // For robustness, we'll proceed assuming auth state will be updated by onAuthStateChanged.
                             }
                         } else {
-                            await signInAnonymously(auth); // Sign in anonymously if no token
+                            // If no initial token, attempt anonymous sign-in.
+                            try {
+                                await signInAnonymously(auth);
+                                console.log('익명 로그인 성공.');
+                            } catch (error) {
+                                console.error('익명 로그인 실패:', error);
+                            }
                         }
 
-                        // THEN, set up the state change listener to handle both initial state and future changes
+                        // Set up the state change listener to handle both initial state and future changes.
+                        // This listener will fire immediately after authentication state is determined (including the await calls above).
                         onAuthStateChanged(auth, async (user) => {
                             await updateAccountUI(user);
-                            if (!user) { // If user is logged out, redirect
+                            // Page-specific logic that depends on auth state can go here or be triggered by updateAccountUI.
+                            // For write page: check if user exists, else redirect.
+                            if (window.location.pathname === '/write' && !user) {
                                 showMessageBox('로그인해야 글을 작성할 수 있습니다.');
-                                window.location.href = '/login'; // Redirect to login if not authenticated
+                                window.location.href = '/login';
                             }
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        showMessageBox('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.');
+                        // On initialization failure, explicitly update UI to logged-out state.
                         await updateAccountUI(null); // Ensure UI updates even on init failure
+                        // For write page: redirect on Firebase init failure if not logged in.
+                        if (window.location.pathname === '/write') {
+                            showMessageBox('Firebase 초기화에 실패했습니다. 글쓰기 기능을 사용할 수 없습니다. 관리자에게 문의하세요.');
+                            // No redirect here, just disable functionality if Firebase failed.
+                        }
                     }
                 } else {
-                    // If app is already initialized, ensure auth and db are referenced
+                    // If app is already initialized (e.g., due to dev environment hot reload or previous page navigation),
+                    // ensure auth and db instances are correctly referenced from the existing app.
                     auth = getAuth(app);
                     db = getFirestore(app);
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
-                    await updateAccountUI(auth.currentUser); // Update UI with current user state immediately
-                    if (!auth.currentUser) { // If user is logged out, redirect
-                        showMessageBox('로그인해야 글을 작성할 수 있습니다.');
-                        window.location.href = '/login'; // Redirect to login if not authenticated
-                    }
+
+                    // Immediately update UI with the *current* authentication state.
+                    // This ensures the UI is correct even if onAuthStateChanged hasn't fired yet for this page's lifecycle.
+                    await updateAccountUI(auth.currentUser);
+
+                    // Re-attach onAuthStateChanged listener to ensure ongoing state changes are handled.
+                    onAuthStateChanged(auth, async (user) => {
+                        await updateAccountUI(user);
+                        // Page-specific logic that depends on auth state.
+                        if (window.location.pathname === '/write' && !user) {
+                            showMessageBox('로그인해야 글을 작성할 수 있습니다.');
+                            window.location.href = '/login';
+                        }
+                    });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
-                await updateAccountUI(null); // Ensure UI updates if no config
+                await updateAccountUI(null); // Ensure UI updates if no config is available.
+                if (window.location.pathname === '/write') {
+                    showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
+                }
             }
 
             // Define custom sizes for Quill editor
