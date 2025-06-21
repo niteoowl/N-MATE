@@ -118,13 +118,13 @@
             background-color: #f9fafb; /* hover:bg-gray-50 */
         }
         .nav-item.active {
-            color: #2563eb;
+            color: #2563eb; /* text-blue-600 */
         }
         .nav-item.active span {
-            font-weight: 700;
+            font-weight: 700; /* font-bold */
         }
         .nav-item.active svg {
-            color: #2563eb;
+            color: #2563eb; /* text-blue-600 */
         }
 
         /* Floating Action Button (FAB) styles */
@@ -375,7 +375,7 @@
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user && user.email) { // Check if a user is logged in and has an email
+            if (user && user.email) {
                 const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -385,7 +385,6 @@
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
-                // Attach event listeners for dropdown buttons
                 const settingsButton = document.getElementById('settingsButton');
                 if (settingsButton && !settingsButton.dataset.listenerAdded) {
                     settingsButton.addEventListener('click', handleSettingsClick);
@@ -396,9 +395,7 @@
                     logoutButton.addEventListener('click', handleLogout);
                     logoutButton.dataset.listenerAdded = 'true';
                 }
-
             } else {
-                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -407,9 +404,9 @@
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+                accountDropdown.classList.add('hidden');
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            lucide.createIcons();
         }
 
         /**
@@ -424,7 +421,7 @@
                 const spanElement = item.querySelector('span');
                 const svgElement = item.querySelector('svg');
 
-                // Reset classes
+                // Reset all nav items to default (inactive) state
                 item.classList.remove('text-blue-600');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
@@ -437,7 +434,7 @@
                 }
 
                 // Check for exact path match or if it's the community button and current path is within /community or /view section
-                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/view') || currentPath.startsWith('/write')))) {
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/view')))) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -445,10 +442,11 @@
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
                         svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    // Specific handling for school life tab if the current path is /sclife or a sub-path
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -614,6 +612,10 @@
                         db = getFirestore(app);
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                        });
+
                         // Canvas 환경에서 제공되는 초기 인증 토큰 사용
                         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                         if (initialAuthToken) {
@@ -622,49 +624,21 @@
                                 console.log('Custom token을 사용하여 로그인 성공.');
                             } catch (error) {
                                 console.error('Custom token 로그인 실패:', error);
-                                // If custom token fails, try anonymous sign-in or handle as logged out.
-                                // For robustness, we'll proceed assuming auth state will be updated by onAuthStateChanged.
+                                // Fallback to anonymous if custom token fails (or just stay logged out)
+                                await signInAnonymously(auth);
                             }
                         } else {
-                            // If no initial token, attempt anonymous sign-in.
-                            try {
-                                await signInAnonymously(auth);
-                                console.log('익명 로그인 성공.');
-                            } catch (error) {
-                                console.error('익명 로그인 실패:', error);
-                            }
+                            await signInAnonymously(auth);
                         }
-
-                        // Set up the state change listener to handle both initial state and future changes.
-                        // This listener will fire immediately after authentication state is determined (including the await calls above).
-                        onAuthStateChanged(auth, async (user) => {
-                            await updateAccountUI(user);
-                        });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        // On initialization failure, explicitly update UI to logged-out state.
-                        await updateAccountUI(null); // Ensure UI updates even on init failure
+                        await updateAccountUI(null);
                     }
-                } else {
-                    // If app is already initialized (e.g., due to dev environment hot reload or previous page navigation),
-                    // ensure auth and db instances are correctly referenced from the existing app.
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
-
-                    // Immediately update UI with the *current* authentication state.
-                    // This ensures the UI is correct even if onAuthStateChanged hasn't fired yet for this page's lifecycle.
-                    await updateAccountUI(auth.currentUser);
-
-                    // Re-attach onAuthStateChanged listener to ensure ongoing state changes are handled.
-                    onAuthStateChanged(auth, async (user) => {
-                        await updateAccountUI(user);
-                    });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null); // Ensure UI updates if no config is available.
+                await updateAccountUI(null);
             }
 
             // Global click listener to close dropdown when clicking outside
