@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 커뮤니티</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (v9.6.1로 업데이트) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        // 전역 변수로 Firebase 인스턴스 노출
+        window.firebaseApp = initializeApp;
+        window.getFirebaseAuth = getAuth;
+        window.firebaseSignInAnonymously = signInAnonymously;
+        window.firebaseSignInWithCustomToken = signInWithCustomToken;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.getFirebaseFirestore = getFirestore;
+        window.firebaseCollection = collection;
+        window.firebaseQuery = query;
+        window.firebaseOrderBy = orderBy;
+        window.firebaseOnSnapshot = onSnapshot;
+    </script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+        /* Skeleton Loader animation for loading states (kept for consistency, not directly used here) */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+            background-size: 200% 100%;
+        }
+        @keyframes pulse {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-text {
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
+            border-radius: 4px;
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
+
+        /* Floating Action Button (FAB) styles */
+        #createPostFab {
+            position: fixed; /* Changed back to fixed */
+            bottom: 100px; /* Moved higher: 70px (nav) + 30px (gap) */
+            right: calc(50% - 18rem + 20px); /* Aligns to the right of the main content container, plus 20px padding */
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            width: 56px; /* Typical FAB size */
+            height: 56px; /* Typical FAB size */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* shadow-lg */
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            z-index: 30; /* Above nav bar */
+            cursor: pointer;
+        }
+        #createPostFab:hover {
+            background-color: #3b82f6; /* blue-500 */
+            transform: translateY(-2px);
+        }
+
+        /* Responsive adjustments for FAB */
+        @media (max-width: 640px) { /* Adjust breakpoint for small screens */
+            #createPostFab {
+                right: 20px; /* Keep 20px from the viewport edge on smaller screens */
+                bottom: 100px; /* Keep 100px from the bottom on smaller screens */
+            }
+        }
+
+        /* Custom styles for community category buttons (text-only) */
+        .community-category-button {
+            /* Remove box styling */
+            border: none;
+            background-color: transparent;
+            border-radius: 0; /* Remove rounded corners */
+            padding: 0.25rem 0.75rem; /* px-3 py-1 adjusted for text */
+            margin: 0 0.25rem; /* Small horizontal margin between buttons */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: #6b7280; /* text-gray-500 default */
+            display: inline-flex; /* To allow padding and margin to work correctly */
+            align-items: center;
+            justify-content: center;
+            height: auto; /* Allow height to adjust to content */
+        }
+        .community-category-button:hover {
+            color: #2563eb; /* blue-600 on hover */
+        }
+        .community-category-button.active {
+            color: #2563eb; /* blue-600 for active state */
+            font-weight: 700; /* font-bold for active state */
+            /* Underline effect for active state */
+            position: relative;
+        }
+        .community-category-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; /* Position below the text */
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 1rem); /* Width slightly less than button to look like text underline */
+            height: 2px;
+            background-color: #2563eb; /* blue-600 underline */
+            border-radius: 1px;
+        }
+        /* Style for post list items */
+        .post-list-item {
+            border-bottom: 1px solid #e5e7eb; /* Optional separator */
+        }
+        .post-list-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-0 pt-4"> <!-- Removed px-6 from header to align with main content padding -->
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Section Content -->
+        <div class="w-full flex flex-col items-start px-0 mt-8 mb-4"> <!-- Removed px-6 from content section to align with main content padding -->
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800 mb-4">커뮤니티</h2>
+
+            <!-- Three category buttons below the title (text-only) -->
+            <div class="w-full flex justify-start mb-4"> <!-- Use justify-start for left alignment -->
+                <!-- '전체' 버튼 -->
+                <button id="category-all" class="community-category-button active" data-path="/community">
+                    전체
+                </button>
+                <!-- '인기' 버튼 -->
+                <button id="category-popular" class="community-category-button" data-path="/community/popular">
+                    인기
+                </button>
+                <!-- '카테고리' 버튼 -->
+                <button id="category-category" class="community-category-button" data-path="/community/category">
+                    카테고리
+                </button>
+            </div>
+
+            <!-- Posts List Section -->
+            <div id="postsList" class="w-full mt-4">
+                <p class="text-gray-500 text-center">게시물 로딩 중...</p>
+                <!-- Posts will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Placeholder for additional content -->
+        <p class="text-2xl text-gray-700 px-0 mt-1"></p> <!-- Removed px-6 from placeholder -->
+    </div>
+
+    <!-- Floating Action Button (FAB) for creating a new post -->
+    <button id="createPostFab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5V19"/><path d="M5 12H19"/></svg>
+    </button>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script type="module">
+        // Firebase 전역 변수 참조
+        const initializeApp = window.firebaseApp;
+        const getAuth = window.getFirebaseAuth;
+        const signInAnonymously = window.firebaseSignInAnonymously;
+        const signInWithCustomToken = window.firebaseSignInWithCustomToken;
+        const onAuthStateChanged = window.firebaseOnAuthStateChanged;
+        const getFirestore = window.getFirebaseFirestore;
+        const collection = window.firebaseCollection;
+        const query = window.firebaseQuery;
+        const orderBy = window.firebaseOrderBy;
+        const onSnapshot = window.firebaseOnSnapshot;
+
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const createPostFab = document.getElementById('createPostFab');
+        const postsListDiv = document.getElementById('postsList'); // The div to hold post items
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) {
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+            } else {
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                // Reset all nav items to default (inactive) state
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                }
+
+                // Check for exact path match or if it's the community button and current path is within /community or /view section
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/view')))) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    // Specific handling for school life tab if the current path is /sclife or a sub-path
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Handles the click event for the community category buttons.
+         * Navigates to the specified path and updates the active state of the buttons.
+         * @param {HTMLElement} clickedButton - The button element that was clicked.
+         */
+        function handleCommunityCategoryClick(clickedButton) {
+            const targetPath = clickedButton.dataset.path;
+            const currentPath = window.location.pathname;
+
+            // Only navigate if the target path is different from the current path
+            if (currentPath !== targetPath) {
+                window.location.href = targetPath;
+            }
+            // Update active state regardless of navigation (in case the URL changes by other means, e.g., direct access)
+            updateCommunityCategoryActiveState();
+        }
+
+        /**
+         * Updates the visual active state of the community category buttons based on the current URL path.
+         */
+        function updateCommunityCategoryActiveState() {
+            const currentPath = window.location.pathname;
+            const categoryButtons = document.querySelectorAll('.community-category-button'); // Select all buttons
+
+            categoryButtons.forEach(button => {
+                const buttonPath = button.dataset.path;
+
+                // Reset to default (inactive) state
+                button.classList.remove('active');
+                button.classList.remove('text-blue-600', 'font-bold');
+                button.classList.add('text-gray-500', 'font-medium');
+
+
+                // Apply active state if path matches
+                // If current path is exactly '/community' or '/community/all', activate the '전체' button
+                if (currentPath === buttonPath || (currentPath === '/community' && buttonPath === '/community')) {
+                    button.classList.add('active');
+                    button.classList.remove('text-gray-500', 'font-medium');
+                    button.classList.add('text-blue-600', 'font-bold');
+                }
+            });
+        }
+
+        /**
+         * Handles the click event for the Floating Action Button (FAB).
+         * Redirects to the /write page.
+         */
+        function handleCreatePostClick() {
+            window.location.href = '/write';
+        }
+
+        /**
+         * Renders a single post item in the list.
+         * @param {Object} post - The post data object.
+         * @param {string} postId - The ID of the post.
+         */
+        function renderPostItem(post, postId) {
+            const postItemDiv = document.createElement('div');
+            postItemDiv.classList.add('post-list-item', 'p-4', 'cursor-pointer', 'hover:bg-gray-50', 'transition-colors', 'duration-200');
+            postItemDiv.dataset.postId = postId; // Store the post ID
+
+            const author = post.authorEmail ? post.authorEmail.split('@')[0] : '익명';
+
+            postItemDiv.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">${post.title || '제목 없음'}</h3>
+                <div class="flex items-center text-gray-500 text-xs">
+                    <!-- Likes -->
+                    <span class="flex items-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        <span>${post.likes !== undefined ? post.likes : 0}</span>
+                    </span>
+                    <!-- Views -->
+                    <span class="flex items-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye mr-1"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>${post.views !== undefined ? post.views : 0}</span>
+                    </span>
+                    <span>${author}</span>
+                </div>
+            `;
+            postItemDiv.addEventListener('click', () => {
+                window.location.href = `/view/${postId}`; // Navigate to the new clean URL
+            });
+            postsListDiv.appendChild(postItemDiv);
+        }
+
+        /**
+         * Fetches and displays posts from Firestore.
+         */
+        function fetchAndDisplayPosts() {
+            const postsCollectionRef = collection(db, 'artifacts', appId, 'public', 'posts');
+            const q = query(postsCollectionRef, orderBy('createdAt', 'desc')); // Order by creation date descending
+
+            onSnapshot(q, (snapshot) => {
+                postsListDiv.innerHTML = ''; // Clear existing posts
+                if (snapshot.empty) {
+                    postsListDiv.innerHTML = '<p class="text-gray-500 text-center">게시물이 없습니다.</p>';
+                } else {
+                    snapshot.forEach((doc) => {
+                        renderPostItem(doc.data(), doc.id);
+                    });
+                }
+            }, (error) => {
+                console.error('게시물 가져오기 오류:', error);
+                postsListDiv.innerHTML = '<p class="text-red-500 text-center">게시물을 불러오는 중 오류가 발생했습니다.</p>';
+            });
+        }
+
+
+        /**
+         * Sets up click event listeners for navigation items and community category buttons.
+         */
+        function setupAllEventListeners() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
+
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        window.location.href = path;
+                    }
+                });
+            });
+
+            // Add click listeners to community category buttons
+            const communityCategoryButtons = document.querySelectorAll('.community-category-button');
+            communityCategoryButtons.forEach(button => {
+                button.addEventListener('click', () => handleCommunityCategoryClick(button));
+            });
+
+            // Add click listener to the FAB
+            if (createPostFab) {
+                createPostFab.addEventListener('click', handleCreatePostClick);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (!app) { // Check if app is not already initialized
+                    try {
+                        app = initializeApp(firebaseConfig);
+                        auth = getAuth(app);
+                        db = getFirestore(app);
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                        });
+
+                        // Canvas 환경에서 제공되는 초기 인증 토큰 사용
+                        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log('Custom token을 사용하여 로그인 성공.');
+                            } catch (error) {
+                                console.error('Custom token 로그인 실패:', error);
+                                // Fallback to anonymous if custom token fails (or just stay logged out)
+                                await signInAnonymously(auth);
+                            }
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                    }
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup all event listeners
+            setupAllEventListeners();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+            // Update community category active state on initial load
+            updateCommunityCategoryActiveState();
+
+            // Fetch and display posts
+            fetchAndDisplayPosts();
+
+            // Initial icon creation
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
