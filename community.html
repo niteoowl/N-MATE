@@ -6,32 +6,18 @@
     <title>부산남중학교 N-MATE - 커뮤니티</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter 폰트 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN (v9.6.1로 업데이트) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-        // 전역 변수로 Firebase 인스턴스 노출
-        window.firebaseApp = initializeApp;
-        window.getFirebaseAuth = getAuth;
-        window.firebaseSignInAnonymously = signInAnonymously;
-        window.firebaseSignInWithCustomToken = signInWithCustomToken;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
-        window.getFirebaseFirestore = getFirestore;
-        window.firebaseCollection = collection;
-        window.firebaseQuery = query;
-        window.firebaseOrderBy = orderBy;
-        window.firebaseOnSnapshot = onSnapshot;
-    </script>
+    <!-- Firebase SDK CDN (v8.10.1로 업데이트) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Body styles for overall layout */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -127,81 +113,80 @@
             color: #2563eb; /* text-blue-600 */
         }
 
-        /* Floating Action Button (FAB) styles */
-        #createPostFab {
-            position: fixed; /* Changed back to fixed */
-            bottom: 100px; /* Moved higher: 70px (nav) + 30px (gap) */
-            right: calc(50% - 18rem + 20px); /* Aligns to the right of the main content container, plus 20px padding */
+        /* Floating Action Button (FAB) */
+        .fab {
+            position: fixed;
+            bottom: 80px; /* Adjust based on bottom navigation bar height */
+            right: 20px;
             background-color: #2563eb; /* blue-600 */
             color: white;
-            width: 56px; /* Typical FAB size */
-            height: 56px; /* Typical FAB size */
-            border-radius: 50%;
+            border-radius: 9999px; /* full rounded */
+            width: 56px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08); /* shadow-lg */
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-size: 2rem; /* Larger plus sign */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
             z-index: 30; /* Above nav bar */
             cursor: pointer;
         }
-        #createPostFab:hover {
-            background-color: #3b82f6; /* blue-500 */
-            transform: translateY(-2px);
+        .fab:hover {
+            background-color: #1d4ed8; /* blue-700 */
         }
 
-        /* Responsive adjustments for FAB */
-        @media (max-width: 640px) { /* Adjust breakpoint for small screens */
-            #createPostFab {
-                right: 20px; /* Keep 20px from the viewport edge on smaller screens */
-                bottom: 100px; /* Keep 100px from the bottom on smaller screens */
-            }
-        }
-
-        /* Custom styles for community category buttons (text-only) */
-        .community-category-button {
-            /* Remove box styling */
-            border: none;
-            background-color: transparent;
-            border-radius: 0; /* Remove rounded corners */
-            padding: 0.25rem 0.75rem; /* px-3 py-1 adjusted for text */
-            margin: 0 0.25rem; /* Small horizontal margin between buttons */
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 500; /* font-medium */
-            color: #6b7280; /* text-gray-500 default */
-            display: inline-flex; /* To allow padding and margin to work correctly */
-            align-items: center;
+        /* Custom message box style */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
             justify-content: center;
-            height: auto; /* Allow height to adjust to content */
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .community-category-button:hover {
-            color: #2563eb; /* blue-600 on hover */
+        .message-box-overlay.visible {
+            opacity: 1;
+            visibility: visible;
         }
-        .community-category-button.active {
-            color: #2563eb; /* blue-600 for active state */
-            font-weight: 700; /* font-bold for active state */
-            /* Underline effect for active state */
-            position: relative;
+        .message-box {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
         }
-        .community-category-button.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px; /* Position below the text */
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 1rem); /* Width slightly less than button to look like text underline */
-            height: 2px;
-            background-color: #2563eb; /* blue-600 underline */
-            border-radius: 1px;
+        .message-box-overlay.visible .message-box {
+            transform: translateY(0);
         }
-        /* Style for post list items */
-        .post-list-item {
-            border-bottom: 1px solid #e5e7eb; /* Optional separator */
+        .message-box p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #333;
         }
-        .post-list-item:last-child {
-            border-bottom: none;
+        .message-box button {
+            background-color: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .message-box button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -211,7 +196,7 @@
     <div class="main-content-container">
 
         <!-- Header: Logo and Account/Login section -->
-        <div class="w-full flex justify-between items-center px-0 pt-4"> <!-- Removed px-6 from header to align with main content padding -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
                 <img src="/image/logo.png" alt="가로형 로고" class="h-12">
@@ -231,103 +216,89 @@
         </div>
 
         <!-- Community Section Content -->
-        <div class="w-full flex flex-col items-start px-0 mt-8 mb-4"> <!-- Removed px-6 from content section to align with main content padding -->
+        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
             <!-- Section title -->
             <h2 class="text-left text-xl font-bold text-gray-800 mb-4">커뮤니티</h2>
 
-            <!-- Three category buttons below the title (text-only) -->
-            <div class="w-full flex justify-start mb-4"> <!-- Use justify-start for left alignment -->
-                <!-- '전체' 버튼 -->
-                <button id="category-all" class="community-category-button active" data-path="/community">
-                    전체
-                </button>
-                <!-- '인기' 버튼 -->
-                <button id="category-popular" class="community-category-button" data-path="/community/popular">
-                    인기
-                </button>
-                <!-- '카테고리' 버튼 -->
-                <button id="category-category" class="community-category-button" data-path="/community/category">
-                    카테고리
-                </button>
+            <!-- Three rounded rectangular boxes below the title -->
+            <div class="w-full sm:w-1/2 flex flex-col sm:flex-row gap-2 mb-4">
+                <!-- '전체' 박스 -->
+                <div id="category-all" class="community-category-box flex-1 rounded-full border p-2 flex items-center justify-center text-center h-8 cursor-pointer" data-filter="all">
+                    <p class="text-sm font-medium">전체</p>
+                </div>
+                <!-- '인기' 박스 -->
+                <div id="category-popular" class="community-category-box flex-1 rounded-full border border-gray-300 p-2 flex items-center justify-center text-center h-8 cursor-pointer" data-filter="popular">
+                    <p class="text-sm text-gray-700 font-medium">인기</p>
+                </div>
+                <!-- '카테고리' 박스 (동적으로 텍스트 변경) -->
+                <div id="category-specific" class="community-category-box flex-1 rounded-full border border-gray-300 p-2 flex items-center justify-center text-center h-8 cursor-pointer" data-filter="category">
+                    <p class="text-sm text-gray-700 font-medium">자유 게시판</p>
+                </div>
             </div>
 
             <!-- Posts List Section -->
             <div id="postsList" class="w-full mt-4">
-                <p class="text-gray-500 text-center">게시물 로딩 중...</p>
                 <!-- Posts will be dynamically loaded here -->
+                <p class="text-gray-500 text-center">게시물을 로딩 중입니다...</p>
             </div>
         </div>
 
         <!-- Placeholder for additional content -->
-        <p class="text-2xl text-gray-700 px-0 mt-1"></p> <!-- Removed px-6 from placeholder -->
+        <p class="text-2xl text-gray-700 px-6 mt-1"></p>
     </div>
 
-    <!-- Floating Action Button (FAB) for creating a new post -->
-    <button id="createPostFab">
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5V19"/><path d="M5 12H19"/></svg>
-    </button>
+    <!-- Floating Action Button for writing a new post -->
+    <div id="writePostFab" class="fab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    </div>
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
-                </svg>
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
             <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
-                </svg>
+                <i data-lucide="book-open" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">학교생활</span>
             </button>
 
             <!-- Community Navigation Item -->
-            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
-                </svg>
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 active" data-tab="커뮤니티" data-path="/community">
+                <i data-lucide="users" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
             <!-- Calendar Navigation Item -->
             <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
-                </svg>
+                <i data-lucide="calendar" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">캘린더</span>
             </button>
 
             <!-- More Navigation Item -->
             <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
-                </svg>
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
     </nav>
 
-    <script type="module">
-        // Firebase 전역 변수 참조
-        const initializeApp = window.firebaseApp;
-        const getAuth = window.getFirebaseAuth;
-        const signInAnonymously = window.firebaseSignInAnonymously;
-        const signInWithCustomToken = window.firebaseSignInWithCustomToken;
-        const onAuthStateChanged = window.firebaseOnAuthStateChanged;
-        const getFirestore = window.getFirebaseFirestore;
-        const collection = window.firebaseCollection;
-        const query = window.firebaseQuery;
-        const orderBy = window.firebaseOrderBy;
-        const onSnapshot = window.firebaseOnSnapshot;
-
+    <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
 
         // Firebase app, auth, and firestore instances
         let app;
@@ -337,8 +308,15 @@
         // DOM elements
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
-        const createPostFab = document.getElementById('createPostFab');
-        const postsListDiv = document.getElementById('postsList'); // The div to hold post items
+        const postsList = document.getElementById('postsList'); // 게시물 목록을 표시할 DOM 요소
+        const writePostFab = document.getElementById('writePostFab'); // 글쓰기 FAB
+
+        // Category filter related variables
+        let currentFilter = 'all'; // 'all', 'popular', 'category'
+        const specificCategories = ['자유 게시판', '정보 공유', '질문 게시판'];
+        let currentSpecificCategoryIndex = 0; // Index for cycling through specific categories
+        const categorySpecificBox = document.getElementById('category-specific');
+        const categorySpecificText = categorySpecificBox.querySelector('p');
 
         /**
          * Toggles the visibility of the account dropdown menu.
@@ -419,160 +397,51 @@
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
                 const spanElement = item.querySelector('span');
-                const svgElement = item.querySelector('svg');
+                const iconElement = item.querySelector('i'); // Changed from svgElement to iconElement
 
                 // Reset all nav items to default (inactive) state
-                item.classList.remove('text-blue-600');
+                item.classList.remove('text-blue-600', 'active');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
-                if (svgElement) {
-                    svgElement.classList.remove('text-blue-600');
-                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                if (iconElement) { // Changed from svgElement to iconElement
+                    iconElement.classList.remove('text-blue-600');
+                    iconElement.classList.add('text-gray-500');
                 }
 
-                // Check for exact path match or if it's the community button and current path is within /community or /view section
-                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/view')))) {
-                    item.classList.add('text-blue-600');
+                // Check for exact path match or if it's the community button and current path is within /community or /write section
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
+                    item.classList.add('text-blue-600', 'active');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (svgElement) {
-                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
-                        svgElement.classList.remove('text-gray-500');
+                    if (iconElement) { // Changed from svgElement to iconElement
+                        iconElement.classList.add('text-blue-600');
+                        iconElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
-                    // Specific handling for school life tab if the current path is /sclife or a sub-path
-                    item.classList.add('text-blue-600');
+                    item.classList.add('text-blue-600', 'active');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (svgElement) {
-                        svgElement.classList.add('text-blue-600');
-                        svgElement.classList.remove('text-gray-500');
+                    if (iconElement) { // Changed from svgElement to iconElement
+                        iconElement.classList.add('text-blue-600');
+                        iconElement.classList.remove('text-gray-500');
                     }
                 }
             });
         }
 
         /**
-         * Handles the click event for the community category buttons.
-         * Navigates to the specified path and updates the active state of the buttons.
-         * @param {HTMLElement} clickedButton - The button element that was clicked.
+         * Sets up click event listeners for navigation items.
          */
-        function handleCommunityCategoryClick(clickedButton) {
-            const targetPath = clickedButton.dataset.path;
-            const currentPath = window.location.pathname;
-
-            // Only navigate if the target path is different from the current path
-            if (currentPath !== targetPath) {
-                window.location.href = targetPath;
-            }
-            // Update active state regardless of navigation (in case the URL changes by other means, e.g., direct access)
-            updateCommunityCategoryActiveState();
-        }
-
-        /**
-         * Updates the visual active state of the community category buttons based on the current URL path.
-         */
-        function updateCommunityCategoryActiveState() {
-            const currentPath = window.location.pathname;
-            const categoryButtons = document.querySelectorAll('.community-category-button'); // Select all buttons
-
-            categoryButtons.forEach(button => {
-                const buttonPath = button.dataset.path;
-
-                // Reset to default (inactive) state
-                button.classList.remove('active');
-                button.classList.remove('text-blue-600', 'font-bold');
-                button.classList.add('text-gray-500', 'font-medium');
-
-
-                // Apply active state if path matches
-                // If current path is exactly '/community' or '/community/all', activate the '전체' button
-                if (currentPath === buttonPath || (currentPath === '/community' && buttonPath === '/community')) {
-                    button.classList.add('active');
-                    button.classList.remove('text-gray-500', 'font-medium');
-                    button.classList.add('text-blue-600', 'font-bold');
-                }
-            });
-        }
-
-        /**
-         * Handles the click event for the Floating Action Button (FAB).
-         * Redirects to the /write page.
-         */
-        function handleCreatePostClick() {
-            window.location.href = '/write';
-        }
-
-        /**
-         * Renders a single post item in the list.
-         * @param {Object} post - The post data object.
-         * @param {string} postId - The ID of the post.
-         */
-        function renderPostItem(post, postId) {
-            const postItemDiv = document.createElement('div');
-            postItemDiv.classList.add('post-list-item', 'p-4', 'cursor-pointer', 'hover:bg-gray-50', 'transition-colors', 'duration-200');
-            postItemDiv.dataset.postId = postId; // Store the post ID
-
-            const author = post.authorEmail ? post.authorEmail.split('@')[0] : '익명';
-
-            postItemDiv.innerHTML = `
-                <h3 class="text-lg font-semibold text-gray-800 mb-1">${post.title || '제목 없음'}</h3>
-                <div class="flex items-center text-gray-500 text-xs">
-                    <!-- Likes -->
-                    <span class="flex items-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                        <span>${post.likes !== undefined ? post.likes : 0}</span>
-                    </span>
-                    <!-- Views -->
-                    <span class="flex items-center mr-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye mr-1"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                        <span>${post.views !== undefined ? post.views : 0}</span>
-                    </span>
-                    <span>${author}</span>
-                </div>
-            `;
-            postItemDiv.addEventListener('click', () => {
-                window.location.href = `/view/${postId}`; // Navigate to the new clean URL
-            });
-            postsListDiv.appendChild(postItemDiv);
-        }
-
-        /**
-         * Fetches and displays posts from Firestore.
-         */
-        function fetchAndDisplayPosts() {
-            const postsCollectionRef = collection(db, 'artifacts', appId, 'public', 'posts');
-            const q = query(postsCollectionRef, orderBy('createdAt', 'desc')); // Order by creation date descending
-
-            onSnapshot(q, (snapshot) => {
-                postsListDiv.innerHTML = ''; // Clear existing posts
-                if (snapshot.empty) {
-                    postsListDiv.innerHTML = '<p class="text-gray-500 text-center">게시물이 없습니다.</p>';
-                } else {
-                    snapshot.forEach((doc) => {
-                        renderPostItem(doc.data(), doc.id);
-                    });
-                }
-            }, (error) => {
-                console.error('게시물 가져오기 오류:', error);
-                postsListDiv.innerHTML = '<p class="text-red-500 text-center">게시물을 불러오는 중 오류가 발생했습니다.</p>';
-            });
-        }
-
-
-        /**
-         * Sets up click event listeners for navigation items and community category buttons.
-         */
-        function setupAllEventListeners() {
+        function setupNavigationEvents() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
@@ -589,57 +458,217 @@
                     }
                 });
             });
-
-            // Add click listeners to community category buttons
-            const communityCategoryButtons = document.querySelectorAll('.community-category-button');
-            communityCategoryButtons.forEach(button => {
-                button.addEventListener('click', () => handleCommunityCategoryClick(button));
-            });
-
-            // Add click listener to the FAB
-            if (createPostFab) {
-                createPostFab.addEventListener('click', handleCreatePostClick);
-            }
         }
+
+        /**
+         * Renders a single post item.
+         * @param {Object} postData - The post data object.
+         * @param {string} postId - The ID of the post document.
+         */
+        function renderPostItem(postData, postId) {
+            const postDiv = document.createElement('div');
+            postDiv.classList.add('p-4', 'cursor-pointer', 'hover:bg-gray-50', 'transition-colors', 'duration-200');
+            postDiv.dataset.postId = postId; // Store post ID for navigation
+
+            const author = postData.authorEmail ? postData.authorEmail.split('@')[0] : '익명';
+            const postDate = postData.createdAt ? new Date(postData.createdAt.seconds * 1000).toLocaleString('ko-KR') : '날짜 없음';
+
+            postDiv.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-800 mb-1">${postData.title}</h3>
+                <div class="flex items-center text-gray-500 text-xs">
+                    <!-- Likes -->
+                    <span class="flex items-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart mr-1"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                        <span>${postData.likes !== undefined ? postData.likes : 0}</span>
+                    </span>
+                    <!-- Views -->
+                    <span class="flex items-center mr-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-eye mr-1"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span>${postData.views !== undefined ? postData.views : 0}</span>
+                    </span>
+                    <!-- Author -->
+                    <span class="mr-3">${author}</span>
+                    <!-- Date -->
+                    <span>${postDate}</span>
+                    <!-- Category Badge -->
+                    <span class="ml-auto px-2 py-0.5 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">${postData.category || '기타'}</span>
+                </div>
+            `;
+            postsList.appendChild(postDiv);
+
+            // Add click listener to navigate to post view page
+            postDiv.addEventListener('click', () => {
+                window.location.href = `/view/${postId}`;
+            });
+            lucide.createIcons(); // Ensure icons are rendered for each new post item
+        }
+
+        /**
+         * Fetches and displays posts based on the current filter and category.
+         * Uses onSnapshot for real-time updates.
+         * @param {string} filterType - 'all', 'popular', 'category'
+         * @param {string|null} specificCategory - Specific category name if filterType is 'category', otherwise null.
+         */
+        function fetchAndDisplayPosts(filterType, specificCategory = null) {
+            if (!db) {
+                console.error('Firestore가 초기화되지 않았습니다.');
+                postsList.innerHTML = '<p class="text-red-500 text-center">데이터베이스 연결 오류. 관리자에게 문의하세요.</p>';
+                return;
+            }
+
+            const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('posts');
+            let q;
+
+            if (filterType === 'popular') {
+                q = postsCollectionRef.orderBy('likes', 'desc');
+            } else if (filterType === 'category' && specificCategory) {
+                q = postsCollectionRef.where('category', '==', specificCategory).orderBy('createdAt', 'desc');
+            } else { // 'all' filter or 'category' without specificCategory (fallback to all)
+                q = postsCollectionRef.orderBy('createdAt', 'desc');
+            }
+
+            // Unsubscribe from previous snapshot listener if exists
+            if (window.postsUnsubscribe) {
+                window.postsUnsubscribe();
+            }
+
+            window.postsUnsubscribe = q.onSnapshot((snapshot) => {
+                postsList.innerHTML = ''; // Clear current posts
+                if (snapshot.empty) {
+                    postsList.innerHTML = '<p class="text-gray-500 text-center">게시물이 없습니다.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        renderPostItem(doc.data(), doc.id);
+                        postsList.appendChild(document.createElement('hr')).classList.add('border-gray-200', 'my-2'); // Add separator
+                    });
+                    // Remove the last separator
+                    if (postsList.lastChild && postsList.lastChild.tagName === 'HR') {
+                        postsList.removeChild(postsList.lastChild);
+                    }
+                }
+            }, (error) => {
+                console.error('게시물 실시간 업데이트 오류:', error);
+                showMessageBox('게시물을 불러오는 중 오류가 발생했습니다: ' + error.message);
+                postsList.innerHTML = '<p class="text-red-500 text-center">게시물을 불러오지 못했습니다.</p>';
+            });
+        }
+
+        /**
+         * Updates the visual active state of the community category boxes.
+         * @param {string} activeBoxId - The ID of the box to set as active.
+         */
+        function updateCommunityCategoryActiveState(activeBoxId) {
+            const categoryBoxes = document.querySelectorAll('.community-category-box');
+
+            categoryBoxes.forEach(box => {
+                const textElement = box.querySelector('p');
+
+                // Reset to default (inactive) state
+                box.classList.remove('bg-blue-500', 'border-blue-500');
+                box.classList.add('bg-white', 'border-gray-300');
+                if (textElement) {
+                    textElement.classList.remove('text-white');
+                    textElement.classList.add('text-gray-700');
+                }
+
+                // Apply active state if ID matches
+                if (box.id === activeBoxId) {
+                    box.classList.add('bg-blue-500', 'border-blue-500');
+                    box.classList.remove('bg-white', 'border-gray-300');
+                    if (textElement) {
+                        textElement.classList.add('text-white');
+                        textElement.classList.remove('text-gray-700');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Displays a custom message box.
+         * Replaces native alert() for better UI control in an iframe environment.
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('fixed', 'inset-0', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50', 'z-50');
+            messageBox.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 text-center">
+                    <p class="text-gray-800 text-lg mb-4">${message}</p>
+                    <button id="messageBoxClose" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300">확인</button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            document.getElementById('messageBoxClose').addEventListener('click', () => {
+                document.body.removeChild(messageBox);
+            });
+        }
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey) {
-                if (!app) { // Check if app is not already initialized
+                if (firebase.apps.length === 0) { // Check if app is not already initialized
                     try {
-                        app = initializeApp(firebaseConfig);
-                        auth = getAuth(app);
-                        db = getFirestore(app);
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
+                        // THEN, set up the state change listener to handle both initial state and future changes
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
                         });
 
-                        // Canvas 환경에서 제공되는 초기 인증 토큰 사용
-                        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log('Custom token을 사용하여 로그인 성공.');
-                            } catch (error) {
-                                console.error('Custom token 로그인 실패:', error);
-                                // Fallback to anonymous if custom token fails (or just stay logged out)
-                                await signInAnonymously(auth);
-                            }
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        await updateAccountUI(null);
+                        showMessageBox('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.');
+                        await updateAccountUI(null); // Ensure UI updates even on init failure
                     }
+                } else {
+                    // If app is already initialized, ensure auth and db are referenced
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    await updateAccountUI(auth.currentUser); // Update UI with current user state immediately
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null);
+                showMessageBox('Firebase 구성이 누락되었습니다. 일부 기능을 사용할 수 없습니다.');
+                await updateAccountUI(null); // Ensure UI updates if no config
             }
+
+            // Initial load of posts (default to 'all' filter)
+            fetchAndDisplayPosts(currentFilter);
+            updateCommunityCategoryActiveState('category-all'); // Set '전체' as active on initial load
+
+            // Event Listeners for category filter boxes
+            document.getElementById('category-all').addEventListener('click', () => {
+                currentFilter = 'all';
+                fetchAndDisplayPosts(currentFilter);
+                updateCommunityCategoryActiveState('category-all');
+            });
+
+            document.getElementById('category-popular').addEventListener('click', () => {
+                currentFilter = 'popular';
+                fetchAndDisplayPosts(currentFilter);
+                updateCommunityCategoryActiveState('category-popular');
+            });
+
+            document.getElementById('category-specific').addEventListener('click', () => {
+                currentFilter = 'category';
+                currentSpecificCategoryIndex = (currentSpecificCategoryIndex + 1) % specificCategories.length;
+                const selectedCategory = specificCategories[currentSpecificCategoryIndex];
+                categorySpecificText.textContent = selectedCategory; // Update box text
+                fetchAndDisplayPosts(currentFilter, selectedCategory);
+                updateCommunityCategoryActiveState('category-specific');
+            });
+
+            // Event Listener for FAB
+            writePostFab.addEventListener('click', () => {
+                window.location.href = '/write'; // Navigate to the write page
+            });
 
             // Global click listener to close dropdown when clicking outside
             window.addEventListener('click', function(e) {
@@ -649,15 +678,10 @@
                 }
             });
 
-            // Setup all event listeners
-            setupAllEventListeners();
+            // Setup navigation click handlers
+            setupNavigationEvents();
             // Update navigation active state on initial load
             updateNavigationActiveState();
-            // Update community category active state on initial load
-            updateCommunityCategoryActiveState();
-
-            // Fetch and display posts
-            fetchAndDisplayPosts();
 
             // Initial icon creation
             lucide.createIcons();
