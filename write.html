@@ -179,7 +179,8 @@
             <!-- Account/Login section with dropdown -->
             <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
-                    <!-- Conditional content injected by JavaScript -->
+                    <!-- 초기 로딩 중 메시지 -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
@@ -622,16 +623,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // 초기 계정 로딩 메시지 표시
+            accountStatusArea.innerHTML = `<span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>`;
+
             // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey) {
-                if (!app) { // Check if app is not already initialized
+                if (!app) { // 앱이 초기화되지 않았다면 초기화
                     try {
                         app = initializeApp(firebaseConfig);
                         auth = getAuth(app);
                         db = getFirestore(app);
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // Canvas 환경에서 제공되는 초기 인증 토큰 사용
                         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                         if (initialAuthToken) {
                             try {
@@ -639,11 +642,16 @@
                                 console.log('Custom token을 사용하여 로그인 성공.');
                             } catch (error) {
                                 console.error('Custom token 로그인 실패:', error);
-                                // If custom token fails, try anonymous sign-in or handle as logged out.
-                                // For robustness, we'll proceed assuming auth state will be updated by onAuthStateChanged.
+                                // 커스텀 토큰 실패 시 익명 로그인 시도
+                                try {
+                                    await signInAnonymously(auth);
+                                    console.log('익명 로그인 성공.');
+                                } catch (anonError) {
+                                    console.error('익명 로그인 실패:', anonError);
+                                }
                             }
                         } else {
-                            // If no initial token, attempt anonymous sign-in.
+                            // 초기 토큰이 없다면 익명 로그인 시도
                             try {
                                 await signInAnonymously(auth);
                                 console.log('익명 로그인 성공.');
@@ -652,12 +660,10 @@
                             }
                         }
 
-                        // Set up the state change listener to handle both initial state and future changes.
-                        // This listener will fire immediately after authentication state is determined (including the await calls above).
+                        // IMPORTANT: onAuthStateChanged 리스너에만 의존하여 UI 업데이트
                         onAuthStateChanged(auth, async (user) => {
                             await updateAccountUI(user);
-                            // Page-specific logic that depends on auth state can go here or be triggered by updateAccountUI.
-                            // For write page: check if user exists, else redirect.
+                            // 페이지 특정 로직: 글쓰기 페이지에서 로그인 상태 확인
                             if (window.location.pathname === '/write' && !user) {
                                 showMessageBox('로그인해야 글을 작성할 수 있습니다.');
                                 window.location.href = '/login';
@@ -666,29 +672,22 @@
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        // On initialization failure, explicitly update UI to logged-out state.
-                        await updateAccountUI(null); // Ensure UI updates even on init failure
-                        // For write page: redirect on Firebase init failure if not logged in.
+                        await updateAccountUI(null); // 초기화 실패 시에도 UI를 로그아웃 상태로 업데이트
                         if (window.location.pathname === '/write') {
                             showMessageBox('Firebase 초기화에 실패했습니다. 글쓰기 기능을 사용할 수 없습니다. 관리자에게 문의하세요.');
-                            // No redirect here, just disable functionality if Firebase failed.
                         }
                     }
-                } else {
-                    // If app is already initialized (e.g., due to dev environment hot reload or previous page navigation),
-                    // ensure auth and db instances are correctly referenced from the existing app.
+                } else { // 앱이 이미 초기화되었다면 (예: SPA 탐색 또는 핫 리로드)
+                    // 기존 인스턴스 가져오기
                     auth = getAuth(app);
                     db = getFirestore(app);
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
 
-                    // Immediately update UI with the *current* authentication state.
-                    // This ensures the UI is correct even if onAuthStateChanged hasn't fired yet for this page's lifecycle.
-                    await updateAccountUI(auth.currentUser);
-
-                    // Re-attach onAuthStateChanged listener to ensure ongoing state changes are handled.
+                    // 이미 초기화된 상태이므로 onAuthStateChanged 리스너만 다시 연결
+                    // onAuthStateChanged는 현재 인증 상태를 즉시 보고할 것임
                     onAuthStateChanged(auth, async (user) => {
                         await updateAccountUI(user);
-                        // Page-specific logic that depends on auth state.
+                        // 페이지 특정 로직: 글쓰기 페이지에서 로그인 상태 확인
                         if (window.location.pathname === '/write' && !user) {
                             showMessageBox('로그인해야 글을 작성할 수 있습니다.');
                             window.location.href = '/login';
@@ -697,7 +696,7 @@
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null); // Ensure UI updates if no config is available.
+                await updateAccountUI(null); // 구성이 없을 시에도 UI 업데이트
                 if (window.location.pathname === '/write') {
                     showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
                 }
