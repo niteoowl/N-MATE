@@ -10,26 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN (v9.6.1로 업데이트) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-        // 전역 변수로 Firebase 인스턴스 노출
-        window.firebaseApp = initializeApp;
-        window.getFirebaseAuth = getAuth;
-        window.firebaseSignInAnonymously = signInAnonymously;
-        window.firebaseSignInWithCustomToken = signInWithCustomToken;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
-        window.getFirebaseFirestore = getFirestore;
-        window.firebaseDoc = doc;
-        window.firebaseGetDoc = getDoc;
-        window.firebaseAddDoc = addDoc;
-        window.firebaseUpdateDoc = updateDoc;
-        window.firebaseCollection = collection;
-        window.firebaseServerTimestamp = serverTimestamp;
-    </script>
+    <!-- Firebase SDK CDN (v8.10.1로 업데이트) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <!-- Quill.js CSS CDN -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
@@ -237,41 +221,31 @@
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
-                </svg>
+                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
             <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
-                </svg>
+                <i data-lucide="book-open" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">학교생활</span>
             </button>
 
             <!-- Community Navigation Item -->
             <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
-                </svg>
+                <i data-lucide="users" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
             <!-- Calendar Navigation Item -->
             <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
-                </svg>
+                <i data-lucide="calendar" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">캘린더</span>
             </button>
 
             <!-- More Navigation Item -->
             <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
-                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
-                </svg>
+                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
                 <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
@@ -280,24 +254,18 @@
     <!-- Quill.js JavaScript CDN -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script type="module">
-        // Firebase 전역 변수 참조
-        const initializeApp = window.firebaseApp;
-        const getAuth = window.getFirebaseAuth;
-        const signInAnonymously = window.firebaseSignInAnonymously;
-        const signInWithCustomToken = window.firebaseSignInWithCustomToken;
-        const onAuthStateChanged = window.firebaseOnAuthStateChanged;
-        const getFirestore = window.getFirebaseFirestore;
-        const doc = window.firebaseDoc;
-        const getDoc = window.firebaseGetDoc;
-        const addDoc = window.firebaseAddDoc;
-        const updateDoc = window.firebaseUpdateDoc;
-        const collection = window.firebaseCollection;
-        const serverTimestamp = window.firebaseServerTimestamp;
-
+    <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
 
         // Firebase app, auth, and firestore instances
         let app;
@@ -404,7 +372,7 @@
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
                 const spanElement = item.querySelector('span');
-                const svgElement = item.querySelector('svg');
+                const iconElement = item.querySelector('i'); // Changed from svgElement to iconElement
 
                 // Reset classes
                 item.classList.remove('text-blue-600');
@@ -413,9 +381,9 @@
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
-                if (svgElement) {
-                    svgElement.classList.remove('text-blue-600');
-                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                if (iconElement) { // Changed from svgElement to iconElement
+                    iconElement.classList.remove('text-blue-600');
+                    iconElement.classList.add('text-gray-500'); // Ensure icon also has gray base color
                 }
 
                 // Check for exact path match or if it's the community button and current path is within /community or /write section
@@ -426,9 +394,9 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (svgElement) {
-                        svgElement.classList.add('text-blue-600');
-                        svgElement.classList.remove('text-gray-500');
+                    if (iconElement) { // Changed from svgElement to iconElement
+                        iconElement.classList.add('text-blue-600');
+                        iconElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
                     // Specific handling for school life tab if the current path is /sclife or a sub-path
@@ -438,9 +406,9 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (svgElement) {
-                        svgElement.classList.add('text-blue-600');
-                        svgElement.classList.remove('text-gray-500');
+                    if (iconElement) { // Changed from svgElement to iconElement
+                        iconElement.classList.add('text-blue-600');
+                        iconElement.classList.remove('text-gray-500');
                     }
                 }
             });
@@ -550,10 +518,10 @@
          */
         async function loadPostForEdit(postIdToLoad) {
             try {
-                const postRef = doc(db, 'artifacts', appId, 'public', 'posts', postIdToLoad);
-                const postSnap = await getDoc(postRef);
+                const postRef = db.collection('artifacts').doc(appId).collection('public').doc('posts').doc(postIdToLoad);
+                const postSnap = await postRef.get();
 
-                if (postSnap.exists()) {
+                if (postSnap.exists) {
                     const postData = postSnap.data();
                     // Check if the current user is the author of the post
                     if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
@@ -580,29 +548,15 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey) {
-                if (!app) { // Check if app is not already initialized
+                if (firebase.apps.length === 0) {
                     try {
-                        app = initializeApp(firebaseConfig);
-                        auth = getAuth(app);
-                        db = getFirestore(app);
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // Canvas 환경에서 제공되는 초기 인증 토큰 사용
-                        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log('Custom token을 사용하여 로그인 성공.');
-                            } catch (error) {
-                                console.error('Custom token 로그인 실패:', error);
-                                await signInAnonymously(auth); // Fallback to anonymous
-                            }
-                        } else {
-                            await signInAnonymously(auth); // Sign in anonymously if no token
-                        }
-
-                        // THEN, set up the state change listener to handle both initial state and future changes
-                        onAuthStateChanged(auth, async (user) => {
+                        // Firebase 인증 상태 변경 리스너
+                        auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
                             if (!user) { // If user is logged out, redirect
                                 showMessageBox('로그인해야 글을 작성할 수 있습니다.');
@@ -617,8 +571,9 @@
                     }
                 } else {
                     // If app is already initialized, ensure auth and db are referenced
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
                     await updateAccountUI(auth.currentUser); // Update UI with current user state immediately
                     if (!auth.currentUser) { // If user is logged out, redirect
@@ -723,20 +678,20 @@
                         contentHtml: contentHtml,
                         authorUid: auth.currentUser.uid,
                         authorEmail: auth.currentUser.email,
-                        updatedAt: serverTimestamp() // Update timestamp on every save
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() // Update timestamp on every save
                     };
 
                     if (currentPostId) {
                         // Update existing post
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'posts', currentPostId), postData);
+                        await db.collection('artifacts').doc(appId).collection('public').doc('posts').doc(currentPostId).update(postData);
                         showMessageBox('게시물이 성공적으로 수정되었습니다!');
                         window.location.href = `/view/${currentPostId}`; // Redirect to updated post with new URL format
                     } else {
                         // Create new post
-                        postData.createdAt = serverTimestamp(); // Set creation timestamp only for new posts
+                        postData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // Set creation timestamp only for new posts
                         postData.likes = 0;
                         postData.views = 0;
-                        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'posts'), postData);
+                        const docRef = await db.collection('artifacts').doc(appId).collection('public').doc('posts').add(postData);
                         showMessageBox('게시물이 성공적으로 작성되었습니다!');
                         window.location.href = `/view/${docRef.id}`; // Redirect to newly created post with new URL format
                     }
