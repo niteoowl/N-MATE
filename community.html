@@ -290,8 +290,15 @@
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // Use the Firebase config provided by the Canvas environment
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
 
         // Firebase app, auth, and firestore instances
         let app;
@@ -612,6 +619,7 @@
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
                         // Authentication: Use __initial_auth_token if available, otherwise sign in anonymously
+                        // __initial_auth_token 변수가 전역 범위에 있다고 가정합니다.
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await auth.signInWithCustomToken(__initial_auth_token);
                             console.log('Custom token으로 로그인 성공.');
