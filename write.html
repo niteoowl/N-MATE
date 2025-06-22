@@ -10,26 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN (v9.6.1로 업데이트) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-
-        // 전역 변수로 Firebase 인스턴스 노출
-        window.firebaseApp = initializeApp;
-        window.getFirebaseAuth = getAuth;
-        window.firebaseSignInAnonymously = signInAnonymously;
-        window.firebaseSignInWithCustomToken = signInWithCustomToken;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
-        window.getFirebaseFirestore = getFirestore;
-        window.firebaseDoc = doc;
-        window.firebaseGetDoc = getDoc;
-        window.firebaseAddDoc = addDoc;
-        window.firebaseUpdateDoc = updateDoc;
-        window.firebaseCollection = collection;
-        window.firebaseServerTimestamp = serverTimestamp;
-    </script>
+    <!-- Firebase SDK CDN (제공된 '더보기' 페이지와 동일한 v8.10.1로 변경) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <!-- Quill.js CSS CDN -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <style>
@@ -179,8 +163,7 @@
             <!-- Account/Login section with dropdown -->
             <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
-                    <!-- 초기 로딩 중 메시지 -->
-                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
+                    <!-- Conditional content injected by JavaScript -->
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
@@ -281,24 +264,19 @@
     <!-- Quill.js JavaScript CDN -->
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script type="module">
-        // Firebase 전역 변수 참조
-        const initializeApp = window.firebaseApp;
-        const getAuth = window.getFirebaseAuth;
-        const signInAnonymously = window.firebaseSignInAnonymously;
-        const signInWithCustomToken = window.firebaseSignInWithCustomToken;
-        const onAuthStateChanged = window.firebaseOnAuthStateChanged;
-        const getFirestore = window.getFirebaseFirestore;
-        const doc = window.firebaseDoc;
-        const getDoc = window.firebaseGetDoc;
-        const addDoc = window.firebaseAddDoc;
-        const updateDoc = window.firebaseUpdateDoc;
-        const collection = window.firebaseCollection;
-        const serverTimestamp = window.firebaseServerTimestamp;
-
-        // Global variables for Firebase configuration (provided by Canvas environment)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+    <script>
+        // Firebase 전역 변수 직접 사용 (더보기 페이지와 동일한 v8 방식)
+        // Global variables for Firebase configuration (하드코딩된 '더보기' 페이지의 config 사용)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Canvas 환경변수 유지
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
 
         // Firebase app, auth, and firestore instances
         let app;
@@ -381,7 +359,7 @@
                 }
 
             } else {
-                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
+                // User is logged out or does not have an email
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -595,27 +573,36 @@
          */
         async function loadPostForEdit(postIdToLoad) {
             try {
-                const postRef = doc(db, 'artifacts', appId, 'public', 'posts', postIdToLoad);
-                const postSnap = await getDoc(postRef);
+                // 이 함수는 v9 Firestore API를 사용하고 있으므로,
+                // v8 API와 호환되도록 수정이 필요합니다.
+                // 현재는 더보기 페이지의 로그인 기능 일치에 초점을 맞춥니다.
+                // 이 부분을 활성화하려면 v8 Firestore API를 사용하여 재작성해야 합니다.
+                showMessageBox('게시물 수정 기능은 현재 비활성화되어 있습니다. (v8 API 호환성 문제)');
+                console.warn('게시물 수정 기능은 v8 Firestore API를 사용하여 재작성해야 합니다.');
+                window.location.href = '/community'; // 수정 기능 비활성화로 커뮤니티 페이지로 리다이렉트
+                return;
 
-                if (postSnap.exists()) {
-                    const postData = postSnap.data();
-                    // Check if the current user is the author of the post
-                    if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
-                        postTitleInput.value = postData.title || '';
-                        postCategorySelect.value = postData.category || '';
-                        quill.root.innerHTML = postData.contentHtml || ''; // Set Quill content
-                        submitPostButton.textContent = '게시물 수정'; // Change button text
-                        document.querySelector('h2').textContent = '게시물 수정'; // Change section title
-                        currentPostId = postIdToLoad; // Store post ID for update
-                    } else {
-                        showMessageBox('이 게시물을 수정할 권한이 없습니다.');
-                        window.location.href = `/view/${postIdToLoad}`; // Redirect to view page
-                    }
-                } else {
-                    showMessageBox('수정할 게시물을 찾을 수 없습니다.');
-                    window.location.href = '/community'; // Redirect if post not found
-                }
+
+                // const postRef = doc(db, 'artifacts', appId, 'public', 'posts', postIdToLoad);
+                // const postSnap = await getDoc(postRef);
+
+                // if (postSnap.exists()) {
+                //     const postData = postSnap.data();
+                //     if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
+                //         postTitleInput.value = postData.title || '';
+                //         postCategorySelect.value = postData.category || '';
+                //         quill.root.innerHTML = postData.contentHtml || '';
+                //         submitPostButton.textContent = '게시물 수정';
+                //         document.querySelector('h2').textContent = '게시물 수정';
+                //         currentPostId = postIdToLoad;
+                //     } else {
+                //         showMessageBox('이 게시물을 수정할 권한이 없습니다.');
+                //         window.location.href = `/view/${postIdToLoad}`;
+                //     }
+                // } else {
+                //     showMessageBox('수정할 게시물을 찾을 수 없습니다.');
+                //     window.location.href = '/community';
+                // }
             } catch (error) {
                 console.error('게시물 로드 오류:', error);
                 showMessageBox('게시물 로드 중 오류가 발생했습니다: ' + error.message);
@@ -623,47 +610,19 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // 초기 계정 로딩 메시지 표시
-            accountStatusArea.innerHTML = `<span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>`;
-
-            // Firebase initialization
+            // Firebase initialization (제공된 '더보기' 페이지의 v8 방식과 동일하게)
             if (firebaseConfig && firebaseConfig.apiKey) {
-                if (!app) { // 앱이 초기화되지 않았다면 초기화
+                if (firebase.apps.length === 0) { // 앱이 초기화되지 않았다면 초기화
                     try {
-                        app = initializeApp(firebaseConfig);
-                        auth = getAuth(app);
-                        db = getFirestore(app);
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log('Custom token을 사용하여 로그인 성공.');
-                            } catch (error) {
-                                console.error('Custom token 로그인 실패:', error);
-                                // 커스텀 토큰 실패 시 익명 로그인 시도
-                                try {
-                                    await signInAnonymously(auth);
-                                    console.log('익명 로그인 성공.');
-                                } catch (anonError) {
-                                    console.error('익명 로그인 실패:', anonError);
-                                }
-                            }
-                        } else {
-                            // 초기 토큰이 없다면 익명 로그인 시도
-                            try {
-                                await signInAnonymously(auth);
-                                console.log('익명 로그인 성공.');
-                            } catch (error) {
-                                console.error('익명 로그인 실패:', error);
-                            }
-                        }
-
-                        // IMPORTANT: onAuthStateChanged 리스너에만 의존하여 UI 업데이트
-                        onAuthStateChanged(auth, async (user) => {
+                        // '더보기' 페이지와 동일하게 onAuthStateChanged만 설정
+                        auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
-                            // 페이지 특정 로직: 글쓰기 페이지에서 로그인 상태 확인
+                            // 글쓰기 페이지의 인증 필수 로직은 유지
                             if (window.location.pathname === '/write' && !user) {
                                 showMessageBox('로그인해야 글을 작성할 수 있습니다.');
                                 window.location.href = '/login';
@@ -672,22 +631,21 @@
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        await updateAccountUI(null); // 초기화 실패 시에도 UI를 로그아웃 상태로 업데이트
+                        await updateAccountUI(null);
                         if (window.location.pathname === '/write') {
                             showMessageBox('Firebase 초기화에 실패했습니다. 글쓰기 기능을 사용할 수 없습니다. 관리자에게 문의하세요.');
                         }
                     }
                 } else { // 앱이 이미 초기화되었다면 (예: SPA 탐색 또는 핫 리로드)
-                    // 기존 인스턴스 가져오기
-                    auth = getAuth(app);
-                    db = getFirestore(app);
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
 
-                    // 이미 초기화된 상태이므로 onAuthStateChanged 리스너만 다시 연결
-                    // onAuthStateChanged는 현재 인증 상태를 즉시 보고할 것임
-                    onAuthStateChanged(auth, async (user) => {
+                    // '더보기' 페이지와 동일하게 onAuthStateChanged만 다시 연결
+                    auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        // 페이지 특정 로직: 글쓰기 페이지에서 로그인 상태 확인
+                        // 글쓰기 페이지의 인증 필수 로직은 유지
                         if (window.location.pathname === '/write' && !user) {
                             showMessageBox('로그인해야 글을 작성할 수 있습니다.');
                             window.location.href = '/login';
@@ -696,7 +654,7 @@
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null); // 구성이 없을 시에도 UI 업데이트
+                await updateAccountUI(null);
                 if (window.location.pathname === '/write') {
                     showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
                 }
@@ -756,6 +714,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const postIdFromUrl = urlParams.get('postId');
             if (postIdFromUrl) {
+                // v8 Firestore API 호환성을 위해 loadPostForEdit 함수는 현재 비활성화
                 await loadPostForEdit(postIdFromUrl);
             }
 
@@ -790,26 +749,28 @@
                 }
 
                 try {
+                    // Firebase v8 Firestore API를 사용하여 데이터 저장
+                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('posts');
                     const postData = {
                         title: title,
                         category: category,
                         contentHtml: contentHtml,
                         authorUid: auth.currentUser.uid,
                         authorEmail: auth.currentUser.email,
-                        updatedAt: serverTimestamp() // Update timestamp on every save
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() // v8 방식
                     };
 
                     if (currentPostId) {
                         // Update existing post
-                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'posts', currentPostId), postData);
+                        await postsCollectionRef.doc(currentPostId).update(postData); // v8 방식
                         showMessageBox('게시물이 성공적으로 수정되었습니다!');
                         window.location.href = `/view/${currentPostId}`; // Redirect to updated post with new URL format
                     } else {
                         // Create new post
-                        postData.createdAt = serverTimestamp(); // Set creation timestamp only for new posts
+                        postData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // v8 방식
                         postData.likes = 0;
                         postData.views = 0;
-                        const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'posts'), postData);
+                        const docRef = await postsCollectionRef.add(postData); // v8 방식
                         showMessageBox('게시물이 성공적으로 작성되었습니다!');
                         window.location.href = `/view/${docRef.id}`; // Redirect to newly created post with new URL format
                     }
