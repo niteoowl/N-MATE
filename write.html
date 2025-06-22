@@ -573,36 +573,10 @@
          */
         async function loadPostForEdit(postIdToLoad) {
             try {
-                // 이 함수는 v9 Firestore API를 사용하고 있으므로,
-                // v8 API와 호환되도록 수정이 필요합니다.
-                // 현재는 더보기 페이지의 로그인 기능 일치에 초점을 맞춥니다.
-                // 이 부분을 활성화하려면 v8 Firestore API를 사용하여 재작성해야 합니다.
                 showMessageBox('게시물 수정 기능은 현재 비활성화되어 있습니다. (v8 API 호환성 문제)');
                 console.warn('게시물 수정 기능은 v8 Firestore API를 사용하여 재작성해야 합니다.');
                 window.location.href = '/community'; // 수정 기능 비활성화로 커뮤니티 페이지로 리다이렉트
                 return;
-
-
-                // const postRef = doc(db, 'artifacts', appId, 'public', 'posts', postIdToLoad);
-                // const postSnap = await getDoc(postRef);
-
-                // if (postSnap.exists()) {
-                //     const postData = postSnap.data();
-                //     if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
-                //         postTitleInput.value = postData.title || '';
-                //         postCategorySelect.value = postData.category || '';
-                //         quill.root.innerHTML = postData.contentHtml || '';
-                //         submitPostButton.textContent = '게시물 수정';
-                //         document.querySelector('h2').textContent = '게시물 수정';
-                //         currentPostId = postIdToLoad;
-                //     } else {
-                //         showMessageBox('이 게시물을 수정할 권한이 없습니다.');
-                //         window.location.href = `/view/${postIdToLoad}`;
-                //     }
-                // } else {
-                //     showMessageBox('수정할 게시물을 찾을 수 없습니다.');
-                //     window.location.href = '/community';
-                // }
             } catch (error) {
                 console.error('게시물 로드 오류:', error);
                 showMessageBox('게시물 로드 중 오류가 발생했습니다: ' + error.message);
@@ -749,8 +723,9 @@
                 }
 
                 try {
-                    // Firebase v8 Firestore API를 사용하여 데이터 저장
-                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('posts');
+                    // Firestore 컬렉션 참조 생성 (add()는 컬렉션 참조에서 호출되어야 함)
+                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').collection('posts');
+                    
                     const postData = {
                         title: title,
                         category: category,
@@ -761,12 +736,13 @@
                     };
 
                     if (currentPostId) {
-                        // Update existing post
-                        await postsCollectionRef.doc(currentPostId).update(postData); // v8 방식
+                        // 기존 게시물 수정 (문서 참조에서 update() 호출)
+                        const postDocRef = postsCollectionRef.doc(currentPostId);
+                        await postDocRef.update(postData);
                         showMessageBox('게시물이 성공적으로 수정되었습니다!');
                         window.location.href = `/view/${currentPostId}`; // Redirect to updated post with new URL format
                     } else {
-                        // Create new post
+                        // 새 게시물 생성 (컬렉션 참조에서 add() 호출)
                         postData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // v8 방식
                         postData.likes = 0;
                         postData.views = 0;
