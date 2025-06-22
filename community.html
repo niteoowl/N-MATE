@@ -290,15 +290,8 @@
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = {
-            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
-            authDomain: "n-mate.firebaseapp.com",
-            projectId: "n-mate",
-            storageBucket: "n-mate.firebasestorage.app",
-            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            measurementId: "G-0LCGVBKXLQ",
-            messagingSenderId: "691313471077"
-        };
+        // Use the Firebase config provided by the Canvas environment
+        const firebaseConfig = JSON.parse(__firebase_config);
 
         // Firebase app, auth, and firestore instances
         let app;
@@ -315,6 +308,8 @@
         let currentFilter = 'all'; // 'all', 'popular', 'category'
         const specificCategories = ['자유 게시판', '정보 공유', '질문 게시판'];
         let currentSpecificCategoryIndex = 0; // Index for cycling through specific categories
+        const categoryAllBox = document.getElementById('category-all');
+        const categoryPopularBox = document.getElementById('category-popular');
         const categorySpecificBox = document.getElementById('category-specific');
         const categorySpecificText = categorySpecificBox.querySelector('p');
 
@@ -516,15 +511,16 @@
                 return;
             }
 
-            const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('posts');
+            // Corrected Firestore collection path to include 'data' document as per the recommended structure
+            const postsCollection = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
             let q;
 
             if (filterType === 'popular') {
-                q = postsCollectionRef.orderBy('likes', 'desc');
+                q = postsCollection.orderBy('likes', 'desc');
             } else if (filterType === 'category' && specificCategory) {
-                q = postsCollectionRef.where('category', '==', specificCategory).orderBy('createdAt', 'desc');
+                q = postsCollection.where('category', '==', specificCategory).orderBy('createdAt', 'desc');
             } else { // 'all' filter or 'category' without specificCategory (fallback to all)
-                q = postsCollectionRef.orderBy('createdAt', 'desc');
+                q = postsCollection.orderBy('createdAt', 'desc');
             }
 
             // Unsubscribe from previous snapshot listener if exists
@@ -615,14 +611,26 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // THEN, set up the state change listener to handle both initial state and future changes
+                        // Authentication: Use __initial_auth_token if available, otherwise sign in anonymously
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await auth.signInWithCustomToken(__initial_auth_token);
+                            console.log('Custom token으로 로그인 성공.');
+                        } else {
+                            await auth.signInAnonymously();
+                            console.log('익명으로 로그인 성공.');
+                        }
+
+                        // Set up the state change listener AFTER authentication attempt
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
+                            // Fetch posts ONLY after authentication state is determined
+                            fetchAndDisplayPosts(currentFilter);
+                            updateCommunityCategoryActiveState('category-all'); // Set '전체' as active on initial load
                         });
 
                     } catch (error) {
-                        console.error('Firebase 초기화 실패:', error);
-                        showMessageBox('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.');
+                        console.error('Firebase 초기화 또는 인증 실패:', error);
+                        showMessageBox('Firebase 초기화 또는 인증에 실패했습니다. 관리자에게 문의하세요.');
                         await updateAccountUI(null); // Ensure UI updates even on init failure
                     }
                 } else {
@@ -631,7 +639,12 @@
                     auth = firebase.auth();
                     db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
-                    await updateAccountUI(auth.currentUser); // Update UI with current user state immediately
+                    // Even if already initialized, trigger auth state check and fetch
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        fetchAndDisplayPosts(currentFilter);
+                        updateCommunityCategoryActiveState('category-all');
+                    });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
@@ -639,24 +652,20 @@
                 await updateAccountUI(null); // Ensure UI updates if no config
             }
 
-            // Initial load of posts (default to 'all' filter)
-            fetchAndDisplayPosts(currentFilter);
-            updateCommunityCategoryActiveState('category-all'); // Set '전체' as active on initial load
-
-            // Event Listeners for category filter boxes
-            document.getElementById('category-all').addEventListener('click', () => {
+            // Event Listeners for category filter boxes (these can remain outside onAuthStateChanged)
+            categoryAllBox.addEventListener('click', () => {
                 currentFilter = 'all';
                 fetchAndDisplayPosts(currentFilter);
                 updateCommunityCategoryActiveState('category-all');
             });
 
-            document.getElementById('category-popular').addEventListener('click', () => {
+            categoryPopularBox.addEventListener('click', () => {
                 currentFilter = 'popular';
                 fetchAndDisplayPosts(currentFilter);
                 updateCommunityCategoryActiveState('category-popular');
             });
 
-            document.getElementById('category-specific').addEventListener('click', () => {
+            categorySpecificBox.addEventListener('click', () => {
                 currentFilter = 'category';
                 currentSpecificCategoryIndex = (currentSpecificCategoryIndex + 1) % specificCategories.length;
                 const selectedCategory = specificCategories[currentSpecificCategoryIndex];
