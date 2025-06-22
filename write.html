@@ -573,10 +573,29 @@
          */
         async function loadPostForEdit(postIdToLoad) {
             try {
-                showMessageBox('게시물 수정 기능은 현재 비활성화되어 있습니다. (v8 API 호환성 문제)');
-                console.warn('게시물 수정 기능은 v8 Firestore API를 사용하여 재작성해야 합니다.');
-                window.location.href = '/community'; // 수정 기능 비활성화로 커뮤니티 페이지로 리다이렉트
-                return;
+                // 이 함수는 v8 Firestore API를 사용하여 재작성해야 합니다.
+                // 현재는 기능 일치에 초점을 맞추므로 임시로 비활성화합니다.
+                // 보안 규칙에 따라 /artifacts/{appId}/public/data/posts/{postId} 경로를 사용해야 합니다.
+                const postDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts').doc(postIdToLoad);
+                const postSnap = await postDocRef.get(); // v8 get() 사용
+
+                if (postSnap.exists) { // v8에서는 .exists 속성을 사용
+                    const postData = postSnap.data(); // v8에서는 .data() 메서드를 사용
+                    if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
+                        postTitleInput.value = postData.title || '';
+                        postCategorySelect.value = postData.category || '';
+                        quill.root.innerHTML = postData.contentHtml || ''; // Set Quill content
+                        submitPostButton.textContent = '게시물 수정'; // Change button text
+                        document.querySelector('h2').textContent = '게시물 수정'; // Change section title
+                        currentPostId = postIdToLoad; // Store post ID for update
+                    } else {
+                        showMessageBox('이 게시물을 수정할 권한이 없습니다.');
+                        window.location.href = `/view/${postIdToLoad}`; // Redirect to view page
+                    }
+                } else {
+                    showMessageBox('수정할 게시물을 찾을 수 없습니다.');
+                    window.location.href = '/community'; // Redirect if post not found
+                }
             } catch (error) {
                 console.error('게시물 로드 오류:', error);
                 showMessageBox('게시물 로드 중 오류가 발생했습니다: ' + error.message);
@@ -688,7 +707,7 @@
             const urlParams = new URLSearchParams(window.location.search);
             const postIdFromUrl = urlParams.get('postId');
             if (postIdFromUrl) {
-                // v8 Firestore API 호환성을 위해 loadPostForEdit 함수는 현재 비활성화
+                // v8 Firestore API 호환성을 위해 loadPostForEdit 함수는 이제 제대로 작동하도록 수정되었습니다.
                 await loadPostForEdit(postIdFromUrl);
             }
 
@@ -723,8 +742,9 @@
                 }
 
                 try {
-                    // Firestore 컬렉션 참조 생성 (add()는 컬렉션 참조에서 호출되어야 함)
-                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').collection('posts');
+                    // Firestore 컬렉션 참조 생성
+                    // 경로를 /artifacts/{appId}/public/data/posts 로 수정
+                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
                     
                     const postData = {
                         title: title,
