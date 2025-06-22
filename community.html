@@ -57,11 +57,11 @@
             margin-left: auto;
             margin-right: auto;
             width: 100%;
-            position: relative; /* For absolute positioning of dropdown menu */
+            position: relative; /* For absolute positioning of dropdown menu and FAB */
             padding-bottom: 70px; /* Space for fixed bottom navigation */
         }
 
-        /* Dropdown menu styles */
+        /* Dropdown menu styles (for account) */
         .dropdown-menu {
             position: absolute; /* Relative to the parent with position: relative */
             background-color: white;
@@ -115,7 +115,7 @@
 
         /* Floating Action Button (FAB) */
         .fab {
-            position: fixed;
+            position: absolute; /* Changed from fixed to absolute */
             bottom: 80px; /* Adjust based on bottom navigation bar height */
             right: 20px;
             background-color: #2563eb; /* blue-600 */
@@ -188,6 +188,91 @@
         .message-box button:hover {
             background-color: #0056b3;
         }
+
+        /* Category Modal Styles */
+        .category-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999; /* Below message box, above other content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .category-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .category-modal {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80%; /* Limit height to prevent overflow on small screens */
+            overflow-y: auto; /* Enable scrolling for modal content */
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+        .category-modal-overlay.visible .category-modal {
+            transform: translateY(0);
+        }
+        .category-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .category-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .category-modal-close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s ease;
+        }
+        .category-modal-close-button:hover {
+            color: #333;
+        }
+        .category-list optgroup {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #333;
+            margin-top: 1rem;
+            display: block; /* Make optgroup act like a block for styling */
+            padding: 0.5rem 0;
+        }
+        .category-list button {
+            display: block; /* Each option as a block */
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            background-color: transparent;
+            border: none;
+            font-size: 1rem;
+            color: #555;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            border-radius: 0.5rem;
+        }
+        .category-list button:hover {
+            background-color: #f0f2f5;
+            color: #2563eb;
+        }
     </style>
 </head>
 <body>
@@ -233,7 +318,7 @@
                 </div>
                 <!-- '카테고리' 박스 (동적으로 텍스트 변경) -->
                 <div id="category-specific" class="community-category-box flex-1 rounded-full border border-gray-300 p-2 flex items-center justify-center text-center h-8 cursor-pointer" data-filter="category">
-                    <p class="text-sm text-gray-700 font-medium">자유 게시판</p>
+                    <p class="text-sm text-gray-700 font-medium">카테고리</p>
                 </div>
             </div>
 
@@ -244,45 +329,135 @@
             </div>
         </div>
 
+        <!-- Floating Action Button for writing a new post -->
+        <div id="writePostFab" class="fab">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        </div>
+
         <!-- Placeholder for additional content -->
         <p class="text-2xl text-gray-700 px-6 mt-1"></p>
     </div>
 
-    <!-- Floating Action Button for writing a new post -->
-    <div id="writePostFab" class="fab">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    <!-- Category Selection Modal -->
+    <div id="categoryModalOverlay" class="category-modal-overlay">
+        <div class="category-modal">
+            <div class="category-modal-header">
+                <h3>카테고리 선택</h3>
+                <button id="categoryModalCloseButton" class="category-modal-close-button">&times;</button>
+            </div>
+            <div class="category-list">
+                <optgroup label="일상">
+                    <button data-category="일상_이야기">이야기</button>
+                    <button data-category="일상_사진">사진</button>
+                    <button data-category="일상_고민">고민</button>
+                    <button data-category="일상_정보">정보</button>
+                    <button data-category="일상_질문">질문</button>
+                    <button data-category="일상_자유">자유</button>
+                    <button data-category="일상_뻘글">뻘글</button>
+                    <button data-category="일상_썰">썰</button>
+                    <button data-category="일상_연재">연재</button>
+                    <button data-category="일상_기타">기타 일상</button>
+                </optgroup>
+                <optgroup label="스포츠">
+                    <button data-category="스포츠_야구">야구</button>
+                    <button data-category="스포츠_농구">농구</button>
+                    <button data-category="스포츠_축구">축구</button>
+                    <button data-category="스포츠_배구">배구</button>
+                    <button data-category="스포츠_탁구">탁구</button>
+                    <button data-category="스포츠_테니스">테니스</button>
+                    <button data-category="스포츠_수영">수영</button>
+                    <button data-category="스포츠_배드민턴">배드민턴</button>
+                    <button data-category="스포츠_볼링">볼링</button>
+                    <button data-category="스포츠_골프">골프</button>
+                    <button data-category="스포츠_육상">육상</button>
+                    <button data-category="스포츠_기타">기타 스포츠</button>
+                </optgroup>
+                <optgroup label="예술">
+                    <button data-category="예술_미술">미술</button>
+                    <button data-category="예술_음악">음악</button>
+                    <button data-category="예술_영화">영화</button>
+                    <button data-category="예술_문학">문학</button>
+                    <button data-category="예술_공연">공연</button>
+                    <button data-category="예술_사진">사진</button>
+                    <button data-category="예술_디자인">디자인</button>
+                    <button data-category="예술_건축">건축</button>
+                    <button data-category="예술_기타">기타 예술</button>
+                </optgroup>
+                <optgroup label="학업">
+                    <button data-category="학업_국어">국어</button>
+                    <button data-category="학업_수학">수학</button>
+                    <button data-category="학업_영어">영어</button>
+                    <button data-category="학업_과학">과학</button>
+                    <button data-category="학업_사회">사회</button>
+                    <button data-category="학업_역사">역사</button>
+                    <button data-category="학업_코딩">코딩</button>
+                    <button data-category="학업_기타">기타 학업</button>
+                </optgroup>
+                <optgroup label="취미/여가">
+                    <button data-category="취미_게임">게임</button>
+                    <button data-category="취미_독서">독서</button>
+                    <button data-category="취미_여행">여행</button>
+                    <button data-category="취미_요리">요리</button>
+                    <button data-category="취미_반려동물">반려동물</button>
+                    <button data-category="취미_패션">패션</button>
+                    <button data-category="취미_IT기기">IT/기기</button>
+                    <button data-category="취미_기타">기타 취미</button>
+                </optgroup>
+                <optgroup label="학교생활">
+                    <button data-category="학교생활_급식">급식</button>
+                    <button data-category="학교생활_교복">교복</button>
+                    <button data-category="학교생활_선생님">선생님</button>
+                    <button data-category="학교생활_친구">친구</button>
+                    <button data-category="학교생활_수업">수업</button>
+                    <button data-category="학교생활_동아리">동아리</button>
+                    <button data-category="학교생활_행사">행사</button>
+                    <button data-category="학교생활_기타">기타 학교생활</button>
+                </optgroup>
+            </div>
+        </div>
     </div>
+
 
     <!-- Bottom Navigation Bar -->
     <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
-                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
             <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
-                <i data-lucide="book-open" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
                 <span class="text-xs font-medium">학교생활</span>
             </button>
 
             <!-- Community Navigation Item -->
             <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 active" data-tab="커뮤니티" data-path="/community">
-                <i data-lucide="users" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
                 <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
             <!-- Calendar Navigation Item -->
             <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
-                <i data-lucide="calendar" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
                 <span class="text-xs font-medium">캘린더</span>
             </button>
 
             <!-- More Navigation Item -->
             <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
-                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
                 <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
@@ -314,12 +489,16 @@
 
         // Category filter related variables
         let currentFilter = 'all'; // 'all', 'popular', 'category'
-        const specificCategories = ['자유 게시판', '정보 공유', '질문 게시판'];
-        let currentSpecificCategoryIndex = 0; // Index for cycling through specific categories
+        let currentSpecificCategory = null; // Stores the currently selected specific category (e.g., '스포츠_야구')
         const categoryAllBox = document.getElementById('category-all');
         const categoryPopularBox = document.getElementById('category-popular');
         const categorySpecificBox = document.getElementById('category-specific');
         const categorySpecificText = categorySpecificBox.querySelector('p');
+
+        // Category Modal Elements
+        const categoryModalOverlay = document.getElementById('categoryModalOverlay');
+        const categoryModalCloseButton = document.getElementById('categoryModalCloseButton');
+        const categoryListContainer = document.querySelector('.category-list');
 
         /**
          * Toggles the visibility of the account dropdown menu.
@@ -400,7 +579,7 @@
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
                 const spanElement = item.querySelector('span');
-                const iconElement = item.querySelector('i');
+                const svgElement = item.querySelector('svg'); // Changed from 'i' to 'svg'
 
                 // Reset all nav items to default (inactive) state
                 item.classList.remove('text-blue-600', 'active');
@@ -409,9 +588,9 @@
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
-                if (iconElement) {
-                    iconElement.classList.remove('text-blue-600');
-                    iconElement.classList.add('text-gray-500');
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500');
                 }
 
                 // Check for exact path match or if it's the community button and current path is within /community or /write section
@@ -422,9 +601,9 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (iconElement) {
-                        iconElement.classList.add('text-blue-600');
-                        iconElement.classList.remove('text-gray-500');
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
                     item.classList.add('text-blue-600', 'active');
@@ -433,9 +612,9 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (iconElement) {
-                        iconElement.classList.add('text-blue-600');
-                        iconElement.classList.remove('text-gray-500');
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
                     }
                 }
             });
@@ -609,6 +788,20 @@
             });
         }
 
+        /**
+         * Shows the category selection modal.
+         */
+        function showCategoryModal() {
+            categoryModalOverlay.classList.add('visible');
+        }
+
+        /**
+         * Hides the category selection modal.
+         */
+        function hideCategoryModal() {
+            categoryModalOverlay.classList.remove('visible');
+        }
+
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
@@ -657,23 +850,44 @@
             // Event Listeners for category filter boxes
             categoryAllBox.addEventListener('click', () => {
                 currentFilter = 'all';
+                currentSpecificCategory = null; // Reset specific category
+                categorySpecificText.textContent = '카테고리'; // Reset category box text
                 fetchAndDisplayPosts(currentFilter);
                 updateCommunityCategoryActiveState('category-all');
             });
 
             categoryPopularBox.addEventListener('click', () => {
                 currentFilter = 'popular';
+                currentSpecificCategory = null; // Reset specific category
+                categorySpecificText.textContent = '카테고리'; // Reset category box text
                 fetchAndDisplayPosts(currentFilter);
                 updateCommunityCategoryActiveState('category-popular');
             });
 
             categorySpecificBox.addEventListener('click', () => {
-                currentFilter = 'category';
-                currentSpecificCategoryIndex = (currentSpecificCategoryIndex + 1) % specificCategories.length;
-                const selectedCategory = specificCategories[currentSpecificCategoryIndex];
-                categorySpecificText.textContent = selectedCategory; // Update box text
-                fetchAndDisplayPosts(currentFilter, selectedCategory);
-                updateCommunityCategoryActiveState('category-specific');
+                showCategoryModal(); // Show the category selection modal
+            });
+
+            // Event listener for category modal close button
+            categoryModalCloseButton.addEventListener('click', hideCategoryModal);
+
+            // Event listener for clicking outside the modal to close it
+            categoryModalOverlay.addEventListener('click', (e) => {
+                if (e.target === categoryModalOverlay) {
+                    hideCategoryModal();
+                }
+            });
+
+            // Event listeners for individual category buttons in the modal
+            categoryListContainer.querySelectorAll('button').forEach(button => {
+                button.addEventListener('click', () => {
+                    currentSpecificCategory = button.dataset.category;
+                    currentFilter = 'category';
+                    categorySpecificText.textContent = button.textContent; // Update category box text with selected category
+                    fetchAndDisplayPosts(currentFilter, currentSpecificCategory);
+                    updateCommunityCategoryActiveState('category-specific');
+                    hideCategoryModal();
+                });
             });
 
             // Event Listener for FAB
