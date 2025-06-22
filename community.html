@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN (v8.10.1로 업데이트) -->
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -205,7 +205,8 @@
             <!-- Account/Login section with dropdown -->
             <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
-                    <!-- Conditional content injected by JavaScript -->
+                    <!-- 초기 로딩 중 메시지 -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
@@ -399,7 +400,7 @@
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
                 const spanElement = item.querySelector('span');
-                const iconElement = item.querySelector('i'); // Changed from svgElement to iconElement
+                const iconElement = item.querySelector('i');
 
                 // Reset all nav items to default (inactive) state
                 item.classList.remove('text-blue-600', 'active');
@@ -408,7 +409,7 @@
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
-                if (iconElement) { // Changed from svgElement to iconElement
+                if (iconElement) {
                     iconElement.classList.remove('text-blue-600');
                     iconElement.classList.add('text-gray-500');
                 }
@@ -421,7 +422,7 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (iconElement) { // Changed from svgElement to iconElement
+                    if (iconElement) {
                         iconElement.classList.add('text-blue-600');
                         iconElement.classList.remove('text-gray-500');
                     }
@@ -432,7 +433,7 @@
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
-                    if (iconElement) { // Changed from svgElement to iconElement
+                    if (iconElement) {
                         iconElement.classList.add('text-blue-600');
                         iconElement.classList.remove('text-gray-500');
                     }
@@ -519,18 +520,19 @@
             }
 
             // Corrected Firestore collection path to include 'data' document as per the recommended structure
+            // This path must match the security rules: /artifacts/{appId}/public/data/posts/{postId}
             const postsCollection = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
             let q;
 
             if (filterType === 'popular') {
-                q = postsCollection.orderBy('likes', 'desc');
+                q = postsCollection.orderBy('views', 'desc'); // 'views' 기준으로 인기 정렬 (원하는 필드에 따라 변경 가능)
             } else if (filterType === 'category' && specificCategory) {
                 q = postsCollection.where('category', '==', specificCategory).orderBy('createdAt', 'desc');
             } else { // 'all' filter or 'category' without specificCategory (fallback to all)
                 q = postsCollection.orderBy('createdAt', 'desc');
             }
 
-            // Unsubscribe from previous snapshot listener if exists
+            // Unsubscribe from previous snapshot listener if exists to avoid multiple listeners
             if (window.postsUnsubscribe) {
                 window.postsUnsubscribe();
             }
@@ -544,7 +546,7 @@
                         renderPostItem(doc.data(), doc.id);
                         postsList.appendChild(document.createElement('hr')).classList.add('border-gray-200', 'my-2'); // Add separator
                     });
-                    // Remove the last separator
+                    // Remove the last separator for cleaner display
                     if (postsList.lastChild && postsList.lastChild.tagName === 'HR') {
                         postsList.removeChild(postsList.lastChild);
                     }
@@ -611,56 +613,48 @@
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey) {
-                if (firebase.apps.length === 0) { // Check if app is not already initialized
+                if (firebase.apps.length === 0) { // 앱이 초기화되지 않았다면 초기화
                     try {
                         app = firebase.initializeApp(firebaseConfig);
                         auth = firebase.auth();
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
-                        // Authentication: Use __initial_auth_token if available, otherwise sign in anonymously
-                        // __initial_auth_token 변수가 전역 범위에 있다고 가정합니다.
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await auth.signInWithCustomToken(__initial_auth_token);
-                            console.log('Custom token으로 로그인 성공.');
-                        } else {
-                            await auth.signInAnonymously();
-                            console.log('익명으로 로그인 성공.');
-                        }
-
-                        // Set up the state change listener AFTER authentication attempt
+                        // `onAuthStateChanged` 리스너만 설정하여 인증 상태 변경에 따라 UI 업데이트
+                        // 이는 로그인 상태가 지속되더라도 즉시 올바른 UI를 표시하도록 합니다.
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
-                            // Fetch posts ONLY after authentication state is determined
+                            // 인증 상태가 결정된 후 게시물 로드 시작
                             fetchAndDisplayPosts(currentFilter);
-                            updateCommunityCategoryActiveState('category-all'); // Set '전체' as active on initial load
+                            updateCommunityCategoryActiveState('category-all'); // 초기에는 '전체' 활성화
                         });
 
                     } catch (error) {
-                        console.error('Firebase 초기화 또는 인증 실패:', error);
-                        showMessageBox('Firebase 초기화 또는 인증에 실패했습니다. 관리자에게 문의하세요.');
-                        await updateAccountUI(null); // Ensure UI updates even on init failure
+                        console.error('Firebase 초기화 실패:', error);
+                        showMessageBox('Firebase 초기화에 실패했습니다. 관리자에게 문의하세요.');
+                        await updateAccountUI(null); // 초기화 실패 시에도 UI를 로그아웃 상태로 업데이트
                     }
-                } else {
-                    // If app is already initialized, ensure auth and db are referenced
+                } else { // 앱이 이미 초기화되었다면 (예: SPA 탐색 또는 핫 리로드)
                     app = firebase.app();
                     auth = firebase.auth();
                     db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
-                    // Even if already initialized, trigger auth state check and fetch
+                    
+                    // `onAuthStateChanged` 리스너만 다시 연결
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
+                        // 인증 상태가 결정된 후 게시물 로드 시작
                         fetchAndDisplayPosts(currentFilter);
-                        updateCommunityCategoryActiveState('category-all');
+                        updateCommunityCategoryActiveState('category-all'); // 초기에는 '전체' 활성화
                     });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 showMessageBox('Firebase 구성이 누락되었습니다. 일부 기능을 사용할 수 없습니다.');
-                await updateAccountUI(null); // Ensure UI updates if no config
+                await updateAccountUI(null); // 구성이 없을 시에도 UI 업데이트
             }
 
-            // Event Listeners for category filter boxes (these can remain outside onAuthStateChanged)
+            // Event Listeners for category filter boxes
             categoryAllBox.addEventListener('click', () => {
                 currentFilter = 'all';
                 fetchAndDisplayPosts(currentFilter);
