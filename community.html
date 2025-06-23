@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -531,7 +532,7 @@
 
         /**
          * Updates the account UI based on user authentication status.
-         * Displays email prefix if logged in, otherwise "로그인" button.
+         * 게시물 보기는 로그인 여부와 관계없이 가능하며, 글쓰기 기능만 로그인 사용자에게 제공됩니다.
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
@@ -555,6 +556,8 @@
                     logoutButton.addEventListener('click', handleLogout);
                     logoutButton.dataset.listenerAdded = 'true';
                 }
+                // 로그인 시 FAB 활성화
+                writePostFab.classList.remove('hidden'); 
             } else {
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
@@ -565,6 +568,8 @@
                     window.location.href = '/login';
                 });
                 accountDropdown.classList.add('hidden');
+                // 로그아웃 시 FAB 숨기기
+                writePostFab.classList.add('hidden');
             }
             lucide.createIcons();
         }
@@ -687,7 +692,7 @@
 
         /**
          * Fetches and displays posts based on the current filter and category.
-         * Uses onSnapshot for real-time updates.
+         * 로그인 여부와 관계없이 게시물을 가져와 표시합니다.
          * @param {string} filterType - 'all', 'popular', 'category'
          * @param {string|null} specificCategory - Specific category name if filterType is 'category', otherwise null.
          */
@@ -814,10 +819,10 @@
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
                         // `onAuthStateChanged` 리스너만 설정하여 인증 상태 변경에 따라 UI 업데이트
-                        // 이는 로그인 상태가 지속되더라도 즉시 올바른 UI를 표시하도록 합니다.
+                        // 이 리스너는 로그인 상태와 관계없이 항상 호출되므로, 비로그인 사용자도 게시물을 볼 수 있습니다.
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
-                            // 인증 상태가 결정된 후 게시물 로드 시작
+                            // 인증 상태가 결정된 후 게시물 로드 시작 (로그인 여부와 관계없이 실행)
                             fetchAndDisplayPosts(currentFilter);
                             updateCommunityCategoryActiveState('category-all'); // 초기에는 '전체' 활성화
                         });
@@ -836,7 +841,7 @@
                     // `onAuthStateChanged` 리스너만 다시 연결
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        // 인증 상태가 결정된 후 게시물 로드 시작
+                        // 인증 상태가 결정된 후 게시물 로드 시작 (로그인 여부와 관계없이 실행)
                         fetchAndDisplayPosts(currentFilter);
                         updateCommunityCategoryActiveState('category-all'); // 초기에는 '전체' 활성화
                     });
@@ -892,7 +897,12 @@
 
             // Event Listener for FAB
             writePostFab.addEventListener('click', () => {
-                window.location.href = '/write'; // Navigate to the write page
+                // 글쓰기 기능은 로그인한 사용자만 사용할 수 있도록 제한합니다.
+                if (auth.currentUser) {
+                    window.location.href = '/write'; // Navigate to the write page
+                } else {
+                    showMessageBox('글을 작성하려면 로그인해야 합니다.');
+                }
             });
 
             // Global click listener to close dropdown when clicking outside
