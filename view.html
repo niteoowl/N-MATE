@@ -360,6 +360,7 @@
         /**
          * Updates the account UI based on user authentication status.
          * Displays email prefix if logged in, otherwise "로그인" button.
+         * 게시물 보기는 로그인 여부와 관계없이 가능하며, 댓글 작성 기능만 로그인 사용자에게 제공됩니다.
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
@@ -567,6 +568,7 @@
          * Handles submitting a new comment.
          */
         async function handleSubmitComment() {
+            // 댓글 작성은 로그인한 사용자만 가능합니다.
             if (!currentUserId) {
                 showMessageBox('로그인해야 댓글을 작성할 수 있습니다.');
                 return;
@@ -600,6 +602,7 @@
 
         /**
          * Fetches and displays a specific post's data.
+         * 이 함수는 로그인 여부와 관계없이 게시물 데이터를 가져옵니다.
          * @param {string} id - The ID of the post to fetch.
          */
         async function fetchPostData(id) {
@@ -612,6 +615,9 @@
                     postAuthorId = postData.authorUid; // Set post author ID
 
                     postTitleElem.textContent = postData.title;
+                    // Update the document title based on the post title
+                    document.title = `${postData.title} - N-MATE`;
+
                     postAuthorElem.textContent = `작성자: ${postData.authorEmail ? postData.authorEmail.split('@')[0] : '익명'}`;
                     postDateElem.textContent = postData.createdAt ? new Date(postData.createdAt.seconds * 1000).toLocaleString('ko-KR') : '날짜 없음';
                     postCategoryElem.textContent = postData.category || '기타';
@@ -638,6 +644,7 @@
                     postViewsElem.textContent = 0;
                     postCommentsCount.textContent = 0;
                     commentsSectionCount.textContent = 0;
+                    document.title = '게시물 찾을 수 없음 - N-MATE'; // Update title for not found
                     console.log('게시물 없음:', id);
                 }
             } catch (error) {
@@ -645,6 +652,7 @@
                 showMessageBox('게시물을 가져오는 중 오류가 발생했습니다: ' + error.message);
                 postTitleElem.textContent = '게시물 로드 오류';
                 postContentElem.innerHTML = '<p>게시물을 로드하는 중 오류가 발생했습니다.</p>';
+                document.title = '오류 - N-MATE'; // Update title on error
             }
         }
 
@@ -740,6 +748,7 @@
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
                         // `onAuthStateChanged` 리스너만 설정하여 인증 상태 변경에 따라 UI 업데이트
+                        // 이 리스너는 로그인 상태와 관계없이 항상 호출되므로, 비로그인 사용자도 게시물을 볼 수 있습니다.
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
                         });
@@ -771,11 +780,13 @@
                 postId = pathParts[2];
             }
             
+            // 게시물 ID가 있으면 게시물 데이터를 가져옵니다. 로그인 여부와 관계없이 게시물을 표시합니다.
             if (postId) {
                 fetchPostData(postId);
             } else {
                 postTitleElem.textContent = '게시물 ID를 찾을 수 없습니다.';
                 postContentElem.innerHTML = '<p>URL에 게시물 ID가 없습니다. 올바른 접근 경로를 통해 게시물에 접근해주세요.</p>';
+                document.title = '게시물 찾을 수 없음 - N-MATE'; // Default title if no post ID
             }
 
             // Event Listeners
