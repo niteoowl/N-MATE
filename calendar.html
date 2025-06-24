@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부산남중학교 N-MATE - 캘린더 (빈 페이지)</title>
+    <title>부산남중학교 N-MATE - 캘린더</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter 및 Noto Sans KR 폰트 설정 -->
@@ -316,10 +316,15 @@
         /**
          * Updates the account UI based on user authentication status.
          * Displays email prefix if logged in, otherwise "로그인" button.
+         *
+         * 이 함수는 로그인 상태에 따라 헤더의 계정 영역 UI를 업데이트합니다.
+         * 로그인되어 있으면 이메일 접두사와 사용자 아이콘을 표시하고,
+         * 로그아웃되어 있으면 "로그인" 버튼을 표시하여 로그인 페이지로 리디렉션합니다.
+         *
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user && user.email) { // Check if a user is logged in and has an email
+            if (user && user.email) { // 사용자가 로그인되어 있고 이메일이 있는 경우
                 const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -327,37 +332,39 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
+                // 계정 탭 버튼 클릭 시 드롭다운 토글 기능 추가
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
-                // Attach event listeners for dropdown buttons
+                // 드롭다운 버튼(설정, 로그아웃)에 이벤트 리스너 추가
                 const settingsButton = document.getElementById('settingsButton');
                 if (settingsButton && !settingsButton.dataset.listenerAdded) {
                     settingsButton.addEventListener('click', handleSettingsClick);
-                    settingsButton.dataset.listenerAdded = 'true';
+                    settingsButton.dataset.listenerAdded = 'true'; // 리스너 중복 추가 방지
                 }
                 const logoutButton = document.getElementById('logoutButton');
                 if (logoutButton && !logoutButton.dataset.listenerAdded) {
                     logoutButton.addEventListener('click', handleLogout);
-                    logoutButton.dataset.listenerAdded = 'true';
+                    logoutButton.dataset.listenerAdded = 'true'; // 리스너 중복 추가 방지
                 }
 
-            } else {
-                // User is logged out or does not have an email
+            } else { // 사용자가 로그아웃되었거나 이메일이 없는 경우 (예: 익명 사용자)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
                     </button>
                 `;
+                // "로그인" 버튼 클릭 시 로그인 페이지로 리디렉션
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+                accountDropdown.classList.add('hidden'); // 드롭다운 숨기기
             }
-            lucide.createIcons(); // Ensure Lucide icons are rendered
+            lucide.createIcons(); // Lucide 아이콘이 동적으로 추가/변경될 때 렌더링되도록 호출
         }
 
         /**
          * Updates the active state of the navigation bar buttons based on the current URL path.
+         * 현재 URL 경로에 따라 하단 내비게이션 바의 활성 상태를 업데이트합니다.
          */
         function updateNavigationActiveState() {
             const currentPath = window.location.pathname;
@@ -368,7 +375,7 @@
                 const spanElement = item.querySelector('span');
                 const svgElement = item.querySelector('svg');
 
-                // Reset all nav items to default (inactive) state
+                // 모든 내비게이션 아이템을 기본(비활성) 상태로 재설정합니다.
                 item.classList.remove('text-blue-600', 'active');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
@@ -380,7 +387,7 @@
                     svgElement.classList.add('text-gray-500');
                 }
 
-                // Check for exact path match or if it's a category button
+                // 현재 경로와 일치하거나 카테고리 버튼인 경우 활성 상태를 설정합니다.
                 if (currentPath === itemPath) {
                     item.classList.add('text-blue-600', 'active');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
@@ -426,7 +433,7 @@
                         svgElement.classList.remove('text-gray-500');
                     }
                 }
-                // Specifically for /calendar, activate the nav-calendar item
+                // /calendar 경로에 대해 nav-calendar 아이템을 활성화합니다.
                 if (currentPath === '/calendar' && item.id === 'nav-calendar') {
                      item.classList.add('text-blue-600', 'active');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
@@ -444,6 +451,7 @@
 
         /**
          * Sets up click event listeners for navigation items.
+         * 내비게이션 아이템에 클릭 이벤트 리스너를 설정합니다.
          */
         function setupNavigationEvents() {
             const navItems = document.querySelectorAll('.nav-item');
@@ -452,13 +460,15 @@
                     const path = item.dataset.path;
                     const currentPathname = window.location.pathname;
 
+                    // 현재 경로와 다를 경우에만 페이지 이동
                     if (currentPathname !== path) {
+                        // 학교생활 탭 클릭 시 초기 탭 상태 저장 (필요시 사용)
                         if (item.id === 'nav-school-life') {
                             localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
                         } else {
                             localStorage.removeItem('initialSchoolLifeTab');
                         }
-                        window.location.href = path;
+                        window.location.href = path; // 해당 경로로 페이지 이동
                     }
                 });
             });
@@ -466,8 +476,8 @@
 
         /**
          * Displays a custom message box.
-         * Replaces native alert() for better UI control in an iframe environment.
-         * @param {string} message - The message to display.
+         * 네이티브 alert() 대신 사용자 지정 메시지 상자를 표시합니다.
+         * @param {string} message - 표시할 메시지.
          */
         function showMessageBox(message) {
             const messageBox = document.createElement('div');
@@ -485,14 +495,14 @@
             });
         }
 
-        // Initialize page data (minimal for a blank page)
+        // 페이지 데이터 초기화 (빈 페이지를 위한 최소한의 로직)
         async function initializePageData() {
             console.log("캘린더 페이지가 백지 상태로 초기화되었습니다.");
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Firebase initialization
-            if (firebaseConfig && firebase.apiKey) {
+            // Firebase 초기화
+            if (firebaseConfig && firebaseConfig.apiKey) {
                 if (firebase.apps.length === 0) {
                     try {
                         app = firebase.initializeApp(firebaseConfig);
@@ -500,15 +510,16 @@
                         db = firebase.firestore();
                         console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
 
+                        // 인증 상태 변경 리스너 설정
                         auth.onAuthStateChanged(async (user) => {
-                            await updateAccountUI(user);
-                            initializePageData();
+                            await updateAccountUI(user); // 사용자 UI 업데이트
+                            initializePageData(); // 페이지 데이터 초기화
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
-                        await updateAccountUI(null);
-                        initializePageData();
+                        await updateAccountUI(null); // 오류 발생 시 UI를 로그아웃 상태로 업데이트
+                        initializePageData(); // 페이지 데이터 초기화는 계속 진행
                     }
                 } else {
                     app = firebase.app();
@@ -516,30 +527,31 @@
                     db = firebase.firestore();
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
                     auth.onAuthStateChanged(async (user) => {
-                        await updateAccountUI(user);
-                        initializePageData();
+                        await updateAccountUI(user); // 사용자 UI 업데이트
+                        initializePageData(); // 페이지 데이터 초기화
                     });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
-                await updateAccountUI(null);
-                initializePageData();
+                await updateAccountUI(null); // 구성이 없을 시 UI 업데이트
+                initializePageData(); // 페이지 데이터 초기화는 계속 진행
             }
 
-            // Global click listener to close dropdown when clicking outside
+            // 드롭다운 외부 클릭 시 닫기 위한 전역 클릭 리스너
             window.addEventListener('click', function(e) {
                 const accountTabButton = document.getElementById('accountTabButton');
+                // 계정 탭 버튼 또는 드롭다운 메뉴 자체가 아닌 다른 곳을 클릭했을 때 드롭다운 숨기기
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
                     accountDropdown.classList.add('hidden');
                 }
             });
 
-            // Setup navigation click handlers
+            // 내비게이션 클릭 핸들러 설정
             setupNavigationEvents();
-            // Update navigation active state on initial load
+            // 초기 로드 시 내비게이션 활성 상태 업데이트
             updateNavigationActiveState();
 
-            // Initial icon creation
+            // 초기 아이콘 렌더링
             lucide.createIcons();
         });
     </script>
