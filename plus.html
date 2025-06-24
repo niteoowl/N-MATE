@@ -6,18 +6,18 @@
     <title>부산남중학교 N-MATE - 더보기</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter 폰트 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN (SVG 아이콘을 직접 삽입하므로 이제는 필요 없지만, 다른 곳에서 사용될 수 있으므로 유지) -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN -->
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Body styles for overall layout */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -82,19 +82,39 @@
             font-weight: 500; /* font-medium */
             color: #374151; /* text-gray-700 */
             cursor: pointer;
-            /* 애니메이션 삭제: transform 관련 속성 제거, transition을 background-color로만 설정 */
             transition: background-color 0.2s ease;
         }
 
         .content-box-item:hover {
             background-color: #f9fafb; /* hover:bg-gray-50 */
-            /* transform: translateY(-2px); 제거 */
-        }
-        .content-box-item:active {
-            /* transform: translateY(0); 제거 (이제 불필요) */
         }
         .content-box-item + .content-box-item {
             margin-top: 0.5rem; /* Space between items */
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
         }
     </style>
 </head>
@@ -114,6 +134,7 @@
             <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
                     <!-- Conditional content injected by JavaScript -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
                 </div>
                 <!-- Dropdown menu (initially hidden) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
@@ -132,27 +153,27 @@
             <div class="w-full flex flex-col gap-y-3">
                 <button class="content-box-item" onclick="window.location.href='/info'">
                     <span>서비스 소개</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <button class="content-box-item" onclick="window.location.href='/faq'">
                     <span>자주 묻는 질문</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <button class="content-box-item" onclick="window.location.href='/verinfo'">
                     <span>버전 정보</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <button class="content-box-item" onclick="window.location.href='/contact'">
                     <span>문의하기</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <button class="content-box-item" onclick="window.location.href='/legal'">
                     <span>개인정보처리방침</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
                 <button class="content-box-item" onclick="window.location.href='/legal#terms'">
                     <span>이용 약관</span>
-                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-500"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
                 </button>
             </div>
         </div>
@@ -164,31 +185,41 @@
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
-                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
-            <!-- Schedule Navigation Item -->
-            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="시간표" data-path="/timetable">
-                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">시간표</span>
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
             </button>
 
-            <!-- Meal Navigation Item -->
-            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
-                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">급식</span>
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
-            <!-- Academic Schedule Navigation Item -->
-            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
-                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">학사일정</span>
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
             </button>
 
             <!-- More Navigation Item -->
-            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="더보기" data-path="/plus">
-                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
                 <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
@@ -285,7 +316,7 @@
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            // lucide.createIcons(); // SVG로 직접 변경했으므로 이 줄은 더 이상 필요 없을 수 있음 (다른 아이콘이 있다면 필요)
         }
 
         /**
@@ -297,17 +328,59 @@
 
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
-                // Reset classes
-                item.classList.remove('text-blue-600');
-                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
 
-                // Set active class if path matches
-                if (currentPath === itemPath) {
-                    item.classList.add('text-blue-600');
+                // Reset all nav items to default (inactive) state
+                item.classList.remove('text-blue-600', 'active');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500');
+                }
+
+                // Check for exact path match or if it's the community button and current path is within /community or /write section
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
+                    item.classList.add('text-blue-600', 'active');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-more' && currentPath.startsWith('/plus')) {
+                     item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
                 }
             });
         }
+
 
         /**
          * Sets up click event listeners for navigation items.
@@ -317,7 +390,14 @@
             navItems.forEach(item => {
                 item.addEventListener('click', (event) => {
                     const path = item.dataset.path;
-                    if (window.location.pathname !== path) {
+                    const currentPathname = window.location.pathname;
+
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
                         window.location.href = path;
                     }
                 });
@@ -379,7 +459,8 @@
             // Update navigation active state on initial load
             updateNavigationActiveState();
 
-            // Initial icon creation
+            // Initial icon creation (if Lucide is used for other elements)
+            // If only inline SVGs are used for nav bar, this might not be strictly necessary for nav icons
             lucide.createIcons();
         });
     </script>
