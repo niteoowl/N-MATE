@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 성적 관리</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Chart.js CDN 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (consistent) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu and FAB */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles (for account) */
+        .dropdown-menu {
+            position: absolute;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            min-width: 8rem;
+            right: 0;
+            top: calc(100% + 0.5rem);
+            z-index: 20;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #374151;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
+
+        /* Custom message box style (consistent) */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-box-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+        .message-box-overlay.visible .message-box {
+            transform: translateY(0);
+        }
+        .message-box p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        .message-box button {
+            background-color: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .message-box button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Floating Action Button (FAB) */
+        .fab {
+            position: fixed; /* Changed from absolute to fixed for consistent bottom-right */
+            bottom: 80px; /* Above nav bar */
+            right: 20px;
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            border-radius: 9999px; /* full rounded */
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Larger plus sign */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+            z-index: 30; /* Above nav bar */
+            cursor: pointer;
+        }
+        .fab:hover {
+            background-color: #1d4ed8; /* blue-700 */
+        }
+
+        /* Add Grade Modal Styles */
+        .add-grade-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999; /* Below message box, above other content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .add-grade-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .add-grade-modal {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80%; /* Limit height to prevent overflow on small screens */
+            overflow-y: auto; /* Enable scrolling for modal content */
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+        .add-grade-modal-overlay.visible .add-grade-modal {
+            transform: translateY(0);
+        }
+        .add-grade-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .add-grade-modal-header h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .add-grade-modal-close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.2s ease;
+        }
+        .add-grade-modal-close-button:hover {
+            color: #333;
+        }
+
+        /* Form styles for modal */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #374151;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        .form-group button {
+            background-color: #2563eb;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .form-group button:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grades Management Section Content -->
+        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
+            <h2 class="text-left text-xl font-bold text-gray-800 mb-4">성적 관리</h2>
+
+            <!-- Graph Area -->
+            <div class="w-full bg-white p-4 border border-gray-200 rounded-xl shadow-sm mb-6 flex flex-col items-center justify-center min-h-[200px]">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">성적 분포 그래프</h3>
+                <p id="gradesChartMessage" class="text-gray-600 text-sm mb-1">성적 데이터를 기반으로 한 그래프가 여기에 표시됩니다.</p>
+                <canvas id="gradesChartCanvas" class="w-full h-48"></canvas> <!-- Changed ID to avoid conflict -->
+            </div>
+
+            <!-- Placeholder for grade list (if any) -->
+            <div id="gradeList" class="w-full flex flex-col gap-y-3 p-4 border border-gray-200 rounded-xl bg-white">
+                <p class="text-gray-500 text-center">저장된 성적 데이터가 여기에 표시됩니다.</p>
+                <p class="text-gray-500 text-sm text-center">오른쪽 하단의 '+' 버튼을 눌러 성적을 추가하세요.</p>
+            </div>
+        </div>
+
+        <!-- Floating Action Button for adding grades -->
+        <div id="addGradeFab" class="fab">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        </div>
+
+    </div>
+
+    <!-- Add Grade Modal -->
+    <div id="addGradeModalOverlay" class="add-grade-modal-overlay">
+        <div class="add-grade-modal">
+            <div class="add-grade-modal-header">
+                <h3>성적 추가</h3>
+                <button id="addGradeModalCloseButton" class="add-grade-modal-close-button">&times;</button>
+            </div>
+            <form id="addGradeForm">
+                <div class="form-group">
+                    <label for="gradeSubject">과목</label>
+                    <select id="gradeSubject" class="rounded-lg" required>
+                        <option value="">과목을 선택하세요</option>
+                        <option value="국어">국어</option>
+                        <option value="영어">영어</option>
+                        <option value="수학">수학</option>
+                        <option value="사회">사회</option>
+                        <option value="과학">과학</option>
+                        <option value="기술·가정">기술·가정</option>
+                        <option value="정보">정보</option>
+                        <option value="체육">체육</option>
+                        <option value="도덕">도덕</option>
+                        <option value="음악">음악</option>
+                        <option value="미술">미술</option>
+                        <option value="한문">한문</option>
+                        <option value="환경">환경</option>
+                        <option value="생활 외국어">생활 외국어</option>
+                        <option value="진로와 직업">진로와 직업</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gradeTitle">제목</label>
+                    <input type="text" id="gradeTitle" placeholder="예: 1학기 중간, 2학기 기말" class="rounded-lg" required>
+                </div>
+                <div class="form-group">
+                    <label for="gradeScoreInput">점수</label>
+                    <input type="number" id="gradeScoreInput" min="0" max="100" placeholder="점수를 입력하세요 (0-100)" class="rounded-lg" required>
+                </div>
+                <button type="submit" class="w-full rounded-lg mt-4">성적 저장</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+        let userId = null; // User ID variable
+
+        // Chart.js instance
+        let gradesChart = null;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const addGradeFab = document.getElementById('addGradeFab');
+        const addGradeModalOverlay = document.getElementById('addGradeModalOverlay');
+        const addGradeModalCloseButton = document.getElementById('addGradeModalCloseButton');
+        const addGradeForm = document.getElementById('addGradeForm');
+        const gradeSubjectSelect = document.getElementById('gradeSubject');
+        const gradeTitleInput = document.getElementById('gradeTitle');
+        const gradeScoreInput = document.getElementById('gradeScoreInput');
+        const gradeListDiv = document.getElementById('gradeList'); // 성적 목록을 표시할 div
+        const gradesChartCanvas = document.getElementById('gradesChartCanvas'); // 그래프 캔버스
+        const gradesChartMessage = document.getElementById('gradesChartMessage'); // 그래프 메시지
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) {
+                userId = user.uid; // Set userId when logged in
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+                addGradeFab.classList.remove('hidden'); // 로그인 시 FAB 표시
+            } else {
+                userId = null; // Clear userId when logged out
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden');
+                addGradeFab.classList.add('hidden'); // 로그아웃 시 FAB 숨기기
+            }
+            lucide.createIcons();
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                item.classList.remove('text-blue-600', 'active');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500');
+                }
+
+                if (currentPath === itemPath) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view'))) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-more' && (currentPath.startsWith('/plus') || currentPath.startsWith('/legal') || currentPath.startsWith('/info') || currentPath.startsWith('/faq') || currentPath.startsWith('/verinfo') || currentPath.startsWith('/contact') || currentPath.startsWith('/settings'))) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+                // /calendar 경로에 대해 nav-calendar 아이템을 활성화합니다.
+                if (currentPath === '/calendar' && item.id === 'nav-calendar') {
+                     item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
+
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        /**
+         * Displays a custom message box.
+         * Replaces native alert() for better UI control in an iframe environment.
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('fixed', 'inset-0', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50', 'z-50');
+            messageBox.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 text-center">
+                    <p class="text-gray-800 text-lg mb-4">${message}</p>
+                    <button id="messageBoxClose" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300">확인</button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            document.getElementById('messageBoxClose').addEventListener('click', () => {
+                document.body.removeChild(messageBox);
+            });
+        }
+
+        /**
+         * Shows the add grade modal.
+         */
+        function showAddGradeModal() {
+            if (!auth.currentUser) {
+                showMessageBox("성적을 추가하려면 로그인해야 합니다.");
+                return;
+            }
+            addGradeModalOverlay.classList.add('visible');
+            addGradeForm.reset(); // Clear form fields
+        }
+
+        /**
+         * Hides the add grade modal.
+         */
+        function hideAddGradeModal() {
+            addGradeModalOverlay.classList.remove('visible');
+        }
+
+        /**
+         * Initializes and updates the Chart.js graph.
+         * @param {Array<Object>} gradesData - Array of grade objects.
+         */
+        function renderGradesChart(gradesData) {
+            const ctx = gradesChartCanvas.getContext('2d');
+
+            if (gradesChart) {
+                gradesChart.destroy(); // Destroy previous chart instance
+            }
+
+            // Group grades by subject and get the latest score for each subject
+            const gradesBySubject = {};
+            gradesData.forEach(grade => {
+                // For simplicity, take the last recorded score for a subject.
+                // For more complex charts (e.g., trend), you'd need more sophisticated logic.
+                if (!gradesBySubject[grade.subject] || gradesBySubject[grade.subject].createdAt < grade.createdAt) {
+                    gradesBySubject[grade.subject] = grade;
+                }
+            });
+
+            const labels = Object.keys(gradesBySubject);
+            const scores = Object.values(gradesBySubject).map(grade => grade.score);
+
+            if (labels.length === 0) {
+                gradesChartCanvas.style.display = 'none';
+                gradesChartMessage.textContent = '아직 등록된 성적 데이터가 없습니다.';
+                return;
+            } else {
+                gradesChartCanvas.style.display = 'block';
+                gradesChartMessage.textContent = '성적 데이터를 기반으로 한 그래프입니다.';
+            }
+
+            gradesChart = new Chart(ctx, {
+                type: 'bar', // Can be 'line', 'bar', 'radar', 'pie', 'doughnut'
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '최신 성적',
+                        data: scores,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false,
+                            text: '내 성적 분포'
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Fetches and displays grades from Firestore for the current user.
+         * Uses onSnapshot for real-time updates.
+         */
+        async function fetchAndDisplayGrades() {
+            gradeListDiv.innerHTML = '<p class="text-gray-500 text-center">성적 목록을 불러오는 중...</p>';
+
+            if (!userId || !db) {
+                gradeListDiv.innerHTML = '<p class="text-gray-500 text-center">로그인 후 성적 목록을 확인할 수 있습니다.</p>';
+                gradesChartCanvas.style.display = 'none'; // Hide chart if not logged in
+                gradesChartMessage.textContent = '로그인 후 성적 그래프를 확인할 수 있습니다.';
+                return;
+            }
+
+            const gradesCollection = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('grades');
+
+            // Unsubscribe from previous snapshot listener if exists to avoid multiple listeners
+            if (window.gradesUnsubscribe) {
+                window.gradesUnsubscribe();
+            }
+
+            window.gradesUnsubscribe = gradesCollection.orderBy('subject', 'asc').orderBy('gradeTitle', 'asc').onSnapshot(snapshot => {
+                const gradesData = []; // To store data for both list and chart
+                gradeListDiv.innerHTML = ''; // Clear current list
+
+                if (snapshot.empty) {
+                    gradeListDiv.innerHTML = '<p class="text-gray-500 text-center">등록된 성적이 없습니다.</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const grade = doc.data();
+                        gradesData.push({ ...grade, id: doc.id }); // Add ID for deletion
+                        const gradeId = doc.id;
+                        const gradeItem = document.createElement('div');
+                        gradeItem.classList.add('data-list-item', 'bg-white', 'p-4', 'rounded-lg', 'shadow-sm', 'border', 'border-gray-200');
+                        gradeItem.innerHTML = `
+                            <h4 class="text-gray-800 text-lg font-semibold">${grade.subject} - ${grade.gradeTitle}</h4>
+                            <p class="text-gray-600">점수: <span class="font-bold text-blue-600">${grade.score}점</span></p>
+                            <p class="text-gray-500 text-sm">기록일: ${grade.createdAt ? new Date(grade.createdAt.seconds * 1000).toLocaleDateString('ko-KR') : '날짜 없음'}</p>
+                            <div class="actions mt-3 flex justify-end">
+                                <button class="delete-grade-btn bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md text-sm transition duration-300" data-id="${gradeId}">삭제</button>
+                            </div>
+                        `;
+                        gradeListDiv.appendChild(gradeItem);
+
+                        // Add event listener for delete button
+                        gradeItem.querySelector('.delete-grade-btn').addEventListener('click', async (e) => {
+                            const id = e.target.dataset.id;
+                            await deleteGrade(id);
+                        });
+                    });
+                }
+                // Render chart after fetching all grades
+                renderGradesChart(gradesData);
+            }, error => {
+                console.error("성적 목록 불러오기 오류:", error);
+                showMessageBox("성적 목록을 불러오는 데 실패했습니다: " + error.message);
+                gradeListDiv.innerHTML = '<p class="text-red-500 text-center">성적 목록을 불러오지 못했습니다.</p>';
+                gradesChartCanvas.style.display = 'none'; // Hide chart on error
+                gradesChartMessage.textContent = '성적 그래프를 불러오는 데 실패했습니다.';
+            });
+        }
+
+        /**
+         * Adds a new grade to Firestore.
+         * @param {Event} event - The form submission event.
+         */
+        async function addGrade(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            if (!userId || !db) {
+                showMessageBox("로그인 후 성적을 추가할 수 있습니다.");
+                return;
+            }
+
+            const gradesCollection = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('grades');
+
+            const subject = gradeSubjectSelect.value;
+            const gradeTitle = gradeTitleInput.value.trim();
+            const score = parseInt(gradeScoreInput.value, 10);
+
+            if (!subject || !gradeTitle || isNaN(score) || score < 0 || score > 100) {
+                showMessageBox("모든 필수 항목을 올바르게 입력해주세요 (점수는 0-100).");
+                return;
+            }
+
+            try {
+                await gradesCollection.add({
+                    subject: subject,
+                    gradeTitle: gradeTitle,
+                    score: score,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp() // Timestamp for sorting
+                });
+                showMessageBox("성적이 성공적으로 추가되었습니다!");
+                hideAddGradeModal(); // Close modal after successful addition
+            } catch (error) {
+                console.error("성적 추가 오류:", error);
+                showMessageBox("성적 추가에 실패했습니다: " + error.message);
+            }
+        }
+
+        /**
+         * Deletes a grade from Firestore.
+         * @param {string} gradeId - The ID of the grade document to delete.
+         */
+        async function deleteGrade(gradeId) {
+            if (!userId || !db) {
+                showMessageBox("로그인 후 성적을 삭제할 수 있습니다.");
+                return;
+            }
+
+            const gradesCollection = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('grades');
+
+            try {
+                await gradesCollection.doc(gradeId).delete();
+                showMessageBox("성적이 성공적으로 삭제되었습니다!");
+            } catch (error) {
+                console.error("성적 삭제 오류:", error);
+                showMessageBox("성적 삭제에 실패했습니다: " + error.message);
+            }
+        }
+
+        // Initialize page data and event listeners
+        async function initializePageData() {
+            // Attach event listeners for FAB and modal
+            addGradeFab.addEventListener('click', showAddGradeModal);
+            addGradeModalCloseButton.addEventListener('click', hideAddGradeModal);
+            addGradeForm.addEventListener('submit', addGrade);
+
+            // Close modal when clicking outside
+            addGradeModalOverlay.addEventListener('click', (e) => {
+                if (e.target === addGradeModalOverlay) {
+                    hideAddGradeModal();
+                }
+            });
+
+            // Fetch and display grades on page load (if user is logged in)
+            if (auth.currentUser) {
+                fetchAndDisplayGrades();
+            } else {
+                 gradeListDiv.innerHTML = '<p class="text-gray-500 text-center">로그인하시면 성적 목록을 확인할 수 있습니다.</p>';
+                 gradesChartCanvas.style.display = 'none'; // Hide chart if not logged in
+                 gradesChartMessage.textContent = '로그인 후 성적 그래프를 확인할 수 있습니다.';
+            }
+
+            console.log("성적 관리 페이지 초기화 완료.");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            initializePageData();
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        initializePageData();
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializePageData();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                initializePageData();
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
