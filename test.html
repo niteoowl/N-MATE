@@ -193,27 +193,14 @@
             </div>
         </div>
 
-        <!-- Notification section container -->
+        <!-- Trivia section container -->
         <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
-            <!-- Section title -->
-            <h2 class="text-left text-xl font-bold text-gray-800">알림</h2>
-            <!-- Notification content box -->
-            <div class="w-full h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
-                <p>아직 알림이 없습니다</p>
-            </div>
-        </div>
-
-        <!-- Today's Trivia section container (NEW) -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
-            <!-- Section title -->
+            <!-- Section title changed to 오늘의 잡학 상식 -->
             <h2 class="text-left text-xl font-bold text-gray-800">오늘의 잡학 상식</h2>
             <!-- Trivia content box -->
-            <div id="trivia-display-section" class="w-full min-h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
+            <div id="triviaDisplaySection" class="w-full min-h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <!-- Skeleton Loader for Trivia content -->
-                <div class="w-full text-left">
-                    <div class="skeleton skeleton-text w-full"></div>
-                    <div class="skeleton skeleton-text w-5/6"></div>
-                </div>
+                <p class="skeleton skeleton-text w-full"></p>
             </div>
         </div>
 
@@ -290,7 +277,7 @@
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
         const countdownBox = document.getElementById('countdownBox'); // Get countdown box element
-        const triviaDisplaySection = document.getElementById('trivia-display-section'); // NEW: Trivia display section
+        const triviaDisplaySection = document.getElementById('triviaDisplaySection'); // Get trivia display section
 
         // NEIS API common information
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
@@ -449,37 +436,6 @@
                 timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
-
-        // Function to fetch and display random trivia data from facts.json
-        async function fetchTriviaData() {
-            // Skeleton loader for trivia section
-            triviaDisplaySection.innerHTML = `
-                <div class="w-full text-left">
-                    <div class="skeleton skeleton-text w-full"></div>
-                    <div class="skeleton skeleton-text w-5/6"></div>
-                </div>
-            `;
-
-            try {
-                const response = await fetch('/facts.json'); // Fetch from facts.json
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const facts = await response.json();
-
-                if (facts.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * facts.length);
-                    const randomFact = facts[randomIndex];
-                    triviaDisplaySection.innerHTML = `<p class="text-base text-gray-800">${randomFact}</p>`;
-                } else {
-                    triviaDisplaySection.innerHTML = '<p class="text-base text-gray-500">오늘의 잡학 상식이 없습니다.</p>';
-                }
-            } catch (error) {
-                console.error('Error fetching trivia data:', error);
-                triviaDisplaySection.innerHTML = '<p class="text-base text-red-500">잡학 상식을 가져오는 중 오류가 발생했습니다.</p>';
-            }
-        }
-
 
         // Function to toggle dropdown menu visibility
         function toggleDropdown() {
@@ -668,6 +624,35 @@
         }
 
 
+        // Function to fetch and display trivia data from facts.json
+        async function fetchTriviaData() {
+            // Skeleton loader for trivia section
+            triviaDisplaySection.innerHTML = `
+                <p class="skeleton skeleton-text w-full h-8"></p>
+            `;
+
+            try {
+                // Fetch facts from facts.json
+                const response = await fetch('/data/facts.json'); // Assumes facts.json is in a /data directory
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const allFacts = await response.json();
+                
+                if (allFacts.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * allFacts.length);
+                    const randomFact = allFacts[randomIndex];
+                    triviaDisplaySection.innerHTML = `<p class="text-gray-800 text-lg font-medium text-left">${randomFact}</p>`;
+                } else {
+                    triviaDisplaySection.innerHTML = '<p class="text-lg text-gray-800">잡학 상식 정보가 없습니다.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching trivia data:', error);
+                triviaDisplaySection.innerHTML = '<p class="text-lg text-red-500">잡학 상식 정보를 가져오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+
         // Function to initialize data fetching for home page
         async function initializeHomePageData() {
             let userGrade = "1";
@@ -689,7 +674,7 @@
 
             fetchTimetableData(userGrade, userClassNum);
             fetchMealData();
-            fetchTriviaData(); // Fetch trivia data from facts.json
+            fetchTriviaData(); // Fetch trivia data on home page load
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
