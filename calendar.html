@@ -93,8 +93,8 @@
             color: #2563eb; /* text-blue-600 */
         }
 
-        /* Custom message box style (consistent) */
-        .message-box-overlay {
+        /* Custom message box and event modal style */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -109,13 +109,13 @@
             visibility: hidden;
             transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        .message-box-overlay.visible {
+        .modal-overlay.visible {
             opacity: 1;
             visibility: visible;
         }
-        .message-box {
+        .modal-box {
             background-color: #fff;
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 1rem;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
             text-align: center;
@@ -124,15 +124,15 @@
             transform: translateY(-30px);
             transition: transform 0.3s ease;
         }
-        .message-box-overlay.visible .message-box {
+        .modal-overlay.visible .modal-box {
             transform: translateY(0);
         }
-        .message-box p {
+        .modal-box p {
             font-size: 1.25rem;
             margin-bottom: 2rem;
             color: #333;
         }
-        .message-box button {
+        .modal-box button {
             background-color: #007bff;
             color: white;
             padding: 0.75rem 1.5rem;
@@ -142,8 +142,64 @@
             font-size: 1rem;
             transition: background-color 0.3s ease;
         }
-        .message-box button:hover {
+        .modal-box button:hover {
             background-color: #0056b3;
+        }
+        .modal-box h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        .modal-box label {
+            display: block;
+            text-align: left;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+        .modal-box input[type="text"],
+        .modal-box input[type="date"],
+        .modal-box textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: #374151;
+        }
+        .modal-box textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-box .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .modal-box .button-group button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .modal-box .button-group .save-button {
+            background-color: #2563eb;
+            color: white;
+        }
+        .modal-box .button-group .save-button:hover {
+            background-color: #1d4ed8;
+        }
+        .modal-box .button-group .cancel-button {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        .modal-box .button-group .cancel-button:hover {
+            background-color: #d1d5db;
         }
 
         /* Added for square boxes */
@@ -159,6 +215,141 @@
             flex: 1; /* Allows boxes to take equal space */
             aspect-ratio: 1 / 1; /* Makes the box square based on its width */
             text-align: center;
+            cursor: pointer; /* Indicate it's clickable */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .square-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        }
+
+
+        /* Academic schedule content box styles */
+        .academic-schedule-content-box {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            min-height: 200px;
+            width: 100%;
+            overflow: hidden;
+        }
+        /* Calendar navigation styles */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+        }
+        .calendar-nav button {
+            background-color: transparent;
+            color: #4b5563;
+            padding: 0;
+            border-radius: 0;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .calendar-nav button:hover {
+            color: #3b82f6;
+            background-color: transparent;
+        }
+        .calendar-nav span {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        /* Calendar grid specific styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            width: 100%;
+            background-color: #e2e8f0;
+        }
+        .calendar-header-day {
+            background-color: #ffffff;
+            font-weight: 600;
+            text-align: center;
+            padding: 0.75rem 0.25rem;
+            font-size: 0.75rem;
+            color: #4a5568;
+        }
+        .calendar-cell {
+            background-color: #ffffff;
+            min-height: 80px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            font-size: 0.75rem;
+            color: #4a5568;
+            overflow: hidden;
+            position: relative;
+        }
+        .calendar-cell.inactive-month {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+        }
+        .calendar-cell.today {
+            background-color: #e5e7eb;
+            font-weight: 600;
+        }
+        .calendar-cell-date {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: #1f2937;
+        }
+        .calendar-cell-event {
+            font-size: 0.625rem;
+            line-height: 1.2;
+            margin-bottom: 0.2rem;
+            color: #1f2937;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .calendar-cell-event.user-event { /* New style for user-added events */
+            background-color: #e0f2fe; /* Light blue background */
+            border-left: 3px solid #38b2ac; /* Teal left border */
+            padding-left: 0.25rem;
+            color: #0056b3; /* Darker blue text */
+            font-weight: 500;
+        }
+        .calendar-cell-event:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Skeleton Loader animation for loading states */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+            background-size: 200% 100%;
+        }
+        @keyframes pulse {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-text {
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -190,17 +381,24 @@
 
         <!-- Calendar Section Content -->
         <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
-            <h2 class="text-left text-xl font-bold text-gray-800 mb-4">캘린더</h2>
+            <div class="flex justify-between items-center w-full mb-4">
+                <h2 class="text-left text-xl font-bold text-gray-800">캘린더</h2>
+                <!-- Add Event Button (visible only for logged-in users) -->
+                <button id="addEventButton" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300 text-sm">
+                    일정 추가
+                </button>
+            </div>
+
 
             <!-- Two square boxes for Calendar functions -->
             <div class="w-full flex gap-4 mb-6">
-                <div class="square-box">
+                <div id="homeworkBox" class="square-box">
                     <!-- Homework icon -->
                     <img src="/image/homework.png" alt="숙제 아이콘" class="w-16 h-16 mb-4 object-contain">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">숙제 관리</h3>
                     <p class="text-gray-600 text-sm">여기에서 숙제를 추가하고 확인할 수 있습니다.</p>
                 </div>
-                <div class="square-box">
+                <div id="gradesBox" class="square-box">
                     <!-- Grades icon -->
                     <img src="/image/sexual.png" alt="성적 아이콘" class="w-16 h-16 mb-4 object-contain">
                     <h3 class="text-lg font-semibold text-gray-800 mb-2">성적 관리</h3>
@@ -208,13 +406,56 @@
                 </div>
             </div>
 
-            <!-- Placeholder for additional content below boxes -->
-            <div class="w-full flex flex-col items-center justify-center text-center">
-                <p class="text-gray-600">이곳에 캘린더의 주요 기능이 추가될 예정입니다.</p>
-                <p class="text-gray-500 text-sm mt-2">지금은 빈 페이지입니다. 필요한 콘텐츠를 추가해주세요.</p>
+            <!-- Academic Calendar Section -->
+            <div class="w-full flex flex-col items-start gap-y-2 mt-4">
+                <!-- Calendar Navigation (Month selection) -->
+                <div class="calendar-nav">
+                    <button id="academic-prevMonthButton" aria-label="Previous Month"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <span id="academic-calendar-month-year"></span>
+                    <button id="academic-nextMonthButton" aria-label="Next Month"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+
+                <!-- Academic Schedule display area -->
+                <div id="academic-schedule-display-section" class="w-full academic-schedule-content-box">
+                    <!-- Academic calendar will be rendered here -->
+                    <div class="w-full calendar-grid">
+                        <!-- Skeleton header days -->
+                        ${Array(5).fill(0).map((_, i) => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                        <!-- Skeleton cells -->
+                        ${Array(35).fill(0).map((_, i) => `
+                            <div class="calendar-cell">
+                                <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                                <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                                <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         </div>
 
+    </div>
+
+    <!-- Event Add Modal (Hidden by default) -->
+    <div id="eventModalOverlay" class="modal-overlay">
+        <div class="modal-box">
+            <h3>새 일정 추가</h3>
+            <form id="eventForm">
+                <label for="eventName">일정명:</label>
+                <input type="text" id="eventName" placeholder="예: 수학 숙제 제출" required>
+
+                <label for="eventDate">날짜:</label>
+                <input type="date" id="eventDate" required>
+
+                <label for="eventDescription">설명 (선택 사항):</label>
+                <textarea id="eventDescription" placeholder="추가 설명..."></textarea>
+
+                <div class="button-group">
+                    <button type="button" id="cancelEventButton" class="cancel-button">취소</button>
+                    <button type="submit" id="saveEventButton" class="save-button">저장</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Bottom Navigation Bar -->
@@ -280,9 +521,35 @@
         let auth;
         let db;
 
+        // NEIS API common information
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
+        const eduCode = "C10"; // Replace with your school's education office code
+        const schoolCode = "7171018"; // Replace with your school's standard code
+
         // DOM elements
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
+        const homeworkBox = document.getElementById('homeworkBox'); // Homework box
+        const gradesBox = document.getElementById('gradesBox');     // Grades box
+
+        // DOM elements (Academic Schedule / Calendar)
+        const academicScheduleDisplaySection = document.getElementById('academic-schedule-display-section');
+        const academicCalendarMonthYearSpan = document.getElementById('academic-calendar-month-year');
+        const academicPrevMonthButton = document.getElementById('academic-prevMonthButton');
+        const academicNextMonthButton = document.getElementById('academic-nextMonthButton');
+        let academicCurrentDate = new Date(); // Current date object for academic calendar
+        let academicCalendarEvents = []; // Store fetched academic calendar events globally
+        let userCalendarEvents = []; // Store user-added calendar events globally
+
+        // DOM elements for Event Add Modal
+        const addEventButton = document.getElementById('addEventButton');
+        const eventModalOverlay = document.getElementById('eventModalOverlay');
+        const eventForm = document.getElementById('eventForm');
+        const eventNameInput = document.getElementById('eventName');
+        const eventDateInput = document.getElementById('eventDate');
+        const eventDescriptionInput = document.getElementById('eventDescription');
+        const saveEventButton = document.getElementById('saveEventButton');
+        const cancelEventButton = document.getElementById('cancelEventButton');
 
         /**
          * Toggles the visibility of the account dropdown menu.
@@ -316,10 +583,7 @@
         /**
          * Updates the account UI based on user authentication status.
          * Displays email prefix if logged in, otherwise "로그인" button.
-         *
-         * 이 함수는 로그인 상태에 따라 헤더의 계정 영역 UI를 업데이트합니다.
-         * 로그인되어 있으면 이메일 접두사와 사용자 아이콘을 표시하고,
-         * 로그아웃되어 있으면 "로그인" 버튼을 표시하여 로그인 페이지로 리디렉션합니다.
+         * Shows/hides the "일정 추가" button based on login status.
          *
          * @param {firebase.User} user - The authenticated user object or null.
          */
@@ -332,32 +596,33 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
-                // 계정 탭 버튼 클릭 시 드롭다운 토글 기능 추가
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
-                // 드롭다운 버튼(설정, 로그아웃)에 이벤트 리스너 추가
                 const settingsButton = document.getElementById('settingsButton');
                 if (settingsButton && !settingsButton.dataset.listenerAdded) {
                     settingsButton.addEventListener('click', handleSettingsClick);
-                    settingsButton.dataset.listenerAdded = 'true'; // 리스너 중복 추가 방지
+                    settingsButton.dataset.listenerAdded = 'true';
                 }
                 const logoutButton = document.getElementById('logoutButton');
                 if (logoutButton && !logoutButton.dataset.listenerAdded) {
                     logoutButton.addEventListener('click', handleLogout);
-                    logoutButton.dataset.listenerAdded = 'true'; // 리스너 중복 추가 방지
+                    logoutButton.dataset.listenerAdded = 'true';
                 }
-
+                addEventButton.classList.remove('hidden'); // Show add event button
+                setupUserEventsListener(user.uid); // Setup listener for user events
             } else { // 사용자가 로그아웃되었거나 이메일이 없는 경우 (예: 익명 사용자)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
                     </button>
                 `;
-                // "로그인" 버튼 클릭 시 로그인 페이지로 리디렉션
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden'); // 드롭다운 숨기기
+                accountDropdown.classList.add('hidden'); // Hide dropdown
+                addEventButton.classList.add('hidden'); // Hide add event button
+                userCalendarEvents = []; // Clear user events if logged out
+                renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents); // Re-render without user events
             }
             lucide.createIcons(); // Lucide 아이콘이 동적으로 추가/변경될 때 렌더링되도록 호출
         }
@@ -472,6 +737,14 @@
                     }
                 });
             });
+
+            // Add navigation for Homework and Grades boxes
+            homeworkBox.addEventListener('click', () => {
+                window.location.href = '/homework';
+            });
+            gradesBox.addEventListener('click', () => {
+                window.location.href = '/sexual';
+            });
         }
 
         /**
@@ -481,9 +754,9 @@
          */
         function showMessageBox(message) {
             const messageBox = document.createElement('div');
-            messageBox.classList.add('fixed', 'inset-0', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50', 'z-50');
+            messageBox.classList.add('modal-overlay', 'visible'); // Use modal-overlay for consistency
             messageBox.innerHTML = `
-                <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 text-center">
+                <div class="modal-box">
                     <p class="text-gray-800 text-lg mb-4">${message}</p>
                     <button id="messageBoxClose" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300">확인</button>
                 </div>
@@ -495,9 +768,273 @@
             });
         }
 
-        // 페이지 데이터 초기화 (빈 페이지를 위한 최소한의 로직)
+        // --- Academic Schedule Functions ---
+
+        /**
+         * Renders the calendar grid view for a given month and populates it with events.
+         * Merges academic events and user events.
+         * @param {Date} monthDate - The Date object representing the month to display.
+         * @param {Array} academicEvents - An array of academic event objects from the NEIS API.
+         * @param {Array} userEvents - An array of user-added event objects from Firestore.
+         */
+        function renderAcademicCalendar(monthDate, academicEvents, userEvents) {
+            const today = new Date();
+            const currentYear = monthDate.getFullYear();
+            const currentMonth = monthDate.getMonth(); // 0-indexed
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+            const dayNames = ['월', '화', '수', '목', '금']; // Only display weekdays in header
+
+            let calendarHtml = '<div class="calendar-grid">';
+
+            // Add day headers (Mon-Fri)
+            dayNames.forEach(dayName => {
+                calendarHtml += `<div class="calendar-header-day">${dayName}</div>`;
+            });
+
+            // Determine the starting day for the calendar grid
+            let startCalendarDate = new Date(firstDayOfMonth);
+            const firstDayWeekday = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+            if (firstDayWeekday === 0) { // If first day is Sunday, go back 6 days to Monday of previous week
+                startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
+            } else if (firstDayWeekday !== 1) { // If not Monday, go back to the previous Monday
+                startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - 1));
+            }
+
+            // Determine the ending day for the calendar grid
+            let endCalendarDate = new Date(lastDayOfMonth);
+            const lastDayWeekday = lastDayOfMonth.getDay();
+
+            if (lastDayWeekday === 0) { // If last day is Sunday, go forward 5 days to Friday of next week
+                endCalendarDate.setDate(lastDayOfMonth.getDate() + 5);
+            } else if (lastDayWeekday !== 5) { // If not Friday, go forward to the next Friday
+                endCalendarDate.setDate(lastDayOfMonth.getDate() + (5 - lastDayWeekday + 7) % 7);
+            }
+
+            // Iterate through each day from startCalendarDate to endCalendarDate
+            let currentIterationDate = new Date(startCalendarDate);
+            while (currentIterationDate <= endCalendarDate) {
+                const dayOfWeek = currentIterationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+                // Only render Mon-Fri cells
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    const cellDateString = `${currentIterationDate.getFullYear()}${String(currentIterationDate.getMonth() + 1).padStart(2, '0')}${String(currentIterationDate.getDate()).padStart(2, '0')}`;
+                    const isToday = currentIterationDate.toDateString() === today.toDateString();
+                    const isCurrentMonth = currentIterationDate.getMonth() === currentMonth && currentIterationDate.getFullYear() === currentYear;
+
+                    let cellClass = 'calendar-cell';
+                    if (!isCurrentMonth) {
+                        cellClass += ' inactive-month';
+                    }
+                    if (isToday) {
+                        cellClass += ' today';
+                    }
+
+                    let eventHtml = '';
+                    const dailyAcademicEvents = academicEvents.filter(event => event.AA_YMD === cellDateString);
+                    const dailyUserEvents = userEvents.filter(event => event.eventDate === cellDateString);
+
+                    // Sort events by time if available, or just by type
+                    const allDailyEvents = [
+                        ...dailyAcademicEvents.map(event => ({ type: 'academic', name: event.EVENT_NM })),
+                        ...dailyUserEvents.map(event => ({ type: 'user', name: event.eventName }))
+                    ];
+
+                    allDailyEvents.forEach(event => {
+                        const eventClass = event.type === 'user' ? 'user-event' : '';
+                        eventHtml += `<p class="calendar-cell-event ${eventClass}">${event.name}</p>`;
+                    });
+
+                    calendarHtml += `
+                        <div class="${cellClass}">
+                            <div class="calendar-cell-date">${currentIterationDate.getDate()}</div>
+                            ${eventHtml}
+                        </div>
+                    `;
+                }
+                currentIterationDate.setDate(currentIterationDate.getDate() + 1);
+            }
+
+            calendarHtml += '</div>'; // Close calendar-grid
+            academicScheduleDisplaySection.innerHTML = calendarHtml;
+            lucide.createIcons(); // Re-create Lucide icons for new content (calendar navigation arrows)
+        }
+
+        /**
+         * NEIS API를 사용하여 학사일정을 불러오는 함수
+         * 인자로 표시할 달의 Date 객체를 받도록 수정
+         * @param {Date} monthDate - 학사일정을 불러올 월의 Date 객체.
+         */
+        async function getAcademicCalendar(monthDate = academicCurrentDate) {
+            academicCalendarMonthYearSpan.textContent = `${monthDate.getFullYear()}년 ${monthDate.getMonth() + 1}월`;
+
+            // Display skeleton loader while fetching
+            academicScheduleDisplaySection.innerHTML = `
+                <div class="w-full calendar-grid">
+                    ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                    ${Array(35).fill(0).map((_, i) => `
+                        <div class="calendar-cell">
+                            <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                            <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                            <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+
+            const fromDate = new Date(year, month, 1);
+            const toDate = new Date(year, month + 1, 0);
+
+            const fromYmd = `${fromDate.getFullYear()}${('0' + (fromDate.getMonth() + 1)).slice(-2)}${('0' + fromDate.getDate()).slice(-2)}`;
+            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getMonth() + 1)).slice(-2)}${('0' + toDate.getDate()).slice(-2)}`;
+
+            const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                let events = [];
+                if (data.SchoolSchedule && data.SchoolSchedule[1] && data.SchoolSchedule[1].row) {
+                    events = data.SchoolSchedule[1].row;
+                    events.sort((a, b) => parseInt(a.AA_YMD) - parseInt(b.AA_YMD));
+                } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    console.log(`No academic schedule for ${year}년 ${month + 1}월`);
+                } else {
+                    console.error(`API response error for academic schedule:`, data);
+                }
+
+                academicCalendarEvents = events;
+                // Re-render calendar with both academic and user events
+                renderAcademicCalendar(monthDate, academicCalendarEvents, userCalendarEvents);
+            } catch (error) {
+                console.error('Error fetching academic schedule data:', error);
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+        /**
+         * 이전 달로 이동합니다.
+         */
+        function goToPrevAcademicMonth() {
+            academicCurrentDate.setMonth(academicCurrentDate.getMonth() - 1);
+            getAcademicCalendar(academicCurrentDate);
+        }
+
+        /**
+         * 다음 달로 이동합니다.
+         */
+        function goToNextAcademicMonth() {
+            academicCurrentDate.setMonth(academicCurrentDate.getMonth() + 1);
+            getAcademicCalendar(academicCurrentDate);
+        }
+
+        /**
+         * Shows the event addition modal.
+         */
+        function showEventModal() {
+            eventModalOverlay.classList.add('visible');
+            eventNameInput.value = '';
+            eventDateInput.value = '';
+            eventDescriptionInput.value = '';
+
+            // Set default date to today
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            eventDateInput.value = `${year}-${month}-${day}`;
+        }
+
+        /**
+         * Hides the event addition modal.
+         */
+        function hideEventModal() {
+            eventModalOverlay.classList.remove('visible');
+        }
+
+        /**
+         * Saves a new event to Firestore.
+         */
+        async function saveEvent() {
+            const eventName = eventNameInput.value.trim();
+            const eventDate = eventDateInput.value.replace(/-/g, ''); // YYYYMMDD format
+            const eventDescription = eventDescriptionInput.value.trim();
+
+            if (!eventName || !eventDate) {
+                showMessageBox('일정명과 날짜를 입력해주세요.');
+                return;
+            }
+
+            if (!auth.currentUser) {
+                showMessageBox('로그인이 필요합니다.');
+                return;
+            }
+
+            try {
+                const userId = auth.currentUser.uid;
+                const userEventsCollectionRef = db.collection(`artifacts/${appId}/users/${userId}/user_events`);
+
+                await userEventsCollectionRef.add({
+                    eventName: eventName,
+                    eventDate: eventDate,
+                    description: eventDescription,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    userId: userId
+                });
+                showMessageBox('일정이 성공적으로 추가되었습니다!');
+                hideEventModal();
+                // onSnapshot listener will automatically re-render the calendar
+            } catch (error) {
+                console.error('일정 추가 오류:', error);
+                showMessageBox('일정 추가 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        /**
+         * Sets up real-time listener for user-specific events.
+         * @param {string} userId - The current user's ID.
+         */
+        function setupUserEventsListener(userId) {
+            if (!db || !userId) {
+                console.error("Firestore 또는 userId가 유효하지 않아 사용자 일정 리스너를 설정할 수 없습니다.");
+                return;
+            }
+            const userEventsCollectionRef = db.collection(`artifacts/${appId}/users/${userId}/user_events`);
+            // Clear previous listener if any to avoid duplicates
+            if (window.userEventsUnsubscribe) {
+                window.userEventsUnsubscribe();
+            }
+
+            window.userEventsUnsubscribe = userEventsCollectionRef.onSnapshot(snapshot => {
+                userCalendarEvents = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                // Sort by date to ensure proper display
+                userCalendarEvents.sort((a, b) => parseInt(a.eventDate) - parseInt(b.eventDate));
+                console.log("사용자 일정 업데이트:", userCalendarEvents);
+                // Re-render the calendar with updated user events
+                renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents);
+            }, error => {
+                console.error("사용자 일정 가져오기 오류:", error);
+            });
+        }
+
+
+        // 페이지 데이터 초기화 (캘린더 데이터 로딩 포함)
         async function initializePageData() {
-            console.log("캘린더 페이지가 백지 상태로 초기화되었습니다.");
+            console.log("캘린더 페이지가 초기화되었습니다.");
+            // 캘린더 페이지 로드 시 학사일정 불러오기
+            // 사용자 인증 상태는 onAuthStateChanged에서 처리되므로, 여기서는 단순히 학사일정만 불러옵니다.
+            // 사용자 일정은 updateAccountUI에서 setupUserEventsListener를 통해 로드됩니다.
+            await getAcademicCalendar(academicCurrentDate);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -512,8 +1049,8 @@
 
                         // 인증 상태 변경 리스너 설정
                         auth.onAuthStateChanged(async (user) => {
-                            await updateAccountUI(user); // 사용자 UI 업데이트
-                            initializePageData(); // 페이지 데이터 초기화
+                            await updateAccountUI(user); // 사용자 UI 업데이트 (여기서 일정 추가 버튼 표시 및 사용자 일정 로드)
+                            initializePageData(); // 페이지 데이터 초기화 (학사일정 로드)
                         });
 
                     } catch (error) {
@@ -550,6 +1087,18 @@
             setupNavigationEvents();
             // 초기 로드 시 내비게이션 활성 상태 업데이트
             updateNavigationActiveState();
+
+            // 학사일정 캘린더 버튼 이벤트 리스너 추가
+            academicPrevMonthButton.addEventListener('click', goToPrevAcademicMonth);
+            academicNextMonthButton.addEventListener('click', goToNextAcademicMonth);
+
+            // 일정 추가 모달 관련 이벤트 리스너
+            addEventButton.addEventListener('click', showEventModal);
+            cancelEventButton.addEventListener('click', hideEventModal);
+            eventForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+                saveEvent();
+            });
 
             // 초기 아이콘 렌더링
             lucide.createIcons();
