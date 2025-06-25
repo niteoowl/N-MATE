@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 숙제 관리</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (consistent) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+            padding-left: 1.5rem; /* px-6 */
+            padding-right: 1.5rem; /* px-6 */
+        }
+
+        /* Dropdown menu styles (for account) */
+        .dropdown-menu {
+            position: absolute;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+            min-width: 8rem;
+            right: 0;
+            top: calc(100% + 0.5rem);
+            z-index: 20;
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            color: #374151;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
+
+        /* Custom message box style (consistent) */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-box-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+        .message-box-overlay.visible .message-box {
+            transform: translateY(0);
+        }
+        .message-box p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        .message-box button {
+            background-color: #007bff;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .message-box button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            max-width: 500px;
+            width: 90%;
+            transform: translateY(-30px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+        }
+        .modal-content h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        .modal-content input,
+        .modal-content select,
+        .modal-content textarea {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        .modal-content textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .modal-buttons button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .modal-buttons .btn-cancel {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        .modal-buttons .btn-cancel:hover {
+            background-color: #d1d5db;
+        }
+        .modal-buttons .btn-primary {
+            background-color: #2563eb;
+            color: white;
+        }
+        .modal-buttons .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Homework item specific styles */
+        .homework-item {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        .homework-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background-color: #f9fafb;
+        }
+        .homework-item .homework-checkbox {
+            margin-right: 1rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            border: 1px solid #9ca3af;
+            appearance: none; /* Hide default checkbox */
+            -webkit-appearance: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .homework-item .homework-checkbox:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        .homework-item .homework-checkbox:checked::before {
+            content: '✔';
+            color: white;
+            font-size: 1rem;
+        }
+        .homework-item-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .homework-item-details strong {
+            font-size: 1rem;
+            color: #1f2937;
+        }
+        .homework-item-details p {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
+        }
+        .homework-item-details span {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .homework-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+        .homework-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        .homework-actions button:hover {
+            background-color: #f3f4f6;
+        }
+        .homework-actions svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #6b7280;
+        }
+
+        /* Sort/Filter */
+        .sort-filter-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 0.75rem;
+            width: 100%;
+        }
+
+        .sort-filter-controls label {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-right: 0.25rem;
+        }
+
+        .sort-filter-controls select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            color: #374151;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+
+        .sort-filter-controls select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center pt-4 mb-8">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Homework Management Section Content -->
+        <div class="w-full flex flex-col items-start mb-4">
+            <h2 id="classHomeworkTitle" class="text-left text-xl font-bold text-gray-800 mb-4">내 반 숙제</h2>
+
+            <!-- Today's Homework Summary (Placeholder for later) -->
+            <div id="todayHomeworkSummary" class="w-full bg-blue-50 rounded-lg p-4 mb-6 flex items-center justify-between shadow-sm">
+                <p class="text-blue-700 font-medium">오늘 마감 숙제 <span id="dueTodayCount" class="font-bold">0</span>건 남았어요!</p>
+                <button class="bg-blue-200 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">자세히 보기</button>
+            </div>
+
+            <!-- Add Homework Button -->
+            <button id="addHomeworkButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-300 flex items-center justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus mr-2"><path d="M12 5V19"/><path d="M5 12H19"/></svg>
+                새 숙제 등록
+            </button>
+
+            <!-- Sort and Filter Controls -->
+            <div class="sort-filter-controls">
+                <label for="sortOrder">정렬:</label>
+                <select id="sortOrder" class="focus:border-blue-500 focus:ring-blue-500">
+                    <option value="latest">최신순</option>
+                    <option value="dueDate">마감 임박순</option>
+                </select>
+                <!-- Add filter dropdowns here if needed later -->
+            </div>
+
+            <!-- Homework List -->
+            <div id="homeworkList" class="w-full">
+                <!-- Homework items will be dynamically loaded here -->
+                <p id="noHomeworkMessage" class="text-gray-600 text-center py-8 hidden">
+                    오늘 숙제는 없습니다 🎉 한 주를 알차게 시작해 보세요!
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Homework Add/Edit Modal -->
+    <div id="homeworkModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle">새 숙제 등록</h3>
+            <form id="homeworkForm">
+                <input type="hidden" id="homeworkId" value="">
+                <div class="mb-4">
+                    <label for="subject">과목</label>
+                    <select id="subject" name="subject" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">과목 선택</option>
+                        <option value="국어">국어</option>
+                        <option value="수학">수학</option>
+                        <option value="과학">과학</option>
+                        <option value="사회">사회</option>
+                        <option value="영어">영어</option>
+                        <option value="도덕">도덕</option>
+                        <option value="기술가정">기술가정</option>
+                        <option value="체육">체육</option>
+                        <option value="음악">음악</option>
+                        <option value="미술">미술</option>
+                        <option value="정보">정보</option>
+                        <option value="한문">한문</option>
+                        <option value="일본어">일본어</option>
+                        <option value="중국어">중국어</option>
+                        <option value="자유학기">자유학기</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="content">숙제 내용</label>
+                    <textarea id="content" name="content" required placeholder="숙제 내용을 입력하세요." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="dueDate">마감일</label>
+                    <input type="date" id="dueDate" name="dueDate" required class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="link">링크/설명 (선택 사항)</label>
+                    <input type="url" id="link" name="link" placeholder="관련 링크 또는 추가 설명을 입력하세요." class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" id="cancelHomework" class="btn-cancel">취소</button>
+                    <button type="submit" id="saveHomework" class="btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Message Box -->
+    <div id="customMessageBoxOverlay" class="message-box-overlay hidden">
+        <div class="message-box">
+            <p id="messageBoxText"></p>
+            <button id="messageBoxConfirm">확인</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+        let currentUser = null;
+        let userGrade = null;
+        let userClassNum = null;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const addHomeworkButton = document.getElementById('addHomeworkButton');
+        const homeworkList = document.getElementById('homeworkList');
+        const noHomeworkMessage = document.getElementById('noHomeworkMessage');
+        const homeworkModal = document.getElementById('homeworkModal');
+        const homeworkForm = document.getElementById('homeworkForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const homeworkIdInput = document.getElementById('homeworkId');
+        const subjectInput = document.getElementById('subject');
+        const contentInput = document.getElementById('content');
+        const dueDateInput = document.getElementById('dueDate');
+        const linkInput = document.getElementById('link');
+        const cancelHomeworkButton = document.getElementById('cancelHomework');
+        const sortOrderSelect = document.getElementById('sortOrder');
+        const classHomeworkTitle = document.getElementById('classHomeworkTitle');
+        const dueTodayCount = document.getElementById('dueTodayCount');
+        const todayHomeworkSummary = document.getElementById('todayHomeworkSummary');
+
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                    showMessageBox('로그아웃 중 오류가 발생했습니다: ' + error.message);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         *
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) {
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
+            } else {
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                item.classList.remove('text-blue-600', 'active');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500');
+                }
+
+                if (currentPath === itemPath ||
+                    (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) ||
+                    (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view'))) ||
+                    (item.id === 'nav-more' && (currentPath.startsWith('/plus') || currentPath.startsWith('/legal') || currentPath.startsWith('/info') || currentPath.startsWith('/faq') || currentPath.startsWith('/verinfo') || currentPath.startsWith('/contact') || currentPath.startsWith('/settings')))
+                ) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+                // Specifically activate the calendar item if on /calendar path
+                if (currentPath === '/calendar' && item.id === 'nav-calendar') {
+                     item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
+
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        /**
+         * Displays a custom message box instead of native alert().
+         * @param {string} message - The message to display.
+         * @returns {Promise<void>} - A promise that resolves when the user clicks '확인'.
+         */
+        function showMessageBox(message) {
+            return new Promise((resolve) => {
+                const messageBoxOverlay = document.getElementById('customMessageBoxOverlay');
+                const messageBoxText = document.getElementById('messageBoxText');
+                const messageBoxConfirm = document.getElementById('messageBoxConfirm');
+
+                messageBoxText.textContent = message;
+                messageBoxOverlay.classList.add('visible');
+                messageBoxOverlay.classList.remove('hidden');
+
+                const closeHandler = () => {
+                    messageBoxOverlay.classList.remove('visible');
+                    messageBoxOverlay.classList.add('hidden');
+                    messageBoxConfirm.removeEventListener('click', closeHandler);
+                    resolve();
+                };
+                messageBoxConfirm.addEventListener('click', closeHandler);
+            });
+        }
+
+        /**
+         * Shows a confirmation dialog.
+         * @param {string} message - The confirmation message.
+         * @returns {Promise<boolean>} - True if confirmed, false otherwise.
+         */
+        function showConfirmBox(message) {
+            return new Promise((resolve) => {
+                const messageBoxOverlay = document.getElementById('customMessageBoxOverlay');
+                const messageBoxText = document.getElementById('messageBoxText');
+                const messageBoxConfirm = document.getElementById('messageBoxConfirm');
+                const confirmCancelButton = document.createElement('button'); // Create a cancel button for confirm
+
+                messageBoxText.textContent = message;
+
+                // Configure confirm button for "Yes"
+                messageBoxConfirm.textContent = '확인';
+                messageBoxConfirm.style.backgroundColor = '#2563eb'; // Blue
+                messageBoxConfirm.style.marginRight = '0.75rem';
+
+                // Configure cancel button for "No"
+                confirmCancelButton.textContent = '취소';
+                confirmCancelButton.style.backgroundColor = '#ef4444'; // Red
+                confirmCancelButton.style.color = 'white';
+                confirmCancelButton.style.padding = '0.75rem 1.5rem';
+                confirmCancelButton.style.border = 'none';
+                confirmCancelButton.style.borderRadius = '0.5rem';
+                confirmCancelButton.style.cursor = 'pointer';
+                confirmCancelButton.style.fontSize = '1rem';
+                confirmCancelButton.style.transition = 'background-color 0.3s ease';
+                confirmCancelButton.classList.add('btn-cancel'); // Use custom class for styling
+
+                // Append buttons to a wrapper for layout
+                const buttonWrapper = document.createElement('div');
+                buttonWrapper.style.display = 'flex';
+                buttonWrapper.style.justifyContent = 'center';
+                buttonWrapper.style.marginTop = '2rem';
+                buttonWrapper.appendChild(messageBoxConfirm);
+                buttonWrapper.appendChild(confirmCancelButton);
+
+                const messageBoxContent = messageBoxConfirm.closest('.message-box');
+                messageBoxContent.appendChild(buttonWrapper);
+
+                messageBoxOverlay.classList.add('visible');
+                messageBoxOverlay.classList.remove('hidden');
+
+                const handleConfirm = () => {
+                    messageBoxOverlay.classList.remove('visible');
+                    messageBoxOverlay.classList.add('hidden');
+                    messageBoxConfirm.removeEventListener('click', handleConfirm);
+                    confirmCancelButton.removeEventListener('click', handleCancel);
+                    messageBoxContent.removeChild(buttonWrapper); // Clean up buttons
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    messageBoxOverlay.classList.remove('visible');
+                    messageBoxOverlay.classList.add('hidden');
+                    messageBoxConfirm.removeEventListener('click', handleConfirm);
+                    confirmCancelButton.removeEventListener('click', handleCancel);
+                    messageBoxContent.removeChild(buttonWrapper); // Clean up buttons
+                    resolve(false);
+                };
+
+                messageBoxConfirm.addEventListener('click', handleConfirm);
+                confirmCancelButton.addEventListener('click', handleCancel);
+            });
+        }
+
+
+        /**
+         * Fetches user's grade and class number from Firestore.
+         * If the user document doesn't exist, it attempts to create one with default values.
+         * @param {string} userId - The current user's UID.
+         * @returns {Promise<{grade: string, classNum: string}>}
+         */
+        async function fetchUserGradeAndClass(userId) {
+            const userDocRef = db.collection('artifacts').doc(appId).collection('users').doc(userId).collection('profile').doc('details');
+            try {
+                const doc = await userDocRef.get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    console.log('사용자 학년/반 정보 로드 완료:', data);
+                    return { grade: data.grade, classNum: data.classNum, nickname: data.nickname };
+                } else {
+                    console.warn('사용자 프로필 문서가 없습니다. 기본값으로 생성합니다.');
+                    // Create with default values if not exists (or redirect to profile setup)
+                    const defaultProfile = {
+                        grade: '1', // Default grade
+                        classNum: '1', // Default class
+                        studentNum: '00', // Default student number
+                        nickname: `사용자${userId.substring(0, 4)}` // Default nickname
+                    };
+                    await userDocRef.set(defaultProfile);
+                    showMessageBox('프로필 정보가 없어 기본값으로 설정되었습니다 (1학년 1반).');
+                    return defaultProfile;
+                }
+            } catch (error) {
+                console.error('사용자 학년/반 정보 로드 중 오류 발생:', error);
+                showMessageBox('사용자 정보를 불러오는 데 실패했습니다: ' + error.message);
+                return { grade: '1', classNum: '1', nickname: `사용자${userId.substring(0, 4)}` }; // Fallback to default
+            }
+        }
+
+        /**
+         * Renders the homework list.
+         * @param {Array<Object>} homeworks - An array of homework objects.
+         */
+        function renderHomeworks(homeworks) {
+            homeworkList.innerHTML = ''; // Clear existing list
+            if (homeworks.length === 0) {
+                noHomeworkMessage.classList.remove('hidden');
+            } else {
+                noHomeworkMessage.classList.add('hidden');
+                homeworks.forEach(hw => {
+                    const isCompleted = hw.completedBy && hw.completedBy.includes(currentUser.uid);
+                    const isAuthor = currentUser && hw.authorId === currentUser.uid;
+                    const dueDate = hw.dueDate ? new Date(hw.dueDate).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }) : '날짜 미정';
+
+                    const homeworkItem = document.createElement('div');
+                    homeworkItem.classList.add('homework-item', 'rounded-xl', 'shadow-sm', 'border', 'border-gray-200');
+                    if (isCompleted) {
+                        homeworkItem.classList.add('completed');
+                    }
+                    homeworkItem.setAttribute('data-id', hw.id);
+
+                    homeworkItem.innerHTML = `
+                        <input type="checkbox" class="homework-checkbox" ${isCompleted ? 'checked' : ''}>
+                        <div class="homework-item-details">
+                            <strong>[${hw.subject}] ${hw.content}</strong>
+                            <p>${dueDate} 마감</p>
+                            <span>작성자: ${hw.authorNickname || '익명'}</span>
+                            ${hw.link ? `<a href="${hw.link}" target="_blank" class="text-blue-500 hover:underline text-xs mt-1">링크 보기</a>` : ''}
+                        </div>
+                        <div class="homework-actions">
+                            ${isAuthor ? `
+                                <button class="edit-homework" title="수정">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                                </button>
+                                <button class="delete-homework" title="삭제">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                    `;
+                    homeworkList.appendChild(homeworkItem);
+
+                    // Add event listeners for checkbox, edit, and delete buttons
+                    homeworkItem.querySelector('.homework-checkbox').addEventListener('change', () => toggleHomeworkCompletion(hw.id, isCompleted));
+                    if (isAuthor) {
+                        homeworkItem.querySelector('.edit-homework').addEventListener('click', () => openHomeworkModalForEdit(hw));
+                        homeworkItem.querySelector('.delete-homework').addEventListener('click', () => deleteHomework(hw.id));
+                    }
+                });
+                lucide.createIcons(); // Re-render Lucide icons if new ones are added
+            }
+        }
+
+        /**
+         * Fetches homeworks from Firestore based on user's grade and class.
+         * Listens for real-time updates.
+         */
+        let unsubscribeHomeworks = null; // To store the unsubscribe function
+        async function fetchAndListenForHomeworks() {
+            if (!db || !userGrade || !userClassNum) {
+                console.warn('Firestore 또는 사용자 학년/반 정보가 없습니다. 숙제를 불러올 수 없습니다.');
+                homeworkList.innerHTML = '';
+                noHomeworkMessage.classList.remove('hidden');
+                return;
+            }
+
+            // Unsubscribe from previous listener if exists
+            if (unsubscribeHomeworks) {
+                unsubscribeHomeworks();
+                console.log('이전 숙제 리스너 해제');
+            }
+
+            const homeworksCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('homeworks');
+            const q = homeworksCollectionRef
+                .where('grade', '==', userGrade)
+                .where('classNum', '==', userClassNum);
+
+            console.log(`현재 학년: ${userGrade}, 반: ${userClassNum}에 대한 숙제 리스너 설정 중...`);
+
+            unsubscribeHomeworks = q.onSnapshot(snapshot => {
+                const homeworks = [];
+                snapshot.forEach(doc => {
+                    homeworks.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Apply sorting based on current sort order
+                const sortOrder = sortOrderSelect.value;
+                if (sortOrder === 'latest') {
+                    homeworks.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+                } else if (sortOrder === 'dueDate') {
+                    homeworks.sort((a, b) => {
+                        const dateA = a.dueDate ? new Date(a.dueDate) : new Date('9999-12-31'); // Push null dates to end
+                        const dateB = b.dueDate ? new Date(b.dueDate) : new Date('9999-12-31');
+                        return dateA.getTime() - dateB.getTime();
+                    });
+                }
+
+                renderHomeworks(homeworks);
+                updateTodayHomeworkSummary(homeworks);
+                console.log('숙제 목록 업데이트:', homeworks);
+            }, error => {
+                console.error('숙제 실시간 업데이트 중 오류 발생:', error);
+                showMessageBox('숙제 정보를 불러오는 데 실패했습니다: ' + error.message);
+            });
+        }
+
+        /**
+         * Updates the "Today's Homework Summary" card.
+         * @param {Array<Object>} homeworks - The list of homeworks.
+         */
+        function updateTodayHomeworkSummary(homeworks) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of today
+
+            let dueTodayCountVal = 0;
+            homeworks.forEach(hw => {
+                if (hw.dueDate) {
+                    const dueDate = new Date(hw.dueDate);
+                    dueDate.setHours(0, 0, 0, 0);
+                    if (dueDate.getTime() === today.getTime() && !(hw.completedBy && hw.completedBy.includes(currentUser.uid))) {
+                        dueTodayCountVal++;
+                    }
+                }
+            });
+            dueTodayCount.textContent = dueTodayCountVal;
+            if (dueTodayCountVal > 0) {
+                todayHomeworkSummary.classList.remove('hidden');
+            } else {
+                todayHomeworkSummary.classList.add('hidden'); // Hide if no homework due today
+            }
+        }
+
+
+        /**
+         * Shows the homework add/edit modal.
+         */
+        function showHomeworkModal() {
+            homeworkModal.classList.add('visible');
+            homeworkModal.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the homework add/edit modal and resets the form.
+         */
+        function hideHomeworkModal() {
+            homeworkModal.classList.remove('visible');
+            homeworkModal.classList.add('hidden');
+            homeworkForm.reset();
+            homeworkIdInput.value = ''; // Clear homework ID for new entries
+            modalTitle.textContent = '새 숙제 등록'; // Reset modal title
+        }
+
+        /**
+         * Opens the homework modal for adding a new homework.
+         */
+        addHomeworkButton.addEventListener('click', () => {
+            hideHomeworkModal(); // Ensure form is reset for new entry
+            showHomeworkModal();
+        });
+
+        /**
+         * Populates the form and opens the modal for editing an existing homework.
+         * @param {Object} homework - The homework object to edit.
+         */
+        function openHomeworkModalForEdit(homework) {
+            modalTitle.textContent = '숙제 수정';
+            homeworkIdInput.value = homework.id;
+            subjectInput.value = homework.subject;
+            contentInput.value = homework.content;
+            dueDateInput.value = homework.dueDate; // YYYY-MM-DD format already from date input
+            linkInput.value = homework.link || '';
+            showHomeworkModal();
+        }
+
+        /**
+         * Handles the submission of the homework form (add or edit).
+         * @param {Event} event - The form submission event.
+         */
+        homeworkForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (!currentUser || !userGrade || !userClassNum) {
+                showMessageBox('로그인 정보가 없거나 반 정보가 누락되었습니다. 다시 로그인해주세요.');
+                return;
+            }
+
+            const homeworkId = homeworkIdInput.value;
+            const homeworkData = {
+                subject: subjectInput.value,
+                content: contentInput.value,
+                dueDate: dueDateInput.value,
+                link: linkInput.value,
+                grade: userGrade,
+                classNum: userClassNum,
+                authorId: currentUser.uid,
+                authorNickname: (await fetchUserGradeAndClass(currentUser.uid)).nickname || currentUser.email.split('@')[0], // Use fetched nickname or email prefix
+            };
+
+            try {
+                if (homeworkId) {
+                    // Edit existing homework
+                    const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('homeworks').doc(homeworkId);
+                    const docSnap = await docRef.get();
+                    if (docSnap.exists && docSnap.data().authorId === currentUser.uid) {
+                        await docRef.update(homeworkData);
+                        showMessageBox('숙제가 성공적으로 수정되었습니다.');
+                    } else {
+                        showMessageBox('이 숙제를 수정할 권한이 없습니다.');
+                    }
+                } else {
+                    // Add new homework
+                    homeworkData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    homeworkData.completedBy = []; // Initialize completedBy array for new homework
+                    await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('homeworks').add(homeworkData);
+                    showMessageBox('숙제가 성공적으로 등록되었습니다.');
+                }
+                hideHomeworkModal();
+            } catch (error) {
+                console.error('숙제 저장 중 오류 발생:', error);
+                showMessageBox('숙제 저장 중 오류가 발생했습니다: ' + error.message);
+            }
+        });
+
+        /**
+         * Handles canceling the homework modal.
+         */
+        cancelHomeworkButton.addEventListener('click', () => {
+            hideHomeworkModal();
+        });
+
+        /**
+         * Toggles the completion status of a homework.
+         * @param {string} homeworkId - The ID of the homework document.
+         * @param {boolean} isCurrentlyCompleted - The current completion status.
+         */
+        async function toggleHomeworkCompletion(homeworkId, isCurrentlyCompleted) {
+            if (!currentUser) {
+                showMessageBox('로그인이 필요합니다.');
+                return;
+            }
+            try {
+                const homeworkRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('homeworks').doc(homeworkId);
+                if (isCurrentlyCompleted) {
+                    // Remove user from completedBy array
+                    await homeworkRef.update({
+                        completedBy: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+                    });
+                    console.log('숙제 완료 취소:', homeworkId);
+                } else {
+                    // Add user to completedBy array
+                    await homeworkRef.update({
+                        completedBy: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+                    });
+                    console.log('숙제 완료:', homeworkId);
+                }
+            } catch (error) {
+                console.error('숙제 완료 상태 변경 중 오류 발생:', error);
+                showMessageBox('숙제 완료 상태 변경 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        /**
+         * Deletes a homework.
+         * @param {string} homeworkId - The ID of the homework document to delete.
+         */
+        async function deleteHomework(homeworkId) {
+            if (!currentUser) {
+                showMessageBox('로그인이 필요합니다.');
+                return;
+            }
+
+            const confirmed = await showConfirmBox('정말로 이 숙제를 삭제하시겠습니까?');
+            if (!confirmed) {
+                return;
+            }
+
+            try {
+                const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('homeworks').doc(homeworkId);
+                const docSnap = await docRef.get();
+                if (docSnap.exists && docSnap.data().authorId === currentUser.uid) {
+                    await docRef.delete();
+                    showMessageBox('숙제가 성공적으로 삭제되었습니다.');
+                    console.log('숙제 삭제:', homeworkId);
+                } else {
+                    showMessageBox('이 숙제를 삭제할 권한이 없습니다.');
+                }
+            } catch (error) {
+                console.error('숙제 삭제 중 오류 발생:', error);
+                showMessageBox('숙제 삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // Event listener for sort order change
+        sortOrderSelect.addEventListener('change', fetchAndListenForHomeworks);
+
+
+        // Page data initialization
+        async function initializePageData() {
+            if (currentUser && currentUser.uid) {
+                const userData = await fetchUserGradeAndClass(currentUser.uid);
+                userGrade = userData.grade;
+                userClassNum = userData.classNum;
+                classHomeworkTitle.textContent = `${userGrade}학년 ${userClassNum}반 숙제`;
+                fetchAndListenForHomeworks(); // Start listening for homeworks specific to user's class
+            } else {
+                console.log("사용자가 로그인되지 않았습니다. 숙제 정보를 로드할 수 없습니다.");
+                homeworkList.innerHTML = '';
+                noHomeworkMessage.classList.remove('hidden');
+                classHomeworkTitle.textContent = '로그인 후 숙제를 확인하세요';
+                todayHomeworkSummary.classList.add('hidden'); // Hide summary if not logged in
+            }
+        }
+
+        // Initialize Firebase and set up listeners when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            currentUser = user; // Set global current user
+                            await updateAccountUI(user);
+                            await initializePageData();
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        await initializePageData(); // Attempt to initialize page even if Firebase fails
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        currentUser = user; // Set global current user
+                        await updateAccountUI(user);
+                        await initializePageData();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                await initializePageData(); // Attempt to initialize page even if no config
+            }
+
+            // Global click listener to close dropdown on outside click
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            setupNavigationEvents();
+            updateNavigationActiveState();
+            lucide.createIcons(); // Initial icon rendering
+        });
+    </script>
+</body>
+</html>
