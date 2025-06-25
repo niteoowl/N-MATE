@@ -15,9 +15,17 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
+        /* Pretendard-Regular 웹폰트 정의 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
         /* Body styles for overall layout */
         body {
-            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            font-family: 'Pretendard-Regular', 'Noto Sans KR', 'Inter', sans-serif; /* Pretendard-Regular 우선 적용 */
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -201,6 +209,13 @@
         .modal-box .button-group .cancel-button:hover {
             background-color: #d1d5db;
         }
+        .modal-box .button-group .delete-button { /* Style for delete button */
+            background-color: #dc2626; /* Red */
+            color: white;
+        }
+        .modal-box .button-group .delete-button:hover {
+            background-color: #b91c1c; /* Darker Red */
+        }
 
         /* Added for square boxes */
         .square-box {
@@ -268,11 +283,18 @@
         /* Calendar grid specific styles */
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
             gap: 1px;
             width: 100%;
             background-color: #e2e8f0;
         }
+        /* Dynamic grid columns based on JS will override this default */
+        .calendar-grid.weekday-mode {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .calendar-grid.full-week-mode {
+            grid-template-columns: repeat(7, 1fr);
+        }
+
         .calendar-header-day {
             background-color: #ffffff;
             font-weight: 600;
@@ -293,6 +315,7 @@
             color: #4a5568;
             overflow: hidden;
             position: relative;
+            cursor: pointer; /* Indicate it's clickable for adding events */
         }
         .calendar-cell.inactive-month {
             background-color: #f3f4f6;
@@ -301,6 +324,12 @@
         .calendar-cell.today {
             background-color: #e5e7eb;
             font-weight: 600;
+        }
+        .calendar-cell.weekend { /* Style for weekend cells */
+            background-color: #fcfcfc;
+        }
+        .calendar-cell.weekend.today {
+            background-color: #e5e7eb; /* Still highlight today even if it's a weekend */
         }
         .calendar-cell-date {
             font-weight: 700;
@@ -326,6 +355,7 @@
             padding-left: 0.25rem;
             color: #0056b3; /* Darker blue text */
             font-weight: 500;
+            cursor: pointer; /* Make user events clickable for editing */
         }
         .calendar-cell-event:last-child {
             margin-bottom: 0;
@@ -351,6 +381,61 @@
             margin-bottom: 0.5em;
             border-radius: 4px;
         }
+
+        /* Settings Dropdown for Calendar */
+        .settings-dropdown {
+            position: absolute;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 0.75rem;
+            min-width: 10rem;
+            right: 0; /* Align with add event button */
+            top: 2.5rem; /* Position below the button */
+            z-index: 30;
+        }
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        .settings-option:last-child {
+            margin-bottom: 0;
+        }
+        .settings-option label {
+            font-size: 0.875rem;
+            color: #374151;
+            font-weight: 500;
+        }
+        /* Toggle Switch related CSS removed as per user request */
+
+        .mode-selection-buttons {
+            display: flex;
+            gap: 0.5rem;
+            /* margin-top: 1rem; No margin top if it's the only element now */
+        }
+        .mode-selection-buttons button {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: #e5e7eb;
+            color: #4b5563;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .mode-selection-buttons button.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        .mode-selection-buttons button:hover:not(.active) {
+            background-color: #d1d5db;
+        }
+
     </style>
 </head>
 <body>
@@ -381,12 +466,29 @@
 
         <!-- Calendar Section Content -->
         <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
-            <div class="flex justify-between items-center w-full mb-4">
+            <div class="flex justify-between items-center w-full mb-4 relative"> <!-- Added relative for settings dropdown -->
                 <h2 class="text-left text-xl font-bold text-gray-800">캘린더</h2>
-                <!-- Add Event Button (visible only for logged-in users) -->
-                <button id="addEventButton" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300 text-sm">
-                    일정 추가
-                </button>
+                <div class="flex gap-2 items-center">
+                    <!-- Settings Button for Calendar -->
+                    <button id="calendarSettingsButton" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-3 rounded-full shadow-sm transition duration-300 text-sm flex items-center">
+                        <i data-lucide="settings" class="w-4 h-4 mr-1"></i> 설정
+                    </button>
+                    <!-- Add Event Button (visible only for logged-in users) -->
+                    <button id="addEventButton" class="hidden bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300 text-sm">
+                        일정 추가
+                    </button>
+                </div>
+
+                <!-- Calendar Settings Dropdown (Hidden by default) -->
+                <div id="calendarSettingsDropdown" class="settings-dropdown hidden">
+                    <div class="settings-option">
+                        <label>캘린더 모드</label>
+                        <div class="mode-selection-buttons">
+                            <button id="modeWeekdayButton" class="active">주중</button>
+                            <button id="modeFullWeekButton">주간</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 
@@ -418,7 +520,7 @@
                 <!-- Academic Schedule display area -->
                 <div id="academic-schedule-display-section" class="w-full academic-schedule-content-box">
                     <!-- Academic calendar will be rendered here -->
-                    <div class="w-full calendar-grid">
+                    <div class="w-full calendar-grid weekday-mode">
                         <!-- Skeleton header days -->
                         ${Array(5).fill(0).map((_, i) => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
                         <!-- Skeleton cells -->
@@ -436,10 +538,10 @@
 
     </div>
 
-    <!-- Event Add Modal (Hidden by default) -->
+    <!-- Event Add/Edit Modal (Hidden by default) -->
     <div id="eventModalOverlay" class="modal-overlay">
         <div class="modal-box">
-            <h3>새 일정 추가</h3>
+            <h3 id="eventModalTitle">새 일정 추가</h3>
             <form id="eventForm">
                 <label for="eventName">일정명:</label>
                 <input type="text" id="eventName" placeholder="예: 수학 숙제 제출" required>
@@ -452,6 +554,7 @@
 
                 <div class="button-group">
                     <button type="button" id="cancelEventButton" class="cancel-button">취소</button>
+                    <button type="button" id="deleteEventButton" class="delete-button hidden">삭제</button>
                     <button type="submit" id="saveEventButton" class="save-button">저장</button>
                 </div>
             </form>
@@ -541,15 +644,27 @@
         let academicCalendarEvents = []; // Store fetched academic calendar events globally
         let userCalendarEvents = []; // Store user-added calendar events globally
 
-        // DOM elements for Event Add Modal
+        // Calendar Settings & Modes
+        const calendarSettingsButton = document.getElementById('calendarSettingsButton');
+        const calendarSettingsDropdown = document.getElementById('calendarSettingsDropdown');
+        // const toggleWeekendDisplay = document.getElementById('toggleWeekendDisplay'); // Removed as per user request
+        const modeWeekdayButton = document.getElementById('modeWeekdayButton');
+        const modeFullWeekButton = document.getElementById('modeFullWeekButton');
+        // let showWeekends = true; // No longer directly controlled by a toggle
+        let calendarMode = 'fullWeek'; // Default calendar mode: 'fullWeek' (주간) or 'weekday' (주중)
+
+        // DOM elements for Event Add/Edit Modal
         const addEventButton = document.getElementById('addEventButton');
         const eventModalOverlay = document.getElementById('eventModalOverlay');
+        const eventModalTitle = document.getElementById('eventModalTitle');
         const eventForm = document.getElementById('eventForm');
         const eventNameInput = document.getElementById('eventName');
         const eventDateInput = document.getElementById('eventDate');
         const eventDescriptionInput = document.getElementById('eventDescription');
         const saveEventButton = document.getElementById('saveEventButton');
         const cancelEventButton = document.getElementById('cancelEventButton');
+        const deleteEventButton = document.getElementById('deleteEventButton');
+        let editingEventId = null; // Stores the ID of the event being edited
 
         /**
          * Toggles the visibility of the account dropdown menu.
@@ -622,7 +737,8 @@
                 accountDropdown.classList.add('hidden'); // Hide dropdown
                 addEventButton.classList.add('hidden'); // Hide add event button
                 userCalendarEvents = []; // Clear user events if logged out
-                renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents); // Re-render without user events
+                // Re-render without user events based on current calendar mode (which implies weekend visibility)
+                renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents);
             }
             lucide.createIcons(); // Lucide 아이콘이 동적으로 추가/변경될 때 렌더링되도록 호출
         }
@@ -785,82 +901,141 @@
             const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
             const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
 
-            const dayNames = ['월', '화', '수', '목', '금']; // Only display weekdays in header
+            // Dynamically set grid columns based on calendarMode
+            const calendarGridContainer = academicScheduleDisplaySection.querySelector('.calendar-grid');
+            calendarGridContainer.classList.remove('weekday-mode', 'full-week-mode');
+            calendarGridContainer.classList.add(calendarMode === 'weekday' ? 'weekday-mode' : 'full-week-mode');
 
-            let calendarHtml = '<div class="calendar-grid">';
+            let dayNames;
+            let startDayCorrection; // Correction to align with Monday (1) or Sunday (0)
+            let daysInGridRow; // Number of days displayed per row
 
-            // Add day headers (Mon-Fri)
+            if (calendarMode === 'weekday') {
+                dayNames = ['월', '화', '수', '목', '금'];
+                startDayCorrection = 1; // Start from Monday (dayOfWeek 1)
+                daysInGridRow = 5;
+            } else { // fullWeek mode
+                dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+                startDayCorrection = 0; // Start from Sunday (dayOfWeek 0)
+                daysInGridRow = 7;
+            }
+
+            let calendarHtml = '<div class="w-full calendar-grid ' + (calendarMode === 'weekday' ? 'weekday-mode' : 'full-week-mode') + '">';
+
+            // Add day headers
             dayNames.forEach(dayName => {
                 calendarHtml += `<div class="calendar-header-day">${dayName}</div>`;
             });
 
-            // Determine the starting day for the calendar grid
+            // Determine the starting day for the calendar grid (first cell to render)
             let startCalendarDate = new Date(firstDayOfMonth);
             const firstDayWeekday = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-            if (firstDayWeekday === 0) { // If first day is Sunday, go back 6 days to Monday of previous week
-                startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
-            } else if (firstDayWeekday !== 1) { // If not Monday, go back to the previous Monday
-                startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - 1));
+            // Adjust `startCalendarDate` to be the first day of the *displayed* week
+            // E.g., if the 1st is a Wednesday (3), and mode is fullWeek (start Sun, 0), then startDate = Sunday before 1st.
+            // If the 1st is Wednesday (3), and mode is weekday (start Mon, 1), then startDate = Monday before 1st.
+            if (firstDayWeekday !== startDayCorrection) {
+                if (firstDayWeekday === 0 && calendarMode === 'weekday') { // If 1st is Sunday, and we want Monday
+                    startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
+                } else if (firstDayWeekday > startDayCorrection) {
+                    startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - startDayCorrection));
+                } else { // firstDayWeekday < startDayCorrection (e.g., 1st is Monday, but we want Sunday start)
+                    startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday + (daysInGridRow - startDayCorrection)));
+                }
             }
 
-            // Determine the ending day for the calendar grid
-            let endCalendarDate = new Date(lastDayOfMonth);
-            const lastDayWeekday = lastDayOfMonth.getDay();
 
-            if (lastDayWeekday === 0) { // If last day is Sunday, go forward 5 days to Friday of next week
-                endCalendarDate.setDate(lastDayOfMonth.getDate() + 5);
-            } else if (lastDayWeekday !== 5) { // If not Friday, go forward to the next Friday
-                endCalendarDate.setDate(lastDayOfMonth.getDate() + (5 - lastDayWeekday + 7) % 7);
-            }
+            // Calculate total cells needed to cover the month, ensuring full rows
+            const totalDaysInMonth = lastDayOfMonth.getDate();
+            const daysBeforeFirst = (firstDayWeekday - startDayCorrection + daysInGridRow) % daysInGridRow;
+            const totalCells = Math.ceil((totalDaysInMonth + daysBeforeFirst) / daysInGridRow) * daysInGridRow;
 
-            // Iterate through each day from startCalendarDate to endCalendarDate
             let currentIterationDate = new Date(startCalendarDate);
-            while (currentIterationDate <= endCalendarDate) {
+
+            // Iterate through each cell of the grid
+            for (let i = 0; i < totalCells; i++) {
                 const dayOfWeek = currentIterationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-                // Only render Mon-Fri cells
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    const cellDateString = `${currentIterationDate.getFullYear()}${String(currentIterationDate.getMonth() + 1).padStart(2, '0')}${String(currentIterationDate.getDate()).padStart(2, '0')}`;
-                    const isToday = currentIterationDate.toDateString() === today.toDateString();
-                    const isCurrentMonth = currentIterationDate.getMonth() === currentMonth && currentIterationDate.getFullYear() === currentYear;
-
-                    let cellClass = 'calendar-cell';
-                    if (!isCurrentMonth) {
-                        cellClass += ' inactive-month';
-                    }
-                    if (isToday) {
-                        cellClass += ' today';
-                    }
-
-                    let eventHtml = '';
-                    const dailyAcademicEvents = academicEvents.filter(event => event.AA_YMD === cellDateString);
-                    const dailyUserEvents = userEvents.filter(event => event.eventDate === cellDateString);
-
-                    // Sort events by time if available, or just by type
-                    const allDailyEvents = [
-                        ...dailyAcademicEvents.map(event => ({ type: 'academic', name: event.EVENT_NM })),
-                        ...dailyUserEvents.map(event => ({ type: 'user', name: event.eventName }))
-                    ];
-
-                    allDailyEvents.forEach(event => {
-                        const eventClass = event.type === 'user' ? 'user-event' : '';
-                        eventHtml += `<p class="calendar-cell-event ${eventClass}">${event.name}</p>`;
-                    });
-
-                    calendarHtml += `
-                        <div class="${cellClass}">
-                            <div class="calendar-cell-date">${currentIterationDate.getDate()}</div>
-                            ${eventHtml}
-                        </div>
-                    `;
+                // Skip rendering if weekend is not displayed and current day is a weekend
+                if (calendarMode === 'weekday' && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                    // Increment date, but do not render cell for weekends in weekday mode
+                    currentIterationDate.setDate(currentIterationDate.getDate() + 1);
+                    continue;
                 }
+
+                const cellDateString = `${currentIterationDate.getFullYear()}${String(currentIterationDate.getMonth() + 1).padStart(2, '0')}${String(currentIterationDate.getDate()).padStart(2, '0')}`;
+                const isToday = currentIterationDate.toDateString() === today.toDateString();
+                const isCurrentMonth = currentIterationDate.getMonth() === currentMonth && currentIterationDate.getFullYear() === currentYear;
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+                let cellClass = 'calendar-cell';
+                if (!isCurrentMonth) {
+                    cellClass += ' inactive-month';
+                }
+                if (isToday) {
+                    cellClass += ' today';
+                }
+                if (isWeekend) { // Apply weekend style if it's a weekend, regardless of `showWeekends` as the mode now controls visibility
+                    cellClass += ' weekend';
+                }
+
+                let eventHtml = '';
+                const dailyAcademicEvents = academicEvents.filter(event => event.AA_YMD === cellDateString);
+                const dailyUserEvents = userEvents.filter(event => event.eventDate === cellDateString);
+
+                // Combine and sort events
+                const allDailyEvents = [
+                    ...dailyAcademicEvents.map(event => ({ type: 'academic', name: event.EVENT_NM, id: null })), // Academic events don't have Firestore ID
+                    ...dailyUserEvents.map(event => ({ type: 'user', name: event.eventName, id: event.id }))
+                ];
+
+                allDailyEvents.forEach(event => {
+                    const eventClass = event.type === 'user' ? 'user-event' : '';
+                    const eventIdAttr = event.id ? `data-event-id="${event.id}"` : '';
+                    eventHtml += `<p class="calendar-cell-event ${eventClass}" ${eventIdAttr}>${event.name}</p>`;
+                });
+
+                calendarHtml += `
+                    <div class="${cellClass}" data-date="${cellDateString}">
+                        <div class="calendar-cell-date">${currentIterationDate.getDate()}</div>
+                        ${eventHtml}
+                    </div>
+                `;
                 currentIterationDate.setDate(currentIterationDate.getDate() + 1);
             }
 
             calendarHtml += '</div>'; // Close calendar-grid
             academicScheduleDisplaySection.innerHTML = calendarHtml;
             lucide.createIcons(); // Re-create Lucide icons for new content (calendar navigation arrows)
+
+            // Add click listeners to cells for adding new events
+            academicScheduleDisplaySection.querySelectorAll('.calendar-cell').forEach(cell => {
+                // Only allow adding events to dates within the current month that are not inactive
+                if (cell.classList.contains('inactive-month')) {
+                    // For inactive month cells, ensure cursor is not pointer and no event listener
+                    cell.style.cursor = 'default';
+                } else {
+                    cell.addEventListener('click', (e) => {
+                        // Prevent opening modal if clicking an existing event within the cell
+                        if (!e.target.classList.contains('calendar-cell-event')) {
+                             const clickedDate = cell.dataset.date;
+                             showEventModal(clickedDate);
+                        }
+                    });
+                }
+            });
+
+            // Add click listeners to user events for editing
+            academicScheduleDisplaySection.querySelectorAll('.calendar-cell-event.user-event').forEach(eventElement => {
+                eventElement.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent cell click event from firing
+                    const eventId = eventElement.dataset.eventId;
+                    const eventToEdit = userCalendarEvents.find(event => event.id === eventId);
+                    if (eventToEdit) {
+                        showEventModal(eventToEdit.eventDate, eventToEdit);
+                    }
+                });
+            });
         }
 
         /**
@@ -873,9 +1048,9 @@
 
             // Display skeleton loader while fetching
             academicScheduleDisplaySection.innerHTML = `
-                <div class="w-full calendar-grid">
-                    ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
-                    ${Array(35).fill(0).map((_, i) => `
+                <div class="w-full calendar-grid ${calendarMode === 'weekday' ? 'weekday-mode' : 'full-week-mode'}">
+                    ${(calendarMode === 'weekday' ? ['월', '화', '수', '목', '금'] : ['일', '월', '화', '수', '목', '금', '토']).map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                    ${Array(calendarMode === 'weekday' ? 35 : 42).fill(0).map((_, i) => `
                         <div class="calendar-cell">
                             <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
                             <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
@@ -936,35 +1111,56 @@
         }
 
         /**
-         * Shows the event addition modal.
+         * Shows the event addition/edit modal.
+         * @param {string} [date] - Optional date (YYYYMMDD) to pre-fill for new events.
+         * @param {Object} [eventData] - Optional event data to pre-fill for editing.
          */
-        function showEventModal() {
+        function showEventModal(date = null, eventData = null) {
             eventModalOverlay.classList.add('visible');
             eventNameInput.value = '';
             eventDateInput.value = '';
             eventDescriptionInput.value = '';
+            editingEventId = null; // Reset editing state
 
-            // Set default date to today
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            eventDateInput.value = `${year}-${month}-${day}`;
+            if (eventData) { // Edit mode
+                eventModalTitle.textContent = '일정 수정';
+                eventNameInput.value = eventData.eventName || '';
+                eventDateInput.value = eventData.eventDate ? `${eventData.eventDate.substring(0,4)}-${eventData.eventDate.substring(4,6)}-${eventData.eventDate.substring(6,8)}` : '';
+                eventDescriptionInput.value = eventData.description || '';
+                saveEventButton.textContent = '수정';
+                deleteEventButton.classList.remove('hidden');
+                editingEventId = eventData.id;
+            } else { // Add mode
+                eventModalTitle.textContent = '새 일정 추가';
+                saveEventButton.textContent = '저장';
+                deleteEventButton.classList.add('hidden');
+                // Set default date if provided or today
+                if (date) {
+                    eventDateInput.value = `${date.substring(0,4)}-${date.substring(4,6)}-${date.substring(6,8)}`;
+                } else {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    eventDateInput.value = `${year}-${month}-${day}`;
+                }
+            }
         }
 
         /**
-         * Hides the event addition modal.
+         * Hides the event addition/edit modal.
          */
         function hideEventModal() {
             eventModalOverlay.classList.remove('visible');
+            editingEventId = null; // Clear editing state
         }
 
         /**
-         * Saves a new event to Firestore.
+         * Saves or updates an event to Firestore.
          */
         async function saveEvent() {
             const eventName = eventNameInput.value.trim();
-            const eventDate = eventDateInput.value.replace(/-/g, ''); // YYYYMMDD format
+            const eventDate = eventDateInput.value.replace(/-/g, ''); //YYYYMMDD format
             const eventDescription = eventDescriptionInput.value.trim();
 
             if (!eventName || !eventDate) {
@@ -981,19 +1177,61 @@
                 const userId = auth.currentUser.uid;
                 const userEventsCollectionRef = db.collection(`artifacts/${appId}/users/${userId}/user_events`);
 
-                await userEventsCollectionRef.add({
-                    eventName: eventName,
-                    eventDate: eventDate,
-                    description: eventDescription,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    userId: userId
-                });
-                showMessageBox('일정이 성공적으로 추가되었습니다!');
+                if (editingEventId) { // Update existing event
+                    const eventDocRef = userEventsCollectionRef.doc(editingEventId);
+                    await eventDocRef.update({
+                        eventName: eventName,
+                        eventDate: eventDate,
+                        description: eventDescription,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    showMessageBox('일정이 성공적으로 수정되었습니다!');
+                } else { // Add new event
+                    await userEventsCollectionRef.add({
+                        eventName: eventName,
+                        eventDate: eventDate,
+                        description: eventDescription,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        userId: userId
+                    });
+                    showMessageBox('일정이 성공적으로 추가되었습니다!');
+                }
                 hideEventModal();
                 // onSnapshot listener will automatically re-render the calendar
             } catch (error) {
-                console.error('일정 추가 오류:', error);
-                showMessageBox('일정 추가 중 오류가 발생했습니다: ' + error.message);
+                console.error('일정 저장/수정 오류:', error);
+                showMessageBox('일정 저장/수정 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        /**
+         * Deletes an event from Firestore.
+         */
+        async function deleteEvent() {
+            if (!editingEventId) {
+                showMessageBox('삭제할 일정을 찾을 수 없습니다.');
+                return;
+            }
+            if (!auth.currentUser) {
+                showMessageBox('로그인이 필요합니다.');
+                return;
+            }
+
+            const confirmDelete = confirm('정말 이 일정을 삭제하시겠습니까?'); // Use confirm for simplicity, custom modal for better UX if needed
+            if (!confirmDelete) {
+                return;
+            }
+
+            try {
+                const userId = auth.currentUser.uid;
+                const userEventsCollectionRef = db.collection(`artifacts/${appId}/users/${userId}/user_events`);
+                await userEventsCollectionRef.doc(editingEventId).delete();
+                showMessageBox('일정이 성공적으로 삭제되었습니다.');
+                hideEventModal();
+                // onSnapshot listener will automatically re-render the calendar
+            } catch (error) {
+                console.error('일정 삭제 오류:', error);
+                showMessageBox('일정 삭제 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
@@ -1018,7 +1256,12 @@
                     ...doc.data()
                 }));
                 // Sort by date to ensure proper display
-                userCalendarEvents.sort((a, b) => parseInt(a.eventDate) - parseInt(b.eventDate));
+                userCalendarEvents.sort((a, b) => {
+                    if (a.eventDate === b.eventDate) {
+                        return a.eventName.localeCompare(b.eventName); // Secondary sort by name
+                    }
+                    return parseInt(a.eventDate) - parseInt(b.eventDate);
+                });
                 console.log("사용자 일정 업데이트:", userCalendarEvents);
                 // Re-render the calendar with updated user events
                 renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents);
@@ -1027,13 +1270,39 @@
             });
         }
 
+        /**
+         * Switches the calendar display mode (weekday or full week).
+         * @param {string} mode - 'weekday' or 'fullWeek'
+         */
+        function switchCalendarMode(mode) {
+            calendarMode = mode;
+            // showWeekends variable is now implicitly managed by calendarMode
+            // No need to explicitly set showWeekends here, just ensure renderAcademicCalendar
+            // correctly uses calendarMode to determine which days to show.
+            renderAcademicCalendar(academicCurrentDate, academicCalendarEvents, userCalendarEvents);
+            updateModeButtons();
+        }
+
+        /**
+         * Updates the active state of the mode selection buttons.
+         */
+        function updateModeButtons() {
+            modeWeekdayButton.classList.remove('active');
+            modeFullWeekButton.classList.remove('active');
+            if (calendarMode === 'weekday') {
+                modeWeekdayButton.classList.add('active');
+            } else {
+                modeFullWeekButton.classList.add('active');
+            }
+            // Removed sync for toggleWeekendDisplay as it's removed
+        }
+
 
         // 페이지 데이터 초기화 (캘린더 데이터 로딩 포함)
         async function initializePageData() {
             console.log("캘린더 페이지가 초기화되었습니다.");
-            // 캘린더 페이지 로드 시 학사일정 불러오기
-            // 사용자 인증 상태는 onAuthStateChanged에서 처리되므로, 여기서는 단순히 학사일정만 불러옵니다.
-            // 사용자 일정은 updateAccountUI에서 setupUserEventsListener를 통해 로드됩니다.
+            // Set initial calendar mode and weekend display based on defaults
+            updateModeButtons();
             await getAcademicCalendar(academicCurrentDate);
         }
 
@@ -1081,6 +1350,10 @@
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
                     accountDropdown.classList.add('hidden');
                 }
+                // 캘린더 설정 드롭다운 닫기
+                if (calendarSettingsButton && !calendarSettingsButton.contains(e.target) && !calendarSettingsDropdown.contains(e.target)) {
+                    calendarSettingsDropdown.classList.add('hidden');
+                }
             });
 
             // 내비게이션 클릭 핸들러 설정
@@ -1092,13 +1365,23 @@
             academicPrevMonthButton.addEventListener('click', goToPrevAcademicMonth);
             academicNextMonthButton.addEventListener('click', goToNextAcademicMonth);
 
-            // 일정 추가 모달 관련 이벤트 리스너
-            addEventButton.addEventListener('click', showEventModal);
+            // 일정 추가/수정 모달 관련 이벤트 리스너
+            addEventButton.addEventListener('click', () => showEventModal()); // No arguments for general add
             cancelEventButton.addEventListener('click', hideEventModal);
-            eventForm.addEventListener('submit', function(e) {
-                e.preventDefault(); // Prevent default form submission
-                saveEvent();
+            deleteEventButton.addEventListener('click', deleteEvent); // Add delete event listener
+            saveEventButton.addEventListener('click', saveEvent); // Changed to click listener for direct call
+            // eventForm.addEventListener('submit', function(e) { e.preventDefault(); saveEvent(); }); // Removed submit listener
+
+            // 캘린더 설정 버튼 및 토글 이벤트 리스너
+            calendarSettingsButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent document click from immediately closing it
+                calendarSettingsDropdown.classList.toggle('hidden');
+                updateModeButtons(); // Ensure mode buttons reflect current state when dropdown opens
             });
+            // toggleWeekendDisplay.addEventListener('change', toggleWeekendDisplayHandler); // Removed as per user request
+            modeWeekdayButton.addEventListener('click', () => switchCalendarMode('weekday'));
+            modeFullWeekButton.addEventListener('click', () => switchCalendarMode('fullWeek'));
+
 
             // 초기 아이콘 렌더링
             lucide.createIcons();
