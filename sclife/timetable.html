@@ -869,6 +869,9 @@
                                 return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
                             content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
+
+                            
                             weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
                         });
                     } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
