@@ -27,7 +27,7 @@
             min-height: 100vh;
             background-color: #ffffff; /* Light gray background */
         }
-        /* Skeleton Loader animation for loading states (kept for consistency, not directly used here) */
+        /* Skeleton Loader animation for loading states */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
             background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
@@ -41,12 +41,25 @@
                 background-position: 200% 0;
             }
         }
+        /* Adjusted skeleton specific styles for better mimicry */
+        .skeleton-title {
+            height: 1.5em; /* Matches h3 text-lg roughly */
+            width: 60%; /* Variable width for title */
+            margin-bottom: 0.75em; /* Matches h3 margin */
+            border-radius: 4px;
+        }
+        /* Generic skeleton text/block, can be overridden by more specific classes */
         .skeleton-text {
-            height: 1em; /* Adjust as needed */
-            width: 80%; /* Adjust as needed */
+            height: 1em; /* Base height for text lines */
+            width: 80%; /* Base width for text lines */
             margin-bottom: 0.5em;
             border-radius: 4px;
         }
+        .skeleton-meta-item {
+            height: 0.75em; /* Matches text-xs roughly */
+            border-radius: 4px;
+        }
+
 
         /* Main content container for centering and max-width */
         .main-content-container {
@@ -326,8 +339,7 @@
 
             <!-- Posts List Section -->
             <div id="postsList" class="w-full mt-4">
-                <!-- Posts will be dynamically loaded here -->
-                <p class="text-gray-500 text-center">게시물을 로딩 중입니다...</p>
+                <!-- Posts will be dynamically loaded here, or skeleton loader shown -->
             </div>
         </div>
 
@@ -692,6 +704,31 @@
         }
 
         /**
+         * Generates and inserts skeleton loader items into the posts list.
+         * @param {number} count - The number of skeleton items to generate.
+         */
+        function showSkeletonLoader(count = 3) {
+            postsList.innerHTML = ''; // Clear existing content
+            for (let i = 0; i < count; i++) {
+                const skeletonDiv = document.createElement('div');
+                skeletonDiv.classList.add('p-4', 'border-b', 'border-gray-200');
+                skeletonDiv.innerHTML = `
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="flex items-center mt-2"> <!-- Added mt-2 for spacing -->
+                        <!-- Likes, Views, Author, Date placeholders -->
+                        <div class="skeleton w-12 h-4 rounded-md mr-3"></div>
+                        <div class="skeleton w-12 h-4 rounded-md mr-3"></div>
+                        <div class="skeleton w-20 h-4 rounded-md mr-3"></div>
+                        <div class="skeleton w-24 h-4 rounded-md"></div>
+                        <!-- Category Badge placeholder, ml-auto to push right -->
+                        <div class="skeleton w-16 h-5 rounded-full ml-auto"></div>
+                    </div>
+                `;
+                postsList.appendChild(skeletonDiv);
+            }
+        }
+
+        /**
          * Fetches and displays posts based on the current filter and category.
          * 로그인 여부와 관계없이 게시물을 가져와 표시합니다.
          * @param {string} filterType - 'all', 'popular', 'category'
@@ -721,7 +758,7 @@
                 console.log('이전 Firestore 스냅샷 리스너 해제됨.');
             }
 
-            postsList.innerHTML = '<p class="text-gray-500 text-center">게시물을 로딩 중입니다...</p>'; // Show loading message
+            showSkeletonLoader(); // Show skeleton loader while fetching
 
             window.postsUnsubscribe = baseQuery.onSnapshot((snapshot) => {
                 let posts = [];
@@ -744,7 +781,7 @@
                     console.log('클라이언트 측 정렬: 최신순으로 정렬 완료.');
                 }
 
-                postsList.innerHTML = ''; // Clear current posts
+                postsList.innerHTML = ''; // Clear skeleton loader and current posts
                 if (posts.length === 0) {
                     postsList.innerHTML = '<p class="text-gray-500 text-center">게시물이 없습니다.</p>';
                     console.log('필터링된 게시물이 없습니다.');
@@ -911,6 +948,7 @@
 
             // Event listeners for individual category buttons in the modal
             categoryListContainer.querySelectorAll('button').forEach(button => {
+                console.log(`카테고리 버튼에 이벤트 리스너 부착 중: ${button.textContent}`); // 디버깅: 리스너 부착 확인
                 button.addEventListener('click', () => {
                     console.log(`카테고리 버튼 클릭됨: ${button.textContent}`); // 디버깅: 어떤 카테고리 버튼이 클릭되었는지 확인
                     currentSpecificCategory = button.dataset.category;
