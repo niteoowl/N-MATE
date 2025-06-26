@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /login
+Disallow: /auth
+Disallow: /write
+Disallow: /404
+Disallow: /more
+Disallow: /settings
+Allow: /
+
+Sitemap: https://nmate.kr/sitemap.xml
