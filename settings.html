@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 설정</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN (SVG 아이콘을 직접 삽입하므로 이제는 필요 없지만, 다른 곳에서 사용될 수 있으므로 유지) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <style>
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+
+        /* Dark mode styles - Changed to blackish tones */
+        html.dark body {
+            background-color: #1a1a1a; /* Very dark gray/almost black background */
+            color: #e0e0e0; /* Lighter text for contrast */
+        }
+
+        html.dark .main-content-container {
+            background-color: #1a1a1a; /* Consistent with body background */
+        }
+
+        html.dark .content-box-item {
+            background-color: #282828; /* Slightly lighter dark gray for content boxes */
+            border-color: #404040; /* Darker border for separation */
+            color: #e0e0e0;
+        }
+
+        html.dark .content-box-item:hover {
+            background-color: #3a3a3a; /* Darker hover for content boxes */
+        }
+
+        html.dark .dropdown-menu {
+            background-color: #282828; /* Consistent with content boxes */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.24); /* Darker shadow */
+        }
+
+        html.dark .dropdown-menu button {
+            color: #e0e0e0;
+        }
+
+        html.dark .dropdown-menu button:hover {
+            background-color: #3a3a3a;
+        }
+
+        html.dark .nav-item {
+            color: #b0b0b0; /* Neutral gray for inactive nav items */
+        }
+
+        html.dark .nav-item:hover {
+            color: #ffffff; /* White hover for nav items */
+            background-color: #282828;
+        }
+
+        html.dark .nav-item.active {
+            color: #ffffff; /* White for active nav items */
+        }
+
+        html.dark .nav-item.active span, html.dark .nav-item.active svg {
+            color: #ffffff; /* White for active text/svg in nav */
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* General content box style for "설정" items */
+        .content-box-item {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem; /* py-5 */
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1rem; /* text-base */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* text-gray-700 */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .content-box-item:hover {
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .content-box-item + .content-box-item {
+            margin-top: 0.5rem; /* Space between items */
+        }
+
+        /* Custom Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 38px; /* Adjusted width */
+            height: 22px; /* Adjusted height */
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px; /* Adjusted border-radius */
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; /* Adjusted height */
+            width: 18px; /* Adjusted width */
+            left: 2px; /* Adjusted left */
+            bottom: 2px; /* Adjusted bottom */
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2196F3; /* Still blue for toggle for visibility, but could be changed */
+        }
+
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(16px); /* Adjusted translateX */
+        }
+
+        /* Bottom Navigation Bar Styles */
+        /* Explicitly set background and border for the nav element */
+        nav {
+            background-color: #ffffff; /* Default light background */
+            border-top: 1px solid #e2e8f0; /* Default light border */
+        }
+
+        /* Dark mode override for the nav element */
+        html.dark nav {
+            background-color: #1a1a1a; /* Dark mode background - blackish */
+            border-top: 1px solid #404040; /* Dark mode border - blackish */
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings section container -->
+        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-8 mb-4">
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800 mb-2 dark:text-white">설정</h2>
+
+            <!-- Settings options -->
+            <div class="w-full flex flex-col gap-y-3">
+                <!-- 계정 정보 (Account Info) -->
+                <div class="content-box-item flex-col items-start">
+                    <div class="w-full flex justify-between items-center mb-2">
+                        <span>계정 정보</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500 dark:text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                    </div>
+                    <div id="accountInfoDisplay" class="text-sm text-gray-600 dark:text-gray-300 w-full">
+                        <!-- Account info will be populated here by JavaScript -->
+                        <p>이메일: 로딩 중...</p>
+                        <p>UID: 로딩 중...</p>
+                    </div>
+                    <button id="editProfileButton" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow transition duration-300 w-full text-center">
+                        프로필 수정
+                    </button>
+                </div>
+
+                <!-- 알림 설정 (Notifications) -->
+                <div class="content-box-item">
+                    <span>알림 설정</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="notificationsToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- 개인정보 설정 (Privacy) -->
+                <button id="privacySettingsButton" class="content-box-item">
+                    <span>개인정보 설정</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500 dark:text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+
+                <!-- 언어 설정 (Language) -->
+                <div class="content-box-item">
+                    <span>언어 설정</span>
+                    <select id="languageSelect" class="bg-gray-100 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
+                        <option value="ko">한국어</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+
+                <!-- 테마 설정 (Theme) -->
+                <div class="content-box-item">
+                    <span>테마 설정 (다크 모드)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 p-3 border-t max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item (now activates for /plus paths including /plus/settings) -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600 active dark:text-blue-400" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-bold">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const accountInfoDisplay = document.getElementById('accountInfoDisplay');
+        const notificationsToggle = document.getElementById('notificationsToggle');
+        const privacySettingsButton = document.getElementById('privacySettingsButton');
+        const languageSelect = document.getElementById('languageSelect');
+        const themeToggle = document.getElementById('themeToggle');
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/plus/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-gray-700">
+                        <span class="text-gray-700 text-sm font-medium dark:text-gray-200">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2 text-gray-500 dark:text-gray-400"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
+                // Update account info display
+                accountInfoDisplay.innerHTML = `
+                    <p>이메일: <span class="font-semibold">${user.email}</span></p>
+                    <p>UID: <span class="font-semibold">${user.uid}</span></p>
+                `;
+
+            } else {
+                // User is logged out
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+
+                // Clear account info display
+                accountInfoDisplay.innerHTML = `
+                    <p>로그인하여 계정 정보를 확인하세요.</p>
+                `;
+            }
+        }
+
+        /**
+         * Initializes the state of the notifications toggle switch from localStorage.
+         */
+        function initializeNotificationsSetting() {
+            const notificationsEnabled = localStorage.getItem('notificationsEnabled');
+            if (notificationsEnabled === 'true') {
+                notificationsToggle.checked = true;
+            } else {
+                notificationsToggle.checked = false;
+            }
+
+            notificationsToggle.addEventListener('change', (event) => {
+                localStorage.setItem('notificationsEnabled', event.target.checked);
+                console.log('알림 설정:', event.target.checked ? '켜짐' : '꺼짐');
+            });
+        }
+
+        /**
+         * Handles the click event for the privacy settings button.
+         */
+        function handlePrivacySettings() {
+            // In a real application, this would navigate to a privacy settings page
+            console.log('개인정보 설정 페이지로 이동 (기능 미구현)');
+            // For demonstration, you could show a temporary message or modal
+            // alert('개인정보 설정 기능은 현재 개발 중입니다.');
+        }
+
+        /**
+         * Initializes the state of the language select dropdown from localStorage.
+         */
+        function initializeLanguageSetting() {
+            const savedLanguage = localStorage.getItem('selectedLanguage');
+            if (savedLanguage) {
+                languageSelect.value = savedLanguage;
+            } else {
+                // Default to Korean if no language is saved
+                languageSelect.value = 'ko';
+                localStorage.setItem('selectedLanguage', 'ko');
+            }
+
+            languageSelect.addEventListener('change', (event) => {
+                localStorage.setItem('selectedLanguage', event.target.value);
+                console.log('언어 설정:', event.target.value);
+                // In a real application, you would trigger UI re-render or page reload for language change
+            });
+        }
+
+        /**
+         * Initializes the state of the theme toggle switch and applies the theme from localStorage.
+         */
+        function initializeThemeSetting() {
+            const savedTheme = localStorage.getItem('theme');
+
+            // Apply theme on load
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggle.checked = true;
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggle.checked = false;
+                // Default to light mode if nothing is saved
+                if (!savedTheme) {
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            themeToggle.addEventListener('change', (event) => {
+                if (event.target.checked) {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                    console.log('테마 설정: 다크 모드');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                    console.log('테마 설정: 라이트 모드');
+                }
+            });
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                // Reset all nav items to default (inactive) state
+                item.classList.remove('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700'); /* Kept dark:hover:bg-gray-700 for subtle hover */
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    svgElement.classList.add('text-gray-500');
+                }
+
+                // Check for exact path match or if it's the community button and current path is within /community or /write section
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
+                    item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-more' && currentPath.startsWith('/plus')) {
+                     item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
+
+                    // If navigating to the same path, do nothing
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        // For the '더보기' (More) tab, if the current path is settings, it should still go to '/plus'
+                        // This ensures clicking the '더보기' button from a sub-page like settings still lands on the main '더보기' page.
+                        if (item.id === 'nav-more' && currentPathname.startsWith('/plus') && path === '/plus') {
+                             // Do nothing if already on a /plus subpath and clicking the parent /plus path again
+                             return;
+                        }
+
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        // Initialize data fetching/page specific logic for this page
+        async function initializePageData() {
+            console.log("설정 페이지 초기화 완료.");
+            initializeNotificationsSetting();
+            initializeLanguageSetting();
+            initializeThemeSetting();
+
+            // Attach specific event listeners for settings sections
+            if (privacySettingsButton) {
+                privacySettingsButton.addEventListener('click', handlePrivacySettings);
+            }
+            const editProfileButton = document.getElementById('editProfileButton');
+            if (editProfileButton) {
+                editProfileButton.addEventListener('click', () => {
+                    console.log('프로필 수정 페이지로 이동 (기능 미구현)');
+                    // alert('프로필 수정 기능은 현재 개발 중입니다.');
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            initializePageData();
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        initializePageData();
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializePageData();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                initializePageData();
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation (if Lucide is used for other elements)
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
