@@ -426,9 +426,9 @@
             if (user && user.email) { // Check if a user is logged in and has an email
                 const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
-                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-gray-700">
-                        <span class="text-gray-700 text-sm font-medium dark:text-gray-200">${emailPrefix}</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2 text-gray-500 dark:text-gray-400"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
@@ -562,49 +562,49 @@
                 const svgElement = item.querySelector('svg');
 
                 // Reset all nav items to default (inactive) state
-                item.classList.remove('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
-                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700'); /* Kept dark:hover:bg-gray-700 for subtle hover */
+                item.classList.remove('text-blue-600', 'active', 'dark:text-white');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
                 if (spanElement) {
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
                 if (svgElement) {
-                    svgElement.classList.remove('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    svgElement.classList.remove('text-blue-600', 'dark:text-white');
                     svgElement.classList.add('text-gray-500');
                 }
 
                 // Check for exact path match or if it's the community button and current path is within /community or /write section
                 if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
-                    item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    item.classList.add('text-blue-600', 'active', 'dark:text-white');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.add('text-blue-600', 'dark:text-white');
                         svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
-                    item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                    item.classList.add('text-blue-600', 'active', 'dark:text-white');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.add('text-blue-600', 'dark:text-white');
                         svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-more' && currentPath.startsWith('/plus')) {
-                     item.classList.add('text-blue-600', 'active', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                     item.classList.add('text-blue-600', 'active', 'dark:text-white');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white'); /* Changed dark:text-blue-400 to dark:text-white */
+                        svgElement.classList.add('text-blue-600', 'dark:text-white');
                         svgElement.classList.remove('text-gray-500');
                     }
                 }
