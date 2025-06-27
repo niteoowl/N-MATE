@@ -7,19 +7,12 @@
     <meta name="description" content="오늘 급식 뭐지? Nmate에서 매일 최신 급식표를 확인하세요. 남중 학생을 위한 빠르고 정확한 급식 정보 제공!">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 급식</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN - Keep in head for styling to avoid FOUC (Flash of Unstyled Content) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter 폰트 설정 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <!-- Lucide icons are still used for other parts of the page, e.g., account dropdown, calendar navigation -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-                /* Pretendard-Regular 웹폰트 정의 */
+        /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
             font-family: 'Pretendard-Regular';
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
@@ -113,7 +106,7 @@
             padding: 0.75rem 1rem;
             font-size: 1rem;
             font-weight: 600;
-            color: #6b7280; /* Gray-500 */
+            color: #374151; /* Adjusted from Gray-500 (#6b7280) to Gray-700 for better contrast */
             background-color: transparent;
             border: none;
             border-bottom: 2px solid transparent; /* Transparent border for inactive */
@@ -152,7 +145,7 @@
         }
         .calendar-nav button {
             background-color: transparent;
-            color: #4b5563;
+            color: #4b5563; /* Gray-600 */
             padding: 0;
             border-radius: 0;
             transition: color 0.2s ease;
@@ -186,7 +179,7 @@
             text-align: center;
             padding: 0.75rem 0.25rem;
             font-size: 0.75rem;
-            color: #4a5568;
+            color: #4a5568; /* Gray-600 */
         }
         .calendar-cell {
             background-color: #ffffff;
@@ -197,7 +190,7 @@
             align-items: flex-start;
             justify-content: flex-start;
             font-size: 0.75rem;
-            color: #4a5568;
+            color: #4a5568; /* Gray-600 */
             overflow: hidden;
             position: relative;
         }
@@ -212,13 +205,13 @@
         .calendar-cell-date {
             font-weight: 700;
             margin-bottom: 0.25rem;
-            color: #1f2937;
+            color: #1f2937; /* Gray-900 */
         }
         .calendar-cell-event {
             font-size: 0.625rem;
             line-height: 1.2;
             margin-bottom: 0.2rem;
-            color: #1f2937;
+            color: #1f2937; /* Gray-900 */
             white-space: normal;
             word-break: break-word;
             display: -webkit-box;
@@ -243,7 +236,7 @@
             text-align: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #4b5563;
+            color: #4b5563; /* Gray-600 */
             background-color: #ffffff;
         }
         .timetable-table tbody td {
@@ -254,14 +247,14 @@
             white-space: normal;
             text-align: center;
             font-size: 0.875rem;
-            color: #374151;
+            color: #374151; /* Gray-700 */
         }
         .timetable-table tbody tr:last-child td {
             border-bottom: none;
         }
         .timetable-table .lunch-break {
             background-color: #ffffff;
-            color: #374151;
+            color: #374151; /* Gray-700 */
             font-weight: 600;
             border-top: 1px solid #cbd5e1;
             border-bottom: 1px solid #cbd5e1;
@@ -285,7 +278,7 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
             line-height: 1.5;
-            color: #374151;
+            color: #374151; /* Gray-700 */
         }
         .meal-content-box p:last-child {
             margin-bottom: 0;
@@ -307,7 +300,7 @@
             border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #4b5563;
+            color: #374151; /* Adjusted from Gray-600 (#4b5563) to Gray-700 for better contrast */
             background-color: transparent;
             transition: all 0.2s ease;
             text-align: center;
@@ -334,7 +327,8 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12">
+                <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -471,6 +465,13 @@
             </button>
         </div>
     </nav>
+
+    <!-- Firebase SDK CDN - defer 속성을 사용하여 렌더링 차단 방지 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+    <!-- Lucide Icons CDN - defer 속성을 사용하여 렌더링 차단 방지 -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
@@ -847,7 +848,8 @@
          */
         async function fetchTimetableData(grade, classNum) {
             if (!grade || !classNum) {
-                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-600">학년과 반 정보가 유효하지 않습니다.</p>';
+                // 대비율 개선: text-gray-600 대신 text-gray-700 사용
+                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-700">학년과 반 정보가 유효하지 않습니다.</p>';
                 return;
             }
 
@@ -1089,15 +1091,18 @@
                                 menuHtml += `<p class="text-base font-medium text-gray-800">${item}</p>`;
                             });
                         } else {
-                            menuHtml += `<p class="text-base text-gray-600">이 날짜의 중식 메뉴는 비어 있습니다.</p>`;
+                            // 대비율 개선: text-gray-600 대신 text-gray-700 사용
+                            menuHtml += `<p class="text-base text-gray-700">이 날짜의 중식 메뉴는 비어 있습니다.</p>`;
                         }
                         menuHtml += '</div>';
                         mealDisplaySection.innerHTML = menuHtml;
                     } else {
-                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-600">선택된 날짜의 중식 정보가 없어요.</p>';
+                        // 대비율 개선: text-gray-600 대신 text-gray-700 사용
+                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">선택된 날짜의 중식 정보가 없어요.</p>';
                     }
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-600">등록된 급식이 없어요.</p>';
+                    // 대비율 개선: text-gray-600 대신 text-gray-700 사용
+                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">등록된 급식이 없어요.</p>';
                 } else {
                     mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 데 실패했습니다.</p>';
                 }
@@ -1373,9 +1378,6 @@
                     }
                 }, 200);
             });
-
-            // Initial icon creation for Lucide icons still used (e.g., account dropdown, calendar navigation)
-            lucide.createIcons();
         });
     </script>
 </body>
