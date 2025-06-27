@@ -7,9 +7,19 @@
     <meta name="description" content="오늘 급식 뭐지? Nmate에서 매일 최신 급식표를 확인하세요. 남중 학생을 위한 빠르고 정확한 급식 정보 제공!">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 급식</title>
-    <!-- Critical CSS (Pretendard font-face and essential body/skeleton styles) -->
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <!-- Lucide icons are still used for other parts of the page, e.g., account dropdown, calendar navigation -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-        /* Pretendard-Regular 웹폰트 정의 */
+                /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
             font-family: 'Pretendard-Regular';
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
@@ -127,7 +137,7 @@
             border-radius: 0.75rem;
             border: 1px solid #e2e8f0;
             text-align: left;
-            min-height: 200px; /* Ensure a minimum height for skeleton */
+            min-height: 200px;
             width: 100%;
             overflow: hidden;
         }
@@ -265,7 +275,7 @@
             border: 1px solid #e2e8f0;
             padding: 1.5rem;
             text-align: left;
-            min-height: 150px; /* Ensure a minimum height for skeleton */
+            min-height: 150px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -313,14 +323,6 @@
         .date-button:not(.active):hover {
             background-color: #e5e7eb;
         }
-
-        /* Added style for account status area to prevent layout shift */
-        #accountStatusArea {
-            min-height: 40px; /* Approximate height of the login button or user email + icon */
-            display: flex; /* Ensure flex properties are maintained */
-            align-items: center; /* Vertically center content */
-            justify-content: flex-end; /* Align to end for right side */
-        }
     </style>
 </head>
 <body>
@@ -332,13 +334,11 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <!-- Added width and height attributes to prevent CLS -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="192" height="48">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
             </div>
 
             <!-- Account/Login section with dropdown -->
             <div class="relative">
-                <!-- Added min-height to accountStatusArea to prevent CLS -->
                 <div id="accountStatusArea" class="flex items-center">
                     <!-- Conditional content injected by JavaScript -->
                 </div>
@@ -367,8 +367,7 @@
             <!-- Timetable Section -->
             <div id="timetableContent" class="tab-content hidden w-full flex flex-col items-start gap-y-2 mt-4">
                 <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
-                    <!-- Added min-height to timetable-display-section to prevent CLS -->
-                    <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center min-h-[200px]">
+                    <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
                         <!-- Skeleton Loader for Timetable content -->
                     </div>
                 </div>
@@ -453,7 +452,9 @@
                 <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
-            <!-- Calendar Navigation Item -->
+            <!-- Calendar Navigation Item (as a separate item if needed, but '/school-life' is already for academic calendar) -->
+            <!-- If this is meant to be a new, separate feature, its path needs to be defined.
+                 For now, I'll assume it's for a future feature and add a placeholder path. -->
             <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
@@ -470,13 +471,6 @@
             </button>
         </div>
     </nav>
-
-    <!-- Deferred JavaScript files -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <script src="https://unpkg.com/lucide@latest" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
@@ -590,7 +584,7 @@
                 }
                 loadedTabs[tabId] = true; // Mark as loaded
             }
-            lucide.createIcons(); // Keep this for other parts of the page where Lucide is still used
+            // lucide.createIcons(); // Keep this for other parts of the page where Lucide is still used
         }
 
         // --- Academic Schedule Functions ---
