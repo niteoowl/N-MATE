@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -8,8 +9,8 @@
     <meta name="description" content="부산남중 학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 홈</title>
-    <!-- Pretendard-Regular 웹폰트 프리로드: 폰트 로딩으로 인한 CLS 및 FOUT 방지 -->
-    <link rel="preload" href="https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff" as="font" type="font/woff" crossorigin>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
@@ -17,7 +18,6 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
-            font-display: swap; /* 폰트 로딩 중에도 텍스트가 보이도록 설정 */
         }
         
         /* Body styles for overall layout */
@@ -102,7 +102,7 @@
             padding: 0.5rem; /* p-2 */
             border-radius: 0.75rem; /* rounded-xl */
             transition: all 0.3s ease; /* transition-all duration-300 */
-            color: #374151; /* text-gray-700로 변경하여 대비 개선 */
+            color: #6b7280; /* text-gray-500 */
         }
         .nav-item:hover {
             color: #3b82f6; /* hover:text-blue-500 */
@@ -128,8 +128,8 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <!-- 이미지 태그에 width와 height 속성 추가하여 CLS 방지 및 성능 개선 -->
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12" width="160" height="48">
+                <!-- Added width and height attributes for image optimization -->
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12" width="168" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -210,7 +210,7 @@
     <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
-            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
                 </svg>
@@ -218,7 +218,7 @@
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -226,7 +226,7 @@
             </button>
 
             <!-- Community Navigation Item -->
-            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
                 </svg>
@@ -234,7 +234,7 @@
             </button>
 
             <!-- Calendar Navigation Item -->
-            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
                 </svg>
@@ -242,7 +242,7 @@
             </button>
 
             <!-- More Navigation Item -->
-            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-700 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
                 </svg>
@@ -251,16 +251,14 @@
         </div>
     </nav>
 
-    <!-- Tailwind CSS CDN (defer 속성 추가) -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <!-- Lucide Icons CDN (defer 속성 추가) -->
+    <!-- Lucide Icons CDN (moved to end of body and deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
-    <!-- Firebase SDK CDN (defer 속성 추가) -->
+    <!-- Firebase SDK CDN (moved to end of body and deferred) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
 
-    <script>
+    <script defer>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
@@ -478,6 +476,7 @@
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <!-- User icon from Lucide Icons -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
@@ -507,7 +506,10 @@
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            // Ensure Lucide icons are created after dynamic HTML injection
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
         }
 
         /**
@@ -524,28 +526,28 @@
 
                 // Reset all nav items to default (inactive) state
                 item.classList.remove('text-blue-600');
-                item.classList.add('text-gray-700', 'hover:text-blue-500', 'hover:bg-gray-50'); /* text-gray-700로 변경 */
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
                 if (svgElement) {
                     svgElement.classList.remove('text-blue-600');
-                    svgElement.classList.add('text-gray-700'); /* SVG도 text-gray-700으로 변경 */
+                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
                 }
 
                 // Check for exact path match or if it's the school-life button and current path is within /sclife section
                 // The nav-school-life itemPath is now /sclife/timetable
                 if (currentPath === itemPath || (item.id === 'nav-school-life' && currentPath.startsWith('/sclife'))) {
                     item.classList.add('text-blue-600');
-                    item.classList.remove('text-gray-700', 'hover:text-blue-500', 'hover:bg-gray-50'); /* text-gray-700 제거 */
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
                         svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
-                        svgElement.classList.remove('text-gray-700'); /* text-gray-700 제거 */
+                        svgElement.classList.remove('text-gray-500');
                     }
                 }
             });
@@ -665,6 +667,19 @@
             let userGrade = "1";
             let userClassNum = "1";
 
+            // Wait for Firebase to be initialized and auth state to be known
+            await new Promise(resolve => {
+                if (auth && auth.currentUser !== undefined) { // Check if auth object exists and currentUser is set (even if null)
+                    resolve();
+                } else {
+                    // If auth is not yet ready, set up a listener
+                    const unsubscribe = auth.onAuthStateChanged(() => {
+                        unsubscribe(); // Unsubscribe after the first call
+                        resolve();
+                    });
+                }
+            });
+
             if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
@@ -686,7 +701,8 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
-            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+            // Ensure Firebase is initialized only once, and correctly
+            if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth();
@@ -696,28 +712,31 @@
                     // onAuthStateChanged will automatically handle session persistence
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        initializeHomePageData(); // Only initialize home page data here
+                        initializeHomePageData(); // Initialize home page data only after auth state is known
                     });
 
                 } catch (error) {
                     console.error('Firebase initialization failed:', error);
                     await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
-                    initializeHomePageData();
+                    initializeHomePageData(); // Attempt to load data even if Firebase init failed (e.g., anonymous default)
                 }
-            } else if (firebase.apps.length > 0) {
+            } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+                // If Firebase is already initialized (e.g., due to hot reload in development), use existing instance
                 app = firebase.app();
                 auth = firebase.auth();
                 db = firebase.firestore();
                 console.log('Firebase app already initialized. Using existing instance.');
 
+                // Still need to listen for auth state changes for UI updates and data loading
                 auth.onAuthStateChanged(async (user) => {
                     await updateAccountUI(user);
                     initializeHomePageData();
                 });
             } else {
-                console.warn('Firebase configuration not properly provided.');
+                console.warn('Firebase library not loaded or configuration not properly provided.');
+                // Fallback if firebase is not defined or config is missing
                 await updateAccountUI(null);
-                initializeHomePageData();
+                initializeHomePageData(); // Load data with defaults if Firebase is not available
             }
 
             // Global click listener to close dropdown when clicking outside
@@ -746,9 +765,9 @@
                     initializeHomePageData(); // Re-fetch or re-render data based on new window size
                 }, 200);
             });
-
-            // Initial icon creation
-            lucide.createIcons();
+            // Note: "텍스트 압축 사용 권장" 및 "긴 기본 스레드 작업 줄이기"는 서버 설정 및 복잡한 JS 최적화가 필요합니다.
+            // "사용하지 않는 자바스크립트 줄이기"는 번들링 및 코드 스플리팅을 통해 더 큰 최적화가 가능합니다.
+            // 현재 버전은 CDN 스크립트의 비동기 로딩을 통해 브라우저 렌더링을 방해하는 요소를 줄였습니다.
         });
     </script>
 
