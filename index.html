@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -48,19 +49,12 @@
                 opacity: 0.6;
             }
         }
-        /* Adjusted skeleton-text to have more consistent height/width for CLS */
         .skeleton-text {
-            height: 1.2em; /* Slightly larger fixed height for better visibility and consistency */
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
             border-radius: 4px;
-            margin-bottom: 0.5em; /* Spacing between lines */
         }
-        /* Specific width adjustments for skeleton lines to mimic typical text lengths */
-        .skeleton-text-full { width: 100%; }
-        .skeleton-text-5-6 { width: 83%; } /* Approximate w-5/6 */
-        .skeleton-text-3-4 { width: 75%; } /* Approximate w-3/4 */
-        .skeleton-text-1-2 { width: 50%; } /* Approximate w-1/2 */
-        .skeleton-text-2-3 { width: 66%; } /* Approximate w-2/3 */
-
 
         /* Main content container for centering and max-width */
         .main-content-container {
@@ -159,7 +153,7 @@
         <div class="w-full flex flex-col items-start gap-y-4 px-6 mt-8 mb-4">
             <div id="countdownBox" class="w-full h-16 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <!-- Countdown will be injected here by JavaScript -->
-                <p class="skeleton skeleton-text skeleton-text-3-4"></p>
+                <p class="skeleton skeleton-text w-3/4"></p>
             </div>
         </div>
 
@@ -173,29 +167,29 @@
                 <!-- Left half: Timetable information -->
                 <!-- Fixed 1/2 width, right border, and both overflow-y/x for scrolling -->
                 <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 border-r border-gray-300 overflow-y-auto overflow-x-auto">
-                    <!-- Skeleton Loader for Timetable content - improved CLS by using more consistent widths -->
+                    <!-- Skeleton Loader for Timetable content -->
                     <div class="flex w-full h-full text-left">
                         <div class="flex-1 flex flex-col items-start">
-                            <div class="skeleton skeleton-text skeleton-text-3-4"></div>
-                            <div class="skeleton skeleton-text skeleton-text-full"></div>
-                            <div class="skeleton skeleton-text skeleton-text-1-2"></div>
-                            <div class="skeleton skeleton-text skeleton-text-2-3"></div>
+                            <div class="skeleton skeleton-text w-3/4"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text w-1/2"></div>
+                            <div class="skeleton skeleton-text w-2/3"></div>
                         </div>
                         <div class="flex-1 flex flex-col items-start">
-                            <div class="skeleton skeleton-text skeleton-text-3-4"></div>
-                            <div class="skeleton skeleton-text skeleton-text-full"></div>
-                            <div class="skeleton skeleton-text skeleton-text-1-2"></div>
+                            <div class="skeleton skeleton-text w-3/4"></div>
+                            <div class="skeleton skeleton-text"></div>
+                            <div class="skeleton skeleton-text w-1/2"></div>
                         </div>
                     </div>
                 </div>
                 <!-- Right half: Meal information -->
                 <!-- Fixed 1/2 width, and both overflow-y/x for scrolling -->
                 <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto overflow-x-auto">
-                    <!-- Skeleton Loader for Meal content - improved CLS by using more consistent widths -->
+                    <!-- Skeleton Loader for Meal content -->
                     <div class="w-full text-left">
-                        <div class="skeleton skeleton-text skeleton-text-full"></div>
-                        <div class="skeleton skeleton-text skeleton-text-5-6"></div>
-                        <div class="skeleton skeleton-text skeleton-text-3-4"></div>
+                        <div class="skeleton skeleton-text w-full"></div>
+                        <div class="skeleton skeleton-text w-5/6"></div>
+                        <div class="skeleton skeleton-text w-3/4"></div>
                     </div>
                 </div>
             </div>
@@ -207,8 +201,8 @@
             <h2 class="text-left text-xl font-bold text-gray-800">오늘의 잡학 상식</h2>
             <!-- Trivia content box -->
             <div id="triviaDisplaySection" class="w-full min-h-20 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
-                <!-- Skeleton Loader for Trivia content - improved CLS by using more consistent widths -->
-                <p class="skeleton skeleton-text skeleton-text-full"></p>
+                <!-- Skeleton Loader for Trivia content -->
+                <p class="skeleton skeleton-text w-full"></p>
             </div>
         </div>
 
@@ -335,9 +329,9 @@
             // Skeleton loader for meal section (Home page specific)
             mealDisplaySection.innerHTML = `
                 <div class="w-full text-left">
-                    <div class="skeleton skeleton-text skeleton-text-full"></div>
-                    <div class="skeleton skeleton-text skeleton-text-5-6"></div>
-                    <div class="skeleton skeleton-text skeleton-text-3-4"></div>
+                    <div class="skeleton skeleton-text w-full"></div>
+                    <div class="skeleton skeleton-text w-5/6"></div>
+                    <div class="skeleton skeleton-text w-3/4"></div>
                 </div>
             `;
 
@@ -376,15 +370,15 @@
             timetableDisplaySection.innerHTML = `
                 <div class="flex w-full h-full text-left">
                     <div class="flex-1 flex flex-col items-start">
-                        <div class="skeleton skeleton-text skeleton-text-3-4"></div>
-                        <div class="skeleton skeleton-text skeleton-text-full"></div>
-                        <div class="skeleton skeleton-text skeleton-text-1-2"></div>
-                        <div class="skeleton skeleton-text skeleton-text-2-3"></div>
+                        <div class="skeleton skeleton-text w-3/4"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text w-1/2"></div>
+                        <div class="skeleton skeleton-text w-2/3"></div>
                     </div>
                     <div class="flex-1 flex flex-col items-start">
-                        <div class="skeleton skeleton-text skeleton-text-3-4"></div>
-                        <div class="skeleton skeleton-text skeleton-text-full"></div>
-                        <div class="skeleton skeleton-text skeleton-text-1-2"></div>
+                        <div class="skeleton skeleton-text w-3/4"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text w-1/2"></div>
                     </div>
                 </div>
             `;
@@ -643,7 +637,7 @@
         async function fetchTriviaData() {
             // Skeleton loader for trivia section
             triviaDisplaySection.innerHTML = `
-                <p class="skeleton skeleton-text skeleton-text-full"></p>
+                <p class="skeleton skeleton-text w-full h-8"></p>
             `;
 
             try {
