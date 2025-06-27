@@ -127,7 +127,7 @@
             border-radius: 0.75rem;
             border: 1px solid #e2e8f0;
             text-align: left;
-            min-height: 200px;
+            min-height: 200px; /* Ensure a minimum height for skeleton */
             width: 100%;
             overflow: hidden;
         }
@@ -265,7 +265,7 @@
             border: 1px solid #e2e8f0;
             padding: 1.5rem;
             text-align: left;
-            min-height: 150px;
+            min-height: 150px; /* Ensure a minimum height for skeleton */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -313,6 +313,14 @@
         .date-button:not(.active):hover {
             background-color: #e5e7eb;
         }
+
+        /* Added style for account status area to prevent layout shift */
+        #accountStatusArea {
+            min-height: 40px; /* Approximate height of the login button or user email + icon */
+            display: flex; /* Ensure flex properties are maintained */
+            align-items: center; /* Vertically center content */
+            justify-content: flex-end; /* Align to end for right side */
+        }
     </style>
 </head>
 <body>
@@ -324,11 +332,13 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12">
+                <!-- Added width and height attributes to prevent CLS -->
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
             <div class="relative">
+                <!-- Added min-height to accountStatusArea to prevent CLS -->
                 <div id="accountStatusArea" class="flex items-center">
                     <!-- Conditional content injected by JavaScript -->
                 </div>
@@ -357,7 +367,8 @@
             <!-- Timetable Section -->
             <div id="timetableContent" class="tab-content hidden w-full flex flex-col items-start gap-y-2 mt-4">
                 <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
-                    <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
+                    <!-- Added min-height to timetable-display-section to prevent CLS -->
+                    <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center min-h-[200px]">
                         <!-- Skeleton Loader for Timetable content -->
                     </div>
                 </div>
