@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -11,6 +10,12 @@
     <title>부산남중학교 N-MATE - 홈</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
@@ -128,8 +133,7 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <!-- Added width and height attributes for image optimization -->
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12" width="168" height="48">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -251,14 +255,7 @@
         </div>
     </nav>
 
-    <!-- Lucide Icons CDN (moved to end of body and deferred) -->
-    <script src="https://unpkg.com/lucide@latest" defer></script>
-    <!-- Firebase SDK CDN (moved to end of body and deferred) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
-
-    <script defer>
+    <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
@@ -476,7 +473,6 @@
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
-                        <!-- User icon from Lucide Icons -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
@@ -506,10 +502,7 @@
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            // Ensure Lucide icons are created after dynamic HTML injection
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                lucide.createIcons();
-            }
+            lucide.createIcons(); // Refresh Lucide icons
         }
 
         /**
@@ -667,19 +660,6 @@
             let userGrade = "1";
             let userClassNum = "1";
 
-            // Wait for Firebase to be initialized and auth state to be known
-            await new Promise(resolve => {
-                if (auth && auth.currentUser !== undefined) { // Check if auth object exists and currentUser is set (even if null)
-                    resolve();
-                } else {
-                    // If auth is not yet ready, set up a listener
-                    const unsubscribe = auth.onAuthStateChanged(() => {
-                        unsubscribe(); // Unsubscribe after the first call
-                        resolve();
-                    });
-                }
-            });
-
             if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
@@ -701,8 +681,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
-            // Ensure Firebase is initialized only once, and correctly
-            if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth();
@@ -712,31 +691,28 @@
                     // onAuthStateChanged will automatically handle session persistence
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        initializeHomePageData(); // Initialize home page data only after auth state is known
+                        initializeHomePageData(); // Only initialize home page data here
                     });
 
                 } catch (error) {
                     console.error('Firebase initialization failed:', error);
                     await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
-                    initializeHomePageData(); // Attempt to load data even if Firebase init failed (e.g., anonymous default)
+                    initializeHomePageData();
                 }
-            } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                // If Firebase is already initialized (e.g., due to hot reload in development), use existing instance
+            } else if (firebase.apps.length > 0) {
                 app = firebase.app();
                 auth = firebase.auth();
                 db = firebase.firestore();
                 console.log('Firebase app already initialized. Using existing instance.');
 
-                // Still need to listen for auth state changes for UI updates and data loading
                 auth.onAuthStateChanged(async (user) => {
                     await updateAccountUI(user);
                     initializeHomePageData();
                 });
             } else {
-                console.warn('Firebase library not loaded or configuration not properly provided.');
-                // Fallback if firebase is not defined or config is missing
+                console.warn('Firebase configuration not properly provided.');
                 await updateAccountUI(null);
-                initializeHomePageData(); // Load data with defaults if Firebase is not available
+                initializeHomePageData();
             }
 
             // Global click listener to close dropdown when clicking outside
@@ -765,9 +741,9 @@
                     initializeHomePageData(); // Re-fetch or re-render data based on new window size
                 }, 200);
             });
-            // Note: "텍스트 압축 사용 권장" 및 "긴 기본 스레드 작업 줄이기"는 서버 설정 및 복잡한 JS 최적화가 필요합니다.
-            // "사용하지 않는 자바스크립트 줄이기"는 번들링 및 코드 스플리팅을 통해 더 큰 최적화가 가능합니다.
-            // 현재 버전은 CDN 스크립트의 비동기 로딩을 통해 브라우저 렌더링을 방해하는 요소를 줄였습니다.
+
+            // Initial icon creation
+            lucide.createIcons();
         });
     </script>
 
