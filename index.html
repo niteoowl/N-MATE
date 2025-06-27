@@ -8,7 +8,14 @@
     <meta name="description" content="부산남중 학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 홈</title>
-    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
         /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
@@ -16,7 +23,6 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
-            font-display: swap; /* 웹폰트 로딩 중 텍스트가 계속 표시되도록 설정 */
         }
         
         /* Body styles for overall layout */
@@ -127,9 +133,7 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <!-- Added width and height attributes for image optimization -->
-                <!-- Lighthouse recommends serving images in next-gen formats like WebP. -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="168" height="48" onerror="this.onerror=null;this.src='/image/logo.png';">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -251,16 +255,7 @@
         </div>
     </nav>
 
-    <!-- Tailwind CSS CDN (Moved to end of body and deferred for render-blocking resource optimization) -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <!-- Lucide Icons CDN (moved to end of body and deferred) -->
-    <script src="https://unpkg.com/lucide@latest" defer></script>
-    <!-- Firebase SDK CDN (moved to end of body and deferred) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
-
-    <script defer>
+    <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
@@ -478,7 +473,6 @@
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
-                        <!-- User icon from Lucide Icons -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
                     </button>
                 `;
@@ -508,10 +502,7 @@
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            // Ensure Lucide icons are created after dynamic HTML injection
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                lucide.createIcons();
-            }
+            lucide.createIcons(); // Refresh Lucide icons
         }
 
         /**
@@ -669,19 +660,6 @@
             let userGrade = "1";
             let userClassNum = "1";
 
-            // Wait for Firebase to be initialized and auth state to be known
-            await new Promise(resolve => {
-                if (auth && auth.currentUser !== undefined) { // Check if auth object exists and currentUser is set (even if null)
-                    resolve();
-                } else {
-                    // If auth is not yet ready, set up a listener
-                    const unsubscribe = auth.onAuthStateChanged(() => {
-                        unsubscribe(); // Unsubscribe after the first call
-                        resolve();
-                    });
-                }
-            });
-
             if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
@@ -703,8 +681,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Firebase initialization
-            // Ensure Firebase is initialized only once, and correctly
-            if (typeof firebase !== 'undefined' && firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth();
@@ -714,31 +691,28 @@
                     // onAuthStateChanged will automatically handle session persistence
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        initializeHomePageData(); // Initialize home page data only after auth state is known
+                        initializeHomePageData(); // Only initialize home page data here
                     });
 
                 } catch (error) {
                     console.error('Firebase initialization failed:', error);
                     await updateAccountUI(null); // Ensure UI shows "Login" if Firebase fails
-                    initializeHomePageData(); // Attempt to load data even if Firebase init failed (e.g., anonymous default)
+                    initializeHomePageData();
                 }
-            } else if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-                // If Firebase is already initialized (e.g., due to hot reload in development), use existing instance
+            } else if (firebase.apps.length > 0) {
                 app = firebase.app();
                 auth = firebase.auth();
                 db = firebase.firestore();
                 console.log('Firebase app already initialized. Using existing instance.');
 
-                // Still need to listen for auth state changes for UI updates and data loading
                 auth.onAuthStateChanged(async (user) => {
                     await updateAccountUI(user);
                     initializeHomePageData();
                 });
             } else {
-                console.warn('Firebase library not loaded or configuration not properly provided.');
-                // Fallback if firebase is not defined or config is missing
+                console.warn('Firebase configuration not properly provided.');
                 await updateAccountUI(null);
-                initializeHomePageData(); // Load data with defaults if Firebase is not available
+                initializeHomePageData();
             }
 
             // Global click listener to close dropdown when clicking outside
@@ -767,14 +741,9 @@
                     initializeHomePageData(); // Re-fetch or re-render data based on new window size
                 }, 200);
             });
-            /*
-            성능 최적화 참고 사항:
-            - "자바스크립트 줄이기" (Minify JavaScript)는 빌드 프로세스 (예: Webpack, Rollup)를 통해 JavaScript 파일을 압축하여 페이로드 크기와 파싱 시간을 줄이는 것을 의미합니다. 현재 인라인 스크립트에서는 수동으로 수행하기 어렵습니다.
-            - "텍스트 압축 사용" (Enable Text Compression)은 서버 설정 (gzip, deflate, brotli)을 통해 텍스트 기반 리소스를 압축하여 전송하는 것을 권장합니다. 이는 프론트엔드 코드 수정으로는 불가능하며 서버 측에서 설정해야 합니다.
-            - "사용하지 않는 자바스크립트 줄이기" (Reduce Unused JavaScript)의 경우, Firebase SDK와 Lucide Icons CDN은 필요한 부분만 가져오는 모듈형 번들링 (tree-shaking)을 통해 최적화할 수 있습니다. 이는 빌드 도구가 필요하며, 현재 CDN 방식으로는 제한적입니다. `defer`를 통해 렌더링을 차단하지 않도록 하는 것이 현재 환경에서 가능한 최선입니다.
-            - "긴 기본 스레드 작업 피하기" (Avoid long main-thread tasks)는 복잡한 JavaScript 로직이나 DOM 조작을 최적화하여 메인 스레드의 블로킹 시간을 줄이는 것입니다. Firebase SDK 로딩과 관련된 부분은 `defer` 속성으로 초기 로딩 시 영향은 줄였지만, 여전히 다운로드 및 실행 크기가 크기 때문에 번들링을 통한 개선이 필요합니다.
-            - 레이아웃 변경 및 합성 작업이 아닌 애니메이션 관련 경고는 현재 UI의 시각적 전환을 유지하기 위해 최소한의 변화로 간주되며 CLS 점수가 0이므로 큰 문제는 아닙니다.
-            */
+
+            // Initial icon creation
+            lucide.createIcons();
         });
     </script>
 
