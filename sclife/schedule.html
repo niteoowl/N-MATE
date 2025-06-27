@@ -9,22 +9,16 @@
     <title>부산남중학교 N-MATE - 학사일정</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter 폰트 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <!-- Lucide icons are still used for other parts of the page, e.g., account dropdown, calendar navigation -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Inter 폰트 설정 (비동기 로딩 및 렌더링 차단 제거) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <style>
-                /* Pretendard-Regular 웹폰트 정의 */
+        /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
             font-family: 'Pretendard-Regular';
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
+            font-display: swap; /* 폰트 로드 중 텍스트 표시 */
         }
         
         /* Body styles for overall layout */
@@ -113,7 +107,7 @@
             padding: 0.75rem 1rem;
             font-size: 1rem;
             font-weight: 600;
-            color: #6b7280; /* Gray-500 */
+            color: #374151; /* Gray-700 (접근성 개선) */
             background-color: transparent;
             border: none;
             border-bottom: 2px solid transparent; /* Transparent border for inactive */
@@ -186,7 +180,7 @@
             text-align: center;
             padding: 0.75rem 0.25rem;
             font-size: 0.75rem;
-            color: #4a5568;
+            color: #1f2937; /* Gray-900 (접근성 개선) */
         }
         .calendar-cell {
             background-color: #ffffff;
@@ -197,7 +191,7 @@
             align-items: flex-start;
             justify-content: flex-start;
             font-size: 0.75rem;
-            color: #4a5568;
+            color: #374151; /* Gray-700 (접근성 개선) */
             overflow: hidden;
             position: relative;
         }
@@ -243,7 +237,7 @@
             text-align: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #4b5563;
+            color: #374151; /* Gray-700 (접근성 개선) */
             background-color: #ffffff;
         }
         .timetable-table tbody td {
@@ -254,14 +248,14 @@
             white-space: normal;
             text-align: center;
             font-size: 0.875rem;
-            color: #374151;
+            color: #374151; /* Gray-700 */
         }
         .timetable-table tbody tr:last-child td {
             border-bottom: none;
         }
         .timetable-table .lunch-break {
             background-color: #ffffff;
-            color: #374151;
+            color: #374151; /* Gray-700 */
             font-weight: 600;
             border-top: 1px solid #cbd5e1;
             border-bottom: 1px solid #cbd5e1;
@@ -285,7 +279,7 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
             line-height: 1.5;
-            color: #374151;
+            color: #374151; /* Gray-700 */
         }
         .meal-content-box p:last-child {
             margin-bottom: 0;
@@ -307,7 +301,7 @@
             border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #4b5563;
+            color: #374151; /* Gray-700 (접근성 개선) */
             background-color: transparent;
             transition: all 0.2s ease;
             text-align: center;
@@ -334,7 +328,8 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+                <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -471,6 +466,13 @@
             </button>
         </div>
     </nav>
+
+    <!-- Firebase SDK CDN (defer 로드) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+    <!-- Lucide Icons CDN (defer 로드) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
@@ -668,7 +670,7 @@
 
             calendarHtml += '</div>'; // Close calendar-grid
             academicScheduleDisplaySection.innerHTML = calendarHtml;
-            lucide.createIcons(); // Re-create Lucide icons for new content (calendar navigation arrows)
+            // lucide.createIcons(); // No longer needed here as it will be called once on DOMContentLoaded
         }
 
         /**
@@ -699,7 +701,7 @@
             const toDate = new Date(year, month + 1, 0);
 
             const fromYmd = `${fromDate.getFullYear()}${('0' + (fromDate.getMonth() + 1)).slice(-2)}${('0' + fromDate.getDate()).slice(-2)}`;
-            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getDate())).slice(-2)}`;
+            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getMonth() + 1)).slice(-2)}${('0' + toDate.getDate()).slice(-2)}`;
 
             const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
 
@@ -740,8 +742,6 @@
             academicCurrentDate.setMonth(academicCurrentDate.getMonth() + 1);
             getAcademicCalendar(academicCurrentDate);
         }
-
-        // Removed showAcademicDatePicker and handleAcademicDatePickerChange functions
 
 
         // --- Timetable Functions ---
@@ -847,7 +847,7 @@
          */
         async function fetchTimetableData(grade, classNum) {
             if (!grade || !classNum) {
-                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-600">학년과 반 정보가 유효하지 않습니다.</p>';
+                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-700">학년과 반 정보가 유효하지 않습니다.</p>'; // (접근성 개선)
                 return;
             }
 
@@ -870,6 +870,9 @@
                                 return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
                             content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
+
+                            
                             weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
                         });
                     } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
@@ -1089,15 +1092,15 @@
                                 menuHtml += `<p class="text-base font-medium text-gray-800">${item}</p>`;
                             });
                         } else {
-                            menuHtml += `<p class="text-base text-gray-600">이 날짜의 중식 메뉴는 비어 있습니다.</p>`;
+                            mealHtml += `<p class="text-base text-gray-700">이 날짜의 중식 메뉴는 비어 있습니다.</p>`; // (접근성 개선)
                         }
                         menuHtml += '</div>';
                         mealDisplaySection.innerHTML = menuHtml;
                     } else {
-                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-600">선택된 날짜의 중식 정보가 없어요.</p>';
+                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">선택된 날짜의 중식 정보가 없어요.</p>'; // (접근성 개선)
                     }
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-600">등록된 급식이 없어요.</p>';
+                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">등록된 급식이 없어요.</p>'; // (접근성 개선)
                 } else {
                     mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 데 실패했습니다.</p>';
                 }
