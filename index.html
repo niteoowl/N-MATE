@@ -8,7 +8,7 @@
     <meta name="description" content="부산남중 학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 홈</title>
-    <!-- Tailwind CSS CDN (Moved back to head for essential styling) -->
+    <!-- Tailwind CSS CDN (Moved back to head for essential styling to prevent CLS) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Pretendard-Regular 웹폰트 정의 -->
     <style>
@@ -17,7 +17,7 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
-            font-display: swap; /* Add font-display: swap for better performance */
+            font-display: swap; /* Add font-display: swap for better performance and to ensure text remains visible during webfont load */
         }
         
         /* Body styles for overall layout */
@@ -34,15 +34,18 @@
         /* Skeleton Loader animation for loading states */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
-            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
-            background-size: 200% 100%;
+            background-color: #f0f0f0; /* Base color for skeleton */
+            /* Using opacity for pulse animation for better compositing performance */
         }
         @keyframes pulse {
             0% {
-                background-position: -200% 0;
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
             }
             100% {
-                background-position: 200% 0;
+                opacity: 0.6;
             }
         }
         .skeleton-text {
