@@ -9,8 +9,8 @@
     <title>부산남중학교 N-MATE - 급식</title>
     <!-- Tailwind CSS CDN - Keep in head for styling to avoid FOUC (Flash of Unstyled Content) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter 폰트 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Inter 폰트 설정 (비동기 로딩 및 렌더링 차단 제거) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <style>
         /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
@@ -18,6 +18,7 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
+            font-display: swap; /* Add font-display: swap for better performance */
         }
         
         /* Body styles for overall layout */
@@ -179,7 +180,7 @@
             text-align: center;
             padding: 0.75rem 0.25rem;
             font-size: 0.75rem;
-            color: #4a5568; /* Gray-600 */
+            color: #1f2937; /* Changed from Gray-600 to Gray-900 for better contrast */
         }
         .calendar-cell {
             background-color: #ffffff;
@@ -190,7 +191,7 @@
             align-items: flex-start;
             justify-content: flex-start;
             font-size: 0.75rem;
-            color: #4a5568; /* Gray-600 */
+            color: #374151; /* Changed from Gray-600 to Gray-700 for better contrast */
             overflow: hidden;
             position: relative;
         }
@@ -236,7 +237,7 @@
             text-align: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #4b5563; /* Gray-600 */
+            color: #374151; /* Changed from Gray-600 to Gray-700 for better contrast */
             background-color: #ffffff;
         }
         .timetable-table tbody td {
@@ -328,7 +329,7 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto">
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
