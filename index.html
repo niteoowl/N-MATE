@@ -8,16 +8,10 @@
     <meta name="description" content="부산남중 학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 홈</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN (Moved back to head for essential styling) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Pretendard-Regular 웹폰트 정의 -->
     <style>
-        /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
             font-family: 'Pretendard-Regular';
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
@@ -254,6 +248,13 @@
             </button>
         </div>
     </nav>
+
+    <!-- Lucide Icons CDN (Deferred) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+    <!-- Firebase SDK CDN (Deferred) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
@@ -502,7 +503,7 @@
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            // lucide.createIcons(); // Refresh Lucide icons - This will be called once DOMContentLoaded is fired after all deferred scripts are loaded
         }
 
         /**
@@ -742,17 +743,29 @@
                 }, 200);
             });
 
-            // Initial icon creation
-            lucide.createIcons();
+            // Initial icon creation - Ensure Lucide icons are created after the script is loaded
+            // Since Lucide is deferred, we should wait until it's available.
+            // A simple way is to check if it's defined before calling.
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            } else {
+                // If lucide is not yet defined, retry after a short delay
+                const checkLucide = setInterval(() => {
+                    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                        lucide.createIcons();
+                        clearInterval(checkLucide);
+                    }
+                }, 100);
+            }
         });
     </script>
 
-            <script>
+    <script>
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
       .then(reg => console.log('Service Worker 등록됨:', reg.scope))
       .catch(err => console.error('Service Worker 등록 실패:', err));
   }
-            </script>
+    </script>
 </body>
 </html>
