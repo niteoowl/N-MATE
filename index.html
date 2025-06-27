@@ -8,8 +8,7 @@
     <meta name="description" content="부산남중 학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 홈</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         /* Pretendard-Regular 웹폰트 정의 */
         @font-face {
@@ -17,6 +16,7 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
+            font-display: swap; /* 웹폰트 로딩 중 텍스트가 계속 표시되도록 설정 */
         }
         
         /* Body styles for overall layout */
@@ -128,7 +128,8 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- Added width and height attributes for image optimization -->
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12" width="168" height="48">
+                <!-- Lighthouse recommends serving images in next-gen formats like WebP. -->
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="168" height="48" onerror="this.onerror=null;this.src='/image/logo.png';">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -250,6 +251,8 @@
         </div>
     </nav>
 
+    <!-- Tailwind CSS CDN (Moved to end of body and deferred for render-blocking resource optimization) -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <!-- Lucide Icons CDN (moved to end of body and deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
     <!-- Firebase SDK CDN (moved to end of body and deferred) -->
@@ -764,9 +767,14 @@
                     initializeHomePageData(); // Re-fetch or re-render data based on new window size
                 }, 200);
             });
-            // Note: "텍스트 압축 사용 권장" 및 "긴 기본 스레드 작업 줄이기"는 서버 설정 및 복잡한 JS 최적화가 필요합니다.
-            // "사용하지 않는 자바스크립트 줄이기"는 번들링 및 코드 스플리팅을 통해 더 큰 최적화가 가능합니다.
-            // 현재 버전은 CDN 스크립트의 비동기 로딩을 통해 브라우저 렌더링을 방해하는 요소를 줄였습니다.
+            /*
+            성능 최적화 참고 사항:
+            - "자바스크립트 줄이기" (Minify JavaScript)는 빌드 프로세스 (예: Webpack, Rollup)를 통해 JavaScript 파일을 압축하여 페이로드 크기와 파싱 시간을 줄이는 것을 의미합니다. 현재 인라인 스크립트에서는 수동으로 수행하기 어렵습니다.
+            - "텍스트 압축 사용" (Enable Text Compression)은 서버 설정 (gzip, deflate, brotli)을 통해 텍스트 기반 리소스를 압축하여 전송하는 것을 권장합니다. 이는 프론트엔드 코드 수정으로는 불가능하며 서버 측에서 설정해야 합니다.
+            - "사용하지 않는 자바스크립트 줄이기" (Reduce Unused JavaScript)의 경우, Firebase SDK와 Lucide Icons CDN은 필요한 부분만 가져오는 모듈형 번들링 (tree-shaking)을 통해 최적화할 수 있습니다. 이는 빌드 도구가 필요하며, 현재 CDN 방식으로는 제한적입니다. `defer`를 통해 렌더링을 차단하지 않도록 하는 것이 현재 환경에서 가능한 최선입니다.
+            - "긴 기본 스레드 작업 피하기" (Avoid long main-thread tasks)는 복잡한 JavaScript 로직이나 DOM 조작을 최적화하여 메인 스레드의 블로킹 시간을 줄이는 것입니다. Firebase SDK 로딩과 관련된 부분은 `defer` 속성으로 초기 로딩 시 영향은 줄였지만, 여전히 다운로드 및 실행 크기가 크기 때문에 번들링을 통한 개선이 필요합니다.
+            - 레이아웃 변경 및 합성 작업이 아닌 애니메이션 관련 경고는 현재 UI의 시각적 전환을 유지하기 위해 최소한의 변화로 간주되며 CLS 점수가 0이므로 큰 문제는 아닙니다.
+            */
         });
     </script>
 
