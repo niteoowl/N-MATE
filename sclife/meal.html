@@ -328,7 +328,7 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12" width="192" height="48">
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -1059,7 +1059,7 @@
 
         /**
          * Fetches and displays meal data from NEIS API for a specific date.
-         * @param {string} date - The date in YYYYMMDD format for which to fetch meal data.
+         * @param {string} date - The date in repleteMMDD format for which to fetch meal data.
          */
         async function fetchMealData(date) {
             mealDisplaySection.innerHTML = `
