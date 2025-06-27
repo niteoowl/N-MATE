@@ -329,7 +329,7 @@
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -852,39 +852,46 @@
             }
 
             const weekDates = getWeekDates();
-            const weeklyTimetableData = {};
-
-            for (const date of weekDates) {
+            const fetchPromises = weekDates.map(date => {
                 const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
-                try {
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-
-                    if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
-                        data.misTimetable[1].row.forEach(period => {
-                            const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
-                            if (!weeklyTimetableData[currentDay]) {
-                                weeklyTimetableData[currentDay] = {};
-                            }
-                            let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
-                                return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
+                return fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
+                        const dailyTimetable = {};
+                        if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
+                            data.misTimetable[1].row.forEach(period => {
+                                let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
+                                    return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
+                                });
+                                content = content.replace(/\(창\)동아리활동/g, '동아리');
+                                content = content.replace(/\(창\)자율·자치활동/g, '창체');
+                                dailyTimetable[parseInt(period.PERIO)] = content;
                             });
-                            content = content.replace(/\(창\)동아리활동/g, '동아리');
-                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
+                        } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                            console.log(`No timetable for ${date}`);
+                        } else {
+                            console.error(`API response error for date ${date}:`, data);
+                        }
+                        return { date: currentDay, data: dailyTimetable };
+                    })
+                    .catch(error => {
+                        console.error(`Error fetching timetable data for date ${date}:`, error);
+                        return { date: new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay(), data: {} }; // Return empty data on error
+                    });
+            });
 
-                            
-                            weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
-                        });
-                    } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        console.log(`No timetable for ${date}`);
-                    } else {
-                        console.error(`API response error for date ${date}:`, data);
-                    }
-                } catch (error) {
-                    console.error(`Error fetching timetable data for date ${date}:`, error);
-                }
+            try {
+                const results = await Promise.all(fetchPromises);
+                const weeklyTimetableData = {};
+                results.forEach(result => {
+                    weeklyTimetableData[result.date] = result.data;
+                });
+                renderWeeklyTimetable(weeklyTimetableData);
+            } catch (error) {
+                console.error('Error in Promise.all for timetable data:', error);
+                timetableDisplaySection.innerHTML = '<p class="text-base text-red-500">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
-            renderWeeklyTimetable(weeklyTimetableData);
         }
 
         /**
@@ -1060,7 +1067,7 @@
 
         /**
          * Fetches and displays meal data from NEIS API for a specific date.
-         * @param {string} date - The date in YYYYMMDD format for which to fetch meal data.
+         * @param {string} date - The date in INSEE_MMDD format for which to fetch meal data.
          */
         async function fetchMealData(date) {
             mealDisplaySection.innerHTML = `
