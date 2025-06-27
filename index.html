@@ -17,6 +17,7 @@
             src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
             font-weight: 400;
             font-style: normal;
+            font-display: swap; /* Add font-display: swap for better performance */
         }
         
         /* Body styles for overall layout */
@@ -127,7 +128,8 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+                <!-- Added width and height attributes for LCP and CLS improvements -->
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12" width="160" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -406,9 +408,9 @@
                         const periodNumberDisplay = isMobileView ? period.PERIO : `${period.PERIO}교시`;
 
                         // Apply whitespace-nowrap and text-sm to both period number and content
-                        // Removed fixed width for period number and added mr-1 for spacing
+                        // Changed text-gray-400 to text-gray-700 for better contrast (accessibility)
                         const periodHtml = `<p class="flex text-sm font-medium text-gray-800 items-baseline">
-                                            <strong class="text-gray-400 font-semibold whitespace-nowrap text-sm text-left mr-1">${periodNumberDisplay}</strong>
+                                            <strong class="text-gray-700 font-semibold whitespace-nowrap text-sm text-left mr-1">${periodNumberDisplay}</strong>
                                             <span class="flex-grow whitespace-nowrap text-sm">${content}</span>
                                         </p>`;
                         if (parseInt(period.PERIO) <= 4) {
