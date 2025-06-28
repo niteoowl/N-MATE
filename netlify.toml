@@ -2,7 +2,7 @@
   edge_functions = "netlify/edge-functions"
 
 [[edge_functions]]
-  path = "/*"
+  path = "/ip"
   function = "log-ip"
 
 [[headers]]
