@@ -2,359 +2,541 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <link rel="shortcut icon" href="/simbol.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE 앱 다운로드</title>
-    <meta name="description" content="앱을 다운로드해 N-MATE를 더 편리하게 사용하세요">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192x192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>App Detail - App Store Clone</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="/manifest.json">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #fff;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
+            background-color: #ffffff; /* 배경색을 흰색으로 변경 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            display: flex; /* Make body a flex container */
+            flex-direction: column; /* Stack children vertically */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+        }
+        /* Line clamping for text truncation - Removed as we're now toggling visibility of full content */
+        /* .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        } */
+        /* Underline effect on hover for links */
+        .text-blue-500:hover {
+            text-decoration: underline;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-            width: 100%;
-        }
-
-        header h1 {
-            font-size: 2.8rem;
-            color: #000;
-            margin-bottom: 15px;
-            letter-spacing: -0.02em;
-            font-weight: 600;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            color: #666;
-            line-height: 1.7;
-            max-width: 70%;
-            margin: 0 auto;
-        }
-
-        .main-content {
-            text-align: center;
-            background-color: transparent;
-            padding: 0;
-            max-width: 95%;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        #install-button {
-            display: inline-flex;
-            align-items: center;
-            background-color: #000;
-            color: white;
-            padding: 16px 32px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
-            margin-right: 10px;
-        }
-
-        #install-button:hover {
-            background-color: #333;
-        }
-
-        #install-button img {
-            margin-right: 12px;
-            height: 28px;
-            width: 28px;
-            filter: invert(100%);
-        }
-
-        #help-button {
-            display: inline-flex;
-            align-items: center;
-            background-color: #fff; /* 배경색을 흰색으로 변경 */
-            color: #333;
-            padding: 16px 32px;
-            border: 1px solid #e0e0e0; /* 회색 테두리 추가 */
-            border-radius: 8px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
-        }
-
-        #help-button:hover {
-            background-color: #f0f0f0; /* 호버 시 약간 연한 회색으로 변경 */
-        }
-
-        #help-button img {
-            margin-right: 12px;
-            height: 28px;
-            width: 28px;
-        }
-
-        #install-message {
-            margin-top: 30px;
-            font-size: 1.1rem;
-            color: #000;
-            display: none;
-            text-align: center;
-        }
-
-        #help-message {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #fff;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
-            text-align: left;
-        }
-
-        #help-message h2 {
-            font-size: 2.2rem;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        #help-message p {
-            font-size: 1.1rem;
-            line-height: 1.7;
-            margin-bottom: 20px;
-        }
-
-        #help-message ul, #help-message ol {
-            margin-left: 20px;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-
-        #help-message li {
-            margin-bottom: 10px;
-        }
-
-        #help-message .close-button {
+        /* Custom style for carousel buttons to ensure visibility on small screens */
+        .carousel-button {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #fff;
-            border: none;
-            background: none;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.75); /* Semi-transparent background */
+            border-radius: 9999px; /* Full rounded */
+            padding: 0.5rem; /* p-2 */
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            z-index: 10;
         }
 
-        footer {
-            margin-top: 40px;
-            text-align: center;
-            color: #86868b;
-            font-size: 0.9rem;
-            padding-top: 20px;
-            border-top: 1px solid #e5e5e5;
-            width: 100%;
+        .carousel-button:hover {
+            background-color: rgba(255, 255, 255, 1); /* Fully opaque on hover */
         }
 
-        @media (max-width: 768px) {
-            header h1 {
-                font-size: 2.5rem;
-            }
-
-            header p {
-                font-size: 1rem;
-            }
-
-            .main-content {
-                padding: 0;
-            }
-
-            #install-button, #help-button {
-                font-size: 1rem;
-                padding: 14px 28px;
-            }
-
-            #install-button img, #help-button img {
-                height: 26px;
-                width: 26px;
-            }
-
-            footer {
-                font-size: 0.8rem;
-            }
-
-            #help-message h2 {
-                font-size: 2rem;
-            }
-
-            #help-message p,
-            #help-message ul,
-            #help-message ol,
-            #help-message li {
-                font-size: 1rem;
-            }
+        .carousel-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        @media (max-width: 600px) {
-            header h1 {
-                font-size: 2.2rem;
-            }
-
-            header p {
-                font-size: 0.95rem;
-            }
-
-            #install-button, #help-button {
-                font-size: 0.9rem;
-                padding: 12px 24px;
-            }
-
-            #install-button img, #help-button img {
-                height: 24px;
-                width: 24px;
-            }
-
-            footer {
-                font-size: 0.75rem;
-            }
-
-            #help-message h2 {
-                font-size: 1.8rem;
-            }
-
-            #help-message p,
-            #help-message ul,
-            #help-message ol,
-            #help-message li {
-                font-size: 0.95rem;
-            }
+        /* Specific style for sticky header blur effect */
+        .sticky-header-scrolled {
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
+            backdrop-filter: blur(10px); /* Apply blur effect */
+            -webkit-backdrop-filter: blur(10px); /* For Safari support */
         }
     </style>
 </head>
 <body>
-    <button onclick="location.href='https://nmate.kr'" style="
-  background-color: white;
-  color: black;
-  padding: 12px 24px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-">
-  홈으로
-</button>
 
-    <header>
-        <h1>N-MATE 앱 다운로드</h1>
-        <p>앱을 다운로드해 N-MATE를 더 편리하게 사용하세요!</p>
-    </header>
-    <main class="main-content">
-        <button id="install-button">
-            <img src="https://unpkg.com/ionicons@5.5.2/dist/svg/download-outline.svg" alt="다운로드 아이콘">
-            설치하기
-        </button>
-        <button id="help-button">
-            <img src="https://unpkg.com/ionicons@5.5.2/dist/svg/help-circle-outline.svg" alt="도움말 아이콘">
-            도움말
-        </button>
-        <div id="install-message">앱 설치가 완료되었습니다!</div>
-        <div id="help-message">
-            <button class="close-button">&times;</button>
-            <h2>앱 설치 방법</h2>
-            <ol>
-                <li>설치하기 버튼을 누르세요.</li>
-                <li>브라우저의 안내에 따라 앱을 설치하세요.</li>
-                <li>설치가 완료되면 홈 화면에서 앱을 실행할 수 있습니다.</li>
-            </ol>
-            <h3>왜 '브라우저가 앱 설치를 지원하지 않습니다'라고 뜨나요?</h3>
-                 <p>접속한 브라우저가 카카오톡 등 기타 브라우저일수 있습니다. chrome/삼성 인터넷 등의 브라우저로 접속하세요.</p>
+    <!-- Sticky Header for Scroll Effect -->
+    <header class="fixed top-0 left-0 right-0 z-20 w-full max-w-xl mx-auto py-2 px-6 transition-colors duration-300 bg-opacity-0" id="sticky-header">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <!-- Store Logo -->
+                <img src="https://i.postimg.cc/fRQNJRbq/001-82.png" alt="App Store Logo" class="h-8 mr-2">
+                <!-- This will be the shrinking title, initially hidden -->
+                <h1 class="text-xl font-bold text-gray-900 opacity-0 transition-opacity duration-300" id="header-title-sticky">N-MATE</h1>
+            </div>
+            <!-- Back Button on Sticky Header (optional, if needed for complex navigation) -->
+            <!-- <a href="#" class="text-blue-500 hover:text-blue-600 font-semibold flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                투데이
+            </a> -->
         </div>
-    </main>
-    <footer>
-        <p>&copy; 2025 SUPPLE. All rights reserved.</p>
-    </footer>
-    <script>
-        let deferredPrompt;
-        const installButton = document.getElementById('install-button');
-        const helpButton = document.getElementById('help-button');
-        const installMessage = document.getElementById('install-message');
-        const helpMessage = document.getElementById('help-message');
-        const closeButton = helpMessage.querySelector('.close-button');
+    </header>
 
+    <!-- Main Container - Adjusted max-width and added mx-auto for centering. Added pt-16 for sticky header space. -->
+    <div class="w-full max-w-xl bg-white rounded-3xl overflow-hidden mx-auto pt-16 pb-16"> <!-- Added pb-16 for bottom nav bar -->
+
+        <!-- Back Button (Simple representation, now scrolls with content) -->
+        <div class="px-6 pt-4">
+            <a href="#" class="text-blue-500 hover:text-blue-600 font-semibold flex items-center">
+                <!-- Simple left arrow SVG icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                투데이
+            </a>
+        </div>
+
+        <!-- App Header Section - Now this part scrolls -->
+        <section class="flex flex-col md:flex-row items-center md:items-start px-6 pt-4 pb-0 md:pb-0">
+            <!-- App Icon -->
+            <img src="https://placehold.co/120x120/4a90e2/ffffff?text=APP" alt="App Icon" class="w-28 h-28 md:w-32 md:h-32 rounded-2xl md:rounded-3xl mb-4 md:mb-0 md:mr-6 object-cover flex-shrink-0">
+            <!-- Fallback if image fails -->
+            <script>
+                document.querySelector('img[alt="App Icon"]').onerror = function() {
+                    this.src = 'https://placehold.co/120x120/4a90e2/ffffff?text=APP';
+                };
+            </script>
+            <!-- Right Content Area: App Info + Button Group -->
+            <div class="flex-grow w-full md:flex md:flex-row md:items-start md:justify-between text-center md:text-left">
+                <!-- App Name, Description, Developer (Left Part) -->
+                <div class="flex-grow">
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-1 transition-opacity duration-300" id="main-app-title">N-MATE</h1>
+                    <p class="text-gray-600 text-base mb-2">부산남중 학생을 위한 학교생활 올인원 앱</p>
+                    <p class="text-blue-500 text-sm md:text-base mb-1">OneBox</p>
+                </div>
+
+                <!-- Get Button and In-App Purchase (Right Part) -->
+                <div class="flex flex-col items-center md:items-end mt-4 md:mt-0 md:ml-4 flex-shrink-0">
+                    <button id="install-button" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-8 rounded-full text-lg transition-colors duration-200">
+                        받기
+                    </button>
+                    <p class="text-gray-500 text-xs mt-1">인앱 구매</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rating and Age Rating Section -->
+        <section class="flex justify-around items-center px-6 py-4 border-b border-gray-200">
+            <div class="text-center">
+                <p class="text-xl font-bold text-gray-900">4.8</p>
+                <p class="text-sm text-gray-500">★★★★★</p>
+                <p class="text-xs text-gray-500">평가</p>
+            </div>
+            <div class="h-10 w-px bg-gray-300"></div>
+            <div class="text-center">
+                <p class="text-xl font-bold text-gray-900">4+</p>
+                <p class="text-sm text-gray-500">연령</p>
+                <p class="text-xs text-gray-500">세 이상</p>
+            </div>
+            <div class="h-10 w-px bg-gray-300"></div>
+            <div class="text-center">
+                <p class="text-xl font-bold text-gray-900">#1</p>
+                <p class="text-sm text-gray-500">모험</p>
+                <p class="text-xs text-gray-500">게임</p>
+            </div>
+        </section>
+
+        <!-- Screenshots Section - Now a carousel -->
+        <section class="px-6 py-4"> <!-- Section has consistent padding -->
+            <h2 class="text-xl font-bold text-gray-900 mb-4">미리보기</h2>
+            <div class="relative"> <!-- Carousel wrapper for buttons -->
+                <!-- Screenshots Container (overflow-x-hidden to hide scrollbar) -->
+                <div id="screenshots-container" class="flex overflow-x-hidden space-x-4 pb-4">
+                    <!-- Screenshot 1 -->
+                    <img src="https://i.postimg.cc/tTKx6bPR/1.png" alt="Screenshot 1" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
+                    <script>
+                        document.querySelector('img[alt="Screenshot 1"]').onerror = function() {
+                            this.src = 'https://placehold.co/200x350/a78bfa/ffffff?text=Screenshot+1';
+                        };
+                    </script>
+                    <!-- Screenshot 2 -->
+                    <img src="https://i.postimg.cc/W3xJLV1L/g.png" alt="Screenshot 2" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
+                    <script>
+                        document.querySelector('img[alt="Screenshot 2"]').onerror = function() {
+                            this.src = 'https://placehold.co/200x350/60a5fa/ffffff?text=Screenshot+2';
+                        };
+                    </script>
+                    <!-- Screenshot 3 -->
+                    <img src="https://i.postimg.cc/HxcMjnrP/3.png" alt="Screenshot 3" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
+                    <script>
+                        document.querySelector('img[alt="Screenshot 3"]').onerror = function() {
+                            this.src = 'https://placehold.co/200x350/34d399/ffffff?text=Screenshot+3';
+                        };
+                    </script>
+                     <!-- Screenshot 4 -->
+                    <img src="https://i.postimg.cc/5tkvxL2C/4.png" alt="Screenshot 4" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
+                    <script>
+                        document.querySelector('img[alt="Screenshot 4"]').onerror = function() {
+                            this.src = 'https://placehold.co/200x350/fbbf24/ffffff?text=Screenshot+4';
+                        };
+                    </script>
+                    <!-- Screenshot 5 -->
+                    <img src="https://i.postimg.cc/D01bdNdr/5.png" alt="Screenshot 5" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
+                    <script>
+                        document.querySelector('img[alt="Screenshot 5"]').onerror = function() {
+                            this.src = 'https://placehold.co/200x350/a78bfa/ffffff?text=Screenshot+5';
+                        };
+                    </script>
+                </div>
+                <!-- Carousel Navigation Buttons -->
+                <button id="left-arrow" class="carousel-button left-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button id="right-arrow" class="carousel-button right-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Description Section -->
+        <section class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">설명</h2>
+            <!-- Initial summary text -->
+            <div id="description-summary" class="text-gray-700 text-sm leading-relaxed mb-2">
+                N-MATE는 부산남중학교 학생들의 원활한 학교생활을 지원하기 위해 제공되는 통합 서비스 앱입니다.
+                시간표, 급식, 학사일정, 캘린더, 커뮤니티 등 학교생활에 필요한 주요 기능을 하나의 앱에서 제공합니다.
+            </div>
+            <!-- Full description content (initially hidden) -->
+            <div id="full-description-content" class="text-gray-700 text-sm leading-relaxed hidden">
+                <p class="mb-2">
+                    N-MATE는 부산남중학교 학생들의 원활한 학교생활을 지원하기 위해 제공되는 통합 서비스 앱입니다.
+                    시간표, 급식, 학사일정, 캘린더, 커뮤니티 등 학교생활에 필요한 주요 기능을 하나의 앱에서 제공합니다.
+                </p>
+                <p>
+                    학생별 시간표를 바로 확인할 수 있으며,
+                    급식 정보 및 각종 학교 행사·시험 일정도 간편하게 조회할 수 있습니다.
+                    또한, 개인 일정을 직접 추가할 수 있어 자기주도적인 일정 관리가 가능합니다.
+                </p>
+                <p class="mt-2">
+                    반별 커뮤니티 게시판을 통해 학생 간 소통이 가능하며,
+                    공지사항이나 숙제 등의 알림은 푸시 기능으로 실시간 전달됩니다.
+                </p>
+                <p class="mt-2">
+                    광고 없이 제공되며,
+                    가볍고 직관적인 인터페이스로 학생들이 편리하게 사용할 수 있도록 구성되어 있습니다.
+                </p>
+            </div>
+            <button id="toggle-description" class="text-blue-500 hover:text-blue-600 text-sm font-semibold">
+                더 보기
+            </button>
+        </section>
+
+        <!-- What's New Section (Simplified) -->
+        <section class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">새로운 기능</h2>
+            <p class="text-gray-500 text-sm mb-2">버전 2.1</p>
+            <!-- Initial summary text -->
+            <div id="whats-new-summary" class="text-gray-700 text-sm leading-relaxed mb-2">
+                내 일정 추가 기능 출시 <br>
+                메인화면 레이아웃 개선 및 시인성 향상<br>
+            </div>
+            <!-- Full whats new content (initially hidden) -->
+            <div id="full-whats-new-content" class="text-gray-700 text-sm leading-relaxed hidden">
+                <p class="mb-2">내 일정 추가 기능 출시</p>
+                <p class="mb-2">메인화면 레이아웃 개선 및 시인성 향상</p>
+                <p>버그 수정 및 안정성 향상</p>
+            </div>
+            <button id="toggle-whats-new" class="text-blue-500 hover:text-blue-600 text-sm font-semibold mt-2">
+                더 보기
+            </button>
+        </section>
+
+        <!-- Information Section -->
+        <section class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">정보</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">제공</span>
+                    <span>OneBox</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">크기</span>
+                    <span>85.2 MB</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">카테고리</span>
+                    <span>교육</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">호환성</span>
+                    <span>iPhone, iPad, iPod touch</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">언어</span>
+                    <span>한국어, 영어</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">연령 등급</span>
+                    <span>4+</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">저작권</span>
+                    <span>© 2025 OneBox</span>
+                </div>
+                <div class="flex justify-between items-center text-gray-700 text-sm">
+                    <span class="font-semibold">인앱 구매</span>
+                    <span>아니요</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ratings & Reviews Section -->
+        <section class="px-6 py-4">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">평가 및 리뷰</h2>
+            <div class="flex items-center mb-4">
+                <div class="text-5xl font-bold text-gray-900 mr-4">4.8</div>
+                <div>
+                    <div class="text-yellow-500 text-2xl mb-1">★★★★★</div>
+                    <p class="text-gray-500 text-sm">평가</p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <!-- Sample Review 1 -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="font-semibold text-gray-800">학교생활이 편해졌어요!</p>
+                        <p class="text-xs text-gray-500">2일 전</p>
+                    </div>
+                    <div class="text-yellow-500 text-lg mb-1">★★★★★</div>
+                    <p class="text-gray-700 text-sm leading-relaxed">
+                        시간표랑 급식 확인하는 게 너무 편해졌어요. 학사일정도 한눈에 볼 수 있어서 정말 유용합니다!
+                    </p>
+                </div>
+                <!-- Sample Review 2 -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="font-semibold text-gray-800">커뮤니티 기능 최고!</p>
+                        <p class="text-xs text-gray-500">1주 전</p>
+                    </div>
+                    <div class="text-yellow-500 text-lg mb-1">★★★★☆</div>
+                    <p class="text-gray-700 text-sm leading-relaxed">
+                        반 친구들이랑 쉽게 소통할 수 있어서 좋아요. 공지사항도 바로 알림으로 와서 놓칠 일이 없네요.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 max-w-xl mx-auto">
+        <div class="flex justify-around items-center h-16 text-xs text-gray-500 font-medium">
+            <a href="#" class="flex flex-col items-center p-1 text-blue-600"> <!-- Active state example -->
+                <!-- Using generic placeholder SVG for icons -->
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span>투데이</span>
+            </a>
+            <a href="#" class="flex flex-col items-center p-1">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20 6H12L10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6ZM20 18H4V8H20V18Z"/>
+                </svg>
+                <span>게임</span>
+            </a>
+            <a href="#" class="flex flex-col items-center p-1">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.07V14H13v5.07c3.35-.37 6-3.3 6-6.91 0-3.87-3.13-7-7-7s-7 3.13-7 7c0 3.61 2.65 6.54 6 6.91z"/>
+                </svg>
+                <span>앱</span>
+            </a>
+            <a href="#" class="flex flex-col items-center p-1">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6zm0-8h2V7h-2v2z"/>
+                </svg>
+                <span>아케이드</span>
+            </a>
+            <a href="#" class="flex flex-col items-center p-1">
+                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/>
+                </svg>
+                <span>검색</span>
+            </a>
+        </div>
+    </nav>
+
+    <script>
+        let deferredPrompt; // Variable to store the install event
+
+        // PWA install prompt event listener
         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installButton.style.display = 'inline-flex';
-            helpButton.style.display = 'inline-flex';
+            e.preventDefault(); // Prevent the mini-infobar from appearing on mobile
+            deferredPrompt = e; // Stash the event so it can be triggered later.
+            // You might want to show a custom install button or UI element here
+            console.log('beforeinstallprompt event fired and captured.');
+            // Optionally, make the install button visible here if it's hidden by default
+            // document.getElementById('install-button').style.display = 'block';
         });
 
-        installButton.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const choiceResult = await deferredPrompt.userChoice;
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('설치를 수락했습니다.');
-                    installMessage.style.display = 'block';
-                    installButton.style.display = 'none';
-                    helpButton.style.display = 'none';
-                } else {
-                    console.log('설치를 거부했습니다.');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((reg) => {
+                        console.log('Service Worker registered successfully. Scope is ' + reg.scope);
+                    }).catch((error) => {
+                        console.log('Service Worker registration failed: ' + error);
+                    });
+            }
+
+            // Description "더 보기" / "간략히 보기" toggle
+            const descriptionSummary = document.getElementById('description-summary');
+            const fullDescriptionContent = document.getElementById('full-description-content');
+            const toggleDescriptionButton = document.getElementById('toggle-description');
+
+            if (toggleDescriptionButton) {
+                toggleDescriptionButton.addEventListener('click', function() {
+                    if (fullDescriptionContent.classList.contains('hidden')) {
+                        // Show full content and hide summary
+                        descriptionSummary.classList.add('hidden');
+                        fullDescriptionContent.classList.remove('hidden');
+                        this.textContent = '간략히 보기';
+                    } else {
+                        // Hide full content and show summary
+                        fullDescriptionContent.classList.add('hidden');
+                        descriptionSummary.classList.remove('hidden');
+                        this.textContent = '더 보기';
+                    }
+                });
+            }
+
+            // What's New "더 보기" / "간략히 보기" toggle
+            const whatsNewSummary = document.getElementById('whats-new-summary');
+            const fullWhatsNewContent = document.getElementById('full-whats-new-content');
+            const toggleWhatsNewButton = document.getElementById('toggle-whats-new');
+
+            if (toggleWhatsNewButton) {
+                toggleWhatsNewButton.addEventListener('click', function() {
+                    if (fullWhatsNewContent.classList.contains('hidden')) {
+                        // Show full content and hide summary
+                        whatsNewSummary.classList.add('hidden');
+                        fullWhatsNewContent.classList.remove('hidden');
+                        this.textContent = '간략히 보기';
+                    } else {
+                        // Hide full content and show summary
+                        fullWhatsNewContent.classList.add('hidden');
+                        whatsNewSummary.classList.remove('hidden');
+                        this.textContent = '더 보기';
+                    }
+                });
+            }
+
+            // Carousel logic for screenshots
+            const screenshotsContainer = document.getElementById('screenshots-container');
+            const leftArrow = document.getElementById('left-arrow');
+            const rightArrow = document.getElementById('right-arrow');
+
+            // Determine scroll amount based on screenshot width + space-x-4
+            // Assuming w-48 (192px) for mobile, w-64 (256px) for md and up, and space-x-4 (16px)
+            const getScrollAmount = () => {
+                const firstScreenshot = screenshotsContainer.querySelector('img');
+                if (firstScreenshot) {
+                    const style = window.getComputedStyle(firstScreenshot);
+                    const width = parseFloat(style.width);
+                    const margin = parseFloat(style.marginRight || '16px'); // Default to 16px for space-x-4
+                    return width + margin;
                 }
-                deferredPrompt = null;
-            } else if (navigator.standalone) {
-                installMessage.textContent = "앱이 이미 설치됐습니다.";
-                installMessage.style.display = 'block';
-                installButton.style.display = 'none';
-                helpButton.style.display = 'none';
-            } else {
-                installMessage.textContent = "이미 설치되었거나 브라우저가 앱 설치를 지원하지 않습니다.";
-                installMessage.style.display = 'block';
-                installButton.style.display = 'none';
+                return 272; // Fallback value if no screenshot is found (md:w-64 + space-x-4)
+            };
+
+            function updateArrowVisibility() {
+                // Hide left arrow if at the beginning
+                if (screenshotsContainer.scrollLeft <= 0) {
+                    leftArrow.disabled = true;
+                } else {
+                    leftArrow.disabled = false;
+                }
+
+                // Hide right arrow if at the end (allow for slight floating point inaccuracies)
+                const scrollableWidth = screenshotsContainer.scrollWidth - screenshotsContainer.clientWidth;
+                if (screenshotsContainer.scrollLeft >= scrollableWidth - 1) { // -1 for tolerance
+                    rightArrow.disabled = true;
+                } else {
+                    rightArrow.disabled = false;
+                }
+            }
+
+            leftArrow.addEventListener('click', () => {
+                screenshotsContainer.scrollBy({
+                    left: -getScrollAmount(),
+                    behavior: 'smooth'
+                });
+            });
+
+            rightArrow.addEventListener('click', () => {
+                screenshotsContainer.scrollBy({
+                    left: getScrollAmount(),
+                    behavior: 'smooth'
+                });
+            });
+
+            // Update arrow visibility on scroll and resize
+            screenshotsContainer.addEventListener('scroll', updateArrowVisibility);
+            window.addEventListener('resize', updateArrowVisibility);
+
+            // Initial check when page loads
+            updateArrowVisibility();
+
+
+            // Header scroll effect logic
+            const stickyHeader = document.getElementById('sticky-header');
+            const mainAppTitle = document.getElementById('main-app-title');
+            const headerTitleSticky = document.getElementById('header-title-sticky');
+            const scrollThreshold = 100; // Pixels to scroll before effect activates
+
+            const updateHeaderOnScroll = () => {
+                if (window.scrollY > scrollThreshold) {
+                    stickyHeader.classList.add('sticky-header-scrolled'); // Use custom class for blur
+                    stickyHeader.classList.remove('bg-opacity-0');
+                    mainAppTitle.classList.add('opacity-0'); // Fade out large title
+                    headerTitleSticky.classList.remove('opacity-0'); // Fade in sticky title
+                } else {
+                    stickyHeader.classList.remove('sticky-header-scrolled'); // Remove custom class
+                    stickyHeader.classList.add('bg-opacity-0');
+                    mainAppTitle.classList.remove('opacity-0'); // Fade in large title
+                    headerTitleSticky.classList.add('opacity-0'); // Fade out sticky title
+                }
+            };
+
+            window.addEventListener('scroll', updateHeaderOnScroll);
+            // Initial call to set header state on page load
+            updateHeaderOnScroll();
+
+            // PWA Install Button Click Listener
+            const installButton = document.getElementById('install-button');
+            if (installButton) {
+                installButton.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt(); // Show the install prompt
+                        const { outcome } = await deferredPrompt.userChoice; // Wait for the user to respond
+                        console.log(`User response to the install prompt: ${outcome}`);
+                        // Optionally, reset deferredPrompt to null if you want to prevent showing it again
+                        deferredPrompt = null;
+                        // You might want to hide the install button here if it was shown
+                        // installButton.style.display = 'none';
+                    } else {
+                        // If deferredPrompt is not available, it means the browser did not fire beforeinstallprompt
+                        // or the app is already installed.
+                        console.log('PWA installation prompt not available or already installed.');
+                        // You can provide alternative instructions for installation (e.g., "Add to Home Screen" for iOS)
+                        alert('이 앱은 웹 브라우저의 "홈 화면에 추가" 기능을 통해 설치할 수 있습니다.'); // Using alert as a temporary workaround for demonstration.
+                    }
+                });
             }
         });
-
-        helpButton.addEventListener('click', () => {
-            helpMessage.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-
-        closeButton.addEventListener('click', () => {
-            helpMessage.style.display = 'none';
-            document.body.style.overflow = 'unset';
-        });
-
-        if (navigator.standalone) {
-            installMessage.textContent = "[ios] 이미 설치되어 있습니다.";
-            installMessage.style.display = 'block';
-            installButton.style.display = 'none';
-            helpButton.style.display = 'none';
-        } else if (window.matchMedia('(display-mode: standalone)').matches) {
-            installMessage.textContent = "[Android] 이미 설치되어 있습니다.";
-            installMessage.style.display = 'block';
-            installButton.style.display = 'none';
-        }
     </script>
 </body>
 </html>
