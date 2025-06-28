@@ -2,7 +2,8 @@
   edge_functions = "netlify/edge-functions"
 
 [[edge_functions]]
-  path = "/ip"
+  # 기존: path = "/ip"
+  path = "/*" # 모든 경로에 대해 Edge Function 실행
   function = "log-ip"
 
 [[headers]]
