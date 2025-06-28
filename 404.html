@@ -1,176 +1,463 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-1752YPLP7H"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-
-      gtag("config", "G-1752YPLP7H");
-    </script>
-
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta name="description" content="" />
-    <meta name="author" content="Matteo Bruni" />
-    <title>tsParticles 404 Templates</title>
-
-    <!-- Bootstrap core CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-      integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
-      crossorigin="anonymous"
-    />
-    <link rel="icon" type="image/x-icon" href="./images/tsParticles-64.png" />
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부산남중학교 N-MATE - 404 페이지를 찾을 수 없습니다.</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 및 Noto Sans KR 폰트 설정 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN (SVG 아이콘을 직접 삽입하므로 이제는 필요 없지만, 다른 곳에서 사용될 수 있으므로 유지) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (v8.10.1로 유지) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <style>
-      .bd-placeholder-img {
-        font-size: 1.125rem;
-        text-anchor: middle;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
-      .mynav li:hover {
-        text-decoration: underline;
-      }
-      @media (min-width: 768px) {
-        .bd-placeholder-img-lg {
-          font-size: 3.5rem;
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Noto Sans KR', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
         }
-      }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* General content box style for "더보기" items (retained for consistency, though not used directly on 404) */
+        .content-box-item {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            padding: 1.25rem; /* py-5 */
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1rem; /* text-base */
+            font-weight: 500; /* font-medium */
+            color: #374151; /* text-gray-700 */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .content-box-item:hover {
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .content-box-item + .content-box-item {
+            margin-top: 0.5rem; /* Space between items */
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
     </style>
-    <!-- Custom styles for this template -->
-    <link href="css/main.css" rel="stylesheet" />
-  </head>
+</head>
+<body>
 
-  <body>
-    <main role="main">
-      <section class="jumbotron text-center">
-        <div>
-          <div class="container">
-            <h1>404</h1>
-            <p class="lead text-muted">
-              Some
-              <a href="https://github.com/matteobruni/tsparticles"
-                >tsParticles</a
-              >
-              페이지를 찾을 수 없습니다
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                    <span class="text-gray-500 text-sm">계정 정보 로딩 중...</span>
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 404 Error Section -->
+        <div class="w-full flex flex-col items-center justify-center px-6 mt-16 text-center">
+            <!-- Warning Icon -->
+            <img src="/image/warming.png" alt="경고" class="w-24 h-24 mb-6" onerror="this.onerror=null; this.src='https://placehold.co/96x96/FF0000/FFFFFF?text=!';" />
+
+            <h1 class="text-6xl font-extrabold text-red-500 mb-4">404</h1>
+            <p class="text-2xl font-bold text-gray-800 mb-2">페이지를 찾을 수 없습니다.</p>
+            <p class="text-lg text-gray-600 mb-8 max-w-sm">
+                요청하신 페이지를 찾을 수 없습니다. 주소가 올바른지 확인하거나 홈으로 돌아가세요.
             </p>
-          </div>
-          <div class="github-link-container pt-5">
-            <a
-              href="https://github.com/matteobruni/tsparticles"
-              class="github-link"
-              ><span class="github-text font-weight-bold">Github</span>
-              <svg
-                class="redirect-svg"
-                x="0px"
-                y="0px"
-                viewBox="0 0 100 100"
-                width="15"
-                height="15"
-              >
-                <path
-                  fill="currentColor"
-                  d="
-                                M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,
-                                0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z
-                              "
-                ></path>
-                <polygon
-                  fill="currentColor"
-                  points="
-                                45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,
-                                14.9 62.8,22.9 71.5,22.9
-                                "
-                ></polygon></svg
-            ></a>
-          </div>
+            <!-- Modified button for "홈으로 돌아가기" -->
+            <button onclick="window.location.href='/'" class="bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                홈으로 돌아가기
+            </button>
         </div>
-      </section>
 
-      <div class="py-5 bg-light">
-        <div class="container">
-          <div class="row" id="pages"></div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="더보기" data-path="/more">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
         </div>
-      </div>
-      <div class="container">
-        <footer class="py-3 my-4">
-          <p class="text-center text-muted">Connect Us On:</p>
-          <ul class="nav justify-content-center border-bottom pb-3 mb-3 mynav">
-            <li class="nav-item">
-              <a
-                href="https://github.com/matteobruni/tsparticles"
-                class="nav-link px-2 text-muted"
-                target="_blank"
-                >Github</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                href="https://www.reddit.com/r/tsParticles/"
-                class="nav-link px-2 text-muted"
-                target="_blank"
-                >Reddit</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                href="https://t.me/tsparticles"
-                class="nav-link px-2 text-muted"
-                target="_blank"
-                >Telegram</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                href="https://tsparticles.slack.com/join/shared_invite/enQtOTcxNTQxNjQ4NzkxLWE2MTZhZWExMWRmOWI5MTMxNjczOGE1Yjk0MjViYjdkYTUzODM3OTc5MGQ5MjFlODc4MzE0N2Q1OWQxZDc1YzI#/shared-invite/email"
-                class="nav-link px-2 text-muted"
-                target="_blank"
-                >Slack</a
-              >
-            </li>
-            <li class="nav-item">
-              <a
-                href="https://discord.com/invite/hACwv45Hme"
-                class="nav-link px-2 text-muted"
-                target="_blank"
-                >Discord</a
-              >
-            </li>
-          </ul>
-          <p class="text-center text-muted">tsParticles © 2022</p>
-        </footer>
-      </div>
-    </main>
+    </nav>
 
-    <script
-      src="https://code.jquery.com/jquery-3.5.1.min.js"
-      integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
-      integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
-      integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s"
-      crossorigin="anonymous"
-    ></script>
-    <script type="text/javascript" src="js/main.js"></script>
-  </body>
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+
+            } else {
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+            }
+            // lucide.createIcons(); // SVG로 직접 변경했으므로 이 줄은 더 이상 필요 없을 수 있음 (다른 아이콘이 있다면 필요)
+        }
+
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         * For the 404 page, it explicitly sets the "Home" tab as active.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                // Reset all nav items to default (inactive) state
+                item.classList.remove('text-blue-600', 'active');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500');
+                }
+
+                // Explicitly activate 'Home' for the 404 page, or match other paths
+                if (currentPath === '/' || currentPath === '/404') { // Activate Home if on '/' or '/404'
+                    if (item.id === 'nav-home') {
+                        item.classList.add('text-blue-600', 'active');
+                        item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                        if (spanElement) {
+                            spanElement.classList.add('font-bold');
+                            spanElement.classList.remove('font-medium');
+                        }
+                        if (svgElement) {
+                            svgElement.classList.add('text-blue-600');
+                            svgElement.classList.remove('text-gray-500');
+                        }
+                    }
+                } else if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-more' && currentPath.startsWith('/plus')) {
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+        }
+
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
+
+                    if (currentPathname !== path) {
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        window.location.href = path;
+                    }
+                });
+            });
+        }
+
+        // Initialize data fetching/page specific logic for this page
+        async function initializePageData() {
+            // No specific data fetching for this page currently
+            console.log("404 페이지 초기화 완료.");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            initializePageData();
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        initializePageData();
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        initializePageData();
+                    });
+                }
+            } else {
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                initializePageData();
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation (if Lucide is used for other elements)
+            lucide.createIcons();
+        });
+    </script>
+</body>
 </html>
