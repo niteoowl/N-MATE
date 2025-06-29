@@ -319,7 +319,7 @@
     <div class="main-content-container">
 
         <!-- 헤더: 로고 및 계정/로그인 섹션 -->
-        <div class="w-full flex justify-between items-center px-6 pt-4">
+        <div class="w-full flex justify-between items-center px-4 pt-4"> <!-- px-6에서 px-4로 변경 -->
             <!-- 로고 -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
@@ -340,7 +340,7 @@
         </div>
 
         <!-- 학교생활 섹션 컨테이너 -->
-        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4"> <!-- px-6에서 px-4로 변경 -->
             <!-- 섹션 제목 -->
             <h2 class="text-left text-xl font-bold text-gray-800">학교생활</h2>
 
@@ -425,7 +425,7 @@
             </button>
 
             <!-- 학교생활 내비게이션 아이템 -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/school-life">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife"> <!-- data-path를 /sclife로 변경 -->
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -485,33 +485,34 @@
 
         // NEIS API 공통 정보 (API 키)
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // 실제 API 키로 교체
-
-        let currentUserEduCode = "C10";
+        
+        // User's school information (default to Busan Namjung Middle School)
+        let currentUserEduCode = "C10"; 
         let currentUserSchoolCode = "7171018";
         let currentUserGrade = "1";
         let currentUserClassNum = "1";
 
-        // DOM 요소 (공통)
+        // DOM elements (general)
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
 
-        // DOM 요소 (탭)
+        // DOM elements (tabs)
         const tabButtons = document.querySelectorAll('.tab-button');
         const academicScheduleContent = document.getElementById('academicScheduleContent');
         const timetableContent = document.getElementById('timetableContent');
         const mealContent = document.getElementById('mealContent');
 
-        // DOM 요소 (학사일정)
+        // DOM elements (Academic Schedule)
         const academicScheduleDisplaySection = document.getElementById('academic-schedule-display-section');
         const academicCalendarMonthYearSpan = document.getElementById('academic-calendar-month-year');
         const academicPrevMonthButton = document.getElementById('academic-prevMonthButton');
         const academicNextMonthButton = document.getElementById('academic-nextMonthButton');
         let academicCurrentDate = new Date(); // 학사일정 캘린더 표시를 위한 현재 날짜 객체
 
-        // DOM 요소 (시간표)
+        // DOM elements (Timetable)
         const timetableDisplaySection = document.getElementById('timetable-display-section');
 
-        // DOM 요소 (급식)
+        // DOM elements (Meal)
         const mealDisplaySection = document.getElementById('meal-display-section');
         const mealDateButtonsContainer = document.getElementById('meal-date-buttons-container');
         const mealDatePicker = document.getElementById('mealDatePicker');
@@ -552,20 +553,42 @@
             // 탭의 데이터를 아직 로드하지 않았다면 로드합니다.
             if (!loadedTabs[tabId]) {
                 if (tabId === 'academicScheduleContent') {
+                    // 스켈레톤 즉시 표시
+                    academicScheduleDisplaySection.innerHTML = `
+                        <div class="w-full calendar-grid">
+                            ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                            ${Array(35).fill(0).map((_, i) => `
+                                <div class="calendar-cell">
+                                    <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                                    <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                                    <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
                     await getAcademicCalendar(academicCurrentDate);
                 } else if (tabId === 'timetableContent') {
                     // 스켈레톤 즉시 표시
                     timetableDisplaySection.innerHTML = generateTimetableSkeleton();
-                    await fetchTimetableData();
+                    await fetchTimetableData(); // currentUserGrade, currentUserClassNum은 전역 변수로 이미 설정됨
                 } else if (tabId === 'mealContent') {
-                    // 급식 날짜 버튼 초기화 및 오늘 날짜 급식 가져오기
+                    // 급식 섹션용 스켈레톤 로더
+                    mealDisplaySection.innerHTML = `
+                        <div class="w-full">
+                            <div class="skeleton skeleton-text w-full"></div>
+                            <div class="skeleton skeleton-text w-5/6"></div>
+                            <div class="skeleton skeleton-text w-3/4"></div>
+                            <div class="skeleton skeleton-text w-1/2"></div>
+                        </div>
+                    `;
+                    // Initialize meal date buttons and fetch for today
                     const todayDate = new Date();
                     const year = todayDate.getFullYear();
                     const month = String(todayDate.getMonth() + 1).padStart(2, '0');
                     const day = String(todayDate.getDate()).padStart(2, '0');
                     const todayYYYYMMDD = `${year}${month}${day}`;
-                    renderMealDateButtons(todayYYYYMMDD); // 오늘을 활성 상태로 날짜 버튼 렌더링
-                    await fetchMealData(todayYYYYMMDD); // 초기에는 오늘 날짜의 급식 가져오기
+                    renderMealDateButtons(todayYYYYMMDD); // Render date buttons with today as active
+                    await fetchMealData(todayYYYYMMDD); // Fetch meal for today's date initially
                 }
                 loadedTabs[tabId] = true; // 로드됨으로 표시
             }
@@ -827,8 +850,8 @@
          * 현재 사용자의 교육청 코드, 학교 코드, 학년, 반 번호를 사용합니다.
          */
         async function fetchTimetableData() {
-            if (!currentUserGrade || !currentUserClassNum) {
-                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-700">학년과 반 정보가 유효하지 않습니다. 설정 페이지에서 업데이트해주세요.</p>';
+            if (!currentUserEduCode || !currentUserSchoolCode || !currentUserGrade || !currentUserClassNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 및 학년/반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
                 return;
             }
 
@@ -851,6 +874,9 @@
                                 return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
                             content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
+
+                            
                             weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
                         });
                     } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
@@ -1039,7 +1065,7 @@
         /**
          * NEIS API에서 특정 날짜의 급식 데이터를 가져와 표시합니다.
          * 현재 사용자의 교육청 코드와 학교 코드를 사용합니다.
-         * @param {string} date - 급식 데이터를 가져올 YYYYMMDD 형식의 날짜.
+         * @param {string} date - 급식 데이터를 가져올 मीडियावरMMDD 형식의 날짜.
          */
         async function fetchMealData(date) {
             mealDisplaySection.innerHTML = `
@@ -1050,6 +1076,11 @@
                     <div class="skeleton skeleton-text w-1/2"></div>
                 </div>
             `;
+
+            if (!currentUserEduCode || !currentUserSchoolCode) {
+                mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
 
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&MLSV_YMD=${date}`;
 
@@ -1076,16 +1107,16 @@
                         menuHtml += '</div>';
                         mealDisplaySection.innerHTML = menuHtml;
                     } else {
-                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">선택된 날짜의 중식 정보가 없어요.</p>';
+                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">선택된 날짜의 중식 정보가 없어요.</p>';
                     }
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">등록된 급식이 없어요.</p>';
+                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">등록된 급식이 없어요.</p>';
                 } else {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 데 실패했습니다.</p>';
+                    mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 데 실패했습니다.</p>';
                 }
             } catch (error) {
                 console.error('급식 데이터 가져오기 오류:', error);
-                mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
@@ -1185,7 +1216,7 @@
                 }
 
                 // 정확한 경로 일치 또는 학교생활 버튼이고 현재 경로가 하위 경로 중 하나인지 확인
-                if (currentPath === itemPath || (itemPath === '/school-life' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
+                if (currentPath === itemPath || (itemPath === '/sclife' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -1212,7 +1243,7 @@
                         // 다른 학교생활 탭에서 학교생활 탭으로 이동하거나
                         // 다른 페이지에서 특정 학교생활 탭으로 이동할 때 현재 탭을 저장합니다.
                         const currentActiveTab = document.querySelector('.tab-button.active');
-                        if (currentActiveTab && (path === '/school-life' || path.startsWith('/sclife/'))) {
+                        if (currentActiveTab && (path === '/sclife' || path.startsWith('/sclife/'))) {
                              localStorage.setItem('initialSchoolLifeTab', currentActiveTab.dataset.tabId);
                         }
                         window.location.href = path;
