@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="/image/simbol.png" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/png" href="/image/dark_simbol.png" media="(prefers-color-scheme: dark)">
-    <meta name="description" content="전국 중학교 시간표, 학년/반별 수업 정보를 실시간으로 확인하세요.">
+    <meta name="description" content="우리반 시간표를 확인하세요! 부산남중 학생을 위한 간편한 시간표 조회 서비스를 제공합니다.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE | 전국 중학교 시간표</title>
+    <title>부산남중학교 N-MATE - 학교생활</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter 폰트 설정 (비동기 로딩) -->
@@ -59,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start; /* Aligns content to the left */
-            max-width: 36rem; /* Max width for content */
+            max-width: 36rem; /* Max width for content - Adjusted back to 36rem to match bottom nav */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
@@ -97,7 +97,7 @@
         /* Tab buttons container for switching between sections */
         .tab-buttons-container {
             display: flex;
-            width: 100%; /* Adjusted to take full width of its px-6 parent */
+            width: 100%; /* Adjusted to take full width of its px-4 parent */
             margin-top: 1.5rem; /* Top margin for separation */
             margin-bottom: 0.5rem; /* Bottom margin */
             border-bottom: 2px solid #e5e7eb; /* Gray-200 for separator */
@@ -325,11 +325,11 @@
     <div class="main-content-container">
 
         <!-- Header: Logo and Account/Login section -->
-        <div class="w-full flex justify-between items-center px-6 pt-4">
+        <div class="w-full flex justify-between items-center px-4 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
-                <img src="/image/logo.webp" alt="N-MATE 로고" class="h-12 w-auto" width="192" height="48">
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -346,7 +346,7 @@
         </div>
 
         <!-- School Life section container -->
-        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4">
             <!-- Section title -->
             <h2 class="text-left text-xl font-bold text-gray-800">학교생활</h2>
 
