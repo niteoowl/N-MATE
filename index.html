@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -277,10 +278,8 @@
         const countdownBox = document.getElementById('countdownBox'); // 카운트다운 박스 요소 가져오기
         const triviaDisplaySection = document.getElementById('triviaDisplaySection'); // 잡학 상식 표시 섹션 가져오기
 
-        // NEIS API 공통 정보
+        // NEIS API 공통 정보 (더 이상 하드코딩되지 않음)
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // API 키로 대체
-        const eduCode = "C10"; // 학교 교육청 코드로 대체
-        const schoolCode = "7171018"; // 학교 표준 코드로 대체
 
         // 오늘 날짜를 YYYYMMDD 형식으로 가져오는 함수
         function getTodayDate() {
@@ -314,7 +313,8 @@
         }
 
         // NEIS API에서 급식 데이터를 가져와 표시하는 함수
-        async function fetchMealData() {
+        // 교육청 코드와 학교 표준 코드를 인수로 받도록 수정됨
+        async function fetchMealData(atptOfcdcScCode, sdSchulCode) {
             // 급식 섹션용 스켈레톤 로더 (홈 페이지 전용)
             mealDisplaySection.innerHTML = `
                 <div class="w-full text-left">
@@ -324,8 +324,13 @@
                 </div>
             `;
 
+            if (!atptOfcdcScCode || !sdSchulCode) {
+                mealDisplaySection.innerHTML = '<p class="text-lg text-red-500">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
+
             const date = getTodayDate();
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`;
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${date}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -353,8 +358,8 @@
         }
 
         // NEIS API에서 시간표 데이터를 가져와 표시하는 함수
-        // 학년과 반 번호를 인수로 받도록 수정됨
-        async function fetchTimetableData(grade, classNum) {
+        // 교육청 코드, 학교 표준 코드, 학년, 반 번호를 인수로 받도록 수정됨
+        async function fetchTimetableData(atptOfcdcScCode, sdSchulCode, grade, classNum) {
             // 시간표 섹션용 스켈레톤 로더 (홈 페이지 전용)
             timetableDisplaySection.innerHTML = `
                 <div class="flex w-full h-full text-left">
@@ -372,8 +377,13 @@
                 </div>
             `;
 
+            if (!atptOfcdcScCode || !sdSchulCode) {
+                timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
+
             const date = getTodayDate();
-            const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
+            const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -650,23 +660,45 @@
         async function initializeHomePageData() {
             let userGrade = "1";
             let userClassNum = "1";
+            // 기본값으로 부산남중 교육청 코드와 학교 코드를 설정합니다.
+            let userEduCode = "C10";
+            let userSchoolCode = "7171018";
 
             if (auth.currentUser) {
                 const user = auth.currentUser;
                 const profile = await getUserProfile(user.uid);
-                if (profile && profile.grade && profile.classNum) {
-                    userGrade = profile.grade;
-                    userClassNum = profile.classNum;
-                    console.log(`데이터 로드 중: ${userGrade}학년 ${userClassNum}반`);
+                if (profile) {
+                    if (profile.grade) {
+                        userGrade = profile.grade;
+                    } else {
+                        console.warn('사용자 프로필에 학년 정보가 없습니다. 기본 1학년을 사용합니다.');
+                    }
+                    if (profile.classNum) {
+                        userClassNum = profile.classNum;
+                    } else {
+                        console.warn('사용자 프로필에 반 정보가 없습니다. 기본 1반을 사용합니다.');
+                    }
+                    if (profile.atptOfcdcScCode) {
+                        userEduCode = profile.atptOfcdcScCode;
+                    } else {
+                        console.warn('사용자 프로필에 교육청 코드 정보가 없습니다. 기본 교육청 코드를 사용합니다.');
+                    }
+                    if (profile.sdSchulCode) {
+                        userSchoolCode = profile.sdSchulCode;
+                    } else {
+                        console.warn('사용자 프로필에 학교 표준 코드 정보가 없습니다. 기본 학교 표준 코드를 사용합니다.');
+                    }
+                    console.log(`데이터 로드 중: ${userEduCode} ${userSchoolCode} ${userGrade}학년 ${userClassNum}반`);
                 } else {
-                    console.warn('사용자가 로그인되었지만 프로필 정보가 불완전합니다. 기본 1학년 1반 데이터를 로드합니다.');
+                    console.warn('사용자가 로그인되었지만 프로필 정보가 없습니다. 기본 학교 정보와 1학년 1반 데이터를 로드합니다.');
                 }
             } else {
-                console.log('인증되지 않았습니다. 기본 1학년 1반 데이터를 로드합니다.');
+                console.log('인증되지 않았습니다. 기본 학교 정보와 1학년 1반 데이터를 로드합니다.');
             }
 
-            fetchTimetableData(userGrade, userClassNum);
-            fetchMealData();
+            // fetch 함수에 동적으로 가져온 코드와 학년, 반 정보를 전달합니다.
+            fetchTimetableData(userEduCode, userSchoolCode, userGrade, userClassNum);
+            fetchMealData(userEduCode, userSchoolCode);
             fetchTriviaData(); // 홈 페이지 로드 시 잡학 상식 데이터 가져오기
         }
 
