@@ -432,7 +432,7 @@
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/school-life">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -494,8 +494,12 @@
 
         // NEIS API common information
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
-        const eduCode = "C10"; // Replace with your school's education office code
-        const schoolCode = "7171018"; // Replace with your school's standard code
+        
+        // User's school information (default to Busan Namjung Middle School)
+        let currentUserEduCode = "C10"; 
+        let currentUserSchoolCode = "7171018";
+        let currentUserGrade = "1";
+        let currentUserClassNum = "1";
 
         // DOM elements (general)
         const accountStatusArea = document.getElementById('accountStatusArea');
@@ -512,13 +516,10 @@
         const academicCalendarMonthYearSpan = document.getElementById('academic-calendar-month-year');
         const academicPrevMonthButton = document.getElementById('academic-prevMonthButton');
         const academicNextMonthButton = document.getElementById('academic-nextMonthButton');
-        // Removed academicDatePicker and academicShowDatePickerButton as per request
         let academicCurrentDate = new Date(); // Current date object for academic calendar
 
         // DOM elements (Timetable)
         const timetableDisplaySection = document.getElementById('timetable-display-section');
-        let timetableUserGrade = "1";
-        let timetableUserClassNum = "1";
 
         // DOM elements (Meal)
         const mealDisplaySection = document.getElementById('meal-display-section');
@@ -561,20 +562,34 @@
             // Load data for the tab if it hasn't been loaded yet
             if (!loadedTabs[tabId]) {
                 if (tabId === 'academicScheduleContent') {
+                    // Display skeleton immediately
+                    academicScheduleDisplaySection.innerHTML = `
+                        <div class="w-full calendar-grid">
+                            ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                            ${Array(35).fill(0).map((_, i) => `
+                                <div class="calendar-cell">
+                                    <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                                    <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                                    <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
                     await getAcademicCalendar(academicCurrentDate);
                 } else if (tabId === 'timetableContent') {
                     // Display skeleton immediately
                     timetableDisplaySection.innerHTML = generateTimetableSkeleton();
-                    // Fetch profile and then timetable
-                    if (auth.currentUser) {
-                        const profile = await getUserProfile(auth.currentUser.uid);
-                        if (profile && profile.grade && profile.classNum) {
-                            timetableUserGrade = profile.grade;
-                            timetableUserClassNum = profile.classNum;
-                        }
-                    }
-                    await fetchTimetableData(timetableUserGrade, timetableUserClassNum);
+                    await fetchTimetableData(currentUserGrade, currentUserClassNum);
                 } else if (tabId === 'mealContent') {
+                    // 급식 섹션용 스켈레톤 로더
+                    mealDisplaySection.innerHTML = `
+                        <div class="w-full">
+                            <div class="skeleton skeleton-text w-full"></div>
+                            <div class="skeleton skeleton-text w-5/6"></div>
+                            <div class="skeleton skeleton-text w-3/4"></div>
+                            <div class="skeleton skeleton-text w-1/2"></div>
+                        </div>
+                    `;
                     // Initialize meal date buttons and fetch for today
                     const todayDate = new Date();
                     const year = todayDate.getFullYear();
@@ -586,7 +601,6 @@
                 }
                 loadedTabs[tabId] = true; // Mark as loaded
             }
-            // lucide.createIcons(); // Keep this for other parts of the page where Lucide is still used
         }
 
         // --- Academic Schedule Functions ---
@@ -617,9 +631,9 @@
             let startCalendarDate = new Date(firstDayOfMonth);
             const firstDayWeekday = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 
-            if (firstDayWeekday === 0) {
+            if (firstDayWeekday === 0) { // If Sunday, go back to previous Monday
                 startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
-            } else if (firstDayWeekday !== 1) {
+            } else if (firstDayWeekday !== 1) { // If not Monday, go back to current week's Monday
                 startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - 1));
             }
 
@@ -627,9 +641,9 @@
             let endCalendarDate = new Date(lastDayOfMonth);
             const lastDayWeekday = lastDayOfMonth.getDay();
 
-            if (lastDayWeekday === 0) {
+            if (lastDayWeekday === 0) { // If Sunday, go to next Friday
                 endCalendarDate.setDate(lastDayOfMonth.getDate() + 5);
-            } else if (lastDayWeekday !== 5) {
+            } else if (lastDayWeekday !== 5) { // If not Friday, go to current week's Friday
                 endCalendarDate.setDate(lastDayOfMonth.getDate() + (5 - lastDayWeekday + 7) % 7);
             }
 
@@ -670,29 +684,20 @@
 
             calendarHtml += '</div>'; // Close calendar-grid
             academicScheduleDisplaySection.innerHTML = calendarHtml;
-            // lucide.createIcons(); // No longer needed here as it will be called once on DOMContentLoaded
         }
 
         /**
-         * NEIS API를 사용하여 학사일정을 불러오는 함수
-         * 인자로 표시할 달의 Date 객체를 받도록 수정
-         * @param {Date} monthDate - 학사일정을 불러올 월의 Date 객체.
+         * Fetches academic schedule data from NEIS API.
+         * Uses the current user's education office code and school code.
+         * @param {Date} monthDate - The Date object representing the month to fetch academic schedule for.
          */
         async function getAcademicCalendar(monthDate = academicCurrentDate) {
             academicCalendarMonthYearSpan.textContent = `${monthDate.getFullYear()}년 ${monthDate.getMonth() + 1}월`;
 
-            academicScheduleDisplaySection.innerHTML = `
-                <div class="w-full calendar-grid">
-                    ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
-                    ${Array(35).fill(0).map((_, i) => `
-                        <div class="calendar-cell">
-                            <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
-                            <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
-                            <div class="skeleton skeleton-text w-3/4 h-3"></div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
+            if (!currentUserEduCode || !currentUserSchoolCode) {
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
 
             const year = monthDate.getFullYear();
             const month = monthDate.getMonth();
@@ -700,10 +705,10 @@
             const fromDate = new Date(year, month, 1);
             const toDate = new Date(year, month + 1, 0);
 
-            const fromYmd = `${fromDate.getFullYear()}${('0' + (fromDate.getMonth() + 1)).slice(-2)}${('0' + fromDate.getDate()).slice(-2)}`;
-            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getMonth() + 1)).slice(-2)}${('0' + toDate.getDate()).slice(-2)}`;
+            const fromYmd = `${fromDate.getFullYear()}${String(fromDate.getMonth() + 1).padStart(2, '0')}${String(fromDate.getDate()).padStart(2, '0')}`;
+            const toYmd = `${toDate.getFullYear()}${String(toDate.getMonth() + 1).padStart(2, '0')}${String(toDate.getDate()).padStart(2, '0')}`;
 
-            const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
+            const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -714,8 +719,10 @@
                     events = data.SchoolSchedule[1].row;
                     events.sort((a, b) => parseInt(a.AA_YMD) - parseInt(b.AA_YMD));
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    academicScheduleDisplaySection.innerHTML = `<p class="text-base text-gray-700 text-center">${year}년 ${month + 1}월에 대한 학사일정이 없습니다.</p>`;
                     console.log(`No academic schedule for ${year}년 ${month + 1}월`);
                 } else {
+                    academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">학사일정 정보를 가져오는 데 실패했습니다.</p>';
                     console.error(`API response error for academic schedule:`, data);
                 }
 
@@ -723,12 +730,12 @@
                 renderAcademicCalendar(monthDate, academicCalendarEvents);
             } catch (error) {
                 console.error('Error fetching academic schedule data:', error);
-                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
         /**
-         * 이전 달로 이동합니다.
+         * Navigates to the previous month for the academic calendar.
          */
         function goToPrevAcademicMonth() {
             academicCurrentDate.setMonth(academicCurrentDate.getMonth() - 1);
@@ -736,7 +743,7 @@
         }
 
         /**
-         * 다음 달로 이동합니다.
+         * Navigates to the next month for the academic calendar.
          */
         function goToNextAcademicMonth() {
             academicCurrentDate.setMonth(academicCurrentDate.getMonth() + 1);
@@ -842,18 +849,19 @@
 
         /**
          * Fetches and displays weekly timetable data from the NEIS API.
+         * Uses the current user's education office code, school code, grade, and class number.
          * @param {string} grade - The selected grade.
          * @param {string} classNum - The selected class number.
          */
         async function fetchTimetableData(grade, classNum) {
-            if (!grade || !classNum) {
-                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-700">학년과 반 정보가 유효하지 않습니다.</p>'; // (접근성 개선)
+            if (!currentUserEduCode || !currentUserSchoolCode || !grade || !classNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 및 학년/반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
                 return;
             }
 
             const weekDates = getWeekDates();
             const fetchPromises = weekDates.map(date => {
-                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
                 return fetch(apiUrl)
                     .then(response => response.json())
                     .then(data => {
@@ -866,6 +874,8 @@
                                 });
                                 content = content.replace(/\(창\)동아리활동/g, '동아리');
                                 content = content.replace(/\(창\)자율·자치활동/g, '창체');
+
+                                
                                 dailyTimetable[parseInt(period.PERIO)] = content;
                             });
                         } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
@@ -890,7 +900,7 @@
                 renderWeeklyTimetable(weeklyTimetableData);
             } catch (error) {
                 console.error('Error in Promise.all for timetable data:', error);
-                timetableDisplaySection.innerHTML = '<p class="text-base text-red-500">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                timetableDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
@@ -1079,7 +1089,12 @@
                 </div>
             `;
 
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&MLSV_YMD=${date}`;
+            if (!currentUserEduCode || !currentUserSchoolCode) {
+                mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
+
+            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&MLSV_YMD=${date}`;
 
             try {
                 const response = await fetch(apiUrl);
@@ -1104,16 +1119,16 @@
                         menuHtml += '</div>';
                         mealDisplaySection.innerHTML = menuHtml;
                     } else {
-                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">선택된 날짜의 중식 정보가 없어요.</p>'; // (접근성 개선)
+                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">선택된 날짜의 중식 정보가 없어요.</p>'; // (접근성 개선)
                     }
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700">등록된 급식이 없어요.</p>'; // (접근성 개선)
+                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">등록된 급식이 없어요.</p>'; // (접근성 개선)
                 } else {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 데 실패했습니다.</p>';
+                    mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 데 실패했습니다.</p>';
                 }
             } catch (error) {
                 console.error('Error fetching meal data:', error);
-                mealDisplaySection.innerHTML = '<p class="text-base text-red-500">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
@@ -1213,7 +1228,7 @@
                 }
 
                 // Check for exact path match or if it's the school-life button and current path is one of the sub-paths
-                if (currentPath === itemPath || (itemPath === '/school-life' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
+                if (currentPath === itemPath || (itemPath === '/sclife' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -1241,7 +1256,7 @@
                         // or from a different page to a specific school-life tab.
                         const currentActiveTab = document.querySelector('.tab-button.active');
                         // Store the current active sub-tab if navigating to or within school-life paths
-                        if (currentActiveTab && (path === '/school-life' || path.startsWith('/sclife/'))) {
+                        if (currentActiveTab && (path === '/sclife' || path.startsWith('/sclife/'))) {
                              localStorage.setItem('initialSchoolLifeTab', currentActiveTab.dataset.tabId);
                         }
                         window.location.href = path;
@@ -1264,6 +1279,35 @@
 
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
+                            
+                            // Fetch user profile and update global school codes and grade/class
+                            if (user) {
+                                const profile = await getUserProfile(user.uid);
+                                if (profile) {
+                                    currentUserEduCode = profile.atptOfcdcScCode || "C10"; // Default to Busan Namjung if not set
+                                    currentUserSchoolCode = profile.sdSchulCode || "7171018"; // Default to Busan Namjung if not set
+                                    currentUserGrade = profile.grade || "1"; // Default to 1st grade if not set
+                                    currentUserClassNum = profile.classNum || "1"; // Default to 1st class if not set
+
+                                    if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
+                                        console.warn('사용자 프로필에 학교 교육청 코드 또는 행정 표준 코드가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                    }
+                                    if (!profile.grade || !profile.classNum) {
+                                        console.warn('사용자 프로필에 학년 또는 반 정보가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                    }
+                                } else {
+                                    console.warn('사용자 프로필을 찾을 수 없습니다. 기본 학교 정보와 학년/반을 사용합니다. 설정 페이지에서 프로필을 설정해주세요.');
+                                }
+                            } else {
+                                console.log('인증되지 않았습니다. 기본 학교 정보와 학년/반을 사용합니다.');
+                                // If not logged in, ensure default school codes are used for anonymous data fetching
+                                currentUserEduCode = "C10";
+                                currentUserSchoolCode = "7171018";
+                                currentUserGrade = "1";
+                                currentUserClassNum = "1";
+                            }
+
+
                             const currentPath = window.location.pathname;
                             let initialTab = 'timetableContent'; // Default tab
 
@@ -1285,6 +1329,12 @@
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
                         await updateAccountUI(null);
+                        // In case of Firebase init failure, still try to show default tab with default data
+                        currentUserEduCode = "C10";
+                        currentUserSchoolCode = "7171018";
+                        currentUserGrade = "1";
+                        currentUserClassNum = "1";
+
                         const currentPath = window.location.pathname;
                         let initialTab = 'timetableContent';
                         if (currentPath === '/sclife/timetable') {
@@ -1306,6 +1356,31 @@
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
+                        // Fetch user profile and update global school codes and grade/class
+                        if (user) {
+                            const profile = await getUserProfile(user.uid);
+                            if (profile) {
+                                currentUserEduCode = profile.atptOfcdcScCode || "C10";
+                                currentUserSchoolCode = profile.sdSchulCode || "7171018";
+                                currentUserGrade = profile.grade || "1";
+                                currentUserClassNum = profile.classNum || "1";
+                                if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
+                                    console.warn('사용자 프로필에 학교 교육청 코드 또는 행정 표준 코드가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                }
+                                if (!profile.grade || !profile.classNum) {
+                                    console.warn('사용자 프로필에 학년 또는 반 정보가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                }
+                            } else {
+                                console.warn('사용자 프로필을 찾을 수 없습니다. 기본 학교 정보와 학년/반을 사용합니다. 설정 페이지에서 프로필을 설정해주세요.');
+                            }
+                        } else {
+                            console.log('인증되지 않았습니다. 기본 학교 정보와 학년/반을 사용합니다.');
+                            currentUserEduCode = "C10";
+                            currentUserSchoolCode = "7171018";
+                            currentUserGrade = "1";
+                            currentUserClassNum = "1";
+                        }
+
                         const currentPath = window.location.pathname;
                         let initialTab = 'timetableContent';
                         if (currentPath === '/sclife/timetable') {
@@ -1324,6 +1399,12 @@
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 await updateAccountUI(null);
+                // If Firebase config is missing, still try to show default tab with default data
+                currentUserEduCode = "C10";
+                currentUserSchoolCode = "7171018";
+                currentUserGrade = "1";
+                currentUserClassNum = "1";
+
                 const currentPath = window.location.pathname;
                 let initialTab = 'timetableContent';
                 if (currentPath === '/sclife/timetable') {
@@ -1379,7 +1460,7 @@
                 resizeTimeout = setTimeout(() => {
                     // Only re-fetch if the timetable tab is currently active
                     if (!timetableContent.classList.contains('hidden') && loadedTabs['timetableContent']) {
-                        fetchTimetableData(timetableUserGrade, timetableUserClassNum);
+                        fetchTimetableData(currentUserGrade, currentUserClassNum); // Ensure it uses current user's grade/class
                     }
                 }, 200);
             });
