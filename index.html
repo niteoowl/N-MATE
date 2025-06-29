@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -122,11 +121,11 @@
     <div class="main-content-container">
 
         <!-- 헤더: 로고 및 계정/로그인 섹션 -->
-        <div class="w-full flex justify-between items-center px-6 pt-4">
+        <div class="w-full flex justify-between items-center px-4 pt-4"> <!-- px-6에서 px-4로 변경 -->
             <!-- 로고 -->
             <div class="flex items-center">
                 <!-- LCP 및 CLS 개선을 위한 width 및 height 속성 추가 -->
-                <img src="/image/logo.webp" alt="부산남중학교 N-MATE 로고" class="h-12">
+                <img src="/image/logo.webp" alt="N-MATE 로고" class="h-12">
             </div>
 
             <!-- 드롭다운이 있는 계정/로그인 섹션 -->
@@ -143,7 +142,7 @@
         </div>
 
         <!-- 여름방학 카운트다운 박스 -->
-        <div class="w-full flex flex-col items-start gap-y-4 px-6 mt-8 mb-4">
+        <div class="w-full flex flex-col items-start gap-y-4 px-4 mt-8 mb-4"> <!-- px-6에서 px-4로 변경 -->
             <div id="countdownBox" class="w-full h-16 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <!-- 카운트다운은 JavaScript에 의해 여기에 주입됩니다. -->
                 <p class="skeleton skeleton-text w-3/4"></p>
@@ -151,7 +150,7 @@
         </div>
 
         <!-- 시간표/급식 섹션 컨테이너 -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
+        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4"> <!-- px-6에서 px-4로 변경 -->
             <!-- 섹션 제목: font-extrabold (font-weight: 800) 적용 -->
             <h2 class="text-left text-xl font-extrabold text-gray-800">시간표/급식</h2>
             <!-- 두 부분으로 분할된 가로 직사각형 상자 -->
@@ -186,7 +185,7 @@
         </div>
 
         <!-- 잡학 상식 섹션 컨테이너 -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-1 mb-4">
+        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4"> <!-- px-6에서 px-4로 변경 -->
             <!-- 섹션 제목: 오늘의 잡학 상식 (font-extrabold (font-weight: 800) 적용) -->
             <h2 class="text-left text-xl font-extrabold text-gray-800">오늘의 잡학 상식</h2>
             <!-- 잡학 상식 콘텐츠 박스 -->
@@ -197,7 +196,7 @@
         </div>
 
         <!-- 추가 콘텐츠를 위한 플레이스홀더 -->
-        <p class="text-2xl text-gray-700 px-6 mt-1"></p>
+        <p class="text-2xl text-gray-700 px-4 mt-1"></p> <!-- px-6에서 px-4로 변경 -->
     </div>
 
     <!-- 하단 내비게이션 바 -->
@@ -212,7 +211,7 @@
             </button>
 
             <!-- 학교생활 내비게이션 아이템 -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife"> <!-- data-path를 /sclife로 변경 -->
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -381,6 +380,11 @@
                 timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
                 return;
             }
+            if (!grade || !classNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-lg text-red-500">학년 또는 반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
+                return;
+            }
+
 
             const date = getTodayDate();
             const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
@@ -401,10 +405,11 @@
 
                     timetable.forEach(period => {
                         // 특수 활동명 변환
-                        let content = period.ITRT_CNTNT.replace('(자)주제선택활동', '주제선택');
-                        content = content.replace('(자)진로탐색활동', '진로탐색');
-                        content = content.replace('(창)동아리활동', '동아리');
-                        content = content.replace('(창)자율·자치활동', '창체');
+                        let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
+                            return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
+                        });
+                        content = content.replace(/\(창\)동아리활동/g, '동아리');
+                        content = content.replace(/\(창\)자율·자치활동/g, '창체');
 
 
                         // 기기 유형에 따라 "교시" 조건부 렌더링
@@ -761,7 +766,9 @@
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    initializeHomePageData(); // 새 창 크기에 따라 데이터 다시 가져오기 또는 다시 렌더링
+                    // Only re-fetch if the timetable tab is currently active
+                    // Since this is the home page, it should always re-initialize if the window size changes
+                    initializeHomePageData(); // Re-fetch/re-render data based on new window size
                 }, 200);
             });
 
