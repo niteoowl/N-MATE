@@ -59,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start; /* Aligns content to the left */
-            max-width: 36rem; /* Max width for content */
+            max-width: 36rem; /* Max width for content (576px) */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
@@ -97,7 +97,7 @@
         /* Tab buttons container for switching between sections */
         .tab-buttons-container {
             display: flex;
-            width: 100%; /* Adjusted to take full width of its px-6 parent */
+            width: 100%; /* Adjusted to take full width of its px-4 parent */
             margin-top: 1.5rem; /* Top margin for separation */
             margin-bottom: 0.5rem; /* Bottom margin */
             border-bottom: 2px solid #e5e7eb; /* 구분선 */
@@ -325,7 +325,7 @@
     <div class="main-content-container">
 
         <!-- Header: Logo and Account/Login section -->
-        <div class="w-full flex justify-between items-center px-6 pt-4">
+        <div class="w-full flex justify-between items-center px-4 pt-4"> <!-- Changed px-6 to px-4 -->
             <!-- Logo -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
@@ -346,7 +346,7 @@
         </div>
 
         <!-- School Life section container -->
-        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4"> <!-- Changed px-6 to px-4 -->
             <!-- Section title -->
             <h2 class="text-left text-xl font-bold text-gray-800">학교생활</h2>
 
