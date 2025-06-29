@@ -270,7 +270,7 @@
 
         <!-- 사용자 정보 설정 섹션 (초기에는 숨김) -->
         <div id="userInfoSetupSection" class="button-section hidden">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">학생 정보 설정</h2>
+            <!-- "학생 정보 설정" 텍스트 제거됨 -->
 
             <!-- 학교 검색 관련 UI -->
             <div class="school-search-container mb-3">
@@ -338,7 +338,7 @@
         };
 
         // NEIS API 설정 (사용자 제공)
-        const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc3"; // 이 인증키를 유효한 키로 교체해야 합니다.
+        const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc2"; // 이 인증키를 유효한 키로 교체해야 합니다.
         const NEIS_API_ENDPOINT = "https://open.neis.go.kr/hub/schoolInfo";
 
         // Firebase app 및 auth, firestore 인스턴스
@@ -504,7 +504,8 @@
             }
 
             try {
-                const url = `${NEIS_API_ENDPOINT}?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=5&SCHUL_NM=${encodeURIComponent(schoolNameQuery)}`;
+                // SCHUL_KND_SC_NM=중학교 파라미터를 추가하여 중학교만 검색하도록 수정
+                const url = `${NEIS_API_ENDPOINT}?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=5&SCHUL_NM=${encodeURIComponent(schoolNameQuery)}&SCHUL_KND_SC_NM=${encodeURIComponent('중학교')}`;
                 console.log('NEIS API 요청 URL:', url);
 
                 const response = await fetch(url);
@@ -521,7 +522,7 @@
                     displaySearchResults(schools);
                 } else if (data && data.RESULT && data.RESULT.CODE === 'INFO-200') {
                     // INFO-200: 해당 자료는 존재하지 않습니다.
-                    showMessage('검색 결과가 없습니다. 정확한 학교 이름을 입력해주세요.', true);
+                    showMessage('검색 결과가 없습니다. 정확한 중학교 이름을 입력해주세요.', true); // 중학교 검색 메시지로 수정
                 } else {
                     showMessage('학교 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.', true);
                     console.error('예상치 못한 NEIS API 응답 구조:', data);
@@ -578,7 +579,7 @@
 
             schoolSearchInput.value = ''; // 검색창 초기화
             schoolSearchResults.classList.add('hidden'); // 검색 결과 숨기기
-            showMessage(`${schoolName}이(가) 선택되었습니다.`, false);
+            // showMessage(`${schoolName}이(가) 선택되었습니다.`, false); // 이 라인 삭제
             resetSchoolSelection.classList.remove('hidden'); // 초기화 버튼 표시
             schoolSearchInput.classList.add('hidden'); // 검색 입력 필드 숨김
             searchSchoolButton.classList.add('hidden'); // 검색 버튼 숨김
