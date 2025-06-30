@@ -2,22 +2,28 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/image/simbol.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="/image/dark_simbol.png" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="우리반 시간표를 확인하세요! 부산남중 학생을 위한 간편한 시간표 조회 서비스를 제공합니다.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부산남중학교 N-MATE - 시간표</title>
+    <title>N-MATE | [학교이름] [학년]학년 [반]반 시간표</title> <!-- 타이틀이 동적으로 변경됩니다. -->
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter 폰트 설정 -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Pretendard 폰트 (모든 굵기 포함) 로드 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
     <style>
+        /* Pretendard-Regular 웹폰트 정의 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap; /* 폰트 로드 중 텍스트 표시 */
+        }
+        
         /* Body styles for overall layout */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Pretendard-Regular', sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -53,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start; /* Aligns content to the left */
-            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            max-width: 36rem; /* Max width for content */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
@@ -88,41 +94,72 @@
             background-color: #f3f4f6; /* hover:bg-gray-100 */
         }
 
-        /* Table specific styles for the timetable */
+        /* Tab buttons container for switching between sections */
+        .tab-buttons-container {
+            display: flex;
+            width: 100%; /* Adjusted to take full width of its px-4 parent */
+            margin-top: 1.5rem; /* Top margin for separation */
+            margin-bottom: 0.5rem; /* Bottom margin */
+            border-bottom: 2px solid #e5e7eb; /* Gray-200 for separator */
+        }
+        .tab-button {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151; /* Gray-700 (접근성 개선) */
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid transparent; /* Transparent border for inactive */
+            transition: all 0.2s ease;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+        }
+        .tab-button.active {
+            color: #3b82f6; /* Blue-500 */
+            border-bottom-color: #3b82f6; /* Blue-500 for active tab */
+        }
+        .tab-button:hover:not(.active) {
+            color: #4f46e5; /* Indigo-600 on hover */
+            background-color: #f9fafb; /* Lighter background on hover */
+        }
+
+        /* Specific styles for the timetable table */
         .timetable-table {
-            border-collapse: collapse; /* Ensure cells collapse borders */
-            width: 100%; /* Make table fill its container */
-            border-radius: 0.75rem; /* rounded-xl on parent, this will be handled by overflow hidden */
+            border-collapse: collapse;
+            width: 100%;
+            border-radius: 0.75rem;
         }
         .timetable-table thead th {
-            border-bottom: 1px solid #e2e8f0; /* Only bottom border */
-            padding: 1rem 0.75rem; /* Increased vertical padding to 1rem */
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0.75rem;
             text-align: center;
-            font-size: 1rem; /* Updated: Increased font size to 1rem */
-            font-weight: 700; /* Updated: Applied bold font weight */
-            color: #4b5563; /* text-gray-600 */
-            background-color: #ffffff; /* White background for headers */
+            font-size: 1rem;
+            font-weight: 700;
+            color: #374151; /* Gray-700 (접근성 개선) */
+            background-color: #ffffff;
         }
         .timetable-table tbody td {
-            border-bottom: 1px solid #e2e8f0; /* Only bottom border */
-            vertical-align: top; /* Align content to the top within cells */
-            padding: 1rem 0.75rem; /* Increased vertical padding to 1rem */
-            word-break: keep-all; /* Prevents long words from overflowing */
-            white-space: normal; /* Allows text to wrap */
-            text-align: center; /* Center content in cells */
-            font-size: 0.875rem; /* text-sm, increased font size */
-            color: #374151; /* text-gray-800 */
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+            padding: 1rem 0.75rem;
+            word-break: keep-all;
+            white-space: normal;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #374151; /* Gray-700 */
         }
         .timetable-table tbody tr:last-child td {
-            border-bottom: none; /* Remove bottom border for the last row */
+            border-bottom: none;
         }
         .timetable-table .lunch-break {
-            background-color: #ffffff; /* White background for lunch break */
-            color: #374151; /* Black text for lunch break */
-            font-weight: 600; /* font-semibold */
-            border-top: 1px solid #cbd5e1; /* Only top border for lunch break */
-            border-bottom: 1px solid #cbd5e1; /* Only bottom border for lunch break */
-            padding: 1rem 0.75rem; /* Maintain increased padding */
+            background-color: #ffffff;
+            color: #374151; /* Gray-700 */
+            font-weight: 600;
+            border-top: 1px solid #cbd5e1;
+            border-bottom: 1px solid #cbd5e1;
+            padding: 1rem 0.75rem;
         }
     </style>
 </head>
@@ -132,10 +169,11 @@
     <div class="main-content-container">
 
         <!-- Header: Logo and Account/Login section -->
-        <div class="w-full flex justify-between items-center px-6 pt-4">
+        <div class="w-full flex justify-between items-center px-4 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+                <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -151,19 +189,51 @@
             </div>
         </div>
 
-        <!-- Timetable section container -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-8 mb-4">
+        <!-- School Life section container -->
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4">
             <!-- Section title -->
-            <h2 class="text-left text-xl font-bold text-gray-800">시간표</h2>
+            <h2 class="text-left text-xl font-bold text-gray-800" id="schoolLifeTitle">학교생활</h2>
 
-            <!-- Timetable display area -->
-            <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
-                <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
-                    <!-- Skeleton Loader for Timetable content (now without the "loading..." text) -->
+            <!-- Tab buttons for switching between sections (Order: 시간표, 급식, 학사일정) -->
+            <div class="tab-buttons-container">
+                <button id="tab-timetable" class="tab-button" data-tab-id="timetableContent" data-path="/timetable">시간표</button>
+                <button id="tab-meal" class="tab-button" data-tab-id="mealContent" data-path="/meal">급식</button>
+                <button id="tab-academic" class="tab-button" data-tab-id="academicScheduleContent" data-path="/schedule">학사일정</button>
+            </div>
+
+            <!-- Timetable Section -->
+            <div id="timetableContent" class="tab-content w-full flex flex-col items-start gap-y-2 mt-4">
+                <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
+                    <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
+                        <!-- Skeleton Loader for Timetable content -->
+                        <table class="timetable-table w-full">
+                            <thead>
+                                <tr class="bg-white">
+                                    <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                                    <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                                    <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                                    <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                                    <th><div class="skeleton skeleton-text w-12 mx-auto"></div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Example skeleton rows (adjust maxPeriodsSkeleton in JS) -->
+                                ${Array(7).fill(0).map((_, i) => `
+                                    ${i === 4 ? `<tr><td colspan="5" class="lunch-break"><div class="skeleton skeleton-text w-24 h-4 mx-auto"></div></td></tr>` : ''}
+                                    <tr>
+                                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                                        <td><div class="skeleton skeleton-text w-20 h-4 mx-auto"></div></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- Bottom Navigation Bar -->
@@ -171,35 +241,52 @@
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
-                <i data-lucide="home" class="w-6 h-6 mb-1"></i>
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
                 <span class="text-xs font-medium">홈</span>
             </button>
 
-            <!-- Schedule Navigation Item -->
-            <button id="nav-schedule" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600" data-tab="시간표" data-path="/timetable">
-                <i data-lucide="calendar-check" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">시간표</span>
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
             </button>
 
-            <!-- Meal Navigation Item -->
-            <button id="nav-meal" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="급식" data-path="/meal">
-                <i data-lucide="utensils" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">급식</span>
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
-            <!-- Academic Schedule Navigation Item -->
-            <button id="nav-academic" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학사일정" data-path="/schedule">
-                <i data-lucide="calendar-days" class="w-6 h-6 mb-1"></i>
-                <span class="text-xs font-medium">학사일정</span>
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
             </button>
 
             <!-- More Navigation Item -->
-            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/plus">
-                <i data-lucide="more-horizontal" class="w-6 h-6 mb-1"></i>
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
                 <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
     </nav>
+
+    <!-- Firebase SDK CDN (defer 로드) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+    <!-- Lucide Icons CDN (defer 로드) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <script>
         // Global variables for Firebase configuration (provided by Canvas environment)
@@ -219,15 +306,95 @@
         let auth;
         let db;
 
-        // DOM elements
-        const timetableDisplaySection = document.getElementById('timetable-display-section');
+        // NEIS API common information
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // 실제 API 키로 교체
+        
+        // User's school information (default to Busan Namjung Middle School)
+        // 이 변수들은 URL 파라미터나 Firebase 사용자 프로필에 의해 동적으로 설정됩니다.
+        let currentEffectiveEduCode = "C10"; // 현재 유효한 교육청 코드 (부산광역시 교육청)
+        let currentEffectiveSchoolCode = "7171018"; // 현재 유효한 학교 코드 (남중학교)
+        let currentEffectiveGrade = "1"; // 현재 유효한 학년
+        let currentEffectiveClassNum = "1"; // 현재 유효한 반 번호
+        let currentEffectiveSchoolName = "학교 이름"; // 현재 유효한 학교 이름 (동적으로 설정됨)
+
+        // DOM elements (general)
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
+        const schoolLifeTitle = document.getElementById('schoolLifeTitle');
+        const pageTitleElement = document.querySelector('title');
 
-        // NEIS API common information
-        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
-        const eduCode = "C10"; // Replace with your school's education office code
-        const schoolCode = "7171018"; // Replace with your school's standard code
+        // DOM elements (tabs)
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const timetableContent = document.getElementById('timetableContent'); // This page will only display timetable content
+
+        // DOM elements (Timetable)
+        const timetableDisplaySection = document.getElementById('timetable-display-section');
+
+        // Track if data for each tab has been loaded to avoid redundant API calls
+        // This page only handles 'timetableContent'
+        const loadedTabs = {
+            timetableContent: false
+        };
+
+        /**
+         * Parses query parameters from the URL and returns them as an object.
+         * @returns {Object} An object containing the query parameters.
+         */
+        function getQueryParams() {
+            const params = {};
+            window.location.search.substring(1).split('&').forEach(param => {
+                const parts = param.split('=');
+                if (parts.length === 2) {
+                    params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+                }
+            });
+            return params;
+        }
+
+        /**
+         * Shows the specified tab content and updates the active state of tab buttons.
+         * Fetches data for the tab if it hasn't been loaded yet.
+         * This page only handles the 'timetableContent' tab.
+         * @param {string} tabId - The ID of the tab content to show (e.g., 'timetableContent').
+         */
+        async function showTab(tabId) {
+            // This page only displays 'timetableContent'.
+            if (tabId !== 'timetableContent') {
+                return; // Ignore other tab IDs.
+            }
+
+            // Hide all tab contents (only relevant for this page's timetableContent)
+            timetableContent.classList.add('hidden');
+
+            // Deactivate all tab buttons (only relevant for the tab buttons on this page)
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Show the selected tab content
+            timetableContent.classList.remove('hidden');
+            // Activate the corresponding tab button
+            const timetableTabButton = document.querySelector(`.tab-button[data-tab-id="${tabId}"]`);
+            if (timetableTabButton) {
+                timetableTabButton.classList.add('active');
+            }
+
+            // Check for valid school and grade/class information
+            if (!currentEffectiveEduCode || !currentEffectiveSchoolCode || !currentEffectiveGrade || !currentEffectiveClassNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center mt-4">학교 및 학년/반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
+                return;
+            }
+
+            // If the tab's data hasn't been loaded yet, load it.
+            if (!loadedTabs[tabId]) {
+                // Immediately display skeleton loader for timetable
+                timetableDisplaySection.innerHTML = generateTimetableSkeleton();
+                await fetchTimetableData(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                loadedTabs[tabId] = true; // Mark as loaded
+            }
+        }
+
+        // --- Timetable Functions ---
 
         /**
          * Calculates the dates for Monday to Friday of the current week.
@@ -252,38 +419,11 @@
         }
 
         /**
-         * Fetches user profile from Firestore.
-         * @param {string} userId - The unique ID of the current user.
-         * @returns {Object|null} The user profile data or null if not found/error.
-         */
-        async function getUserProfile(userId) {
-            if (!db) {
-                console.error('Firestore instance is not initialized.');
-                return null;
-            }
-            // Firestore security rules path: artifacts/{appId}/users/{userId}/profile/user_data
-            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
-            try {
-                const doc = await userProfileRef.get();
-                if (doc.exists) {
-                    return doc.data();
-                } else {
-                    console.log('User profile data not found.');
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error fetching user profile:', error);
-                return null;
-            }
-        }
-
-        /**
          * Generates the HTML for the timetable skeleton loader.
          * @returns {string} The HTML string for the skeleton loader.
          */
         function generateTimetableSkeleton() {
-            // maxPeriods in skeleton should also reflect the actual maxPeriods
-            const maxPeriodsSkeleton = 7;
+            const maxPeriodsSkeleton = 7; // Assuming max 7 periods for skeleton
 
             let skeletonHtml = `
                 <table class="timetable-table w-full">
@@ -299,7 +439,7 @@
                     <tbody>
             `;
 
-            for (let i = 1; i <= maxPeriodsSkeleton; i++) { // Loop up to 7 periods
+            for (let i = 1; i <= maxPeriodsSkeleton; i++) {
                 if (i === 5) { // Lunch break
                     skeletonHtml += `
                         <tr>
@@ -325,22 +465,23 @@
             return skeletonHtml;
         }
 
-
         /**
          * Fetches and displays weekly timetable data from the NEIS API.
+         * Uses the current user's education office code, school code, grade, and class number.
+         * @param {string} eduCode - The education office code.
+         * @param {string} schoolCode - The school code.
          * @param {string} grade - The selected grade.
          * @param {string} classNum - The selected class number.
          */
-        async function fetchTimetableData(grade, classNum) {
-            if (!grade || !classNum) {
-                timetableDisplaySection.innerHTML = '<p class="text-lg text-gray-600">학년과 반 정보가 유효하지 않습니다.</p>';
+        async function fetchTimetableData(eduCode, schoolCode, grade, classNum) {
+            if (!eduCode || !schoolCode || !grade || !classNum) {
+                timetableDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 및 학년/반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
                 return;
             }
 
             const weekDates = getWeekDates();
-            const weeklyTimetableData = {}; // Stores timetable organized by day (1=Mon, 5=Fri) and period
+            const weeklyTimetableData = {};
 
-            // Fetch data for each day of the week
             for (const date of weekDates) {
                 const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
                 try {
@@ -357,15 +498,18 @@
                                 return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
                             content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
+
+                            
                             weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
                         });
                     } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        console.log(`No timetable for ${date}`);
+                        console.log(`${date}에 대한 시간표가 없습니다.`);
                     } else {
-                        console.error(`API response error for date ${date}:`, data);
+                        console.error(`${date}에 대한 API 응답 오류:`, data);
                     }
                 } catch (error) {
-                    console.error(`Error fetching timetable data for date ${date}:`, error);
+                    console.error(`${date}에 대한 시간표 데이터 가져오기 오류:`, error);
                 }
             }
             renderWeeklyTimetable(weeklyTimetableData);
@@ -377,8 +521,8 @@
          */
         function renderWeeklyTimetable(weeklyTimetableData) {
             const daysHeaders = ['월', '화', '수', '목', '금'];
-            const daysMapping = [1, 2, 3, 4, 5];
-            const maxPeriods = 7;
+            const daysMapping = [1, 2, 3, 4, 5]; // Sunday=0, Monday=1, ..., Saturday=6
+            const maxPeriods = 7; // Assuming max 7 periods for display
 
             let tableHtml = `
                 <table class="timetable-table">
@@ -422,6 +566,9 @@
             timetableDisplaySection.innerHTML = tableHtml;
         }
 
+
+        // --- Common Functions (Account, Navigation, School Info) ---
+
         /**
          * Toggles the visibility of the account dropdown menu.
          */
@@ -445,7 +592,7 @@
         }
 
         /**
-         * Handles navigation to the settings page.
+         * Handles redirection to the settings page.
          */
         function handleSettingsClick() {
             window.location.href = '/settings';
@@ -453,11 +600,11 @@
 
         /**
          * Updates the account UI based on user authentication status.
-         * Displays email prefix if logged in, otherwise "로그인" button.
+         * Displays email prefix if logged in, otherwise displays a "Login" button.
          * @param {firebase.User} user - The authenticated user object or null.
          */
         async function updateAccountUI(user) {
-            if (user && user.email) { // Check if a user is logged in and has an email
+            if (user && user.email) {
                 const emailPrefix = user.email.split('@')[0];
                 accountStatusArea.innerHTML = `
                     <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -467,7 +614,6 @@
                 `;
                 document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
-                // Attach event listeners for dropdown buttons
                 const settingsButton = document.getElementById('settingsButton');
                 if (settingsButton && !settingsButton.dataset.listenerAdded) {
                     settingsButton.addEventListener('click', handleSettingsClick);
@@ -478,9 +624,7 @@
                     logoutButton.addEventListener('click', handleLogout);
                     logoutButton.dataset.listenerAdded = 'true';
                 }
-
             } else {
-                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -489,30 +633,63 @@
                 document.getElementById('loginRedirectButton').addEventListener('click', () => {
                     window.location.href = '/login';
                 });
-                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
+                accountDropdown.classList.add('hidden');
             }
-            lucide.createIcons(); // Refresh Lucide icons
+            lucide.createIcons(); // 계정 상태 영역의 Lucide 아이콘(user-circle-2)을 생성해야 함
         }
 
         /**
-         * Updates the active state of the navigation bar buttons based on the current URL path.
+         * Updates the active state of navigation bar buttons based on the current URL path.
          */
         function updateNavigationActiveState() {
-            const currentPath = window.location.pathname;
-            const navItems = document.querySelectorAll('.nav-item');
+            const currentPathname = window.location.pathname; // 현재 페이지의 경로
 
+            const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
-                // Reset classes
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                // 스타일 초기화
                 item.classList.remove('text-blue-600');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500'); // SVG도 회색 기본 색상을 갖도록 보장
+                }
 
-                // Set active class if path matches
-                if (currentPath === itemPath) {
+                // 활성화 로직
+                let isActive = false;
+                if (currentPathname === itemPath) {
+                    isActive = true; // 정확한 경로 일치
+                } else if (itemPath === '/sclife' && (currentPathname === '/meal' || currentPathname === '/timetable' || currentPathname === '/schedule')) {
+                    isActive = true; // '학교생활' 내비게이션 항목은 학교생활 관련 페이지에서 활성화
+                }
+
+                if (isActive) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600'); // 활성 SVG에 파란색 적용
+                        svgElement.classList.remove('text-gray-500');
+                    }
                 }
             });
+
+            // 현재 페이지가 /timetable인 경우, 시간표 탭 버튼 활성화
+            const timetableTabButton = document.querySelector(`.tab-button[data-path="/timetable"]`);
+            if (timetableTabButton && window.location.pathname === '/timetable') {
+                tabButtons.forEach(button => button.classList.remove('active')); // 모든 탭 버튼 비활성화
+                timetableTabButton.classList.add('active'); // 시간표 탭만 활성화
+            }
         }
 
         /**
@@ -521,45 +698,108 @@
         function setupNavigationEvents() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
-                item.addEventListener('click', (event) => {
+                item.addEventListener('click', () => {
                     const path = item.dataset.path;
-                    if (window.location.pathname !== path) {
-                        window.location.href = path;
+                    if (path && window.location.pathname !== path) {
+                        // 현재 URL에 쿼리 파라미터가 있다면 새 경로로 이동 시에도 유지
+                        const currentQueryParams = window.location.search;
+                        window.location.href = path + currentQueryParams;
                     }
-                    // No need to update active state here, as page reload will trigger DOMContentLoaded and update it.
+                    // 현재 경로와 동일한 path를 가진 nav item을 클릭하면 아무것도 하지 않음 (이미 해당 페이지이므로)
+                });
+            });
+
+            // 상단 탭 버튼에도 동일한 네비게이션 동작 적용
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const path = button.dataset.path;
+                    // 현재 페이지 경로가 /timetable이고, 클릭된 탭도 /timetable이라면 데이터만 다시 로드
+                    if (path === '/timetable' && window.location.pathname === '/timetable') {
+                        tabButtons.forEach(btn => btn.classList.remove('active')); // 모든 탭 버튼 비활성화
+                        button.classList.add('active'); // 클릭된 시간표 탭만 활성화
+                        showTab('timetableContent'); // 시간표 탭 콘텐츠를 다시 표시하고 데이터 다시 불러오기
+                    } else if (path && window.location.pathname !== path) {
+                        // 다른 탭을 클릭하면 해당 경로로 이동 (쿼리 파라미터 유지)
+                        const currentQueryParams = window.location.search;
+                        window.location.href = path + currentQueryParams;
+                    }
                 });
             });
         }
 
         /**
-         * Initializes data fetching (timetable) based on user profile or default values.
+         * NEIS API를 통해 학교 이름을 가져와서 페이지 제목과 학교 생활 섹션 제목을 업데이트합니다.
+         * 학년과 반 정보도 함께 표시합니다.
+         * @param {string} eduCode - 교육청 코드.
+         * @param {string} schoolCode - 학교 코드.
+         * @param {string} grade - 학년.
+         * @param {string} classNum - 반.
          */
-        async function initializeDataFetching() {
-            let userGrade = "1";
-            let userClassNum = "1";
+        async function fetchSchoolNameAndSetTitle(eduCode, schoolCode, grade, classNum) {
+            const apiUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=1&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}`;
 
-            if (auth.currentUser) {
-                const user = auth.currentUser;
-                const profile = await getUserProfile(user.uid);
-                if (profile && profile.grade && profile.classNum) {
-                    userGrade = profile.grade;
-                    userClassNum = profile.classNum;
-                    console.log(`계정 프로필에서 시간표 로드: ${userGrade}학년 ${userClassNum}반`);
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                let schoolName = "학교 이름";
+                if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row && data.schoolInfo[1].row.length > 0) {
+                    schoolName = data.schoolInfo[1].row[0].SCHUL_NM;
+                    currentEffectiveSchoolName = schoolName; // 전역 변수 업데이트
                 } else {
-                    console.warn('로그인했지만 프로필 정보가 불완전합니다. 기본 1학년 1반 시간표를 로드합니다.');
+                    console.log('학교 이름을 찾을 수 없습니다. 기본 이름을 사용합니다.');
                 }
-            } else {
-                console.log('인증되지 않았습니다. 기본 1학년 1반 시간표를 로드합니다.');
-            }
 
-            fetchTimetableData(userGrade, userClassNum);
+                // 학년 및 반 정보가 유효한지 확인하여 표시 문자열 구성
+                let gradeClassString = '';
+                if (grade && classNum) {
+                    gradeClassString = `${grade}학년 ${classNum}반`;
+                } else if (grade) {
+                    gradeClassString = `${grade}학년`;
+                } else if (classNum) {
+                    gradeClassString = `${classNum}반`;
+                }
+
+                // 페이지 타이틀 (브라우저 탭, 검색 엔진)
+                pageTitleElement.textContent = `N-MATE | ${schoolName} ${gradeClassString} 시간표`.trim();
+                // 학교 생활 섹션 제목
+                schoolLifeTitle.textContent = `${schoolName} ${gradeClassString} 시간표`.trim();
+
+            } catch (error) {
+                console.error('학교 이름 가져오기 오류:', error);
+                pageTitleElement.textContent = `N-MATE | 시간표`;
+                schoolLifeTitle.textContent = `학교생활`;
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Display skeleton loader immediately when DOM is ready
-            timetableDisplaySection.innerHTML = generateTimetableSkeleton();
+        /**
+         * Firestore에서 사용자 프로필을 가져옵니다.
+         * @param {string} userId - 현재 사용자의 고유 ID.
+         * @returns {Object|null} 사용자 프로필 데이터 또는 찾을 수 없거나 오류가 발생하면 null.
+         */
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                return null;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log('사용자 프로필 데이터를 찾을 수 없습니다.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('사용자 프로필 가져오기 오류:', error);
+                return null;
+            }
+        }
 
-            // Firebase initialization
+        // --- DOMContentLoaded 시 초기화 ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase 초기화
             if (firebaseConfig && firebaseConfig.apiKey) {
                 if (firebase.apps.length === 0) {
                     try {
@@ -570,13 +810,56 @@
 
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
-                            initializeDataFetching();
+
+                            const queryParams = getQueryParams();
+                            const urlEduCode = queryParams.eduCode;
+                            const urlSchoolCode = queryParams.schoolCode;
+                            const urlGrade = queryParams.grade; // URL에서 학년 가져오기
+                            const urlClassNum = queryParams.classNum; // URL에서 반 가져오기
+
+                            // URL 파라미터가 있을 경우 우선적으로 사용
+                            if (urlEduCode && urlSchoolCode) {
+                                currentEffectiveEduCode = urlEduCode;
+                                currentEffectiveSchoolCode = urlSchoolCode;
+                                currentEffectiveGrade = urlGrade || currentEffectiveGrade; // URL에 학년 없으면 기본값
+                                currentEffectiveClassNum = urlClassNum || currentEffectiveClassNum; // URL에 반 없으면 기본값
+                                console.log('URL 파라미터에서 학교 및 학년/반 정보 설정됨:', currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                            } else if (user) {
+                                // URL 파라미터가 없고 사용자가 로그인되어 있다면 Firebase 프로필에서 가져옴
+                                const profile = await getUserProfile(user.uid);
+                                if (profile) {
+                                    currentEffectiveEduCode = profile.atptOfcdcScCode || currentEffectiveEduCode;
+                                    currentEffectiveSchoolCode = profile.sdSchulCode || currentEffectiveSchoolCode;
+                                    currentEffectiveGrade = profile.grade || currentEffectiveGrade;
+                                    currentEffectiveClassNum = profile.classNum || currentEffectiveClassNum;
+
+                                    if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
+                                        console.warn('사용자 프로필 정보(학교)가 불완전합니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                    }
+                                    if (!profile.grade || !profile.classNum) {
+                                        console.warn('사용자 프로필 정보(학년/반)가 불완전합니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                    }
+                                    console.log('Firebase 프로필에서 학교 및 학년/반 정보 설정됨:', currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                                } else {
+                                    console.warn('사용자 프로필을 찾을 수 없습니다. 기본 학교 및 학년/반 정보를 사용합니다. 설정 페이지에서 프로필을 설정해주세요.');
+                                }
+                            } else {
+                                console.log('인증되지 않았습니다. 기본 학교 및 학년/반 정보를 사용합니다. (URL 파라미터 없음)');
+                            }
+                            
+                            // 학교 이름, 학년, 반 정보 가져와서 페이지 제목 및 섹션 제목 업데이트
+                            await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+
+                            // 이 페이지는 항상 'timetableContent'만 표시합니다.
+                            showTab('timetableContent');
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
                         await updateAccountUI(null);
-                        initializeDataFetching();
+                        // Firebase 초기화 실패 시에도 기본 학교 이름으로 설정
+                        await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                        showTab('timetableContent');
                     }
                 } else {
                     app = firebase.app();
@@ -585,16 +868,40 @@
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        initializeDataFetching();
+
+                        const queryParams = getQueryParams();
+                        const urlEduCode = queryParams.eduCode;
+                        const urlSchoolCode = queryParams.schoolCode;
+                        const urlGrade = queryParams.grade;
+                        const urlClassNum = queryParams.classNum;
+
+                        if (urlEduCode && urlSchoolCode) {
+                            currentEffectiveEduCode = urlEduCode;
+                            currentEffectiveSchoolCode = urlSchoolCode;
+                            currentEffectiveGrade = urlGrade || currentEffectiveGrade;
+                            currentEffectiveClassNum = urlClassNum || currentEffectiveClassNum;
+                        } else if (user) {
+                            const profile = await getUserProfile(user.uid);
+                            if (profile) {
+                                currentEffectiveEduCode = profile.atptOfcdcScCode || currentEffectiveEduCode;
+                                currentEffectiveSchoolCode = profile.sdSchulCode || currentEffectiveSchoolCode;
+                                currentEffectiveGrade = profile.grade || currentEffectiveGrade;
+                                currentEffectiveClassNum = profile.classNum || currentEffectiveClassNum;
+                            }
+                        }
+                        
+                        await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                        showTab('timetableContent');
                     });
                 }
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 await updateAccountUI(null);
-                initializeDataFetching();
+                await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                showTab('timetableContent');
             }
 
-            // Global click listener to close dropdown when clicking outside
+            // 외부 클릭 시 드롭다운 닫기 위한 전역 클릭 리스너
             window.addEventListener('click', function(e) {
                 const accountTabButton = document.getElementById('accountTabButton');
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
@@ -602,22 +909,22 @@
                 }
             });
 
-            // Setup navigation click handlers
+            // 내비게이션 클릭 핸들러 설정 (상단 탭 포함)
             setupNavigationEvents();
-            // Update navigation active state on initial load
+            // 초기 로드 시 내비게이션 활성 상태 업데이트
             updateNavigationActiveState();
 
-            // Re-render timetable on window resize to adjust "교시" text
+            // 창 크기 조정 시 시간표 다시 렌더링 (동적으로 콘텐츠 조정 필요 시)
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    initializeDataFetching();
+                    // 시간표 탭이 현재 활성 상태이고 로드된 경우에만 다시 가져오기
+                    if (!timetableContent.classList.contains('hidden') && loadedTabs['timetableContent']) {
+                        fetchTimetableData(currentEffectiveEduCode, currentEffectiveSchoolCode, currentEffectiveGrade, currentEffectiveClassNum);
+                    }
                 }, 200);
             });
-
-            // Initial icon creation
-            lucide.createIcons();
         });
     </script>
 </body>
