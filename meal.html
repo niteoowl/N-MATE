@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="/image/dark_simbol.png" media="(prefers-color-scheme: dark)">
     <meta name="description" content="전국 중학교의 오늘 급식, 주간 급식표를 간편하게 확인하세요. 서울, 부산, 대구 등 지역별 중학교 급식 정보 제공">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE | [학교이름]급식</title> <!-- 타이틀이 동적으로 변경됩니다. -->
+    <title>N-MATE | 학교별 급식</title> <!-- 타이틀이 동적으로 변경됩니다. -->
     <!-- Tailwind CSS CDN을 로드합니다. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Pretendard 폰트 (모든 굵기 포함) 로드 -->
@@ -776,7 +776,7 @@
 
                 if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row && data.schoolInfo[1].row.length > 0) {
                     currentEffectiveSchoolName = data.schoolInfo[1].row[0].SCHUL_NM;
-                    pageTitleElement.textContent = `${currentEffectiveSchoolName}급식`;
+                    pageTitleElement.textContent = `${currentEffectiveSchoolName} 급식 | N-MATE`;
                     schoolLifeTitle.textContent = `${currentEffectiveSchoolName} 급식`; // 학교 생활 섹션 제목도 업데이트
                 } else {
                     console.log('학교 이름을 찾을 수 없습니다. 기본 이름을 사용합니다.');
