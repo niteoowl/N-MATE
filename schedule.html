@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/image/simbol.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" href="/image/dark_simbol.png" media="(prefers-color-scheme: dark)">
+    <meta name="description" content="전국 중학교의 학사일정을 한눈에! 개학일·방학일·시험일 등 정확한 일정을 지역·학교별로 확인하세요.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-MATE | 학교별 학사일정</title> <!-- 타이틀이 동적으로 변경됩니다. -->
+    <!-- Tailwind CSS CDN을 로드합니다. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pretendard 폰트 (모든 굵기 포함) 로드 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <style>
+        /* Pretendard-Regular 웹폰트 정의 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap; /* 폰트 로드 중 텍스트 표시 */
+        }
+        
+        /* Body styles for overall layout */
+        body {
+            font-family: 'Pretendard-Regular', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+        /* Skeleton Loader animation for loading states */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+            background-size: 200% 100%;
+        }
+        @keyframes pulse {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-text {
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
+            border-radius: 4px;
+        }
+
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (576px) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* Tab buttons container for switching between sections */
+        .tab-buttons-container {
+            display: flex;
+            width: 100%; /* Adjusted to take full width of its px-4 parent */
+            margin-top: 1.5rem; /* Top margin for separation */
+            margin-bottom: 0.5rem; /* Bottom margin */
+            border-bottom: 2px solid #e5e7eb; /* 구분선 */
+        }
+        .tab-button {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #374151; /* 대비율 개선을 위해 Gray-500(#6b7280)에서 Gray-700으로 조정 */
+            background-color: transparent;
+            border: none;
+            border-bottom: 2px solid transparent; /* 비활성 상태 투명 테두리 */
+            transition: all 0.2s ease;
+            cursor: pointer;
+            outline: none;
+            text-align: center;
+        }
+        .tab-button.active {
+            color: #3b82f6; /* Blue-500 */
+            border-bottom-color: #3b82f6; /* 활성 탭에 Blue-500 테두리 */
+        }
+        .tab-button:hover:not(.active) {
+            color: #4f46e5; /* 호버 시 Indigo-600 */
+            background-color: #f9fafb; /* 호버 시 더 밝은 배경 */
+        }
+
+        /* Specific styles for academic schedule content area */
+        .academic-schedule-content-box {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+            min-height: 200px;
+            width: 100%;
+            overflow: hidden;
+        }
+        /* Calendar navigation styles */
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+        }
+        .calendar-nav button {
+            background-color: transparent;
+            color: #4b5563; /* Gray-600 */
+            padding: 0;
+            border-radius: 0;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .calendar-nav button:hover {
+            color: #3b82f6;
+            background-color: transparent;
+        }
+        .calendar-nav span {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        /* Calendar grid specific styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1px;
+            width: 100%;
+            background-color: #e2e8f0;
+        }
+        .calendar-header-day {
+            background-color: #ffffff;
+            font-weight: 600;
+            text-align: center;
+            padding: 0.75rem 0.25rem;
+            font-size: 0.75rem;
+            color: #1f2937; /* Gray-900 (접근성 개선) */
+        }
+        .calendar-cell {
+            background-color: #ffffff;
+            min-height: 80px;
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            font-size: 0.75rem;
+            color: #374151; /* Gray-700 (접근성 개선) */
+            overflow: hidden;
+            position: relative;
+        }
+        .calendar-cell.inactive-month {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+        }
+        .calendar-cell.today {
+            background-color: #e5e7eb;
+            font-weight: 600;
+        }
+        .calendar-cell-date {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            color: #1f2937;
+        }
+        .calendar-cell-event {
+            font-size: 0.625rem;
+            line-height: 1.2;
+            margin-bottom: 0.2rem;
+            color: #1f2937;
+            white-space: normal;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .calendar-cell-event:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content area -->
+    <div class="main-content-container">
+
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-4 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
+                <img src="/image/logo.png" alt="N-MATE 로고" class="h-12 w-auto" width="192" height="48">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- School Life section container -->
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4">
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800" id="schoolLifeTitle">학교생활</h2>
+
+            <!-- Tab buttons for switching between sections (Order: 시간표, 급식, 학사일정) -->
+            <div class="tab-buttons-container">
+                <button id="tab-timetable" class="tab-button" data-tab-id="timetableContent" data-path="/timetable">시간표</button>
+                <button id="tab-meal" class="tab-button" data-tab-id="mealContent" data-path="/meal">급식</button>
+                <button id="tab-academic" class="tab-button" data-tab-id="academicScheduleContent" data-path="/schedule">학사일정</button>
+            </div>
+
+            <!-- Academic Schedule Section (This page will only display academic schedule) -->
+            <div id="academicScheduleContent" class="tab-content w-full flex flex-col items-start gap-y-2 mt-4">
+                <!-- Calendar Navigation (Month selection) -->
+                <div class="calendar-nav">
+                    <button id="academic-prevMonthButton" aria-label="이전 달"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <span id="academic-calendar-month-year"></span>
+                    <button id="academic-nextMonthButton" aria-label="다음 달"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+
+                <!-- Academic Schedule display area -->
+                <div id="academic-schedule-display-section" class="w-full academic-schedule-content-box">
+                    <!-- Academic calendar will be rendered here -->
+                    <div class="w-full calendar-grid">
+                        <!-- Skeleton header days -->
+                        ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                        <!-- Skeleton cells -->
+                        ${Array(35).fill(0).map((_, i) => `
+                            <div class="calendar-cell">
+                                <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                                <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                                <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
+
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
+
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
+
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
+
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Firebase SDK CDN (defer loading) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
+    <!-- Lucide Icons CDN (defer loading) -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <script>
+        // Global variables for Firebase configuration (provided by Canvas environment)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
+
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
+
+        // NEIS API common information
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
+
+        // User's school information (default to Busan Namjung Middle School)
+        // These variables are dynamically set by URL parameters or Firebase user profile.
+        let currentEffectiveEduCode = "C10"; // Current effective education office code
+        let currentEffectiveSchoolCode = "7171018"; // Current effective school code
+        let currentEffectiveSchoolName = "학교 이름"; // Current effective school name (set dynamically)
+
+        // DOM elements (general)
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const schoolLifeTitle = document.getElementById('schoolLifeTitle');
+        const pageTitleElement = document.querySelector('title');
+
+        // DOM elements (tabs)
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const academicScheduleContent = document.getElementById('academicScheduleContent');
+
+        // DOM elements (Academic Schedule)
+        const academicScheduleDisplaySection = document.getElementById('academic-schedule-display-section');
+        const academicCalendarMonthYearSpan = document.getElementById('academic-calendar-month-year');
+        const academicPrevMonthButton = document.getElementById('academic-prevMonthButton');
+        const academicNextMonthButton = document.getElementById('academic-nextMonthButton');
+        let academicCurrentDate = new Date(); // Current date object for academic calendar
+
+        // Track if data for each tab has been loaded to avoid redundant API calls
+        // This page only handles 'academicScheduleContent'
+        const loadedTabs = {
+            academicScheduleContent: false
+        };
+
+        /**
+         * Parses query parameters from the URL and returns them as an object.
+         * @returns {Object} An object containing the query parameters.
+         */
+        function getQueryParams() {
+            const params = {};
+            window.location.search.substring(1).split('&').forEach(param => {
+                const parts = param.split('=');
+                if (parts.length === 2) {
+                    params[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+                }
+            });
+            return params;
+        }
+
+        /**
+         * Displays the specified tab content and updates the active state of tab buttons.
+         * Fetches data for tabs that haven't been loaded yet.
+         * This page only handles the 'academicScheduleContent' tab.
+         * @param {string} tabId - The ID of the tab content to display (e.g., 'academicScheduleContent').
+         */
+        async function showTab(tabId) {
+            // This page only displays 'academicScheduleContent'.
+            if (tabId !== 'academicScheduleContent') {
+                return; // Ignore other tab IDs.
+            }
+
+            // Hide all tab contents (only relevant for this page's academicScheduleContent)
+            academicScheduleContent.classList.add('hidden');
+
+            // Deactivate all tab buttons (only relevant for the tab buttons on this page)
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Display the selected tab content
+            academicScheduleContent.classList.remove('hidden');
+            // Activate the corresponding tab button
+            const academicTabButton = document.querySelector(`.tab-button[data-tab-id="${tabId}"]`);
+            if (academicTabButton) {
+                academicTabButton.classList.add('active');
+            }
+
+            // Check for valid school information
+            if (!currentEffectiveEduCode || !currentEffectiveSchoolCode) {
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center mt-4">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
+                return;
+            }
+
+            // If the tab's data hasn't been loaded yet, load it.
+            if (!loadedTabs[tabId]) {
+                // Immediately display skeleton loader for academic schedule
+                academicScheduleDisplaySection.innerHTML = `
+                    <div class="w-full calendar-grid">
+                        ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                        ${Array(35).fill(0).map((_, i) => `
+                            <div class="calendar-cell">
+                                <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                                <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                                <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                await getAcademicCalendar(academicCurrentDate);
+                loadedTabs[tabId] = true; // Mark as loaded
+            }
+        }
+
+        // --- Academic Schedule Functions ---
+
+        /**
+         * Renders the calendar grid view for a given month and populates it with events.
+         * @param {Date} monthDate - A Date object representing the month to display.
+         * @param {Array} events - An array of event objects from the NEIS API.
+         */
+        function renderAcademicCalendar(monthDate, events) {
+            const today = new Date();
+            const currentYear = monthDate.getFullYear();
+            const currentMonth = monthDate.getMonth(); // 0-indexed
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+
+            const dayNames = ['월', '화', '수', '목', '금']; // Display only weekdays in header
+
+            let calendarHtml = '<div class="calendar-grid">';
+
+            // Add weekday headers (Mon-Fri)
+            dayNames.forEach(dayName => {
+                calendarHtml += `<div class="calendar-header-day">${dayName}</div>`;
+            });
+
+            // Determine the start date for the calendar grid
+            let startCalendarDate = new Date(firstDayOfMonth);
+            const firstDayWeekday = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+            if (firstDayWeekday === 0) { // If Sunday, move to Monday of previous week
+                startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
+            } else if (firstDayWeekday !== 1) { // If not Monday, move to Monday of current week
+                startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - 1));
+            }
+
+            // Determine the end date for the calendar grid
+            let endCalendarDate = new Date(lastDayOfMonth);
+            const lastDayWeekday = lastDayOfMonth.getDay();
+
+            if (lastDayWeekday === 0) { // If Sunday, move to Friday of next week
+                endCalendarDate.setDate(lastDayOfMonth.getDate() + 5);
+            } else if (lastDayWeekday !== 5) { // If not Friday, move to Friday of current week
+                endCalendarDate.setDate(lastDayOfMonth.getDate() + (5 - lastDayWeekday + 7) % 7);
+            }
+
+            // Iterate through each date from startCalendarDate to endCalendarDate
+            let currentIterationDate = new Date(startCalendarDate);
+            while (currentIterationDate <= endCalendarDate) {
+                const dayOfWeek = currentIterationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
+                // Render only Mon-Fri cells
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    const cellDateString = `${currentIterationDate.getFullYear()}${String(currentIterationDate.getMonth() + 1).padStart(2, '0')}${String(currentIterationDate.getDate()).padStart(2, '0')}`;
+                    const isToday = currentIterationDate.toDateString() === today.toDateString();
+                    const isCurrentMonth = currentIterationDate.getMonth() === currentMonth && currentIterationDate.getFullYear() === currentYear;
+
+                    let cellClass = 'calendar-cell';
+                    if (!isCurrentMonth) {
+                        cellClass += ' inactive-month';
+                    }
+                    if (isToday) {
+                        cellClass += ' today';
+                    }
+
+                    let eventHtml = '';
+                    const dailyEvents = events.filter(event => event.AA_YMD === cellDateString);
+                    dailyEvents.forEach(event => {
+                        eventHtml += `<p class="calendar-cell-event">${event.EVENT_NM}</p>`;
+                    });
+
+                    calendarHtml += `
+                        <div class="${cellClass}">
+                            <div class="calendar-cell-date">${currentIterationDate.getDate()}</div>
+                            ${eventHtml}
+                        </div>
+                    `;
+                }
+                currentIterationDate.setDate(currentIterationDate.getDate() + 1);
+            }
+
+            calendarHtml += '</div>'; // Close calendar-grid
+            academicScheduleDisplaySection.innerHTML = calendarHtml;
+            lucide.createIcons(); // Re-create Lucide icons for new content (calendar navigation arrows)
+        }
+
+        /**
+         * Function to fetch academic calendar data using NEIS API.
+         * Uses the current user's education office code and school code.
+         * @param {Date} monthDate - Date object for the month to fetch academic schedule.
+         */
+        async function getAcademicCalendar(monthDate) {
+            academicCalendarMonthYearSpan.textContent = `${monthDate.getFullYear()}년 ${monthDate.getMonth() + 1}월`;
+
+            academicScheduleDisplaySection.innerHTML = `
+                <div class="w-full calendar-grid">
+                    ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                    ${Array(35).fill(0).map((_, i) => `
+                        <div class="calendar-cell">
+                            <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                            <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                            <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            const year = monthDate.getFullYear();
+            const month = monthDate.getMonth();
+
+            const fromDate = new Date(year, month, 1);
+            const toDate = new Date(year, month + 1, 0);
+
+            const fromYmd = `${fromDate.getFullYear()}${('0' + (fromDate.getMonth() + 1)).slice(-2)}${('0' + fromDate.getDate()).slice(-2)}`;
+            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getMonth() + 1)).slice(-2)}${('0' + toDate.getDate()).slice(-2)}`;
+
+            const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentEffectiveEduCode}&SD_SCHUL_CODE=${currentEffectiveSchoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                let events = [];
+                if (data.SchoolSchedule && data.SchoolSchedule[1] && data.SchoolSchedule[1].row) {
+                    events = data.SchoolSchedule[1].row;
+                    events.sort((a, b) => parseInt(a.AA_YMD) - parseInt(b.AA_YMD));
+                } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    console.log(`${year}년 ${month + 1}월에 대한 학사일정이 없습니다.`);
+                } else {
+                    console.error(`Academic schedule API response error:`, data);
+                }
+
+                academicCalendarEvents = events;
+                renderAcademicCalendar(monthDate, academicCalendarEvents);
+            } catch (error) {
+                console.error('Error fetching academic schedule data:', error);
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
+            }
+        }
+
+        /**
+         * Moves to the previous month in the academic calendar.
+         */
+        function goToPrevAcademicMonth() {
+            academicCurrentDate.setMonth(academicCurrentDate.getMonth() - 1);
+            getAcademicCalendar(academicCurrentDate);
+        }
+
+        /**
+         * Moves to the next month in the academic calendar.
+         */
+        function goToNextAcademicMonth() {
+            academicCurrentDate.setMonth(academicCurrentDate.getMonth() + 1);
+            getAcademicCalendar(academicCurrentDate);
+        }
+
+
+        // --- Common Functions (Account, Navigation, School Info) ---
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
+            }
+        }
+
+        /**
+         * Handles redirection to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
+
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise displays a "Login" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) {
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
+
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
+            } else {
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden');
+            }
+            lucide.createIcons(); // Needs to create Lucide icons for the account status area (user-circle-2)
+        }
+
+        /**
+         * Updates the active state of navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPathname = window.location.pathname; // Current page path
+
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
+
+                // Reset all nav items to default (inactive) state
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                }
+
+                // Check for exact path match or if it's the school-life button and current path is one of the sub-paths
+                // This correctly applies the active state if the current path is /sclife or starts with /sclife/
+                if (currentPathname === itemPath || (itemPath === '/sclife' && (currentPathname === '/meal' || currentPathname === '/timetable' || currentPathname === '/schedule'))) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                }
+            });
+
+            // If the current page is /schedule, activate the Academic Schedule tab button
+            const academicTabButton = document.querySelector(`.tab-button[data-path="/schedule"]`);
+            if (academicTabButton && window.location.pathname === '/schedule') {
+                tabButtons.forEach(button => button.classList.remove('active')); // Deactivate all tab buttons
+                academicTabButton.classList.add('active'); // Activate only the Academic Schedule tab
+            }
+        }
+
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const path = item.dataset.path;
+                    if (path && window.location.pathname !== path) {
+                        // If query parameters exist in the current URL, preserve them when navigating to a new path
+                        const currentQueryParams = window.location.search;
+                        window.location.href = path + currentQueryParams;
+                    }
+                    // If clicking on the nav item for the current path, do nothing (already on that page)
+                });
+            });
+
+            // Apply same navigation behavior to top tab buttons
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const path = button.dataset.path;
+                    // If current page path is /schedule and the clicked tab is also /schedule, just reload data
+                    if (path === '/schedule' && window.location.pathname === '/schedule') {
+                        tabButtons.forEach(btn => btn.classList.remove('active')); // Deactivate all tab buttons
+                        button.classList.add('active'); // Activate the clicked academic tab only
+
+                        getAcademicCalendar(academicCurrentDate); // Reload academic calendar data
+                    } else if (path && window.location.pathname !== path) {
+                        // If clicking another tab, navigate to that path (preserving query parameters)
+                        const currentQueryParams = window.location.search;
+                        window.location.href = path + currentQueryParams;
+                    }
+                });
+            });
+        }
+
+        /**
+         * Fetches the school name via NEIS API and updates the page title and school life section title.
+         * @param {string} eduCode - Education office code.
+         * @param {string} schoolCode - School code.
+         */
+        async function fetchSchoolNameAndSetTitle(eduCode, schoolCode) {
+            const apiUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=1&ATPT_OFCDC_SC_CODE=${eduCode}&SD_SCHUL_CODE=${schoolCode}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row && data.schoolInfo[1].row.length > 0) {
+                    currentEffectiveSchoolName = data.schoolInfo[1].row[0].SCHUL_NM;
+                    // Add space for better readability, e.g., "부산남중학교 학사일정"
+                    pageTitleElement.textContent = `${currentEffectiveSchoolName} 학사일정`;
+                    schoolLifeTitle.textContent = `${currentEffectiveSchoolName} 학사일정`; // Update school life section title as well
+                } else {
+                    console.log('School name not found. Using default name.');
+                    pageTitleElement.textContent = `N-MATE | 학사일정`;
+                    schoolLifeTitle.textContent = `학교생활`;
+                }
+            } catch (error) {
+                console.error('Error fetching school name:', error);
+                pageTitleElement.textContent = `N-MATE | 학사일정`;
+                schoolLifeTitle.textContent = `학교생활`;
+            }
+        }
+
+        /**
+         * Fetches user profile from Firestore.
+         * @param {string} userId - The unique ID of the current user.
+         * @returns {Object|null} The user profile data or null if not found/error.
+         */
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore instance is not initialized.');
+                return null;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log('User profile data not found.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                return null;
+            }
+        }
+
+        // --- Initialization on DOMContentLoaded ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) {
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase app, auth, and firestore initialized successfully.');
+
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+
+                            const queryParams = getQueryParams();
+                            const urlEduCode = queryParams.eduCode;
+                            const urlSchoolCode = queryParams.schoolCode;
+
+                            // Prioritize URL parameters if they exist
+                            if (urlEduCode && urlSchoolCode) {
+                                currentEffectiveEduCode = urlEduCode;
+                                currentEffectiveSchoolCode = urlSchoolCode;
+                                console.log('School info set from URL parameters:', currentEffectiveEduCode, currentEffectiveSchoolCode);
+                            } else if (user) {
+                                // If no URL parameters and user is logged in, fetch from Firebase profile
+                                const profile = await getUserProfile(user.uid);
+                                if (profile) {
+                                    currentEffectiveEduCode = profile.atptOfcdcScCode || currentEffectiveEduCode;
+                                    currentEffectiveSchoolCode = profile.sdSchulCode || currentEffectiveSchoolCode;
+
+                                    if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
+                                        console.warn('User profile is incomplete (missing school info). Using default values. Please update in settings.');
+                                    }
+                                    console.log('School info set from Firebase profile:', currentEffectiveEduCode, currentEffectiveSchoolCode);
+                                } else {
+                                    console.warn('User profile not found. Using default school info. Please set up your profile in settings.');
+                                }
+                            } else {
+                                console.log('Not authenticated. Using default school info (no URL parameters).');
+                            }
+                            
+                            // Fetch school name and update page and section titles
+                            await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode);
+
+                            // This page always displays 'academicScheduleContent'.
+                            showTab('academicScheduleContent');
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase initialization failed:', error);
+                        await updateAccountUI(null);
+                        // Even if Firebase init fails, set school name with default values
+                        await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode);
+                        showTab('academicScheduleContent');
+                    }
+                } else {
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase app already initialized. Using existing instance.');
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+
+                        const queryParams = getQueryParams();
+                        const urlEduCode = queryParams.eduCode;
+                        const urlSchoolCode = queryParams.schoolCode;
+
+                        if (urlEduCode && urlSchoolCode) {
+                            currentEffectiveEduCode = urlEduCode;
+                            currentEffectiveSchoolCode = urlSchoolCode;
+                        } else if (user) {
+                            const profile = await getUserProfile(user.uid);
+                            if (profile) {
+                                currentEffectiveEduCode = profile.atptOfcdcScCode || currentEffectiveEduCode;
+                                currentEffectiveSchoolCode = profile.sdSchulCode || currentEffectiveSchoolCode;
+                            }
+                        }
+                        
+                        await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode);
+                        showTab('academicScheduleContent');
+                    });
+                }
+            } else {
+                console.warn('Firebase configuration not provided. Cannot initialize Firebase.');
+                await updateAccountUI(null);
+                await fetchSchoolNameAndSetTitle(currentEffectiveEduCode, currentEffectiveSchoolCode);
+                showTab('academicScheduleContent');
+            }
+
+            // Attach event listeners for Academic Schedule (prev/next month)
+            academicPrevMonthButton.addEventListener('click', goToPrevAcademicMonth);
+            academicNextMonthButton.addEventListener('click', goToNextAcademicMonth);
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation for Lucide icons still used (e.g., account dropdown, calendar navigation)
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
