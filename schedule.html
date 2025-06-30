@@ -789,7 +789,7 @@
                 if (data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row && data.schoolInfo[1].row.length > 0) {
                     currentEffectiveSchoolName = data.schoolInfo[1].row[0].SCHUL_NM;
                     // Add space for better readability, e.g., "부산남중학교 학사일정"
-                    pageTitleElement.textContent = `${currentEffectiveSchoolName} 학사일정`;
+                    pageTitleElement.textContent = `${currentEffectiveSchoolName} 학사일정 | N-MATE`;
                     schoolLifeTitle.textContent = `${currentEffectiveSchoolName} 학사일정`; // Update school life section title as well
                 } else {
                     console.log('School name not found. Using default name.');
