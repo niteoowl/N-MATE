@@ -211,9 +211,9 @@
             <!-- 섹션 간 전환을 위한 탭 버튼 (시간표, 급식, 학사일정) -->
             <div class="tab-buttons-container">
                 <!-- data-path를 각 페이지 경로로 설정하여 페이지 이동 처리 -->
-                <button id="tab-timetable" class="tab-button" data-tab-id="timetableContent" data-path="/sclife/timetable">시간표</button>
-                <button id="tab-meal" class="tab-button" data-tab-id="mealContent" data-path="/sclife/meal">급식</button>
-                <button id="tab-academic" class="tab-button" data-tab-id="academicScheduleContent" data-path="/sclife/schedule">학사일정</button>
+                <button id="tab-timetable" class="tab-button" data-tab-id="timetableContent" data-path="/timetable">시간표</button>
+                <button id="tab-meal" class="tab-button" data-tab-id="mealContent" data-path="/meal">급식</button>
+                <button id="tab-academic" class="tab-button" data-tab-id="academicScheduleContent" data-path="/schedule">학사일정</button>
             </div>
 
             <!-- 급식 섹션 (이 페이지에서는 급식만 표시됩니다) -->
@@ -377,7 +377,11 @@
             // 선택된 탭 콘텐츠 표시
             mealContent.classList.remove('hidden');
             // 해당 탭 버튼 활성화
-            document.querySelector(`.tab-button[data-tab-id="${tabId}"]`).classList.add('active');
+            const mealTabButton = document.querySelector(`.tab-button[data-tab-id="${tabId}"]`);
+            if (mealTabButton) {
+                mealTabButton.classList.add('active');
+            }
+
 
             // 유효한 학교 정보를 확인
             if (!currentEffectiveEduCode || !currentEffectiveSchoolCode) {
@@ -532,7 +536,7 @@
 
         /**
          * NEIS API에서 특정 날짜의 급식 데이터를 가져와 표시합니다.
-         * @param {string} date - 급식 데이터를 가져올 YYYYMMDD 형식의 날짜.
+         * @param {string} date - 급식 데이터를 가져올NESDAYMMDD 형식의 날짜.
          * @param {string} eduCode - 교육청 코드.
          * @param {string} schoolCode - 학교 코드.
          */
@@ -666,14 +670,15 @@
          * 현재 URL 경로에 따라 내비게이션 바 버튼의 활성 상태를 업데이트합니다.
          */
         function updateNavigationActiveState() {
-            const currentPath = window.location.pathname;
-            const navItems = document.querySelectorAll('.nav-item');
+            const currentPathname = window.location.pathname; // 현재 페이지의 경로
 
+            const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 const itemPath = item.dataset.path;
                 const spanElement = item.querySelector('span');
                 const svgElement = item.querySelector('svg');
 
+                // 스타일 초기화
                 item.classList.remove('text-blue-600');
                 item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
@@ -685,8 +690,15 @@
                     svgElement.classList.add('text-gray-500'); // SVG도 회색 기본 색상을 갖도록 보장
                 }
 
-                // 정확한 경로 일치 또는 학교생활 버튼이고 현재 경로가 하위 경로 중 하나인지 확인
-                if (currentPath === itemPath || (itemPath === '/sclife' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
+                // 활성화 로직
+                let isActive = false;
+                if (currentPathname === itemPath) {
+                    isActive = true; // 정확한 경로 일치
+                } else if (itemPath === '/sclife' && (currentPathname === '/meal' || currentPathname === '/timetable' || currentPathname === '/schedule')) {
+                    isActive = true; // '학교생활' 내비게이션 항목은 학교생활 관련 페이지에서 활성화
+                }
+
+                if (isActive) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
@@ -699,6 +711,13 @@
                     }
                 }
             });
+
+            // 현재 페이지가 /meal인 경우, 급식 탭 버튼 활성화
+            const mealTabButton = document.querySelector(`.tab-button[data-path="/meal"]`);
+            if (mealTabButton && window.location.pathname === '/meal') {
+                tabButtons.forEach(button => button.classList.remove('active')); // 모든 탭 버튼 비활성화
+                mealTabButton.classList.add('active'); // 급식 탭만 활성화
+            }
         }
 
         /**
@@ -722,14 +741,11 @@
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const path = button.dataset.path;
-                    if (path && window.location.pathname !== path) {
-                        const currentQueryParams = window.location.search;
-                        window.location.href = path + currentQueryParams;
-                    } else if (path === window.location.pathname && path === '/sclife/meal') {
-                        // 급식 탭을 현재 급식 페이지에서 클릭하면, 탭 활성화 상태만 업데이트
-                        tabButtons.forEach(btn => btn.classList.remove('active'));
-                        button.classList.add('active');
-                        // 이 페이지는 급식만 보여주므로, 데이터 다시 불러오기
+                    // 현재 페이지 경로가 /meal이고, 클릭된 탭도 /meal이라면 데이터만 다시 로드
+                    if (path === '/meal' && window.location.pathname === '/meal') {
+                        tabButtons.forEach(btn => btn.classList.remove('active')); // 모든 탭 버튼 비활성화
+                        button.classList.add('active'); // 클릭된 급식 탭만 활성화
+
                         const todayDate = new Date();
                         const year = todayDate.getFullYear();
                         const month = String(todayDate.getMonth() + 1).padStart(2, '0');
@@ -737,6 +753,10 @@
                         const todayYYYYMMDD = `${year}${month}${day}`;
                         renderMealDateButtons(todayYYYYMMDD);
                         fetchMealData(todayYYYYMMDD, currentEffectiveEduCode, currentEffectiveSchoolCode);
+                    } else if (path && window.location.pathname !== path) {
+                        // 다른 탭을 클릭하면 해당 경로로 이동 (쿼리 파라미터 유지)
+                        const currentQueryParams = window.location.search;
+                        window.location.href = path + currentQueryParams;
                     }
                 });
             });
@@ -767,6 +787,31 @@
                 console.error('학교 이름 가져오기 오류:', error);
                 pageTitleElement.textContent = `N-MATE | 급식`;
                 schoolLifeTitle.textContent = `학교생활`;
+            }
+        }
+
+        /**
+         * Firestore에서 사용자 프로필을 가져옵니다.
+         * @param {string} userId - 현재 사용자의 고유 ID.
+         * @returns {Object|null} 사용자 프로필 데이터 또는 찾을 수 없거나 오류가 발생하면 null.
+         */
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                return null;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log('사용자 프로필 데이터를 찾을 수 없습니다.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('사용자 프로필 가져오기 오류:', error);
+                return null;
             }
         }
 
