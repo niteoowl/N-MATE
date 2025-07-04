@@ -25,56 +25,82 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: #ffffff; /* Light gray background */
+            transition: background-color 0.3s ease; /* 테마 변경 시 부드러운 전환 */
         }
 
-        /* Dark mode styles - Changed to blackish tones */
-        html.dark body {
-            background-color: #1a1a1a; /* Very dark gray/almost black background */
-            color: #e0e0e0; /* Lighter text for contrast */
+        /* Dark mode styles */
+        body.dark {
+            background-color: #121212; /* Dark background */
+            color: #e2e8f0; /* Light text color */
         }
 
-        html.dark .main-content-container {
-            background-color: #1a1a1a; /* Consistent with body background */
+        body.dark .main-content-container,
+        body.dark .content-box-item,
+        body.dark .settings-content,
+        body.dark .custom-dropdown-button,
+        body.dark .custom-dropdown-options,
+        body.dark .custom-dropdown-option,
+        body.dark #accountDropdown,
+        body.dark #accountDropdown button {
+            background-color: #121212; /* Darker background for elements */
+            border-color: #4a5568; /* Darker border color */
+            color: #e2e8f0; /* Light text color */
         }
 
-        html.dark .content-box-item {
-            background-color: #282828; /* Slightly lighter dark gray for content boxes */
-            border-color: #404040; /* Darker border for separation */
-            color: #e0e0e0;
+        body.dark .text-gray-800 {
+            color: #e2e8f0; /* Light text for titles */
         }
 
-        html.dark .content-box-item:hover {
-            background-color: #3a3a3a; /* Darker hover for content boxes */
+        body.dark .text-gray-700 {
+            color: #cbd5e0; /* Lighter gray text */
         }
 
-        html.dark .dropdown-menu {
-            background-color: #282828; /* Consistent with content boxes */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.24); /* Darker shadow */
+        body.dark .text-gray-600 {
+            color: #a0aec0; /* Even lighter gray text */
         }
 
-        html.dark .dropdown-menu button {
-            color: #e0e0e0;
+        body.dark .text-gray-500 {
+            color: #a0aec0; /* Lighter gray for icons and inactive nav */
         }
 
-        html.dark .dropdown-menu button:hover {
-            background-color: #3a3a3a;
+        body.dark .content-box-item:hover,
+        body.dark .custom-dropdown-option:hover,
+        body.dark #accountDropdown button:hover {
+            background-color: #1F1F1F; /* Darker hover state */
         }
 
-        html.dark .nav-item {
-            color: #b0b0b0; /* Neutral gray for inactive nav items */
+        body.dark .custom-dropdown-option.selected {
+            background-color: #3b82f6; /* Blue background for selected in dark mode */
+            color: #ffffff; /* White text for selected in dark mode */
         }
 
-        html.dark .nav-item:hover {
-            color: #ffffff; /* White hover for nav items */
-            background-color: #282828;
+        body.dark .nav-item.active {
+            color: #63b3ed; /* Lighter blue for active nav item in dark mode */
         }
 
-        html.dark .nav-item.active {
-            color: #ffffff; /* White for active nav items */
+        body.dark .nav-item.active svg {
+            color: #63b3ed; /* Lighter blue for active nav icon in dark mode */
         }
 
-        html.dark .nav-item.active span, html.dark .nav-item.active svg {
-            color: #ffffff; /* White for active text/svg in nav */
+        body.dark .nav-item:hover {
+            background-color: #1F1F1F; /* Darker hover for nav items */
+            color: #63b3ed; /* Lighter blue hover for nav items */
+        }
+
+        body.dark .border-gray-300 {
+            border-color: #1F1F1F; /* Darker border for inputs */
+        }
+
+        body.dark .shadow-sm {
+            box-shadow: none; /* Remove shadows in dark mode */
+        }
+
+        /* Dark mode for input fields */
+        body.dark input[type="text"],
+        body.dark input[type="email"] {
+            background-color: #212121; /* Dark background for input fields */
+            color: #e2e8f0; /* Light text color for input fields */
+            border-color: #4a5568; /* Darker border for input fields */
         }
 
         /* Main content container for centering and max-width */
@@ -96,7 +122,7 @@
             position: absolute; /* Relative to the parent with position: relative */
             background-color: white;
             border-radius: 0.5rem; /* rounded-md */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            box-shadow: none; /* Explicitly removed shadow */
             padding-top: 0.25rem; /* py-1 */
             padding-bottom: 0.25rem;
             min-width: 8rem; /* w-40 */
@@ -118,11 +144,11 @@
             background-color: #f3f4f6; /* hover:bg-gray-100 */
         }
 
-        /* General content box style for "설정" items */
+        /* General content box style for "더보기" items */
         .content-box-item {
             background-color: #ffffff;
             border-radius: 0.75rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e2e8f0; /* Added border to list items */
             padding: 1.25rem; /* py-5 */
             width: 100%;
             display: flex;
@@ -133,6 +159,7 @@
             color: #374151; /* text-gray-700 */
             cursor: pointer;
             transition: background-color 0.2s ease;
+            box-shadow: none; /* Explicitly removed shadow */
         }
 
         .content-box-item:hover {
@@ -142,69 +169,7 @@
             margin-top: 0.5rem; /* Space between items */
         }
 
-        /* Custom Toggle Switch Styles */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 38px; /* Adjusted width */
-            height: 22px; /* Adjusted height */
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 22px; /* Adjusted border-radius */
-        }
-
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 18px; /* Adjusted height */
-            width: 18px; /* Adjusted width */
-            left: 2px; /* Adjusted left */
-            bottom: 2px; /* Adjusted bottom */
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .toggle-slider {
-            background-color: #2196F3; /* Still blue for toggle for visibility, but could be changed */
-        }
-
-        input:focus + .toggle-slider {
-            box-shadow: 0 0 1px #2196F3;
-        }
-
-        input:checked + .toggle-slider:before {
-            transform: translateX(16px); /* Adjusted translateX */
-        }
-
         /* Bottom Navigation Bar Styles */
-        /* Explicitly set background and border for the nav element */
-        nav {
-            background-color: #ffffff; /* Default light background */
-            border-top: 1px solid #e2e8f0; /* Default light border */
-        }
-
-        /* Dark mode override for the nav element */
-        html.dark nav {
-            background-color: #1a1a1a; /* Dark mode background - blackish */
-            border-top: 1px solid #404040; /* Dark mode border - blackish */
-        }
-
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -228,6 +193,115 @@
         .nav-item.active svg {
             color: #2563eb; /* text-blue-600 */
         }
+
+        /* Dark mode for Bottom Navigation Bar */
+        body.dark .bottom-nav-bar {
+            background-color: #121212; /* Dark background for nav bar */
+            border-color: #1F1F1F; /* Darker border for nav bar */
+        }
+
+        body.dark .bottom-nav-bar .nav-item {
+            color: #a0aec0; /* Lighter gray for nav items in dark mode */
+        }
+
+        body.dark .bottom-nav-bar .nav-item:hover {
+            background-color: #1F1F1F; /* Darker hover for nav items */
+            color: #63b3ed; /* Lighter blue hover for nav items */
+        }
+
+        body.dark .bottom-nav-bar .nav-item.active {
+            color: #63b3ed; /* Lighter blue for active nav item in dark mode */
+        }
+
+        body.dark .bottom-nav-bar .nav-item.active svg {
+            color: #63b3ed; /* Lighter blue for active nav icon in dark mode */
+        }
+
+        /* Dark mode for Back Button hover */
+        body.dark #backButton:hover {
+            background-color: #1F1F1F; /* Darker hover for back button */
+        }
+
+        /* Content sections for settings */
+        .settings-content {
+            display: none; /* Hidden by default */
+            padding: 1.5rem;
+            background-color: #ffffff; /* White background */
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            border: 1px solid #e2e8f0; /* Gray border */
+            width: 100%;
+            box-shadow: none; /* Explicitly removed shadow */
+        }
+        .settings-content.active {
+            display: block; /* Shown when active */
+        }
+
+        /* Custom Dropdown Styles */
+        .custom-dropdown-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-dropdown-button {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            background-color: #ffffff;
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: none; /* Ensure no shadow */
+        }
+
+        .custom-dropdown-button:focus {
+            outline: none;
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* focus:ring-blue-500 */
+        }
+
+        .custom-dropdown-options {
+            position: absolute;
+            top: 100%; /* Position below the button */
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            margin-top: 0.25rem; /* space-y-1 */
+            z-index: 10; /* Ensure it's above other content */
+            box-shadow: none; /* Ensure no shadow */
+            max-height: 200px; /* Optional: for scrollable dropdowns */
+            overflow-y: auto; /* Optional: for scrollable dropdowns */
+        }
+
+        .custom-dropdown-option {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .custom-dropdown-option:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        .custom-dropdown-option.selected {
+            background-color: #eff6ff; /* bg-blue-50 */
+            color: #2563eb; /* text-blue-600 */
+            font-weight: 500; /* font-medium */
+        }
+
+        /* Specific style for the "테마 적용" button to remove its shadow */
+        #themeSettingsContent button {
+            box-shadow: none !important; /* Override Tailwind's shadow-md */
+        }
     </style>
 </head>
 <body>
@@ -239,7 +313,7 @@
         <div class="w-full flex justify-between items-center px-6 pt-4">
             <!-- Logo -->
             <div class="flex items-center">
-                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+                <img src="/image/logo.webp" alt="가로형 로고" class="h-12">
             </div>
 
             <!-- Account/Login section with dropdown -->
@@ -258,69 +332,68 @@
 
         <!-- Settings section container -->
         <div class="w-full flex flex-col items-start gap-y-2 px-6 mt-8 mb-4">
-            <!-- Section title -->
-            <h2 class="text-left text-xl font-bold text-gray-800 mb-2 dark:text-white">설정</h2>
-
-            <!-- Settings options -->
-            <div class="w-full flex flex-col gap-y-3">
-                <!-- 계정 정보 (Account Info) -->
-                <div class="content-box-item flex-col items-start">
-                    <div class="w-full flex justify-between items-center mb-2">
-                        <span>계정 정보</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500 dark:text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
-                    </div>
-                    <div id="accountInfoDisplay" class="text-sm text-gray-600 dark:text-gray-300 w-full">
-                        <!-- Account info will be populated here by JavaScript -->
-                        <p>이메일: 로딩 중...</p>
-                        <p>UID: 로딩 중...</p>
-                    </div>
-                    <button id="editProfileButton" class="mt-3 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md shadow transition duration-300 w-full text-center">
-                        프로필 수정
-                    </button>
-                </div>
-
-                <!-- 알림 설정 (Notifications) -->
-                <div class="content-box-item">
-                    <span>알림 설정</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="notificationsToggle">
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <!-- 개인정보 설정 (Privacy) -->
-                <button id="privacySettingsButton" class="content-box-item">
-                    <span>개인정보 설정</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500 dark:text-gray-400"><path d="m9 18 6-6-6-6"/></svg>
+            <div class="w-full flex items-center mb-2">
+                <button id="backButton" class="hidden mr-2 p-1 rounded-full hover:bg-gray-200" aria-label="뒤로가기">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left text-gray-700"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                 </button>
+                <h2 id="settingsTitle" class="text-left text-xl font-bold text-gray-800">설정</h2>
+            </div>
 
-                <!-- 언어 설정 (Language) -->
-                <div class="content-box-item">
-                    <span>언어 설정</span>
-                    <select id="languageSelect" class="bg-gray-100 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5">
-                        <option value="ko">한국어</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
+            <!-- Container for settings list -->
+            <div id="settingsList" class="w-full flex flex-col gap-y-3">
+                <button class="content-box-item" data-target="infoChangeContent" data-title="정보 변경">
+                    <span>정보 변경</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+                <button class="content-box-item" data-target="themeSettingsContent" data-title="테마 설정">
+                    <span>테마 설정</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right text-gray-500"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+            </div>
 
-                <!-- 테마 설정 (Theme) -->
-                <div class="content-box-item">
-                    <span>테마 설정 (다크 모드)</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="themeToggle">
-                        <span class="toggle-slider"></span>
-                    </label>
+            <!-- Content sections for settings -->
+            <div id="infoChangeContent" class="settings-content">
+                <div class="mt-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700">사용자 이름</label>
+                    <input type="text" id="username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
                 </div>
+                <div class="mt-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700">이메일</label>
+                    <input type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2">
+                </div>
+                <button class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300">
+                    정보 저장
+                </button>
+            </div>
+
+            <div id="themeSettingsContent" class="settings-content">
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">테마 선택</label>
+                    <div class="custom-dropdown-container">
+                        <button id="customThemeDropdownButton" class="custom-dropdown-button">
+                            <span id="selectedThemeText">밝은 테마</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-gray-500"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <div id="customThemeDropdownOptions" class="custom-dropdown-options hidden">
+                            <div class="custom-dropdown-option" data-value="light">밝은 테마</div>
+                            <div class="custom-dropdown-option" data-value="dark">어두운 테마</div>
+                            <div class="custom-dropdown-option" data-value="system">시스템 기본</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="applyThemeButton" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md shadow-md transition duration-300">
+                    테마 적용
+                </button>
             </div>
         </div>
 
     </div>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 p-3 border-t max-w-xl mx-auto w-full z-10">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10 bottom-nav-bar">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
-            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="홈" data-path="/">
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
                 </svg>
@@ -328,7 +401,7 @@
             </button>
 
             <!-- School Life Navigation Item (consolidated) -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="학교생활" data-path="/sclife/timetable">
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -336,7 +409,7 @@
             </button>
 
             <!-- Community Navigation Item -->
-            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="커뮤니티" data-path="/community">
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
                 </svg>
@@ -344,19 +417,19 @@
             </button>
 
             <!-- Calendar Navigation Item -->
-            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="캘린더" data-path="/calendar">
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
                 </svg>
                 <span class="text-xs font-medium">캘린더</span>
             </button>
 
-            <!-- More Navigation Item (now activates for /plus paths including /plus/settings) -->
-            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-blue-600 active dark:text-blue-400" data-tab="더보기" data-path="/plus">
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
                 </svg>
-                <span class="text-xs font-bold">더보기</span>
+                <span class="text-xs font-medium">더보기</span>
             </button>
         </div>
     </nav>
@@ -382,11 +455,16 @@
         // DOM elements
         const accountStatusArea = document.getElementById('accountStatusArea');
         const accountDropdown = document.getElementById('accountDropdown');
-        const accountInfoDisplay = document.getElementById('accountInfoDisplay');
-        const notificationsToggle = document.getElementById('notificationsToggle');
-        const privacySettingsButton = document.getElementById('privacySettingsButton');
-        const languageSelect = document.getElementById('languageSelect');
-        const themeToggle = document.getElementById('themeToggle');
+        const settingsList = document.getElementById('settingsList');
+        const settingsTitle = document.getElementById('settingsTitle');
+        const backButton = document.getElementById('backButton');
+        const applyThemeButton = document.getElementById('applyThemeButton'); // 테마 적용 버튼
+
+        // Custom dropdown elements
+        const customThemeDropdownButton = document.getElementById('customThemeDropdownButton');
+        const customThemeDropdownOptions = document.getElementById('customThemeDropdownOptions');
+        const selectedThemeText = document.getElementById('selectedThemeText');
+        let currentSelectedTheme = localStorage.getItem('theme') || 'system'; // 로컬 스토리지에서 테마 로드, 없으면 시스템 기본
 
         /**
          * Toggles the visibility of the account dropdown menu.
@@ -414,7 +492,7 @@
          * Handles navigation to the settings page.
          */
         function handleSettingsClick() {
-            window.location.href = '/plus/settings';
+            window.location.href = '/settings';
         }
 
         /**
@@ -445,14 +523,8 @@
                     logoutButton.dataset.listenerAdded = 'true';
                 }
 
-                // Update account info display
-                accountInfoDisplay.innerHTML = `
-                    <p>이메일: <span class="font-semibold">${user.email}</span></p>
-                    <p>UID: <span class="font-semibold">${user.uid}</span></p>
-                `;
-
             } else {
-                // User is logged out
+                // User is logged out or does not have an email (e.g., anonymous, but we don't use it now)
                 accountStatusArea.innerHTML = `
                     <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
                         로그인
@@ -462,91 +534,8 @@
                     window.location.href = '/login';
                 });
                 accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
-
-                // Clear account info display
-                accountInfoDisplay.innerHTML = `
-                    <p>로그인하여 계정 정보를 확인하세요.</p>
-                `;
             }
-        }
-
-        /**
-         * Initializes the state of the notifications toggle switch from localStorage.
-         */
-        function initializeNotificationsSetting() {
-            const notificationsEnabled = localStorage.getItem('notificationsEnabled');
-            if (notificationsEnabled === 'true') {
-                notificationsToggle.checked = true;
-            } else {
-                notificationsToggle.checked = false;
-            }
-
-            notificationsToggle.addEventListener('change', (event) => {
-                localStorage.setItem('notificationsEnabled', event.target.checked);
-                console.log('알림 설정:', event.target.checked ? '켜짐' : '꺼짐');
-            });
-        }
-
-        /**
-         * Handles the click event for the privacy settings button.
-         */
-        function handlePrivacySettings() {
-            // In a real application, this would navigate to a privacy settings page
-            console.log('개인정보 설정 페이지로 이동 (기능 미구현)');
-            // For demonstration, you could show a temporary message or modal
-            // alert('개인정보 설정 기능은 현재 개발 중입니다.');
-        }
-
-        /**
-         * Initializes the state of the language select dropdown from localStorage.
-         */
-        function initializeLanguageSetting() {
-            const savedLanguage = localStorage.getItem('selectedLanguage');
-            if (savedLanguage) {
-                languageSelect.value = savedLanguage;
-            } else {
-                // Default to Korean if no language is saved
-                languageSelect.value = 'ko';
-                localStorage.setItem('selectedLanguage', 'ko');
-            }
-
-            languageSelect.addEventListener('change', (event) => {
-                localStorage.setItem('selectedLanguage', event.target.value);
-                console.log('언어 설정:', event.target.value);
-                // In a real application, you would trigger UI re-render or page reload for language change
-            });
-        }
-
-        /**
-         * Initializes the state of the theme toggle switch and applies the theme from localStorage.
-         */
-        function initializeThemeSetting() {
-            const savedTheme = localStorage.getItem('theme');
-
-            // Apply theme on load
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark');
-                themeToggle.checked = true;
-            } else {
-                document.documentElement.classList.remove('dark');
-                themeToggle.checked = false;
-                // Default to light mode if nothing is saved
-                if (!savedTheme) {
-                    localStorage.setItem('theme', 'light');
-                }
-            }
-
-            themeToggle.addEventListener('change', (event) => {
-                if (event.target.checked) {
-                    document.documentElement.classList.add('dark');
-                    localStorage.setItem('theme', 'dark');
-                    console.log('테마 설정: 다크 모드');
-                } else {
-                    document.documentElement.classList.remove('dark');
-                    localStorage.setItem('theme', 'light');
-                    console.log('테마 설정: 라이트 모드');
-                }
-            });
+            // lucide.createIcons(); // SVG로 직접 변경했으므로 이 줄은 더 이상 필요 없을 수 있음 (다른 아이콘이 있다면 필요)
         }
 
         /**
@@ -562,54 +551,55 @@
                 const svgElement = item.querySelector('svg');
 
                 // Reset all nav items to default (inactive) state
-                item.classList.remove('text-blue-600', 'active', 'dark:text-white');
-                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                item.classList.remove('text-blue-600', 'active');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                 if (spanElement) {
                     spanElement.classList.remove('font-bold');
                     spanElement.classList.add('font-medium');
                 }
                 if (svgElement) {
-                    svgElement.classList.remove('text-blue-600', 'dark:text-white');
+                    svgElement.classList.remove('text-blue-600');
                     svgElement.classList.add('text-gray-500');
                 }
 
                 // Check for exact path match or if it's the community button and current path is within /community or /write section
                 if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write') || currentPath.startsWith('/view')))) {
-                    item.classList.add('text-blue-600', 'active', 'dark:text-white');
-                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white');
+                        svgElement.classList.add('text-blue-600');
                         svgElement.classList.remove('text-gray-500');
                     }
                 } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
-                    item.classList.add('text-blue-600', 'active', 'dark:text-white');
-                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                    item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white');
+                        svgElement.classList.add('text-blue-600');
                         svgElement.classList.remove('text-gray-500');
                     }
-                } else if (item.id === 'nav-more' && currentPath.startsWith('/plus')) {
-                     item.classList.add('text-blue-600', 'active', 'dark:text-white');
-                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50', 'dark:hover:bg-gray-700');
+                } else if (item.id === 'nav-more' && (currentPath.startsWith('/more') || currentPath.startsWith('/settings'))) { // Added /settings to nav-more active state
+                     item.classList.add('text-blue-600', 'active');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
                     if (spanElement) {
                         spanElement.classList.add('font-bold');
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600', 'dark:text-white');
+                        svgElement.classList.add('text-blue-600');
                         svgElement.classList.remove('text-gray-500');
                     }
                 }
             });
         }
+
 
         /**
          * Sets up click event listeners for navigation items.
@@ -621,44 +611,142 @@
                     const path = item.dataset.path;
                     const currentPathname = window.location.pathname;
 
-                    // If navigating to the same path, do nothing
                     if (currentPathname !== path) {
                         if (item.id === 'nav-school-life') {
                             localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
                         } else {
                             localStorage.removeItem('initialSchoolLifeTab');
                         }
-                        // For the '더보기' (More) tab, if the current path is settings, it should still go to '/plus'
-                        // This ensures clicking the '더보기' button from a sub-page like settings still lands on the main '더보기' page.
-                        if (item.id === 'nav-more' && currentPathname.startsWith('/plus') && path === '/plus') {
-                             // Do nothing if already on a /plus subpath and clicking the parent /plus path again
-                             return;
-                        }
-
                         window.location.href = path;
                     }
                 });
             });
         }
 
+        /**
+         * Shows the specified content section and hides others, hiding the settings list.
+         * @param {string} targetId - The ID of the content section to show.
+         * @param {string} title - The title to display in the header.
+         */
+        function showSettingsContent(targetId, title) {
+            // Hide all settings content sections
+            const contents = document.querySelectorAll('.settings-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show the target content section
+            document.getElementById(targetId).classList.add('active');
+
+            // Hide the settings list
+            settingsList.classList.add('hidden');
+
+            // Update title and show back button
+            settingsTitle.textContent = title;
+            backButton.classList.remove('hidden');
+        }
+
+        /**
+         * Shows the main settings list and hides all content sections.
+         */
+        function showSettingsList() {
+            // Hide all settings content sections
+            const contents = document.querySelectorAll('.settings-content');
+            contents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show the settings list
+            settingsList.classList.remove('hidden');
+
+            // Reset title and hide back button
+            settingsTitle.textContent = '설정';
+            backButton.classList.add('hidden');
+        }
+
+        /**
+         * Toggles the visibility of the custom theme dropdown options.
+         */
+        function toggleCustomThemeDropdown() {
+            customThemeDropdownOptions.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles the selection of a theme from the custom dropdown.
+         * @param {Event} event - The click event.
+         */
+        function handleThemeOptionClick(event) {
+            const selectedOption = event.target;
+            const value = selectedOption.dataset.value;
+            const text = selectedOption.textContent;
+
+            selectedThemeText.textContent = text;
+            currentSelectedTheme = value; // 선택된 테마 업데이트
+
+            // 로컬 스토리지에 테마 저장
+            localStorage.setItem('theme', currentSelectedTheme);
+
+            customThemeDropdownOptions.classList.add('hidden'); // 드롭다운 숨기기
+
+            // 모든 옵션에서 'selected' 클래스 제거
+            document.querySelectorAll('.custom-dropdown-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // 클릭된 옵션에 'selected' 클래스 추가
+            selectedOption.classList.add('selected');
+
+            console.log('Selected theme:', currentSelectedTheme);
+        }
+
+        /**
+         * Applies the selected theme to the body element.
+         * @param {string} theme - The theme to apply ('light', 'dark', 'system').
+         */
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'dark') {
+                body.classList.add('dark');
+            } else if (theme === 'light') {
+                body.classList.remove('dark');
+            } else if (theme === 'system') {
+                // 시스템 설정에 따라 다크 모드 적용
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    body.classList.add('dark');
+                } else {
+                    body.classList.remove('dark');
+                }
+            }
+        }
+
+        // 시스템 테마 변경 감지 리스너 (system 테마 선택 시에만 동작)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (currentSelectedTheme === 'system') {
+                applyTheme('system');
+            }
+        });
+
+
         // Initialize data fetching/page specific logic for this page
         async function initializePageData() {
             console.log("설정 페이지 초기화 완료.");
-            initializeNotificationsSetting();
-            initializeLanguageSetting();
-            initializeThemeSetting();
+            // Show the settings list by default on page load
+            showSettingsList();
 
-            // Attach specific event listeners for settings sections
-            if (privacySettingsButton) {
-                privacySettingsButton.addEventListener('click', handlePrivacySettings);
+            // Set initial selected theme for custom dropdown
+            const initialThemeOption = document.querySelector(`.custom-dropdown-option[data-value="${currentSelectedTheme}"]`);
+            if (initialThemeOption) {
+                selectedThemeText.textContent = initialThemeOption.textContent;
+                initialThemeOption.classList.add('selected');
+            } else {
+                // If the stored theme is invalid or not found, default to system and update UI
+                currentSelectedTheme = 'system';
+                localStorage.setItem('theme', 'system');
+                document.querySelector(`.custom-dropdown-option[data-value="system"]`).classList.add('selected');
+                selectedThemeText.textContent = '시스템 기본';
             }
-            const editProfileButton = document.getElementById('editProfileButton');
-            if (editProfileButton) {
-                editProfileButton.addEventListener('click', () => {
-                    console.log('프로필 수정 페이지로 이동 (기능 미구현)');
-                    // alert('프로필 수정 기능은 현재 개발 중입니다.');
-                });
-            }
+
+            // 페이지 로드 시 저장된 테마 적용
+            applyTheme(currentSelectedTheme);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -703,7 +791,38 @@
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
                     accountDropdown.classList.add('hidden');
                 }
+                // Close custom theme dropdown if clicked outside
+                if (customThemeDropdownButton && !customThemeDropdownButton.contains(e.target) && !customThemeDropdownOptions.contains(e.target)) {
+                    customThemeDropdownOptions.classList.add('hidden');
+                }
             });
+
+            // Setup click handlers for settings items
+            document.querySelectorAll('.content-box-item').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const targetId = button.dataset.target;
+                    const title = button.dataset.title;
+                    showSettingsContent(targetId, title);
+                });
+            });
+
+            // Setup click handler for the back button
+            backButton.addEventListener('click', showSettingsList);
+
+            // Custom Theme Dropdown Event Listeners
+            if (customThemeDropdownButton) {
+                customThemeDropdownButton.addEventListener('click', toggleCustomThemeDropdown);
+            }
+            document.querySelectorAll('.custom-dropdown-option').forEach(option => {
+                option.addEventListener('click', handleThemeOptionClick);
+            });
+
+            // "테마 적용" 버튼 클릭 시 현재 선택된 테마 적용
+            if (applyThemeButton) {
+                applyThemeButton.addEventListener('click', () => {
+                    applyTheme(currentSelectedTheme);
+                });
+            }
 
             // Setup navigation click handlers
             setupNavigationEvents();
@@ -711,6 +830,7 @@
             updateNavigationActiveState();
 
             // Initial icon creation (if Lucide is used for other elements)
+            // If only inline SVGs are used for nav bar, this might not be strictly necessary for nav icons
             lucide.createIcons();
         });
     </script>
