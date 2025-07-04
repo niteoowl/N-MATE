@@ -31,7 +31,215 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: #ffffff; /* Light gray background */
+            transition: background-color 0.3s ease; /* 테마 변경 시 부드러운 전환 */
         }
+
+        /* Dark mode styles */
+        body.dark {
+            background-color: #121212; /* Dark background */
+            color: #e2e8f0; /* Light text color */
+        }
+
+        /* Dark mode for main content containers and dropdowns */
+        body.dark .main-content-container,
+        body.dark .dropdown-menu,
+        body.dark .dropdown-menu button {
+            background-color: #121212;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        /* Specific background for content boxes in dark mode */
+        body.dark #countdownBox,
+        body.dark #triviaDisplaySection,
+        body.dark .academic-schedule-content-box,
+        body.dark .meal-content-box {
+            background-color: #121212;
+            border-color: #1F1F1F; /* Consistent border for content boxes */
+        }
+
+        /* Specific background for timetable and meal sections in dark mode */
+        body.dark #timetable-display-section,
+        body.dark #meal-display-section {
+            background-color: #121212;
+        }
+
+        /* Dark mode for various text colors */
+        body.dark .text-gray-800 {
+            color: #e2e8f0;
+        }
+        body.dark .text-gray-700 {
+            color: #cbd5e0;
+        }
+        body.dark .text-gray-600 {
+            color: #a0aec0;
+        }
+        body.dark .text-gray-500 {
+            color: #a0aec0;
+        }
+
+        /* Dark mode for dropdown button hover */
+        body.dark .dropdown-menu button:hover {
+            background-color: #1F1F1F;
+        }
+
+        /* Dark mode for navigation items */
+        body.dark .nav-item.active {
+            color: #63b3ed;
+        }
+        body.dark .nav-item.active svg {
+            color: #63b3ed;
+        }
+        body.dark .nav-item:hover {
+            background-color: #1F1F1F;
+            color: #63b3ed;
+        }
+
+        /* Ensure all elements using border-gray-300 have the correct dark mode border color */
+        body.dark .border-gray-300 {
+            border-color: #1F1F1F;
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        /* Remove shadows in dark mode */
+        body.dark .shadow-sm {
+            box-shadow: none;
+        }
+
+        /* Dark mode for Bottom Navigation Bar */
+        body.dark .bottom-nav-bar {
+            background-color: #121212;
+            border-color: #1F1F1F;
+        }
+        body.dark .bottom-nav-bar .nav-item {
+            color: #a0aec0;
+        }
+        body.dark .bottom-nav-bar .nav-item:hover {
+            background-color: #1F1F1F;
+            color: #63b3ed;
+        }
+        body.dark .bottom-nav-bar .nav-item.active {
+            color: #63b3ed;
+        }
+        body.dark .bottom-nav-bar .nav-item.active svg {
+            color: #63b3ed;
+        }
+
+        /* Dark mode for skeleton loader */
+        body.dark .skeleton {
+            background: linear-gradient(-90deg, #2d3748 0%, #3a475a 50%, #2d3748 100%);
+            background-size: 200% 100%;
+        }
+
+        /* Dark mode for text inside various sections */
+        body.dark #countdownBox p,
+        body.dark #timetable-display-section p,
+        body.dark #timetable-display-section strong,
+        body.dark #meal-display-section p,
+        body.dark #meal-display-section strong,
+        body.dark #triviaDisplaySection p {
+            color: #e2e8f0 !important;
+        }
+
+        /* Dark mode for skeleton loader text */
+        body.dark .skeleton.skeleton-text {
+            color: transparent;
+        }
+
+        /* Dark mode for tab buttons */
+        body.dark .tab-buttons-container {
+            border-bottom-color: #1F1F1F;
+        }
+        body.dark .tab-button {
+            color: #cbd5e0;
+        }
+        body.dark .tab-button.active {
+            color: #63b3ed;
+            border-bottom-color: #63b3ed;
+        }
+        body.dark .tab-button:hover:not(.active) {
+            color: #63b3ed;
+            background-color: #1F1F1F;
+        }
+
+        /* Dark mode for calendar navigation */
+        body.dark .calendar-nav button {
+            color: #cbd5e0;
+        }
+        body.dark .calendar-nav button:hover {
+            color: #63b3ed;
+        }
+        body.dark .calendar-nav span {
+            color: #e2e8f0;
+        }
+
+        /* Dark mode for calendar grid */
+        body.dark .calendar-grid {
+            background-color: #1F1F1F; /* Darker background for grid lines */
+        }
+        body.dark .calendar-header-day {
+            background-color: #121212;
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell {
+            background-color: #121212;
+            color: #cbd5e0;
+        }
+        body.dark .calendar-cell.inactive-month {
+            background-color: #1F1F1F;
+            color: #a0aec0;
+        }
+        body.dark .calendar-cell.today {
+            background-color: #2d3748; /* Slightly different background for today */
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell-date {
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell-event {
+            color: #cbd5e0;
+        }
+
+        /* Dark mode for timetable table */
+        body.dark .timetable-table thead th {
+            border-bottom-color: #1F1F1F;
+            color: #cbd5e0;
+            background-color: #121212;
+        }
+        body.dark .timetable-table tbody td {
+            border-bottom-color: #1F1F1F;
+            color: #cbd5e0;
+        }
+        body.dark .timetable-table .lunch-break {
+            background-color: #1F1F1F;
+            color: #cbd5e0;
+            border-top-color: #1F1F1F;
+            border-bottom-color: #1F1F1F;
+        }
+
+        /* Dark mode for meal date buttons */
+        body.dark .date-button-container {
+            background-color: #1F1F1F;
+        }
+        body.dark .date-button {
+            color: #cbd5e0;
+        }
+        body.dark .date-button.active {
+            background-color: #3b82f6; /* Blue remains for active */
+            color: #ffffff;
+        }
+        body.dark .date-button:not(.active):hover {
+            background-color: #2d3748;
+        }
+
+        /* Dark mode for date picker input */
+        body.dark input[type="date"] {
+            background-color: #121212;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+
         /* Skeleton Loader animation for loading states */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
@@ -237,7 +445,7 @@
             text-align: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-600에서 Gray-700으로 변경 */
             background-color: #ffffff;
         }
         .timetable-table tbody td {
@@ -301,7 +509,7 @@
             border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-600(#4b5563)에서 Gray-700으로 조정 */
             background-color: transparent;
             transition: all 0.2s ease;
             text-align: center;
@@ -421,7 +629,7 @@
     </div>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10 bottom-nav-bar">
         <div class="flex justify-around items-center h-12">
             <!-- Home Navigation Item -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
@@ -475,7 +683,7 @@
     <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <script>
-        // Global variables for Firebase configuration (provided by Canvas environment)
+        // Firebase 구성 정보를 위한 전역 변수 (Canvas 환경에서 제공)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -536,6 +744,36 @@
             timetableContent: false,
             mealContent: false
         };
+
+        // 로컬 스토리지에서 테마 로드, 없으면 시스템 기본
+        let currentSelectedTheme = localStorage.getItem('theme') || 'system';
+
+        /**
+         * 선택된 테마를 body 요소에 적용합니다.
+         * @param {string} theme - 적용할 테마 ('light', 'dark', 'system').
+         */
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'dark') {
+                body.classList.add('dark');
+            } else if (theme === 'light') {
+                body.classList.remove('dark');
+            } else if (theme === 'system') {
+                // 시스템 설정에 따라 다크 모드 적용
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    body.classList.add('dark');
+                } else {
+                    body.classList.remove('dark');
+                }
+            }
+        }
+
+        // 시스템 테마 변경 감지 리스너 (system 테마 선택 시에만 동작)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (currentSelectedTheme === 'system') {
+                applyTheme('system');
+            }
+        });
 
 
         /**
@@ -1260,6 +1498,9 @@
 
         // --- Initialization on DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', async () => {
+            // 페이지 로드 시 저장된 테마 적용
+            applyTheme(currentSelectedTheme);
+
             // Firebase initialization
             if (firebaseConfig && firebaseConfig.apiKey) {
                 if (firebase.apps.length === 0) {
