@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/png" href="/image/simbol.png" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/png" href="/image/dark_simbol.png" media="(prefers-color-scheme: dark)">
-    <meta name="description" content="우리반 시간표를 확인하세요! 부산남중 학생을 위한 간편한 시간표 조회 서비스를 제공합니다.">
+    <meta name="description" content="우리반 시간표를 확인하세요! 중학생을 위한 간편한 시간표 조회 서비스를 제공합니다.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>부산남중학교 N-MATE - 학교생활</title>
     <!-- Tailwind CSS CDN -->
@@ -31,8 +31,218 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: #ffffff; /* Light gray background */
+            transition: background-color 0.3s ease; /* 테마 변경 시 부드러운 전환 */
         }
-        /* Skeleton Loader animation for loading states */
+
+        /* Dark mode styles */
+        body.dark {
+            background-color: #121212; /* Dark background */
+            color: #e2e8f0; /* Light text color */
+        }
+
+        /* Dark mode for main content containers and dropdowns */
+        body.dark .main-content-container,
+        body.dark .dropdown-menu,
+        body.dark .dropdown-menu button {
+            background-color: #121212;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+
+        /* Specific background for content boxes in dark mode */
+        body.dark #countdownBox,
+        body.dark #triviaDisplaySection,
+        body.dark .academic-schedule-content-box,
+        body.dark .meal-content-box {
+            background-color: #121212;
+            border-color: #1F1F1F; /* Consistent border for content boxes */
+        }
+
+        /* Specific background for timetable and meal sections in dark mode */
+        body.dark #timetable-display-section,
+        body.dark #meal-display-section {
+            background-color: #121212;
+        }
+
+        /* Dark mode for various text colors */
+        body.dark .text-gray-800 {
+            color: #e2e8f0;
+        }
+        body.dark .text-gray-700 {
+            color: #cbd5e0;
+        }
+        body.dark .text-gray-600 {
+            color: #a0aec0;
+        }
+        body.dark .text-gray-500 {
+            color: #a0aec0;
+        }
+
+        /* Dark mode for dropdown button hover */
+        body.dark .dropdown-menu button:hover {
+            background-color: #1F1F1F;
+        }
+
+        /* Dark mode for navigation items */
+        body.dark .nav-item.active {
+            color: #63b3ed;
+        }
+        body.dark .nav-item.active svg {
+            color: #63b3ed;
+        }
+        body.dark .nav-item:hover {
+            background-color: #1F1F1F;
+            color: #63b3ed;
+        }
+
+        /* Ensure all elements using border-gray-300 have the correct dark mode border color */
+        body.dark .border-gray-300 {
+            border-color: #1F1F1F;
+            border-style: solid;
+            border-width: 1px;
+        }
+
+        /* Remove shadows in dark mode */
+        body.dark .shadow-sm {
+            box-shadow: none;
+        }
+
+        /* Dark mode for Bottom Navigation Bar */
+        body.dark .bottom-nav-bar {
+            background-color: #121212;
+            border-color: #1F1F1F;
+        }
+        body.dark .bottom-nav-bar .nav-item {
+            color: #a0aec0;
+        }
+        body.dark .bottom-nav-bar .nav-item:hover {
+            background-color: #1F1F1F;
+            color: #63b3ed;
+        }
+        body.dark .bottom-nav-bar .nav-item.active {
+            color: #63b3ed;
+        }
+        body.dark .bottom-nav-bar .nav-item.active svg {
+            color: #63b3ed;
+        }
+
+        /* Dark mode for skeleton loader */
+        body.dark .skeleton {
+            background: linear-gradient(-90deg, #2d3748 0%, #3a475a 50%, #2d3748 100%);
+            background-size: 200% 100%;
+        }
+
+        /* Dark mode for text inside various sections */
+        body.dark #countdownBox p,
+        body.dark #timetable-display-section p,
+        body.dark #timetable-display-section strong,
+        body.dark #meal-display-section p,
+        body.dark #meal-display-section strong,
+        body.dark #triviaDisplaySection p {
+            color: #e2e8f0 !important;
+        }
+
+        /* Dark mode for skeleton loader text */
+        body.dark .skeleton.skeleton-text {
+            color: transparent;
+        }
+
+        /* Dark mode for tab buttons */
+        body.dark .tab-buttons-container {
+            border-bottom-color: #1F1F1F;
+        }
+        body.dark .tab-button {
+            color: #cbd5e0;
+        }
+        body.dark .tab-button.active {
+            color: #63b3ed;
+            border-bottom-color: #63b3ed;
+        }
+        body.dark .tab-button:hover:not(.active) {
+            color: #63b3ed;
+            background-color: #1F1F1F;
+        }
+
+        /* Dark mode for calendar navigation */
+        body.dark .calendar-nav button {
+            color: #cbd5e0;
+        }
+        body.dark .calendar-nav button:hover {
+            color: #63b3ed;
+        }
+        body.dark .calendar-nav span {
+            color: #e2e8f0;
+        }
+
+        /* Dark mode for calendar grid */
+        body.dark .calendar-grid {
+            background-color: #1F1F1F; /* Darker background for grid lines */
+        }
+        body.dark .calendar-header-day {
+            background-color: #121212;
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell {
+            background-color: #121212;
+            color: #cbd5e0;
+        }
+        body.dark .calendar-cell.inactive-month {
+            background-color: #1F1F1F;
+            color: #a0aec0;
+        }
+        body.dark .calendar-cell.today {
+            background-color: #2d3748; /* Slightly different background for today */
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell-date {
+            color: #e2e8f0;
+        }
+        body.dark .calendar-cell-event {
+            color: #cbd5e0;
+        }
+
+        /* Dark mode for timetable table */
+        body.dark .timetable-table thead th {
+            border-bottom-color: #1F1F1F;
+            color: #cbd5e0;
+            background-color: #121212;
+        }
+        body.dark .timetable-table tbody td {
+            border-bottom-color: #1F1F1F;
+            color: #cbd5e0;
+            background-color: #121212; /* Added background for cells */
+        }
+        body.dark .timetable-table .lunch-break {
+            background-color: #1F1F1F;
+            color: #cbd5e0;
+            border-top-color: #1F1F1F;
+            border-bottom-color: #1F1F1F;
+        }
+
+        /* Dark mode for meal date buttons */
+        body.dark .date-button-container {
+            background-color: #1F1F1F;
+        }
+        body.dark .date-button {
+            color: #cbd5e0;
+        }
+    
+        body.dark .date-button.active {
+            background-color: #3b82f6; /* Blue remains for active */
+            color: #ffffff;
+        }
+        body.dark .date-button:not(.active):hover {
+            background-color: #2d3748;
+        }
+
+        /* Dark mode for date picker input */
+        body.dark input[type="date"] {
+            background-color: #121212;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+
+        /* 스켈레톤 로더 애니메이션 */
         .skeleton {
             animation: pulse 1.5s infinite ease-in-out;
             background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
@@ -42,43 +252,46 @@
             0% {
                 background-position: -200% 0;
             }
-            100% {
+            50% {
                 background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
             }
         }
         .skeleton-text {
-            height: 1em; /* Adjust as needed */
-            width: 80%; /* Adjust as needed */
+            height: 1em; /* 필요에 따라 조정 */
+            width: 80%; /* 필요에 따라 조정 */
             margin-bottom: 0.5em;
             border-radius: 4px;
         }
 
-        /* Main content container for centering and max-width */
+        /* 메인 콘텐츠 컨테이너 */
         .main-content-container {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; /* Aligns content to the left */
-            max-width: 36rem; /* Max width for content - Adjusted back to 36rem to match bottom nav */
+            align-items: flex-start; /* 콘텐츠를 왼쪽으로 정렬 */
+            max-width: 36rem; /* 콘텐츠 최대 너비 */
             margin-left: auto;
             margin-right: auto;
             width: 100%;
-            position: relative; /* For absolute positioning of dropdown menu */
-            padding-bottom: 70px; /* Space for fixed bottom navigation */
+            position: relative; /* 드롭다운 메뉴 절대 위치 지정을 위해 */
+            padding-bottom: 70px; /* 하단 고정 내비게이션 바를 위한 공간 */
         }
 
-        /* Dropdown menu styles */
+        /* 드롭다운 메뉴 스타일 */
         .dropdown-menu {
-            position: absolute; /* Relative to the parent with position: relative */
+            position: absolute; /* position: relative인 부모에 상대적 */
             background-color: white;
             border-radius: 0.5rem; /* rounded-md */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
             padding-top: 0.25rem; /* py-1 */
             padding-bottom: 0.25rem;
             min-width: 8rem; /* w-40 */
-            right: 0; /* Aligns to the right of the account tab button */
-            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
-            z-index: 20; /* Ensures it appears above other content */
+            right: 0; /* 계정 탭 버튼의 오른쪽에 정렬 */
+            top: calc(100% + 0.5rem); /* 버튼 아래 0.5rem 간격으로 배치 */
+            z-index: 20; /* 다른 콘텐츠 위에 표시되도록 보장 */
         }
 
         .dropdown-menu button {
@@ -94,23 +307,23 @@
             background-color: #f3f4f6; /* hover:bg-gray-100 */
         }
 
-        /* Tab buttons container for switching between sections */
+        /* 탭 버튼 컨테이너 스타일 */
         .tab-buttons-container {
             display: flex;
-            width: 100%; /* Adjusted to take full width of its px-4 parent */
-            margin-top: 1.5rem; /* Top margin for separation */
-            margin-bottom: 0.5rem; /* Bottom margin */
-            border-bottom: 2px solid #e5e7eb; /* Gray-200 for separator */
+            width: 100%; /* px-6 부모의 전체 너비를 차지하도록 조정 */
+            margin-top: 1.5rem; /* 상단 여백 */
+            margin-bottom: 0.5rem; /* 하단 여백 */
+            border-bottom: 2px solid #e5e7eb; /* 구분선 */
         }
         .tab-button {
             flex-grow: 1;
             padding: 0.75rem 1rem;
             font-size: 1rem;
             font-weight: 600;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-500(#6b7280)에서 Gray-700으로 조정 */
             background-color: transparent;
             border: none;
-            border-bottom: 2px solid transparent; /* Transparent border for inactive */
+            border-bottom: 2px solid transparent; /* 비활성 상태 투명 테두리 */
             transition: all 0.2s ease;
             cursor: pointer;
             outline: none;
@@ -118,14 +331,14 @@
         }
         .tab-button.active {
             color: #3b82f6; /* Blue-500 */
-            border-bottom-color: #3b82f6; /* Blue-500 for active tab */
+            border-bottom-color: #3b82f6; /* 활성 탭에 Blue-500 테두리 */
         }
         .tab-button:hover:not(.active) {
-            color: #4f46e5; /* Indigo-600 on hover */
-            background-color: #f9fafb; /* Lighter background on hover */
+            color: #4f46e5; /* 호버 시 Indigo-600 */
+            background-color: #f9fafb; /* 호버 시 더 밝은 배경 */
         }
 
-        /* Specific styles for academic schedule content area */
+        /* 학사일정 콘텐츠 영역 특정 스타일 */
         .academic-schedule-content-box {
             background-color: #ffffff;
             border-radius: 0.75rem;
@@ -135,7 +348,7 @@
             width: 100%;
             overflow: hidden;
         }
-        /* Calendar navigation styles */
+        /* 캘린더 내비게이션 스타일 */
         .calendar-nav {
             display: flex;
             justify-content: space-between;
@@ -146,7 +359,7 @@
         }
         .calendar-nav button {
             background-color: transparent;
-            color: #4b5563;
+            color: #4b5563; /* Gray-600 */
             padding: 0;
             border-radius: 0;
             transition: color 0.2s ease;
@@ -166,7 +379,7 @@
             font-weight: 600;
             color: #1f2937;
         }
-        /* Calendar grid specific styles */
+        /* 캘린더 그리드 특정 스타일 */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -180,7 +393,7 @@
             text-align: center;
             padding: 0.75rem 0.25rem;
             font-size: 0.75rem;
-            color: #1f2937; /* Gray-900 (접근성 개선) */
+            color: #1f2937; /* 대비율 개선을 위해 Gray-600에서 Gray-900으로 변경 */
         }
         .calendar-cell {
             background-color: #ffffff;
@@ -191,7 +404,7 @@
             align-items: flex-start;
             justify-content: flex-start;
             font-size: 0.75rem;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-600에서 Gray-700으로 변경 */
             overflow: hidden;
             position: relative;
         }
@@ -206,13 +419,13 @@
         .calendar-cell-date {
             font-weight: 700;
             margin-bottom: 0.25rem;
-            color: #1f2937;
+            color: #1f2937; /* Gray-900 */
         }
         .calendar-cell-event {
             font-size: 0.625rem;
             line-height: 1.2;
             margin-bottom: 0.2rem;
-            color: #1f2937;
+            color: #1f2937; /* Gray-900 */
             white-space: normal;
             word-break: break-word;
             display: -webkit-box;
@@ -225,7 +438,7 @@
             margin-bottom: 0;
         }
 
-        /* Specific styles for the timetable table */
+        /* 시간표 테이블 특정 스타일 */
         .timetable-table {
             border-collapse: collapse;
             width: 100%;
@@ -237,7 +450,7 @@
             text-align: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-600에서 Gray-700으로 변경 */
             background-color: #ffffff;
         }
         .timetable-table tbody td {
@@ -262,7 +475,7 @@
             padding: 1rem 0.75rem;
         }
 
-        /* Specific styles for the meal content area */
+        /* 급식 콘텐츠 영역 특정 스타일 */
         .meal-content-box {
             background-color: #ffffff;
             border-radius: 0.75rem;
@@ -284,7 +497,7 @@
         .meal-content-box p:last-child {
             margin-bottom: 0;
         }
-        /* Styles for date selection buttons (meal) */
+        /* 날짜 선택 버튼 스타일 (급식) */
         .date-button-container {
             display: flex;
             justify-content: space-around;
@@ -301,7 +514,7 @@
             border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #374151; /* Gray-700 (접근성 개선) */
+            color: #374151; /* 대비율 개선을 위해 Gray-600(#4b5563)에서 Gray-700으로 조정 */
             background-color: transparent;
             transition: all 0.2s ease;
             text-align: center;
@@ -321,23 +534,23 @@
 </head>
 <body>
 
-    <!-- Main content area -->
+    <!-- 메인 콘텐츠 영역 -->
     <div class="main-content-container">
 
-        <!-- Header: Logo and Account/Login section -->
-        <div class="w-full flex justify-between items-center px-4 pt-4">
-            <!-- Logo -->
+        <!-- 헤더: 로고 및 계정/로그인 섹션 -->
+        <div class="w-full flex justify-between items-center px-4 pt-4"> <!-- px-6에서 px-4로 변경 -->
+            <!-- 로고 -->
             <div class="flex items-center">
                 <!-- LCP 개선: 이미지에 width, height 속성 추가 및 .webp 형식 사용 -->
-                <img src="/image/logo.webp" alt="가로형 로고" class="h-12 w-auto" width="192" height="48">
+                <img src="/image/logo.webp" alt="N-MATE 로고" class="h-12 w-auto" width="192" height="48">
             </div>
 
-            <!-- Account/Login section with dropdown -->
+            <!-- 드롭다운이 있는 계정/로그인 섹션 -->
             <div class="relative">
                 <div id="accountStatusArea" class="flex items-center">
-                    <!-- Conditional content injected by JavaScript -->
+                    <!-- JavaScript로 주입되는 조건부 콘텐츠 -->
                 </div>
-                <!-- Dropdown menu (initially hidden) -->
+                <!-- 드롭다운 메뉴 (초기에는 숨김) -->
                 <div id="accountDropdown" class="dropdown-menu hidden">
                     <button id="settingsButton" class="block">설정</button>
                     <button id="logoutButton" class="block">로그아웃</button>
@@ -345,42 +558,42 @@
             </div>
         </div>
 
-        <!-- School Life section container -->
-        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4">
-            <!-- Section title -->
+        <!-- 학교생활 섹션 컨테이너 -->
+        <div class="w-full flex flex-col items-start px-4 mt-8 mb-4"> <!-- px-6에서 px-4로 변경 -->
+            <!-- 섹션 제목 -->
             <h2 class="text-left text-xl font-bold text-gray-800">학교생활</h2>
 
-            <!-- Tab buttons for switching between sections (Order: 시간표, 급식, 학사일정) -->
+            <!-- 섹션 간 전환을 위한 탭 버튼 (순서: 시간표, 급식, 학사일정) -->
             <div class="tab-buttons-container">
                 <button id="tab-timetable" class="tab-button" data-tab-id="timetableContent" data-path="/sclife/timetable">시간표</button>
                 <button id="tab-meal" class="tab-button" data-tab-id="mealContent" data-path="/sclife/meal">급식</button>
                 <button id="tab-academic" class="tab-button" data-tab-id="academicScheduleContent" data-path="/sclife/schedule">학사일정</button>
             </div>
 
-            <!-- Content sections -->
+            <!-- 콘텐츠 섹션 -->
 
-            <!-- Timetable Section -->
+            <!-- 시간표 섹션 -->
             <div id="timetableContent" class="tab-content hidden w-full flex flex-col items-start gap-y-2 mt-4">
                 <div class="w-full bg-white rounded-xl border border-gray-300 flex overflow-x-auto overflow-y-hidden">
                     <div id="timetable-display-section" class="w-full h-full bg-white flex flex-col items-center justify-center">
-                        <!-- Skeleton Loader for Timetable content -->
+                        <!-- 시간표 콘텐츠용 스켈레톤 로더 -->
                     </div>
                 </div>
             </div>
 
-            <!-- Meal Section -->
+            <!-- 급식 섹션 -->
             <div id="mealContent" class="tab-content hidden w-full flex flex-col items-start gap-y-2 mt-4">
-                <!-- Date selection buttons -->
+                <!-- 날짜 선택 버튼 -->
                 <div id="meal-date-buttons-container" class="date-button-container">
-                    <!-- Date buttons will be rendered here by JavaScript -->
+                    <!-- 날짜 버튼은 JavaScript에 의해 여기에 렌더링됩니다. -->
                 </div>
 
-                <!-- Date picker input, initially hidden -->
+                <!-- 날짜 선택기 입력, 초기에는 숨김 -->
                 <input type="date" id="mealDatePicker" class="hidden w-full mt-2 p-2 border border-gray-300 rounded-md text-gray-700 focus:ring-blue-500 focus:border-blue-500">
 
-                <!-- Meal display area -->
+                <!-- 급식 표시 영역 -->
                 <div id="meal-display-section" class="w-full meal-content-box mt-4">
-                    <!-- Skeleton Loader for Meal content -->
+                    <!-- 급식 콘텐츠용 스켈레톤 로더 -->
                     <div class="w-full">
                         <div class="skeleton skeleton-text w-full"></div>
                         <div class="skeleton skeleton-text w-5/6"></div>
@@ -390,22 +603,22 @@
                 </div>
             </div>
 
-            <!-- Academic Schedule Section -->
+            <!-- 학사일정 섹션 -->
             <div id="academicScheduleContent" class="tab-content hidden w-full flex flex-col items-start gap-y-2 mt-4">
-                <!-- Calendar Navigation (Month selection) -->
+                <!-- 캘린더 내비게이션 (월 선택) -->
                 <div class="calendar-nav">
-                    <button id="academic-prevMonthButton" aria-label="Previous Month"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <button id="academic-prevMonthButton" aria-label="이전 달"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
                     <span id="academic-calendar-month-year"></span>
-                    <button id="academic-nextMonthButton" aria-label="Next Month"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                    <button id="academic-nextMonthButton" aria-label="다음 달"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
                 </div>
 
-                <!-- Academic Schedule display area -->
+                <!-- 학사일정 표시 영역 -->
                 <div id="academic-schedule-display-section" class="w-full academic-schedule-content-box">
-                    <!-- Academic calendar will be rendered here -->
+                    <!-- 학사일정 캘린더가 여기에 렌더링됩니다. -->
                     <div class="w-full calendar-grid">
-                        <!-- Skeleton header days -->
+                        <!-- 스켈레톤 헤더 요일 -->
                         ${Array(5).fill(0).map((_, i) => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
-                        <!-- Skeleton cells -->
+                        <!-- 스켈레톤 셀 -->
                         ${Array(35).fill(0).map((_, i) => `
                             <div class="calendar-cell">
                                 <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
@@ -415,15 +628,14 @@
                         `).join('')}
                     </div>
                 </div>
-                <!-- Removed date picker input and button for specific date selection -->
             </div>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+    <!-- 하단 내비게이션 바 -->
+    <nav class="fixed bottom-0 left-0 right-0 p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10 bottom-nav-bar">
         <div class="flex justify-around items-center h-12">
-            <!-- Home Navigation Item -->
+            <!-- 홈 내비게이션 아이템 -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
@@ -431,15 +643,15 @@
                 <span class="text-xs font-medium">홈</span>
             </button>
 
-            <!-- School Life Navigation Item (consolidated) -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife">
+            <!-- 학교생활 내비게이션 아이템 -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife"> <!-- data-path를 /sclife로 변경 -->
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
                 <span class="text-xs font-medium">학교생활</span>
             </button>
 
-            <!-- Community Navigation Item -->
+            <!-- 커뮤니티 내비게이션 아이템 -->
             <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
@@ -447,9 +659,7 @@
                 <span class="text-xs font-medium">커뮤니티</span>
             </button>
 
-            <!-- Calendar Navigation Item (as a separate item if needed, but '/school-life' is already for academic calendar) -->
-            <!-- If this is meant to be a new, separate feature, its path needs to be defined.
-                 For now, I'll assume it's for a future feature and add a placeholder path. -->
+            <!-- 캘린더 내비게이션 아이템 -->
             <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
@@ -457,7 +667,7 @@
                 <span class="text-xs font-medium">캘린더</span>
             </button>
 
-            <!-- More Navigation Item -->
+            <!-- 더보기 내비게이션 아이템 -->
             <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-blue-50" data-tab="더보기" data-path="/more">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
@@ -467,15 +677,15 @@
         </div>
     </nav>
 
-    <!-- Firebase SDK CDN (defer 로드) -->
+    <!-- Firebase SDK CDN - defer 속성을 사용하여 렌더링 차단 방지 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js" defer></script>
-    <!-- Lucide Icons CDN (defer 로드) -->
+    <!-- Lucide Icons CDN - defer 속성을 사용하여 렌더링 차단 방지 -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
 
     <script>
-        // Global variables for Firebase configuration (provided by Canvas environment)
+        // Firebase 구성 정보를 위한 전역 변수 (Canvas 환경에서 제공)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
@@ -487,13 +697,13 @@
             messagingSenderId: "691313471077"
         };
 
-        // Firebase app, auth, and firestore instances
+        // Firebase 앱, 인증, Firestore 인스턴스
         let app;
         let auth;
         let db;
 
-        // NEIS API common information
-        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // Replace with your API key
+        // NEIS API 공통 정보 (API 키)
+        const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // 실제 API 키로 교체
         
         // User's school information (default to Busan Namjung Middle School)
         let currentUserEduCode = "C10"; 
@@ -516,7 +726,7 @@
         const academicCalendarMonthYearSpan = document.getElementById('academic-calendar-month-year');
         const academicPrevMonthButton = document.getElementById('academic-prevMonthButton');
         const academicNextMonthButton = document.getElementById('academic-nextMonthButton');
-        let academicCurrentDate = new Date(); // Current date object for academic calendar
+        let academicCurrentDate = new Date(); // 학사일정 캘린더 표시를 위한 현재 날짜 객체
 
         // DOM elements (Timetable)
         const timetableDisplaySection = document.getElementById('timetable-display-section');
@@ -525,44 +735,108 @@
         const mealDisplaySection = document.getElementById('meal-display-section');
         const mealDateButtonsContainer = document.getElementById('meal-date-buttons-container');
         const mealDatePicker = document.getElementById('mealDatePicker');
-        let mealCurrentSelectedDate = ''; // To keep track of the currently selected date for meal
+        let mealCurrentSelectedDate = ''; // 급식을 위해 현재 선택된 날짜 추적
 
-        // Store fetched academic calendar events globally
+        // 전역적으로 가져온 학사일정 이벤트 저장
         let academicCalendarEvents = [];
 
-        // Track if data for each tab has been loaded to avoid redundant API calls
+        // 각 탭의 데이터 로딩 여부 추적 (불필요한 API 호출 방지)
         const loadedTabs = {
             academicScheduleContent: false,
             timetableContent: false,
             mealContent: false
         };
 
+        // 로컬 스토리지에서 테마 로드, 없으면 시스템 기본
+        let currentSelectedTheme = localStorage.getItem('theme') || 'system';
 
         /**
-         * Shows the specified tab content and updates the active state of tab buttons.
-         * Fetches data for the tab if it hasn't been loaded yet.
-         * @param {string} tabId - The ID of the tab content to show (e.g., 'academicScheduleContent').
+         * 선택된 테마를 body 요소에 적용합니다.
+         * @param {string} theme - 적용할 테마 ('light', 'dark', 'system').
+         */
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'dark') {
+                body.classList.add('dark');
+            } else if (theme === 'light') {
+                body.classList.remove('dark');
+            } else if (theme === 'system') {
+                // 시스템 설정에 따라 다크 모드 적용
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    body.classList.add('dark');
+                } else {
+                    body.classList.remove('dark');
+                }
+            }
+        }
+
+        // 시스템 테마 변경 감지 리스너 (system 테마 선택 시에만 동작)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (currentSelectedTheme === 'system') {
+                applyTheme('system');
+            }
+        });
+
+        // 오늘 날짜를YYYYMMDD 형식으로 가져오는 함수
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // 월은 0부터 시작하므로 1을 더합니다.
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}${month}${day}`;
+        }
+
+        /**
+         * Firestore에서 사용자 프로필을 가져옵니다.
+         * @param {string} userId - 현재 사용자의 고유 ID.
+         * @returns {Object|null} 사용자 프로필 데이터 또는 찾을 수 없거나 오류가 발생하면 null.
+         */
+        async function getUserProfile(userId) {
+            if (!db) {
+                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
+                return null;
+            }
+            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
+            try {
+                const doc = await userProfileRef.get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    console.log('사용자 프로필 데이터를 찾을 수 없습니다.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('사용자 프로필 가져오기 오류:', error);
+                return null;
+            }
+        }
+
+
+        /**
+         * 지정된 탭 콘텐츠를 표시하고 탭 버튼의 활성 상태를 업데이트합니다.
+         * 아직 로드되지 않은 탭의 데이터를 가져옵니다.
+         * @param {string} tabId - 표시할 탭 콘텐츠의 ID (예: 'academicScheduleContent').
          */
         async function showTab(tabId) {
-            // Hide all tab content
+            // 모든 탭 콘텐츠 숨기기
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
 
-            // Deactivate all tab buttons
+            // 모든 탭 버튼 비활성화
             tabButtons.forEach(button => {
                 button.classList.remove('active');
             });
 
-            // Show the selected tab content
+            // 선택된 탭 콘텐츠 표시
             document.getElementById(tabId).classList.remove('hidden');
-            // Activate the corresponding tab button
+            // 해당 탭 버튼 활성화
             document.querySelector(`.tab-button[data-tab-id="${tabId}"]`).classList.add('active');
 
-            // Load data for the tab if it hasn't been loaded yet
+            // 탭의 데이터를 아직 로드하지 않았다면 로드합니다.
             if (!loadedTabs[tabId]) {
                 if (tabId === 'academicScheduleContent') {
-                    // Display skeleton immediately
+                    // 스켈레톤 즉시 표시
                     academicScheduleDisplaySection.innerHTML = `
                         <div class="w-full calendar-grid">
                             ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
@@ -577,9 +851,9 @@
                     `;
                     await getAcademicCalendar(academicCurrentDate);
                 } else if (tabId === 'timetableContent') {
-                    // Display skeleton immediately
+                    // 스켈레톤 즉시 표시
                     timetableDisplaySection.innerHTML = generateTimetableSkeleton();
-                    await fetchTimetableData(currentUserGrade, currentUserClassNum);
+                    await fetchTimetableData(); // currentUserGrade, currentUserClassNum은 전역 변수로 이미 설정됨
                 } else if (tabId === 'mealContent') {
                     // 급식 섹션용 스켈레톤 로더
                     mealDisplaySection.innerHTML = `
@@ -599,60 +873,60 @@
                     renderMealDateButtons(todayYYYYMMDD); // Render date buttons with today as active
                     await fetchMealData(todayYYYYMMDD); // Fetch meal for today's date initially
                 }
-                loadedTabs[tabId] = true; // Mark as loaded
+                loadedTabs[tabId] = true; // 로드됨으로 표시
             }
         }
 
-        // --- Academic Schedule Functions ---
+        // --- 학사일정 함수 ---
 
         /**
-         * Renders the calendar grid view for a given month and populates it with events.
-         * @param {Date} monthDate - The Date object representing the month to display.
-         * @param {Array} events - An array of event objects from the NEIS API.
+         * 주어진 월의 캘린더 그리드 뷰를 렌더링하고 이벤트를 채웁니다.
+         * @param {Date} monthDate - 표시할 월을 나타내는 Date 객체.
+         * @param {Array} events - NEIS API의 이벤트 객체 배열.
          */
         function renderAcademicCalendar(monthDate, events) {
             const today = new Date();
             const currentYear = monthDate.getFullYear();
-            const currentMonth = monthDate.getMonth(); // 0-indexed
+            const currentMonth = monthDate.getMonth(); // 0부터 시작
 
             const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
             const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
 
-            const dayNames = ['월', '화', '수', '목', '금']; // Only display weekdays in header
+            const dayNames = ['월', '화', '수', '목', '금']; // 주중만 헤더에 표시
 
             let calendarHtml = '<div class="calendar-grid">';
 
-            // Add day headers (Mon-Fri)
+            // 요일 헤더 추가 (월-금)
             dayNames.forEach(dayName => {
                 calendarHtml += `<div class="calendar-header-day">${dayName}</div>`;
             });
 
-            // Determine the starting day for the calendar grid
+            // 캘린더 그리드의 시작 날짜 결정
             let startCalendarDate = new Date(firstDayOfMonth);
-            const firstDayWeekday = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const firstDayWeekday = firstDayOfMonth.getDay(); // 0=일, 1=월, ..., 6=토
 
-            if (firstDayWeekday === 0) { // If Sunday, go back to previous Monday
+            if (firstDayWeekday === 0) { // 일요일인 경우, 이전 주 월요일로 이동
                 startCalendarDate.setDate(firstDayOfMonth.getDate() - 6);
-            } else if (firstDayWeekday !== 1) { // If not Monday, go back to current week's Monday
+            } else if (firstDayWeekday !== 1) { // 월요일이 아닌 경우, 해당 주 월요일로 이동
                 startCalendarDate.setDate(firstDayOfMonth.getDate() - (firstDayWeekday - 1));
             }
 
-            // Determine the ending day for the calendar grid
+            // 캘린더 그리드의 마지막 날짜 결정
             let endCalendarDate = new Date(lastDayOfMonth);
             const lastDayWeekday = lastDayOfMonth.getDay();
 
-            if (lastDayWeekday === 0) { // If Sunday, go to next Friday
+            if (lastDayWeekday === 0) { // 일요일인 경우, 다음 주 금요일로 이동
                 endCalendarDate.setDate(lastDayOfMonth.getDate() + 5);
-            } else if (lastDayWeekday !== 5) { // If not Friday, go to current week's Friday
+            } else if (lastDayWeekday !== 5) { // 금요일이 아닌 경우, 해당 주 금요일로 이동
                 endCalendarDate.setDate(lastDayOfMonth.getDate() + (5 - lastDayWeekday + 7) % 7);
             }
 
-            // Iterate through each day from startCalendarDate to endCalendarDate
+            // startCalendarDate부터 endCalendarDate까지 각 날짜를 반복
             let currentIterationDate = new Date(startCalendarDate);
             while (currentIterationDate <= endCalendarDate) {
-                const dayOfWeek = currentIterationDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+                const dayOfWeek = currentIterationDate.getDay(); // 0=일, 1=월, ..., 6=토
 
-                // Only render Mon-Fri cells
+                // 월-금 셀만 렌더링
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     const cellDateString = `${currentIterationDate.getFullYear()}${String(currentIterationDate.getMonth() + 1).padStart(2, '0')}${String(currentIterationDate.getDate()).padStart(2, '0')}`;
                     const isToday = currentIterationDate.toDateString() === today.toDateString();
@@ -682,22 +956,31 @@
                 currentIterationDate.setDate(currentIterationDate.getDate() + 1);
             }
 
-            calendarHtml += '</div>'; // Close calendar-grid
+            calendarHtml += '</div>'; // calendar-grid 닫기
             academicScheduleDisplaySection.innerHTML = calendarHtml;
+            lucide.createIcons(); // 새로운 콘텐츠를 위해 Lucide 아이콘 다시 생성 (캘린더 내비게이션 화살표)
         }
 
         /**
-         * Fetches academic schedule data from NEIS API.
-         * Uses the current user's education office code and school code.
-         * @param {Date} monthDate - The Date object representing the month to fetch academic schedule for.
+         * NEIS API를 사용하여 학사일정 데이터를 가져오는 함수.
+         * 현재 사용자의 교육청 코드와 학교 코드를 사용하여 동적으로 데이터를 가져옵니다.
+         * @param {Date} monthDate - 학사일정을 불러올 월의 Date 객체.
          */
         async function getAcademicCalendar(monthDate = academicCurrentDate) {
             academicCalendarMonthYearSpan.textContent = `${monthDate.getFullYear()}년 ${monthDate.getMonth() + 1}월`;
 
-            if (!currentUserEduCode || !currentUserSchoolCode) {
-                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 정보가 설정되지 않았습니다. 설정 페이지에서 학교를 선택해주세요.</p>';
-                return;
-            }
+            academicScheduleDisplaySection.innerHTML = `
+                <div class="w-full calendar-grid">
+                    ${['월', '화', '수', '목', '금'].map(dayName => `<div class="calendar-header-day skeleton skeleton-text w-full !h-auto !mb-0 !rounded-none py-3"></div>`).join('')}
+                    ${Array(35).fill(0).map((_, i) => `
+                        <div class="calendar-cell">
+                            <div class="skeleton skeleton-text w-8 h-4 mb-2"></div>
+                            <div class="skeleton skeleton-text w-full h-3 mb-1"></div>
+                            <div class="skeleton skeleton-text w-3/4 h-3"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
 
             const year = monthDate.getFullYear();
             const month = monthDate.getMonth();
@@ -705,8 +988,8 @@
             const fromDate = new Date(year, month, 1);
             const toDate = new Date(year, month + 1, 0);
 
-            const fromYmd = `${fromDate.getFullYear()}${String(fromDate.getMonth() + 1).padStart(2, '0')}${String(fromDate.getDate()).padStart(2, '0')}`;
-            const toYmd = `${toDate.getFullYear()}${String(toDate.getMonth() + 1).padStart(2, '0')}${String(toDate.getDate()).padStart(2, '0')}`;
+            const fromYmd = `${fromDate.getFullYear()}${('0' + (fromDate.getMonth() + 1)).slice(-2)}${('0' + fromDate.getDate()).slice(-2)}`;
+            const toYmd = `${toDate.getFullYear()}${('0' + (toDate.getDate())).slice(-2)}`;
 
             const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&AA_FROM_YMD=${fromYmd}&AA_TO_YMD=${toYmd}`;
 
@@ -719,23 +1002,21 @@
                     events = data.SchoolSchedule[1].row;
                     events.sort((a, b) => parseInt(a.AA_YMD) - parseInt(b.AA_YMD));
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    academicScheduleDisplaySection.innerHTML = `<p class="text-base text-gray-700 text-center">${year}년 ${month + 1}월에 대한 학사일정이 없습니다.</p>`;
-                    console.log(`No academic schedule for ${year}년 ${month + 1}월`);
+                    console.log(`${year}년 ${month + 1}월에 대한 학사일정이 없습니다.`);
                 } else {
-                    academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">학사일정 정보를 가져오는 데 실패했습니다.</p>';
-                    console.error(`API response error for academic schedule:`, data);
+                    console.error(`학사일정 API 응답 오류:`, data);
                 }
 
                 academicCalendarEvents = events;
                 renderAcademicCalendar(monthDate, academicCalendarEvents);
             } catch (error) {
-                console.error('Error fetching academic schedule data:', error);
-                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                console.error('학사일정 데이터 가져오기 오류:', error);
+                academicScheduleDisplaySection.innerHTML = '<p class="text-base text-red-500">학사일정 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
         /**
-         * Navigates to the previous month for the academic calendar.
+         * 이전 달로 이동합니다.
          */
         function goToPrevAcademicMonth() {
             academicCurrentDate.setMonth(academicCurrentDate.getMonth() - 1);
@@ -743,7 +1024,7 @@
         }
 
         /**
-         * Navigates to the next month for the academic calendar.
+         * 다음 달로 이동합니다.
          */
         function goToNextAcademicMonth() {
             academicCurrentDate.setMonth(academicCurrentDate.getMonth() + 1);
@@ -751,20 +1032,20 @@
         }
 
 
-        // --- Timetable Functions ---
+        // --- 시간표 함수 ---
 
         /**
-         * Calculates the dates for Monday to Friday of the current week.
-         * @returns {string[]} An array of dates in `YYYYMMDD` format (e.g., ["20231023", "20231024", ...]).
+         * 현재 주의 월요일부터 금요일까지의 날짜를 계산합니다.
+         * @returns {string[]} `YYYYMMDD` 형식의 날짜 배열 (예: ["20231023", "20231024", ...]).
          */
         function getWeekDates() {
             const today = new Date();
-            const dayOfWeek = today.getDay(); // 0 for Sunday, 1 for Monday, ..., 6 for Saturday
-            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust to Monday
+            const dayOfWeek = today.getDay(); // 0은 일요일, 1은 월요일, ..., 6은 토요일
+            const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 월요일로 조정
             const monday = new Date(today.setDate(diff));
 
             const weekDates = [];
-            for (let i = 0; i < 5; i++) { // Monday to Friday
+            for (let i = 0; i < 5; i++) { // 월요일부터 금요일까지
                 const date = new Date(monday);
                 date.setDate(monday.getDate() + i);
                 const year = date.getFullYear();
@@ -776,36 +1057,11 @@
         }
 
         /**
-         * Fetches user profile from Firestore.
-         * @param {string} userId - The unique ID of the current user.
-         * @returns {Object|null} The user profile data or null if not found/error.
-         */
-        async function getUserProfile(userId) {
-            if (!db) {
-                console.error('Firestore instance is not initialized.');
-                return null;
-            }
-            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
-            try {
-                const doc = await userProfileRef.get();
-                if (doc.exists) {
-                    return doc.data();
-                } else {
-                    console.log('User profile data not found.');
-                    return null;
-                }
-            } catch (error) {
-                console.error('Error fetching user profile:', error);
-                return null;
-            }
-        }
-
-        /**
-         * Generates the HTML for the timetable skeleton loader.
-         * @returns {string} The HTML string for the skeleton loader.
+         * 시간표 스켈레톤 로더용 HTML을 생성합니다.
+         * @returns {string} 스켈레톤 로더용 HTML 문자열.
          */
         function generateTimetableSkeleton() {
-            const maxPeriodsSkeleton = 7; // Assuming max 7 periods for skeleton
+            const maxPeriodsSkeleton = 7; // 스켈레톤을 위한 최대 7교시를 가정
 
             let skeletonHtml = `
                 <table class="timetable-table w-full">
@@ -822,7 +1078,7 @@
             `;
 
             for (let i = 1; i <= maxPeriodsSkeleton; i++) {
-                if (i === 5) { // Lunch break
+                if (i === 5) { // 점심시간
                     skeletonHtml += `
                         <tr>
                             <td colspan="5" class="lunch-break"><div class="skeleton skeleton-text w-24 h-4 mx-auto"></div></td>
@@ -848,65 +1104,54 @@
         }
 
         /**
-         * Fetches and displays weekly timetable data from the NEIS API.
-         * Uses the current user's education office code, school code, grade, and class number.
-         * @param {string} grade - The selected grade.
-         * @param {string} classNum - The selected class number.
+         * NEIS API에서 주간 시간표 데이터를 가져와 표시합니다.
+         * 현재 사용자의 교육청 코드, 학교 코드, 학년, 반 번호를 사용합니다.
          */
-        async function fetchTimetableData(grade, classNum) {
-            if (!currentUserEduCode || !currentUserSchoolCode || !grade || !classNum) {
+        async function fetchTimetableData() {
+            if (!currentUserEduCode || !currentUserSchoolCode || !currentUserGrade || !currentUserClassNum) {
                 timetableDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">학교 및 학년/반 정보가 설정되지 않았습니다. 설정 페이지에서 업데이트해주세요.</p>';
                 return;
             }
 
             const weekDates = getWeekDates();
-            const fetchPromises = weekDates.map(date => {
-                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&ALL_TI_YMD=${date}&GRADE=${grade}&CLASS_NM=${classNum}`;
-                return fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
-                        const dailyTimetable = {};
-                        if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
-                            data.misTimetable[1].row.forEach(period => {
-                                let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
-                                    return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
-                                });
-                                content = content.replace(/\(창\)동아리활동/g, '동아리');
-                                content = content.replace(/\(창\)자율·자치활동/g, '창체');
+            const weeklyTimetableData = {};
 
-                                
-                                dailyTimetable[parseInt(period.PERIO)] = content;
+            for (const date of weekDates) {
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${neisApiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${currentUserEduCode}&SD_SCHUL_CODE=${currentUserSchoolCode}&ALL_TI_YMD=${date}&GRADE=${currentUserGrade}&CLASS_NM=${currentUserClassNum}`;
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    if (data.misTimetable && data.misTimetable[1] && data.misTimetable[1].row) {
+                        data.misTimetable[1].row.forEach(period => {
+                            const currentDay = new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay();
+                            if (!weeklyTimetableData[currentDay]) {
+                                weeklyTimetableData[currentDay] = {};
+                            }
+                            let content = period.ITRT_CNTNT.replace(/\(자\)(주제선택활동|진로탐색활동)/g, (match, p1) => {
+                                return p1 === '주제선택활동' ? '주제선택' : '진로탐색';
                             });
-                        } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                            console.log(`No timetable for ${date}`);
-                        } else {
-                            console.error(`API response error for date ${date}:`, data);
-                        }
-                        return { date: currentDay, data: dailyTimetable };
-                    })
-                    .catch(error => {
-                        console.error(`Error fetching timetable data for date ${date}:`, error);
-                        return { date: new Date(parseInt(date.substring(0,4)), parseInt(date.substring(4,6)) - 1, parseInt(date.substring(6,8))).getDay(), data: {} }; // Return empty data on error
-                    });
-            });
+                            content = content.replace(/\(창\)동아리활동/g, '동아리');
+                            content = content.replace(/\(창\)자율·자치활동/g, '창체');
 
-            try {
-                const results = await Promise.all(fetchPromises);
-                const weeklyTimetableData = {};
-                results.forEach(result => {
-                    weeklyTimetableData[result.date] = result.data;
-                });
-                renderWeeklyTimetable(weeklyTimetableData);
-            } catch (error) {
-                console.error('Error in Promise.all for timetable data:', error);
-                timetableDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">시간표 정보를 가져오는 중 오류가 발생했습니다.</p>';
+                            
+                            weeklyTimetableData[currentDay][parseInt(period.PERIO)] = content;
+                        });
+                    } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                        console.log(`${date}에 대한 시간표가 없습니다.`);
+                    } else {
+                        console.error(`${date}에 대한 API 응답 오류:`, data);
+                    }
+                } catch (error) {
+                    console.error(`${date}에 대한 시간표 데이터 가져오기 오류:`, error);
+                }
             }
+            renderWeeklyTimetable(weeklyTimetableData);
         }
 
         /**
-         * Renders the fetched weekly timetable data into an HTML table.
-         * @param {Object} weeklyTimetableData - The object containing timetable data.
+         * 가져온 주간 시간표 데이터를 HTML 테이블로 렌더링합니다.
+         * @param {Object} weeklyTimetableData - 시간표 데이터를 포함하는 객체.
          */
         function renderWeeklyTimetable(weeklyTimetableData) {
             const daysHeaders = ['월', '화', '수', '목', '금'];
@@ -924,7 +1169,7 @@
             `;
 
             for (let i = 1; i <= maxPeriods; i++) {
-                if (i === 5) { // Lunch break
+                if (i === 5) { // 점심시간
                     tableHtml += `
                         <tr>
                             <td colspan="5" class="lunch-break">점심시간</td>
@@ -956,15 +1201,15 @@
         }
 
 
-        // --- Meal Functions ---
+        // --- 급식 함수 ---
 
         /**
-         * Calculates the dates and names for Monday to Friday of the current week.
-         * @returns {Array<Object>} An array of objects, each with { dayName: string, date: string (YYYYMMDD) }.
+         * 현재 주의 월요일부터 금요일까지의 날짜와 이름을 계산합니다.
+         * @returns {Array<Object>} `dayName`(요일 이름), `date`(YYYYMMDD 형식의 날짜)를 포함하는 객체 배열.
          */
         function getMealWeekdaysInfo() {
             const today = new Date();
-            const dayOfWeek = today.getDay(); // 0: Sunday, 1: Monday, ..., 6: Saturday
+            const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
             const monday = new Date(today);
             monday.setDate(today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
 
@@ -986,9 +1231,9 @@
         }
 
         /**
-         * Renders the date selection buttons (월~금) and the "날짜 선택" button for meal.
-         * Attaches event listeners.
-         * @param {string} initialDateYYYYMMDD - The date to be initially selected/active.
+         * 급식을 위한 날짜 선택 버튼(월~금)과 "날짜 선택" 버튼을 렌더링합니다.
+         * 이벤트 리스너를 연결합니다.
+         * @param {string} initialDateYYYYMMDD - 초기 선택/활성 상태로 설정할 날짜.
          */
         function renderMealDateButtons(initialDateYYYYMMDD) {
             const weekdaysInfo = getMealWeekdaysInfo();
@@ -1028,9 +1273,9 @@
         }
 
         /**
-         * Handles clicks on weekday date buttons for meal.
-         * @param {HTMLElement} clickedButton - The button element that was clicked.
-         * @param {string} selectedDate - The date string associated with the button.
+         * 급식용 요일 날짜 버튼 클릭을 처리합니다.
+         * @param {HTMLElement} clickedButton - 클릭된 버튼 요소.
+         * @param {string} selectedDate - 버튼과 관련된 날짜 문자열.
          */
         function handleMealDateButtonClick(clickedButton, selectedDate) {
             mealDatePicker.classList.add('hidden');
@@ -1043,7 +1288,7 @@
         }
 
         /**
-         * Shows the date picker input for meal and clears active state from other buttons.
+         * 급식용 날짜 선택기 입력을 표시하고 다른 버튼의 활성 상태를 지웁니다.
          */
         function showMealDatePicker() {
             document.querySelectorAll('#meal-date-buttons-container .date-button').forEach(btn => btn.classList.remove('active'));
@@ -1062,7 +1307,7 @@
         }
 
         /**
-         * Handles date selection from the date picker input for meal.
+         * 급식용 날짜 선택기 입력에서 날짜 선택을 처리합니다.
          */
         function handleMealDatePickerChange() {
             const selectedDate = mealDatePicker.value.replace(/-/g, '');
@@ -1076,8 +1321,9 @@
         }
 
         /**
-         * Fetches and displays meal data from NEIS API for a specific date.
-         * @param {string} date - The date in INSEE_MMDD format for which to fetch meal data.
+         * NEIS API에서 특정 날짜의 급식 데이터를 가져와 표시합니다.
+         * 현재 사용자의 교육청 코드와 학교 코드를 사용합니다.
+         * @param {string} date - 급식 데이터를 가져올 मीडियावरMMDD 형식의 날짜.
          */
         async function fetchMealData(date) {
             mealDisplaySection.innerHTML = `
@@ -1114,36 +1360,36 @@
                                 menuHtml += `<p class="text-base font-medium text-gray-800">${item}</p>`;
                             });
                         } else {
-                            menuHtml += `<p class="text-base text-gray-700">이 날짜의 중식 메뉴는 비어 있습니다.</p>`; // (접근성 개선)
+                            menuHtml += `<p class="text-base text-gray-700">이 날짜의 중식 메뉴는 비어 있습니다.</p>`;
                         }
                         menuHtml += '</div>';
                         mealDisplaySection.innerHTML = menuHtml;
                     } else {
-                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">선택된 날짜의 중식 정보가 없어요.</p>'; // (접근성 개선)
+                        mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">선택된 날짜의 중식 정보가 없어요.</p>';
                     }
                 } else if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">등록된 급식이 없어요.</p>'; // (접근성 개선)
+                    mealDisplaySection.innerHTML = '<p class="text-base text-gray-700 text-center">등록된 급식이 없어요.</p>';
                 } else {
                     mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 데 실패했습니다.</p>';
                 }
             } catch (error) {
-                console.error('Error fetching meal data:', error);
+                console.error('급식 데이터 가져오기 오류:', error);
                 mealDisplaySection.innerHTML = '<p class="text-base text-red-500 text-center">급식 정보를 가져오는 중 오류가 발생했습니다.</p>';
             }
         }
 
 
-        // --- Common Functions (Account, Navigation) ---
+        // --- 공통 함수 (계정, 내비게이션) ---
 
         /**
-         * Toggles the visibility of the account dropdown menu.
+         * 계정 드롭다운 메뉴의 가시성을 토글합니다.
          */
         function toggleDropdown() {
             accountDropdown.classList.toggle('hidden');
         }
 
         /**
-         * Handles user logout.
+         * 사용자 로그아웃을 처리합니다.
          */
         async function handleLogout() {
             if (auth) {
@@ -1158,16 +1404,16 @@
         }
 
         /**
-         * Handles navigation to the settings page.
+         * 설정 페이지로 이동을 처리합니다.
          */
         function handleSettingsClick() {
             window.location.href = '/settings';
         }
 
         /**
-         * Updates the account UI based on user authentication status.
-         * Displays email prefix if logged in, otherwise "로그인" button.
-         * @param {firebase.User} user - The authenticated user object or null.
+         * 사용자 인증 상태에 따라 계정 UI를 업데이트합니다.
+         * 로그인된 경우 이메일 접두사를 표시하고, 그렇지 않은 경우 "로그인" 버튼을 표시합니다.
+         * @param {firebase.User} user - 인증된 사용자 객체 또는 null.
          */
         async function updateAccountUI(user) {
             if (user && user.email) {
@@ -1201,11 +1447,11 @@
                 });
                 accountDropdown.classList.add('hidden');
             }
-            lucide.createIcons(); // Still need to create Lucide icons for the account status area (user-circle-2)
+            lucide.createIcons(); // 계정 상태 영역의 Lucide 아이콘(user-circle-2)을 생성해야 함
         }
 
         /**
-         * Updates the active state of the navigation bar buttons based on the current URL path.
+         * 현재 URL 경로에 따라 내비게이션 바 버튼의 활성 상태를 업데이트합니다.
          */
         function updateNavigationActiveState() {
             const currentPath = window.location.pathname;
@@ -1224,10 +1470,10 @@
                 }
                 if (svgElement) {
                     svgElement.classList.remove('text-blue-600');
-                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                    svgElement.classList.add('text-gray-500'); // SVG도 회색 기본 색상을 갖도록 보장
                 }
 
-                // Check for exact path match or if it's the school-life button and current path is one of the sub-paths
+                // 정확한 경로 일치 또는 학교생활 버튼이고 현재 경로가 하위 경로 중 하나인지 확인
                 if (currentPath === itemPath || (itemPath === '/sclife' && (currentPath === '/sclife/timetable' || currentPath === '/sclife/meal' || currentPath === '/sclife/schedule'))) {
                     item.classList.add('text-blue-600');
                     item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
@@ -1236,7 +1482,7 @@
                         spanElement.classList.remove('font-medium');
                     }
                     if (svgElement) {
-                        svgElement.classList.add('text-blue-600'); // Apply blue color to active SVG
+                        svgElement.classList.add('text-blue-600'); // 활성 SVG에 파란색 적용
                         svgElement.classList.remove('text-gray-500');
                     }
                 }
@@ -1244,18 +1490,17 @@
         }
 
         /**
-         * Sets up click event listeners for navigation items.
+         * 내비게이션 항목에 클릭 이벤트 리스너를 설정합니다.
          */
         function setupNavigationEvents() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 item.addEventListener('click', () => {
                     const path = item.dataset.path;
-                    if (window.location.pathname !== path) {
-                        // Store the current tab if navigating to school-life from another school-life tab
-                        // or from a different page to a specific school-life tab.
+                    if (path && window.location.pathname !== path) {
+                        // 다른 학교생활 탭에서 학교생활 탭으로 이동하거나
+                        // 다른 페이지에서 특정 학교생활 탭으로 이동할 때 현재 탭을 저장합니다.
                         const currentActiveTab = document.querySelector('.tab-button.active');
-                        // Store the current active sub-tab if navigating to or within school-life paths
                         if (currentActiveTab && (path === '/sclife' || path.startsWith('/sclife/'))) {
                              localStorage.setItem('initialSchoolLifeTab', currentActiveTab.dataset.tabId);
                         }
@@ -1266,9 +1511,12 @@
         }
 
 
-        // --- Initialization on DOMContentLoaded ---
+        // --- DOMContentLoaded 시 초기화 ---
         document.addEventListener('DOMContentLoaded', async () => {
-            // Firebase initialization
+            // 페이지 로드 시 저장된 테마 적용
+            applyTheme(currentSelectedTheme);
+
+            // Firebase 초기화
             if (firebaseConfig && firebaseConfig.apiKey) {
                 if (firebase.apps.length === 0) {
                     try {
@@ -1279,39 +1527,29 @@
 
                         auth.onAuthStateChanged(async (user) => {
                             await updateAccountUI(user);
-                            
-                            // Fetch user profile and update global school codes and grade/class
+
+                            // 사용자별 학교, 학년, 반 정보를 가져오거나 기본값을 설정
                             if (user) {
                                 const profile = await getUserProfile(user.uid);
                                 if (profile) {
-                                    currentUserEduCode = profile.atptOfcdcScCode || "C10"; // Default to Busan Namjung if not set
-                                    currentUserSchoolCode = profile.sdSchulCode || "7171018"; // Default to Busan Namjung if not set
-                                    currentUserGrade = profile.grade || "1"; // Default to 1st grade if not set
-                                    currentUserClassNum = profile.classNum || "1"; // Default to 1st class if not set
+                                    currentUserEduCode = profile.atptOfcdcScCode || currentUserEduCode;
+                                    currentUserSchoolCode = profile.sdSchulCode || currentUserSchoolCode;
+                                    currentUserGrade = profile.grade || currentUserGrade;
+                                    currentUserClassNum = profile.classNum || currentUserClassNum;
 
-                                    if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
-                                        console.warn('사용자 프로필에 학교 교육청 코드 또는 행정 표준 코드가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
-                                    }
-                                    if (!profile.grade || !profile.classNum) {
-                                        console.warn('사용자 프로필에 학년 또는 반 정보가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
+                                    if (!profile.atptOfcdcScCode || !profile.sdSchulCode || !profile.grade || !profile.classNum) {
+                                        console.warn('사용자 프로필 정보(학교, 학년, 반)가 불완전합니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
                                     }
                                 } else {
                                     console.warn('사용자 프로필을 찾을 수 없습니다. 기본 학교 정보와 학년/반을 사용합니다. 설정 페이지에서 프로필을 설정해주세요.');
                                 }
                             } else {
                                 console.log('인증되지 않았습니다. 기본 학교 정보와 학년/반을 사용합니다.');
-                                // If not logged in, ensure default school codes are used for anonymous data fetching
-                                currentUserEduCode = "C10";
-                                currentUserSchoolCode = "7171018";
-                                currentUserGrade = "1";
-                                currentUserClassNum = "1";
                             }
 
-
+                            // 초기 탭 결정
                             const currentPath = window.location.pathname;
-                            let initialTab = 'timetableContent'; // Default tab
-
-                            // Determine initial tab to show based on URL
+                            let initialTab = 'timetableContent'; // 기본 탭: 시간표로 변경
                             if (currentPath === '/sclife/timetable') {
                                 initialTab = 'timetableContent';
                             } else if (currentPath === '/sclife/meal') {
@@ -1319,24 +1557,18 @@
                             } else if (currentPath === '/sclife/schedule') {
                                 initialTab = 'academicScheduleContent';
                             } else {
-                                // If not a specific /sclife/ path, check localStorage (e.g., from bottom nav or direct /school-life)
-                                initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent';
-                                localStorage.removeItem('initialSchoolLifeTab'); // Clear after use
+                                initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent'; // 여기도 시간표로 변경
+                                localStorage.removeItem('initialSchoolLifeTab');
                             }
-                            showTab(initialTab);
+                            showTab(initialTab); // 결정된 탭 표시
                         });
 
                     } catch (error) {
                         console.error('Firebase 초기화 실패:', error);
                         await updateAccountUI(null);
-                        // In case of Firebase init failure, still try to show default tab with default data
-                        currentUserEduCode = "C10";
-                        currentUserSchoolCode = "7171018";
-                        currentUserGrade = "1";
-                        currentUserClassNum = "1";
-
+                        // Firebase 초기화 실패 시에도 기본 탭 표시
                         const currentPath = window.location.pathname;
-                        let initialTab = 'timetableContent';
+                        let initialTab = 'timetableContent'; // 시간표로 변경
                         if (currentPath === '/sclife/timetable') {
                             initialTab = 'timetableContent';
                         } else if (currentPath === '/sclife/meal') {
@@ -1344,7 +1576,7 @@
                         } else if (currentPath === '/sclife/schedule') {
                             initialTab = 'academicScheduleContent';
                         } else {
-                            initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent';
+                            initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent'; // 시간표로 변경
                             localStorage.removeItem('initialSchoolLifeTab');
                         }
                         showTab(initialTab);
@@ -1356,33 +1588,20 @@
                     console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
                     auth.onAuthStateChanged(async (user) => {
                         await updateAccountUI(user);
-                        // Fetch user profile and update global school codes and grade/class
+
+                        // 사용자별 학교, 학년, 반 정보를 가져오거나 기본값을 설정
                         if (user) {
                             const profile = await getUserProfile(user.uid);
                             if (profile) {
-                                currentUserEduCode = profile.atptOfcdcScCode || "C10";
-                                currentUserSchoolCode = profile.sdSchulCode || "7171018";
-                                currentUserGrade = profile.grade || "1";
-                                currentUserClassNum = profile.classNum || "1";
-                                if (!profile.atptOfcdcScCode || !profile.sdSchulCode) {
-                                    console.warn('사용자 프로필에 학교 교육청 코드 또는 행정 표준 코드가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
-                                }
-                                if (!profile.grade || !profile.classNum) {
-                                    console.warn('사용자 프로필에 학년 또는 반 정보가 없습니다. 기본값을 사용합니다. 설정 페이지에서 업데이트해주세요.');
-                                }
-                            } else {
-                                console.warn('사용자 프로필을 찾을 수 없습니다. 기본 학교 정보와 학년/반을 사용합니다. 설정 페이지에서 프로필을 설정해주세요.');
+                                currentUserEduCode = profile.atptOfcdcScCode || currentUserEduCode;
+                                currentUserSchoolCode = profile.sdSchulCode || currentUserSchoolCode;
+                                currentUserGrade = profile.grade || currentUserGrade;
+                                currentUserClassNum = profile.classNum || currentUserClassNum;
                             }
-                        } else {
-                            console.log('인증되지 않았습니다. 기본 학교 정보와 학년/반을 사용합니다.');
-                            currentUserEduCode = "C10";
-                            currentUserSchoolCode = "7171018";
-                            currentUserGrade = "1";
-                            currentUserClassNum = "1";
                         }
 
                         const currentPath = window.location.pathname;
-                        let initialTab = 'timetableContent';
+                        let initialTab = 'timetableContent'; // 시간표로 변경
                         if (currentPath === '/sclife/timetable') {
                             initialTab = 'timetableContent';
                         } else if (currentPath === '/sclife/meal') {
@@ -1390,7 +1609,7 @@
                         } else if (currentPath === '/sclife/schedule') {
                             initialTab = 'academicScheduleContent';
                         } else {
-                            initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent';
+                            initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent'; // 시간표로 변경
                             localStorage.removeItem('initialSchoolLifeTab');
                         }
                         showTab(initialTab);
@@ -1399,14 +1618,9 @@
             } else {
                 console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
                 await updateAccountUI(null);
-                // If Firebase config is missing, still try to show default tab with default data
-                currentUserEduCode = "C10";
-                currentUserSchoolCode = "7171018";
-                currentUserGrade = "1";
-                currentUserClassNum = "1";
-
+                // Firebase 구성이 없는 경우에도 기본 탭 표시
                 const currentPath = window.location.pathname;
-                let initialTab = 'timetableContent';
+                let initialTab = 'timetableContent'; // 시간표로 변경
                 if (currentPath === '/sclife/timetable') {
                     initialTab = 'timetableContent';
                 } else if (currentPath === '/sclife/meal') {
@@ -1414,33 +1628,33 @@
                 } else if (currentPath === '/sclife/schedule') {
                     initialTab = 'academicScheduleContent';
                 } else {
-                    initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent';
+                    initialTab = localStorage.getItem('initialSchoolLifeTab') || 'timetableContent'; // 시간표로 변경
                     localStorage.removeItem('initialSchoolLifeTab');
                 }
                 showTab(initialTab);
             }
 
-            // Attach event listeners for tab buttons
+            // 탭 버튼에 이벤트 리스너 연결
             tabButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const path = button.dataset.path;
-                    if (window.location.pathname !== path) {
+                    if (path && window.location.pathname !== path) {
                         window.location.href = path;
                     } else if (path && window.location.pathname === path) {
-                        // If already on the same path, just ensure the tab is displayed (e.g., after initial load)
+                        // 같은 경로에 이미 있다면, 탭이 표시되도록 보장 (예: 초기 로드 후)
                         showTab(button.dataset.tabId);
                     }
                 });
             });
 
-            // Attach event listeners for Academic Schedule (only prev/next month)
+            // 학사일정 (이전/다음 달) 이벤트 리스너 연결
             academicPrevMonthButton.addEventListener('click', goToPrevAcademicMonth);
             academicNextMonthButton.addEventListener('click', goToNextAcademicMonth);
 
-            // Attach event listener for Meal Date Picker
+            // 급식 날짜 선택기 이벤트 리스너 연결
             mealDatePicker.addEventListener('change', handleMealDatePickerChange);
 
-            // Global click listener to close dropdown when clicking outside
+            // 외부 클릭 시 드롭다운 닫기 위한 전역 클릭 리스너
             window.addEventListener('click', function(e) {
                 const accountTabButton = document.getElementById('accountTabButton');
                 if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
@@ -1448,25 +1662,22 @@
                 }
             });
 
-            // Setup navigation click handlers
+            // 내비게이션 클릭 핸들러 설정
             setupNavigationEvents();
-            // Update navigation active state on initial load
+            // 초기 로드 시 내비게이션 활성 상태 업데이트
             updateNavigationActiveState();
 
-            // Re-render timetable on window resize (to adjust content dynamically if needed)
+            // 창 크기 조정 시 시간표 다시 렌더링
             let resizeTimeout;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(() => {
-                    // Only re-fetch if the timetable tab is currently active
+                    // 시간표 탭이 현재 활성 상태이고 로드된 경우에만 다시 가져오기
                     if (!timetableContent.classList.contains('hidden') && loadedTabs['timetableContent']) {
-                        fetchTimetableData(currentUserGrade, currentUserClassNum); // Ensure it uses current user's grade/class
+                        fetchTimetableData();
                     }
                 }, 200);
             });
-
-            // Initial icon creation for Lucide icons still used (e.g., account dropdown, calendar navigation)
-            lucide.createIcons();
         });
     </script>
 </body>
