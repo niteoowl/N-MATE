@@ -11,7 +11,6 @@
     <!-- Tailwind CSS CDN을 로드합니다. -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Pretendard 폰트 (모든 굵기 포함) 로드 -->
-    <!-- 이 CDN 링크는 Pretendard의 다양한 굵기를 정의하는 @font-face 규칙을 포함합니다. -->
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
     <style>
         /* Body 스타일: Pretendard 폰트를 기본으로 설정 */
@@ -37,12 +36,16 @@
         body.dark .dropdown-menu,
         body.dark .dropdown-menu button,
         body.dark #countdownBox,
-        body.dark #timetable-display-section,
-        body.dark #meal-display-section,
         body.dark #triviaDisplaySection {
             background-color: #121212; /* Darker background for elements */
             border-color: #4a5568; /* Darker border color */
             color: #e2e8f0; /* Light text color */
+        }
+
+        /* Specific background for timetable and meal sections in dark mode */
+        body.dark #timetable-display-section,
+        body.dark #meal-display-section {
+            background-color: #121212;
         }
 
         body.dark .text-gray-800 {
@@ -78,8 +81,11 @@
             color: #63b3ed; /* Lighter blue hover for nav items */
         }
 
+        /* Ensure all elements using border-gray-300 have the correct dark mode border color */
         body.dark .border-gray-300 {
-            border-color: #1F1F1F; /* Darker border for elements that use border-gray-300 */
+            border-color: #1F1F1F;
+            border-style: solid; /* 명시적으로 테두리 스타일 설정 */
+            border-width: 1px; /* 명시적으로 테두리 두께 설정 */
         }
 
         body.dark .shadow-sm {
@@ -194,6 +200,91 @@
         body.dark .skeleton.skeleton-text {
             color: transparent; /* Ensure skeleton text itself is transparent */
         }
+
+        /* Popup Specific Styles */
+        .backdrop-blur-custom {
+            backdrop-filter: blur(8px); /* Subtle blur for the overlay */
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .popup-scroll-content {
+            max-height: 50vh; /* Maintain reduced popup height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+        }
+        .popup-scroll-content::-webkit-scrollbar {
+            display: none;
+        }
+        .popup-scroll-content {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        /* Styles for the button fill effect */
+        #closePopupBtn {
+            position: relative; /* Needed for pseudo-element positioning */
+            overflow: hidden; /* Hide overflow of the filling effect */
+            z-index: 1; /* Ensure button text is above the pseudo-element */
+            transition: color 0.3s ease-in-out; /* Smooth text color transition */
+        }
+
+        #closePopupBtn::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%; /* Initial height (not filled) */
+            background-color: #dc2626; /* Tailwind red-600 color */
+            transition: height 0.3s ease-in-out; /* Smooth filling animation */
+            z-index: -1; /* Place behind the button text */
+        }
+
+        /* Class to apply when the button should be "filled" */
+        #closePopupBtn.do-not-show-again-active::before {
+            height: 100%; /* Fill up completely */
+        }
+
+        /* Adjust text color when the button is filled */
+        #closePopupBtn.do-not-show-again-active {
+            color: white; /* Text becomes white on red background */
+        }
+
+        /* Dark mode for Popups */
+        body.dark #popupContent,
+        body.dark #updateInfoPopupContent {
+            background-color: #1F1F1F; /* Dark background for popup containers */
+            box-shadow: none; /* Remove shadows in dark mode */
+        }
+
+        body.dark #popupContent .border-gray-200,
+        body.dark #updateInfoPopupContent .border-gray-200 {
+            border-color: #2d3748; /* Darker border for popup headers/footers */
+        }
+
+        body.dark #popupContent .text-gray-900,
+        body.dark #updateInfoPopupContent .text-gray-900 {
+            color: #e2e8f0; /* Light text for popup titles */
+        }
+
+        body.dark #popupContent .text-gray-800,
+        body.dark #updateInfoPopupContent .text-gray-800 {
+            color: #cbd5e0; /* Lighter gray text for popup body */
+        }
+
+        body.dark #popupContent .text-gray-500,
+        body.dark #updateInfoPopupContent .text-gray-500 {
+            color: #a0aec0; /* Even lighter gray for info icon */
+        }
+
+        body.dark #closePopupBtn,
+        body.dark #closeUpdateInfoPopupBtn {
+            color: #63b3ed; /* Lighter blue for buttons in dark mode */
+        }
+
+        body.dark #closePopupBtn:hover,
+        body.dark #closeUpdateInfoPopupBtn:hover {
+            background-color: #2d3748; /* Darker hover for buttons */
+        }
     </style>
 </head>
 <body>
@@ -202,10 +293,9 @@
     <div class="main-content-container">
 
         <!-- 헤더: 로고 및 계정/로그인 섹션 -->
-        <div class="w-full flex justify-between items-center px-4 pt-4"> <!-- px-6에서 px-4로 변경 -->
+        <div class="w-full flex justify-between items-center px-4 pt-4">
             <!-- 로고 -->
             <div class="flex items-center">
-                <!-- LCP 및 CLS 개선을 위한 width 및 height 속성 추가 -->
                 <img src="/image/logo.webp" alt="N-MATE 로고" class="h-12">
             </div>
 
@@ -223,7 +313,7 @@
         </div>
 
         <!-- 여름방학 카운트다운 박스 -->
-        <div class="w-full flex flex-col items-start gap-y-4 px-4 mt-8 mb-4"> <!-- px-6에서 px-4로 변경 -->
+        <div class="w-full flex flex-col items-start gap-y-4 px-4 mt-8 mb-4">
             <div id="countdownBox" class="w-full h-16 bg-white rounded-xl border border-gray-300 flex items-center justify-center text-gray-800 text-lg font-medium p-4">
                 <!-- 카운트다운은 JavaScript에 의해 여기에 주입됩니다. -->
                 <p class="skeleton skeleton-text w-3/4"></p>
@@ -231,7 +321,7 @@
         </div>
 
         <!-- 시간표/급식 섹션 컨테이너 -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4"> <!-- px-6에서 px-4로 변경 -->
+        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4">
             <!-- 섹션 제목: font-extrabold (font-weight: 800) 적용 -->
             <h2 class="text-left text-xl font-extrabold text-gray-800">시간표/급식</h2>
             <!-- 두 부분으로 분할된 가로 직사각형 상자 -->
@@ -253,8 +343,10 @@
                         </div>
                     </div>
                 </div>
+                <!-- 구분선 추가 -->
+                <div class="border-l border-gray-300"></div>
                 <!-- 오른쪽 절반: 급식 정보 -->
-                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 border-l border-gray-300 overflow-y-auto overflow-x-auto">
+                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto overflow-x-auto">
                     <!-- 급식 콘텐츠용 스켈레톤 로더 -->
                     <div class="w-full text-left">
                         <div class="skeleton skeleton-text w-full"></div>
@@ -266,7 +358,7 @@
         </div>
 
         <!-- 잡학 상식 섹션 컨테이너 -->
-        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4"> <!-- px-6에서 px-4로 변경 -->
+        <div class="w-full flex flex-col items-start gap-y-2 px-4 mt-1 mb-4">
             <!-- 섹션 제목: 오늘의 잡학 상식 (font-extrabold (font-weight: 800) 적용) -->
             <h2 class="text-left text-xl font-extrabold text-gray-800">눈이 번쩍! 뇌가 짜릿! 신기한 잡학 상식</h2>
             <!-- 잡학 상식 콘텐츠 박스 -->
@@ -277,7 +369,7 @@
         </div>
 
         <!-- 추가 콘텐츠를 위한 플레이스홀더 -->
-        <p class="text-2xl text-gray-700 px-4 mt-1"></p> <!-- px-6에서 px-4로 변경 -->
+        <p class="text-2xl text-gray-700 px-4 mt-1"></p>
     </div>
 
     <!-- 하단 내비게이션 바 -->
@@ -292,7 +384,7 @@
             </button>
 
             <!-- 학교생활 내비게이션 아이템 -->
-            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable"> <!-- data-path를 /sclife로 변경 -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
                 <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
                     <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
                 </svg>
@@ -324,6 +416,102 @@
             </button>
         </div>
     </nav>
+
+    <!-- Main Popup Overlay -->
+    <div id="threadsPopup" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-custom flex items-center justify-center z-50 hidden p-4">
+        <!-- Main Popup Container -->
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-auto overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="popupContent">
+            <!-- Main Popup Header -->
+            <div class="px-6 py-4 border-b border-gray-200 text-center flex items-center justify-center relative">
+                <h3 class="text-lg font-semibold text-gray-900">N-MATE 서버 점검 안내</h3>
+                <!-- Info Icon Button -->
+                <button id="infoIconBtn" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Main Popup Body/Content -->
+            <div class="p-6 text-left popup-scroll-content" id="scrollContent">
+                <p class="text-gray-800 text-sm mb-4">
+                    안녕하세요, N-MATE 운영팀입니다.<br>
+                    보다 안정적인 서비스 제공을 위해 아래와 같이 서버 점검을 진행할 예정입니다. 이용에 불편을 드리는 점 양해 부탁드립니다.
+                </p>
+                <p class="text-gray-800 text-sm font-semibold mb-2">점검 일시</p>
+                <p class="text-gray-800 text-sm mb-4">
+                    2025년 7월 4일(금) 오전 2시부터 2025년 7월 5일 오후 5시까지
+                </p>
+                <p class="text-gray-800 text-sm font-semibold mb-2">점검 내용</p>
+                <ul class="list-disc list-inside text-gray-800 text-sm mb-4 pl-4">
+                    <li><strong>커뮤니티 기능 일시 중단</strong>
+                        <ul class="list-none pl-4">
+                            <li>(글쓰기, 댓글 작성, 회원가입 및 로그인 등)</li>
+                        </ul>
+                    </li>
+                    <li>일부 시스템 안정화 및 기능 개선 작업</li>
+                </ul>
+                <p class="text-gray-800 text-sm font-semibold mb-2">서비스 이용 가능 항목</p>
+                <p class="text-gray-800 text-sm mb-4">
+                    시간표, 학사일정, 급식 정보 등 핵심 기능은 점검 중에도 정상적으로 이용 가능합니다.
+                </p>
+                <p class="text-gray-800 text-sm font-semibold mb-2">안내 사항</p>
+                <ul class="list-disc list-inside text-gray-800 text-sm mb-4 pl-4">
+                    <li>점검 일정은 작업 상황에 따라 변경될 수 있으며, 변동 시 별도 공지를 통해 안내드리겠습니다.</li>
+                    <li>점검 이후 서비스 이용 중 문제가 발생할 경우, support@onebox.kro.kr로 문의해주시기 바랍니다.</li>
+                </ul>
+                <p class="text-gray-800 text-sm mb-4">
+                    점검 이후, N-MATE는 3.0으로 새롭게 돌아옵니다.<br>
+                    더 똑똑하게, 더 빠르게, 더 편리하게.<br>
+                    완전히 새로워진 N-MATE 3.0을 기대해주세요.
+                </p>
+                <p class="text-gray-800 text-sm mb-4">감사합니다.</p>
+                <p class="text-gray-800 text-sm text-right">2025년 7월 3일<br>N-MATE 운영팀 드림</p>
+            </div>
+
+            <!-- Main Popup Button -->
+            <div class="border-t border-gray-200 flex flex-row">
+                <button class="w-full py-3 text-blue-600 font-semibold text-base hover:bg-gray-50 transition duration-200" id="closePopupBtn">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Popup Overlay for Update Info -->
+    <div id="updateInfoPopup" class="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-custom flex items-center justify-center z-50 hidden p-4">
+        <!-- New Popup Container -->
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full mx-auto overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="updateInfoPopupContent">
+            <!-- New Popup Header -->
+            <div class="px-6 py-4 border-b border-gray-200 text-center">
+                <h3 class="text-lg font-semibold text-gray-900">N-MATE 3.0 업데이트 안내</h3>
+            </div>
+
+            <!-- New Popup Body/Content -->
+            <div class="p-6 text-left popup-scroll-content">
+                <p class="text-gray-800 text-sm mb-4">
+                    N-MATE 3.0은 사용자 경험을 혁신적으로 개선하기 위해 다음과 같은 주요 변경 사항을 포함합니다:
+                </p>
+                <ul class="list-disc list-inside text-gray-800 text-sm mb-4 pl-4">
+                    <li><strong>AI 기반 개인화된 학습 경로:</strong> 사용자 학습 패턴을 분석하여 최적화된 콘텐츠를 추천합니다.</li>
+                    <li><strong>실시간 협업 기능 강화:</strong> 그룹 프로젝트 및 스터디를 위한 실시간 문서 편집 및 공유 기능을 제공합니다.</li>
+                    <li><strong>새로운 UI/UX 디자인:</strong> 더 직관적이고 시각적으로 매력적인 인터페이스로 사용 편의성을 높였습니다.</li>
+                    <li><strong>모바일 최적화:</strong> 모든 기기에서 끊김 없는 학습 경험을 위한 완벽한 반응형 디자인을 적용했습니다.</li>
+                    <li><strong>성능 최적화:</strong> 로딩 속도 개선 및 안정성 향상으로 더욱 쾌적한 환경을 제공합니다.</li>
+                </ul>
+                <p class="text-gray-800 text-sm mb-4">
+                    새로운 N-MATE 3.0에서 더 스마트하고 효율적인 학습을 경험해보세요!
+                </p>
+            </div>
+
+            <!-- New Popup Button -->
+            <div class="border-t border-gray-200 flex flex-row">
+                <button class="w-full py-3 text-blue-600 font-semibold text-base hover:bg-gray-50 transition duration-200" id="closeUpdateInfoPopupBtn">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Lucide Icons CDN (Deferred) -->
     <script src="https://unpkg.com/lucide@latest" defer></script>
@@ -357,6 +545,19 @@
         const accountDropdown = document.getElementById('accountDropdown');
         const countdownBox = document.getElementById('countdownBox'); // 카운트다운 박스 요소 가져오기
         const triviaDisplaySection = document.getElementById('triviaDisplaySection'); // 잡학 상식 표시 섹션 가져오기
+
+        // Popup DOM elements
+        // const openPopupBtn = document.getElementById('openPopupBtn'); // Removed
+        const threadsPopup = document.getElementById('threadsPopup');
+        const popupContent = document.getElementById('popupContent');
+        const scrollContent = document.getElementById('scrollContent');
+        const closePopupBtn = document.getElementById('closePopupBtn');
+        const infoIconBtn = document.getElementById('infoIconBtn'); // Info icon button
+
+        const updateInfoPopup = document.getElementById('updateInfoPopup'); // Update info popup overlay
+        const updateInfoPopupContent = document.getElementById('updateInfoPopupContent'); // Update info popup content
+        const closeUpdateInfoPopupBtn = document.getElementById('closeUpdateInfoPopupBtn'); // Close button for update info popup
+
 
         // NEIS API 공통 정보 (더 이상 하드코딩되지 않음)
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // API 키로 대체
@@ -823,7 +1024,7 @@
             applyTheme(currentSelectedTheme);
 
             // Firebase 초기화
-            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+            if (firebaseConfig && firebase.apps.length === 0) {
                 try {
                     app = firebase.initializeApp(firebaseConfig);
                     auth = firebase.auth();
@@ -899,6 +1100,113 @@
                     }
                 }, 100);
             }
+
+            // Popup Functions (from threads-popup-html)
+
+            // Function to show the main popup with animation
+            function showMainPopup() {
+                threadsPopup.classList.remove('hidden');
+                setTimeout(() => {
+                    popupContent.classList.remove('scale-95', 'opacity-0');
+                    popupContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+
+                // Reset scroll position and button state when popup opens
+                scrollContent.scrollTop = 0;
+                closePopupBtn.textContent = '확인';
+                closePopupBtn.classList.remove('do-not-show-again-active');
+                closePopupBtn.classList.remove('text-red-600');
+                closePopupBtn.classList.add('text-blue-600');
+            }
+
+            // Function to hide the main popup with animation
+            function hideMainPopup() {
+                popupContent.classList.remove('scale-100', 'opacity-100');
+                popupContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    threadsPopup.classList.add('hidden');
+                }, 300);
+            }
+
+            // Function to show the update info popup with animation
+            function showUpdateInfoPopup() {
+                updateInfoPopup.classList.remove('hidden');
+                setTimeout(() => {
+                    updateInfoPopupContent.classList.remove('scale-95', 'opacity-0');
+                    updateInfoPopupContent.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+
+            // Function to hide the update info popup with animation
+            function hideUpdateInfoPopup() {
+                updateInfoPopupContent.classList.remove('scale-100', 'opacity-100');
+                updateInfoPopupContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    updateInfoPopup.classList.add('hidden');
+                }, 300);
+            }
+
+            // Event listeners for popups
+            // openPopupBtn.addEventListener('click', showMainPopup); // Removed this button
+
+            // Check if the popup should be shown automatically
+            const doNotShowPopup = localStorage.getItem('doNotShowPopup');
+            if (doNotShowPopup !== 'true') {
+                showMainPopup(); // Show the main popup automatically
+            } else {
+                console.log('팝업이 "다시 보지 않기" 설정으로 인해 자동으로 열리지 않습니다.');
+            }
+
+
+            closePopupBtn.addEventListener('click', () => {
+                if (closePopupBtn.textContent === '다시 보지 않기') {
+                    console.log('버튼 클릭됨: 다시 보지 않기 (스크롤 후)');
+                    localStorage.setItem('doNotShowPopup', 'true'); // Set the flag
+                } else {
+                    console.log('버튼 클릭됨: 확인 (스크롤 전)');
+                }
+                hideMainPopup();
+            });
+
+            scrollContent.addEventListener('scroll', () => {
+                if (scrollContent.scrollHeight - scrollContent.scrollTop <= scrollContent.clientHeight + 1) {
+                    closePopupBtn.textContent = '다시 보지 않기';
+                    closePopupBtn.classList.add('do-not-show-again-active');
+                    closePopupBtn.classList.remove('text-blue-600');
+                } else {
+                    closePopupBtn.textContent = '확인';
+                    closePopupBtn.classList.remove('do-not-show-again-active');
+                    closePopupBtn.classList.remove('text-red-600');
+                    closePopupBtn.classList.add('text-blue-600');
+                }
+            });
+
+            infoIconBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent the main popup from closing if clicked on icon
+                showUpdateInfoPopup();
+            });
+
+            closeUpdateInfoPopupBtn.addEventListener('click', hideUpdateInfoPopup);
+
+            threadsPopup.addEventListener('click', (event) => {
+                if (event.target === threadsPopup) {
+                    hideMainPopup();
+                }
+            });
+
+            updateInfoPopup.addEventListener('click', (event) => {
+                if (event.target === updateInfoPopup) {
+                    hideUpdateInfoPopup();
+                }
+            });
+
+            popupContent.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            updateInfoPopupContent.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
         });
     </script>
 
