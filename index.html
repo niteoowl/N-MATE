@@ -24,28 +24,94 @@
             flex-direction: column;
             min-height: 100vh;
             background-color: #ffffff; /* 라이트 그레이 배경 */
+            transition: background-color 0.3s ease; /* 테마 변경 시 부드러운 전환 */
         }
-        /* 스켈레톤 로더 애니메이션 */
-        .skeleton {
-            animation: pulse 1.5s infinite ease-in-out;
-            background-color: #f0f0f0;
+
+        /* Dark mode styles */
+        body.dark {
+            background-color: #121212; /* Dark background */
+            color: #e2e8f0; /* Light text color */
         }
-        @keyframes pulse {
-            0% {
-                opacity: 0.6;
-            }
-            50% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0.6;
-            }
+
+        body.dark .main-content-container,
+        body.dark .dropdown-menu,
+        body.dark .dropdown-menu button,
+        body.dark #countdownBox,
+        body.dark #timetable-display-section,
+        body.dark #meal-display-section,
+        body.dark #triviaDisplaySection {
+            background-color: #121212; /* Darker background for elements */
+            border-color: #4a5568; /* Darker border color */
+            color: #e2e8f0; /* Light text color */
         }
-        .skeleton-text {
-            height: 1em;
-            width: 80%;
-            margin-bottom: 0.5em;
-            border-radius: 4px;
+
+        body.dark .text-gray-800 {
+            color: #e2e8f0; /* Light text for titles */
+        }
+
+        body.dark .text-gray-700 {
+            color: #cbd5e0; /* Lighter gray text */
+        }
+
+        body.dark .text-gray-600 {
+            color: #a0aec0; /* Even lighter gray text */
+        }
+
+        body.dark .text-gray-500 {
+            color: #a0aec0; /* Lighter gray for icons and inactive nav */
+        }
+
+        body.dark .dropdown-menu button:hover {
+            background-color: #1F1F1F; /* Darker hover state */
+        }
+
+        body.dark .nav-item.active {
+            color: #63b3ed; /* Lighter blue for active nav item in dark mode */
+        }
+
+        body.dark .nav-item.active svg {
+            color: #63b3ed; /* Lighter blue for active nav icon in dark mode */
+        }
+
+        body.dark .nav-item:hover {
+            background-color: #1F1F1F; /* Darker hover for nav items */
+            color: #63b3ed; /* Lighter blue hover for nav items */
+        }
+
+        body.dark .border-gray-300 {
+            border-color: #1F1F1F; /* Darker border for elements that use border-gray-300 */
+        }
+
+        body.dark .shadow-sm {
+            box-shadow: none; /* Remove shadows in dark mode */
+        }
+
+        /* Dark mode for Bottom Navigation Bar */
+        body.dark .bottom-nav-bar {
+            background-color: #121212; /* Dark background for nav bar */
+            border-color: #1F1F1F; /* Darker border for nav bar */
+        }
+
+        body.dark .bottom-nav-bar .nav-item {
+            color: #a0aec0; /* Lighter gray for nav items in dark mode */
+        }
+
+        body.dark .bottom-nav-bar .nav-item:hover {
+            background-color: #1F1F1F; /* Darker hover for nav items */
+            color: #63b3ed; /* Lighter blue hover for nav items */
+        }
+
+        body.dark .bottom-nav-bar .nav-item.active {
+            color: #63b3ed; /* Lighter blue for active nav item in dark mode */
+        }
+
+        body.dark .bottom-nav-bar .nav-item.active svg {
+            color: #63b3ed; /* Lighter blue for active nav icon in dark mode */
+        }
+
+        /* Dark mode for skeleton loader */
+        body.dark .skeleton {
+            background-color: #2d3748; /* Darker skeleton background */
         }
 
         /* 메인 콘텐츠 컨테이너 */
@@ -113,6 +179,21 @@
         .nav-item.active svg {
             color: #2563eb;
         }
+
+        /* Dark mode for text inside timetable and meal sections */
+        body.dark #countdownBox p,
+        body.dark #timetable-display-section p,
+        body.dark #timetable-display-section strong,
+        body.dark #meal-display-section p,
+        body.dark #meal-display-section strong,
+        body.dark #triviaDisplaySection p {
+            color: #e2e8f0 !important; /* Ensure text is light in dark mode, use !important to override Tailwind */
+        }
+
+        /* Dark mode for skeleton loader text */
+        body.dark .skeleton.skeleton-text {
+            color: transparent; /* Ensure skeleton text itself is transparent */
+        }
     </style>
 </head>
 <body>
@@ -156,7 +237,7 @@
             <!-- 두 부분으로 분할된 가로 직사각형 상자 -->
             <div class="w-full min-h-40 bg-white rounded-xl border border-gray-300 flex">
                 <!-- 왼쪽 절반: 시간표 정보 -->
-                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 border-r border-gray-300 overflow-y-auto overflow-x-auto">
+                <div id="timetable-display-section" class="w-1/2 bg-white rounded-l-xl flex flex-col items-start p-4 overflow-y-auto overflow-x-auto">
                     <!-- 시간표 콘텐츠용 스켈레톤 로더 -->
                     <div class="flex w-full h-full text-left">
                         <div class="flex-1 flex flex-col items-start">
@@ -173,7 +254,7 @@
                     </div>
                 </div>
                 <!-- 오른쪽 절반: 급식 정보 -->
-                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 overflow-y-auto overflow-x-auto">
+                <div id="meal-display-section" class="w-1/2 bg-white rounded-r-xl flex items-start justify-start text-gray-800 text-xl font-bold p-4 border-l border-gray-300 overflow-y-auto overflow-x-auto">
                     <!-- 급식 콘텐츠용 스켈레톤 로더 -->
                     <div class="w-full text-left">
                         <div class="skeleton skeleton-text w-full"></div>
@@ -200,7 +281,7 @@
     </div>
 
     <!-- 하단 내비게이션 바 -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10 bottom-nav-bar">
         <div class="flex justify-around items-center h-12">
             <!-- 홈 내비게이션 아이템 -->
             <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
@@ -280,7 +361,37 @@
         // NEIS API 공통 정보 (더 이상 하드코딩되지 않음)
         const neisApiKey = "cbb4da48e87445f68c2732368454ebc3"; // API 키로 대체
 
-        // 오늘 날짜를 YYYYMMDD 형식으로 가져오는 함수
+        // 로컬 스토리지에서 테마 로드, 없으면 시스템 기본
+        let currentSelectedTheme = localStorage.getItem('theme') || 'system';
+
+        /**
+         * Applies the selected theme to the body element.
+         * @param {string} theme - The theme to apply ('light', 'dark', 'system').
+         */
+        function applyTheme(theme) {
+            const body = document.body;
+            if (theme === 'dark') {
+                body.classList.add('dark');
+            } else if (theme === 'light') {
+                body.classList.remove('dark');
+            } else if (theme === 'system') {
+                // 시스템 설정에 따라 다크 모드 적용
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    body.classList.add('dark');
+                } else {
+                    body.classList.remove('dark');
+                }
+            }
+        }
+
+        // 시스템 테마 변경 감지 리스너 (system 테마 선택 시에만 동작)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (currentSelectedTheme === 'system') {
+                applyTheme('system');
+            }
+        });
+
+        // 오늘 날짜를YYYYMMDD 형식으로 가져오는 함수
         function getTodayDate() {
             const today = new Date();
             const year = today.getFullYear();
@@ -708,6 +819,9 @@
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // 페이지 로드 시 저장된 테마 적용
+            applyTheme(currentSelectedTheme);
+
             // Firebase 초기화
             if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
                 try {
