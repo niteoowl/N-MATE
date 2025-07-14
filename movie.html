@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Player Clone</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Font: Inter (기본 폰트) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Pretendard 폰트 임포트 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif; /* 기본 body 폰트 */
+            background-color: #000; /* Netflix-like dark background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        /* Custom scrollbar for better aesthetics if content overflows */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #222;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Custom styling for range input (progress bar, volume) */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #555;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 2px;
+        }
+
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e50914; /* Netflix red */
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            margin-top: -6px; /* Adjust thumb position */
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #e50914; /* Netflix red */
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Specific styles for the progress bar track */
+        #progressBar::-webkit-slider-runnable-track {
+            background: linear-gradient(to right, #e50914 var(--progress-value, 0%), #555 var(--progress-value, 0%));
+            border-radius: 2px;
+            height: 4px;
+        }
+        #progressBar::-moz-range-track {
+            background: linear-gradient(to right, #e50914 var(--progress-value, 0%), #555 var(--progress-value, 0%));
+            border-radius: 2px;
+            height: 4px;
+        }
+
+        /* Custom style for active CC button */
+        .cc-active {
+            color: #e50914; /* Netflix red */
+        }
+
+        /* Subtitle styling for Netflix-like appearance */
+        video::cue {
+            color: white;
+            background-color: transparent; /* 명시적으로 투명 설정 */
+            text-shadow: 0px 0px 7px rgba(0, 0, 0, 0.7), 0px 0px 4px rgba(0, 0, 0, 0.5);
+            font-size: 1.2em; /* 더 작게 조정 */
+            font-weight: 700; /* 텍스트 굵기 700으로 설정 */
+            text-align: center;
+            line-height: 1.1em; /* 자막 줄 간격을 줄여서 전체적으로 위로 올림 */
+            position: 80%; /* 하단에서 20% 위로 이동 (비디오 프레임 기준) */
+        }
+
+        /* Seek Feedback Overlay Styling */
+        #seekFeedback {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 25%; /* 효과가 표시될 영역의 너비 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-align: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.2s;
+            pointer-events: none; /* 클릭 이벤트가 비디오로 전달되도록 함 */
+            z-index: 20;
+        }
+        #seekFeedback.seek-left {
+            left: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.7), transparent);
+            transform: translateX(-100%); /* 초기 숨김 상태 */
+        }
+        #seekFeedback.seek-right {
+            right: 0;
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.7), transparent);
+            transform: translateX(100%); /* 초기 숨김 상태 */
+        }
+        #seekFeedback.show {
+            opacity: 1;
+            transform: translateX(0%); /* 표시 상태 */
+        }
+        #seekFeedback i {
+            font-size: 3rem; /* 아이콘 크기 */
+        }
+        #seekFeedback span {
+            font-size: 1.5rem; /* 텍스트 크기 */
+            font-weight: bold;
+        }
+
+        /* Loading Overlay Styling */
+        #loading-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.9); /* 더 어두운 배경 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30; /* Seek feedback보다 위에 오도록 */
+            opacity: 1; /* 초기에는 보이도록 */
+            transition: opacity 0.5s ease-out;
+        }
+        #loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* 숨겨졌을 때 클릭 이벤트 방지 */
+        }
+        #loading-overlay img {
+            max-width: 150px; /* 이미지 크기 조정 */
+            height: auto;
+            animation: pulse 1.5s infinite ease-in-out; /* 부드러운 맥박 효과 */
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.9);
+                opacity: 0.7;
+            }
+        }
+
+        /* Autoplay Blocked Message Styling */
+        #autoplay-blocked-message {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            color: white;
+            font-size: 1.5rem;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #autoplay-blocked-message.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        #autoplay-blocked-message button {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #e50914;
+            border-radius: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #autoplay-blocked-message button:hover {
+            background-color: #f40612;
+        }
+    </style>
+</head>
+<body class="bg-black text-white">
+
+    <div id="player-container" class="relative w-full max-w-screen-xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+        <!-- Intro Video Area -->
+        <div id="intro-video-container" class="absolute inset-0 bg-black flex items-center justify-center">
+            <video id="introVideoPlayer" class="w-full h-full object-contain" src="https://nmate.kr/op.mp4" playsinline></video>
+        </div>
+
+        <!-- Main Video Area -->
+        <div class="absolute inset-0 bg-black hidden">
+            <video id="videoPlayer" class="w-full h-full object-contain" src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" controlsList="nodownload nofullscreen noremoteplayback" crossorigin="anonymous" playsinline></video>
+        </div>
+
+        <!-- Seek Feedback Overlay -->
+        <div id="seekFeedback">
+            <i id="seekIcon" class="fas"></i>
+            <span id="seekText"></span>
+        </div>
+
+        <!-- Top Overlay - Always visible -->
+        <div id="top-overlay" class="absolute top-0 left-0 right-0 px-4 py-1 bg-gradient-to-b from-black/70 to-transparent hidden">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="text-white text-2xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <span class="text-xl font-semibold">[자막] Tears of Steel</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-white text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay">
+            <img src="https://i.postimg.cc/MZ0RF5XP/001-85.png" alt="Loading Netflix Logo">
+        </div>
+
+        <!-- Autoplay Blocked Message Overlay -->
+        <div id="autoplay-blocked-message" class="hidden">
+            <p>이제 영화도 N-MATE에서!</p>
+            <button id="autoplay-play-button">재생하기</button>
+        </div>
+
+        <!-- Control Bar - Always visible -->
+        <div id="control-bar" class="absolute bottom-0 left-0 right-0 px-3 py-1 bg-gradient-to-t from-black/50 to-transparent hidden">
+            <!-- Progress Bar -->
+            <div class="flex items-center mb-2">
+                <input type="range" id="progressBar" min="0" max="100" value="0" class="w-full h-1 bg-gray-700 appearance-none rounded-full cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between text-white text-sm">
+                <!-- Left Controls -->
+                <div class="flex items-center space-x-4">
+                    <button id="playPauseBtn" class="text-3xl hover:text-gray-300 transition-colors rounded-full p-2 w-12 h-12 flex items-center justify-center">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                    <span id="currentTime" class="min-w-[48px]">00:00</span>
+                    <span class="mx-1">/</span>
+                    <span id="totalTime">00:00</span>
+                </div>
+
+                <!-- Right Controls -->
+                <div class="flex items-center space-x-4">
+                    <!-- Volume control with absolute positioning -->
+                    <div class="flex items-center group relative">
+                        <button id="volumeBtn" class="text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" id="volumeBar" min="0" max="100" value="50"
+                            class="absolute w-20 h-1 bg-gray-700 appearance-none rounded-full cursor-pointer
+                                   opacity-0 invisible transition-all duration-200 ease-out
+                                   left-[calc(100% + 40px)] top-1/2 -translate-y-1/2
+                                   group-hover:opacity-100 group-hover:visible group-hover:left-[calc(100% + 10px)]">
+                    </div>
+                    <button id="ccBtn" class="text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-closed-captioning"></i>
+                    </button>
+                    <button class="text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="fullscreenBtn" class="text-xl hover:text-gray-300 transition-colors rounded-full p-2">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const playerContainer = document.getElementById('player-container');
+        const introVideoContainer = document.getElementById('intro-video-container');
+        const introVideoPlayer = document.getElementById('introVideoPlayer');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playPauseIcon = playPauseBtn.querySelector('i');
+        const progressBar = document.getElementById('progressBar');
+        const currentTimeSpan = document.getElementById('currentTime');
+        const totalTimeSpan = document.getElementById('totalTime');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const volumeIcon = volumeBtn.querySelector('i');
+        const volumeBar = document.getElementById('volumeBar');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const topOverlay = document.getElementById('top-overlay');
+        const controlBar = document.getElementById('control-bar');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const ccBtn = document.getElementById('ccBtn');
+        const ccIcon = ccBtn.querySelector('i');
+        const seekFeedback = document.getElementById('seekFeedback');
+        const seekIcon = document.getElementById('seekIcon');
+        const seekText = document.getElementById('seekText');
+        const autoplayBlockedMessage = document.getElementById('autoplay-blocked-message');
+        const autoplayPlayButton = document.getElementById('autoplay-play-button');
+
+
+        let isPlaying = false;
+        let isMuted = false;
+        let currentVolume = 50;
+        let currentTrackIndex = -1;
+        let subtitleBlobUrl = null;
+
+        let lastClickTime = 0;
+        let clickTimeout = null;
+        const DOUBLE_CLICK_THRESHOLD = 300;
+
+        function formatTime(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            const formattedH = h > 0 ? String(h).padStart(2, '0') + ':' : '';
+            const formattedM = String(m).padStart(2, '0');
+            const formattedS = String(s).padStart(2, '0');
+            return `${formattedH}${formattedM}:${formattedS}`;
+        }
+
+        function updateCcButtonState() {
+            if (currentTrackIndex !== -1 && videoPlayer.textTracks[currentTrackIndex] && videoPlayer.textTracks[currentTrackIndex].mode === 'showing') {
+                ccIcon.classList.add('cc-active');
+            } else {
+                ccIcon.classList.remove('cc-active');
+            }
+        }
+
+        function srtToVtt(srtContent) {
+            let vttContent = 'WEBVTT\n\n';
+            const srtCues = srtContent.split(/\r?\n\r?\n/).filter(block => block.trim() !== '');
+
+            srtCues.forEach(cueBlock => {
+                const lines = cueBlock.split(/\r?\n/);
+                if (lines.length >= 2) {
+                    const timeLine = lines[1];
+                    const textLines = lines.slice(2);
+                    const vttTimeLine = timeLine.replace(/,/g, '.');
+                    vttContent += `${vttTimeLine}\n`;
+                    vttContent += `${textLines.join('\n')}\n\n`;
+                }
+            });
+            return vttContent;
+        }
+
+        async function loadSubtitles(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const srtContent = await response.text();
+                const vttContent = srtToVtt(srtContent);
+
+                if (subtitleBlobUrl) {
+                    URL.revokeObjectURL(subtitleBlobUrl);
+                }
+
+                const blob = new Blob([vttContent], { type: 'text/vtt' });
+                subtitleBlobUrl = URL.createObjectURL(blob);
+
+                while (videoPlayer.querySelector('track')) {
+                    videoPlayer.removeChild(videoPlayer.querySelector('track'));
+                }
+
+                const track = document.createElement('track');
+                track.kind = 'subtitles';
+                track.src = subtitleBlobUrl;
+                track.srclang = 'ko';
+                track.label = 'Korean';
+                track.default = true;
+                videoPlayer.appendChild(track);
+
+                track.addEventListener('load', () => {
+                    for (let i = 0; i < videoPlayer.textTracks.length; i++) {
+                        if (videoPlayer.textTracks[i] === track) {
+                            videoPlayer.textTracks[i].mode = 'showing';
+                            currentTrackIndex = i;
+                            break;
+                        } else {
+                            videoPlayer.textTracks[i].mode = 'hidden';
+                        }
+                    }
+                    updateCcButtonState();
+                });
+
+            } catch (error) {
+                console.error('자막 로드 또는 처리 중 오류 발생:', error);
+            }
+        }
+
+        let seekFeedbackTimeout;
+        function showSeekFeedback(direction) {
+            seekFeedback.classList.remove('seek-left', 'seek-right', 'show');
+
+            if (direction === '+5s') {
+                seekIcon.className = 'fas fa-forward';
+                seekText.textContent = '+5s';
+                seekFeedback.classList.add('seek-right');
+            } else {
+                seekIcon.className = 'fas fa-backward';
+                seekText.textContent = '-5s';
+                seekFeedback.classList.add('seek-left');
+            }
+
+            requestAnimationFrame(() => {
+                seekFeedback.classList.add('show');
+            });
+
+            clearTimeout(seekFeedbackTimeout);
+            seekFeedbackTimeout = setTimeout(() => {
+                seekFeedback.classList.remove('show');
+            }, 700);
+        }
+
+        function showAutoplayBlockedMessage(show) {
+            if (show) {
+                autoplayBlockedMessage.classList.add('show');
+                autoplayBlockedMessage.classList.remove('hidden');
+            } else {
+                autoplayBlockedMessage.classList.remove('show');
+                autoplayBlockedMessage.classList.add('hidden');
+            }
+        }
+
+        autoplayPlayButton.addEventListener('click', () => {
+            showAutoplayBlockedMessage(false);
+            if (introVideoContainer.classList.contains('hidden')) {
+                // Main video is active, try playing it
+                videoPlayer.play().then(() => {
+                    playPauseIcon.classList.remove('fa-play');
+                    playPauseIcon.classList.add('fa-pause');
+                    loadingOverlay.classList.add('hidden');
+                    console.log("사용자 상호작용으로 메인 비디오 재생 성공.");
+                }).catch(error => {
+                    console.error("사용자 상호작용 후 메인 비디오 재생 실패:", error);
+                });
+            } else {
+                // Intro video is active, try playing it
+                introVideoPlayer.play().then(() => {
+                    loadingOverlay.classList.add('hidden');
+                    console.log("사용자 상호작용으로 인트로 비디오 재생 성공.");
+                }).catch(error => {
+                    console.error("사용자 상호작용 후 인트로 비디오 재생 실패:", error);
+                });
+            }
+        });
+
+
+        // Event listeners for main video
+        videoPlayer.addEventListener('loadedmetadata', () => {
+            totalTimeSpan.textContent = formatTime(videoPlayer.duration);
+            progressBar.max = videoPlayer.duration;
+            loadSubtitles('https://nmate.kr/JAMAK.srt');
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (videoPlayer.paused || videoPlayer.ended) {
+                videoPlayer.play();
+            } else {
+                videoPlayer.pause();
+            }
+        });
+
+        videoPlayer.addEventListener('timeupdate', () => {
+            progressBar.value = videoPlayer.currentTime;
+            updateProgressBarFill(videoPlayer.currentTime / videoPlayer.duration * 100);
+            currentTimeSpan.textContent = formatTime(videoPlayer.currentTime);
+        });
+
+        progressBar.addEventListener('input', (e) => {
+            const seekTime = parseFloat(e.target.value);
+            videoPlayer.currentTime = seekTime;
+            loadingOverlay.classList.remove('hidden'); // Seeking 시작 시 로딩 오버레이 표시
+        });
+
+        function updateProgressBarFill(percentage) {
+            progressBar.style.setProperty('--progress-value', `${percentage}%`);
+        }
+        updateProgressBarFill(0);
+
+        volumeBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            videoPlayer.muted = isMuted;
+            if (isMuted) {
+                volumeIcon.classList.remove('fa-volume-up');
+                volumeIcon.classList.add('fa-volume-mute');
+                volumeBar.value = 0;
+            } else {
+                volumeIcon.classList.remove('fa-volume-mute');
+                volumeIcon.classList.add('fa-volume-up');
+                volumeBar.value = currentVolume;
+            }
+        });
+
+        volumeBar.addEventListener('input', (e) => {
+            currentVolume = e.target.value;
+            videoPlayer.volume = currentVolume / 100;
+            if (currentVolume == 0) {
+                volumeIcon.classList.remove('fa-volume-up');
+                volumeIcon.classList.add('fa-volume-mute');
+                isMuted = true;
+            } else {
+                volumeIcon.classList.remove('fa-volume-mute');
+                volumeIcon.classList.add('fa-volume-up');
+                isMuted = false;
+            }
+        });
+        videoPlayer.volume = volumeBar.value / 100;
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                playerContainer.requestFullscreen().catch(err => {
+                    console.error(`전체 화면 모드 활성화 시도 중 오류 발생: ${err.message} (${err.name})`);
+                });
+            }
+        });
+
+        ccBtn.addEventListener('click', () => {
+            const textTracks = videoPlayer.textTracks;
+            const subtitleTracks = [];
+            for (let i = 0; i < textTracks.length; i++) {
+                if (textTracks[i].kind === 'subtitles' || textTracks[i].kind === 'captions') {
+                    subtitleTracks.push(textTracks[i]);
+                }
+            }
+
+            if (subtitleTracks.length === 0) {
+                currentTrackIndex = -1;
+                updateCcButtonState();
+                return;
+            }
+
+            for (let i = 0; i < subtitleTracks.length; i++) {
+                subtitleTracks[i].mode = 'hidden';
+            }
+
+            let nextIndexInSubtitleTracks = -1;
+            if (currentTrackIndex !== -1 && (videoPlayer.textTracks[currentTrackIndex].kind === 'subtitles' || videoPlayer.textTracks[currentTrackIndex].kind === 'captions')) {
+                const currentSubtitleTrack = videoPlayer.textTracks[currentTrackIndex];
+                const currentSubtitleTrackIdx = subtitleTracks.indexOf(currentSubtitleTrack);
+                if (currentSubtitleTrackIdx !== -1) {
+                    nextIndexInSubtitleTracks = (currentSubtitleTrackIdx + 1) % (subtitleTracks.length + 1);
+                } else {
+                    nextIndexInSubtitleTracks = 0;
+                }
+            } else {
+                nextIndexInSubtitleTracks = 0;
+            }
+
+            if (nextIndexInSubtitleTracks < subtitleTracks.length) {
+                subtitleTracks[nextIndexInSubtitleTracks].mode = 'showing';
+                currentTrackIndex = Array.prototype.indexOf.call(videoPlayer.textTracks, subtitleTracks[nextIndexInSubtitleTracks]);
+                console.log(`트랙 표시: ${subtitleTracks[nextIndexInSubtitleTracks].label}`);
+            } else {
+                currentTrackIndex = -1;
+                console.log('자막 꺼짐');
+            }
+            updateCcButtonState();
+        });
+
+
+        window.onload = () => {
+            // Intro video should be visible initially, main video hidden
+            introVideoContainer.classList.remove('hidden');
+            videoPlayer.parentElement.classList.add('hidden');
+            topOverlay.classList.add('hidden');
+            controlBar.classList.add('hidden');
+            loadingOverlay.classList.remove('hidden'); // Show loading for intro video
+            showAutoplayBlockedMessage(false); // Ensure message is hidden on load
+
+            console.log("페이지 로드됨: 인트로 비디오 표시, 메인 비디오 숨김, 로딩 오버레이 활성화.");
+
+            // Try to play intro video
+            introVideoPlayer.play().then(() => {
+                console.log("인트로 비디오 자동 재생 성공.");
+                loadingOverlay.classList.add('hidden'); // Hide loading once intro starts playing
+            }).catch(error => {
+                console.warn("인트로 비디오 자동 재생이 차단되었습니다. 수동으로 시작해야 할 수 있습니다:", error);
+                loadingOverlay.classList.add('hidden'); // Hide loading even if autoplay fails
+                showAutoplayBlockedMessage(true); // Show message if autoplay fails
+            });
+        };
+
+        // When intro video ends, switch to main video
+        introVideoPlayer.addEventListener('ended', () => {
+            console.log("인트로 비디오 종료. 메인 비디오로 전환.");
+            introVideoContainer.classList.add('hidden'); // Hide intro video
+            videoPlayer.parentElement.classList.remove('hidden'); // Show main video container
+            topOverlay.classList.remove('hidden'); // Show top overlay
+            controlBar.classList.remove('hidden'); // Show control bar
+            loadingOverlay.classList.remove('hidden'); // Show loading for main video while it prepares
+            showAutoplayBlockedMessage(false); // Hide message when switching
+
+            videoPlayer.play().then(() => {
+                playPauseIcon.classList.remove('fa-play');
+                playPauseIcon.classList.add('fa-pause');
+                loadingOverlay.classList.add('hidden'); // Hide loading once main video starts playing
+                console.log("메인 비디오 자동 재생 성공 (인트로 후).");
+            }).catch(error => {
+                console.warn("메인 비디오 자동 재생이 차단되었습니다 (인트로 후). 재생 버튼을 눌러주세요:", error);
+                playPauseIcon.classList.remove('fa-pause');
+                playPauseIcon.classList.add('fa-play');
+                loadingOverlay.classList.add('hidden'); // Hide loading even if autoplay fails
+                showAutoplayBlockedMessage(true); // Show message if autoplay fails
+            });
+        });
+
+        // Main video playing state
+        videoPlayer.addEventListener('playing', () => {
+            console.log("메인 비디오 재생 중 - 로딩 오버레이 숨김.");
+            playPauseIcon.classList.remove('fa-play');
+            playPauseIcon.classList.add('fa-pause');
+            loadingOverlay.classList.add('hidden');
+            showAutoplayBlockedMessage(false); // Hide message if playing
+        });
+
+        // Main video ready to play (canplay)
+        videoPlayer.addEventListener('canplay', () => {
+            console.log("메인 비디오 재생 가능 - 로딩 오버레이 숨김.");
+            loadingOverlay.classList.add('hidden');
+        });
+
+        // Main video paused
+        videoPlayer.addEventListener('pause', () => {
+            playPauseIcon.classList.remove('fa-pause');
+            playPauseIcon.classList.add('fa-play');
+        });
+
+        // Main video buffering/waiting
+        videoPlayer.addEventListener('waiting', () => {
+            console.log("메인 비디오 대기 중 - 로딩 오버레이 표시.");
+            loadingOverlay.classList.remove('hidden');
+        });
+
+        // Main video seeking
+        videoPlayer.addEventListener('seeking', () => {
+            console.log("메인 비디오 탐색 중 - 로딩 오버레이 표시.");
+            loadingOverlay.classList.remove('hidden');
+        });
+
+        // Main video seeked
+        videoPlayer.addEventListener('seeked', () => {
+            console.log("메인 비디오 탐색 완료 - 로딩 오버레이 숨김.");
+            loadingOverlay.classList.add('hidden');
+        });
+
+        // Error handling for intro video
+        introVideoPlayer.addEventListener('error', (e) => {
+            console.error('인트로 비디오 로드 또는 재생 오류:', e);
+            loadingOverlay.classList.add('hidden'); // Hide loading
+            // Optionally, show a message to the user that intro video failed
+            // For now, it will just proceed to main video if intro fails.
+            introVideoPlayer.pause(); // Stop trying to play
+            introVideoContainer.classList.add('hidden'); // Hide intro video
+            videoPlayer.parentElement.classList.remove('hidden'); // Show main video container
+            topOverlay.classList.remove('hidden'); // Show top overlay
+            controlBar.classList.remove('hidden'); // Show control bar
+            videoPlayer.play().catch(err => {
+                console.warn("인트로 오류 후 메인 비디오 자동 재생 차단:", err);
+                playPauseIcon.classList.remove('fa-pause');
+                playPauseIcon.classList.add('fa-play');
+                showAutoplayBlockedMessage(true);
+            });
+        });
+
+        // Error handling for main video
+        videoPlayer.addEventListener('error', (e) => {
+            console.error('메인 비디오 로드 또는 재생 오류:', e);
+            loadingOverlay.classList.add('hidden'); // Hide loading
+            playPauseIcon.classList.remove('fa-pause');
+            playPauseIcon.classList.add('fa-play');
+            showAutoplayBlockedMessage(true); // Show a message that video failed
+        });
+
+
+        window.addEventListener('beforeunload', () => {
+            if (subtitleBlobUrl) {
+                URL.revokeObjectURL(subtitleBlobUrl);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            // Only apply keyboard controls if main video is active
+            if (videoPlayer.parentElement.classList.contains('hidden')) {
+                return; // Main video is not active
+            }
+
+            if (isNaN(videoPlayer.duration) || !isFinite(videoPlayer.duration)) {
+                console.warn("Video duration is not available or not finite. Cannot seek.");
+                return;
+            }
+
+            if (e.key === 'ArrowLeft') {
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
+                showSeekFeedback('-5s');
+            } else if (e.key === 'ArrowRight') {
+                videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 5);
+                showSeekFeedback('+5s');
+            } else if (e.key === ' ' || e.key === 'k') {
+                e.preventDefault();
+                playPauseBtn.click();
+            }
+        });
+
+        videoPlayer.addEventListener('click', (e) => {
+            // Only apply click controls if main video is active
+            if (videoPlayer.parentElement.classList.contains('hidden')) {
+                return; // Main video is not active
+            }
+
+            const now = performance.now();
+            const rect = videoPlayer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const videoWidth = rect.width;
+            const middle = videoWidth / 2;
+
+            const side = clickX < middle ? 'left' : 'right';
+
+            if (now - lastClickTime < DOUBLE_CLICK_THRESHOLD) {
+                if (clickTimeout) {
+                    clearTimeout(clickTimeout);
+                    clickTimeout = null;
+                }
+
+                if (isNaN(videoPlayer.duration) || !isFinite(videoPlayer.duration)) {
+                    console.warn("Video duration is not available or not finite. Cannot seek.");
+                    return;
+                }
+
+                if (side === 'left') {
+                    videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
+                    showSeekFeedback('-5s');
+                } else {
+                    videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 5);
+                    showSeekFeedback('+5s');
+                }
+                lastClickTime = 0;
+            } else {
+                lastClickTime = now;
+                if (clickTimeout) {
+                    clearTimeout(clickTimeout);
+                }
+                clickTimeout = setTimeout(() => {
+                    lastClickTime = 0;
+                    clickTimeout = null;
+                }, DOUBLE_CLICK_THRESHOLD);
+            }
+        });
+
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchCount = 0;
+
+        videoPlayer.addEventListener('touchstart', (e) => {
+            // Only apply touch controls if main video is active
+            if (videoPlayer.parentElement.classList.contains('hidden')) {
+                return; // Main video is not active
+            }
+
+            if (e.touches.length === 1) {
+                const now = performance.now();
+                const touch = e.touches[0];
+                const rect = videoPlayer.getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const videoWidth = rect.width;
+                const middle = videoWidth / 2;
+
+                const side = touchX < middle ? 'left' : 'right';
+
+                touchCount++;
+
+                if (touchCount === 1) {
+                    touchStartTime = now;
+                    touchStartX = touchX;
+                    if (clickTimeout) clearTimeout(clickTimeout);
+                    clickTimeout = setTimeout(() => {
+                        touchCount = 0;
+                        clickTimeout = null;
+                    }, DOUBLE_CLICK_THRESHOLD);
+                } else if (touchCount === 2) {
+                    if (now - touchStartTime < DOUBLE_CLICK_THRESHOLD) {
+                        if (isNaN(videoPlayer.duration) || !isFinite(videoPlayer.duration)) {
+                            console.warn("Video duration is not available or not finite. Cannot seek.");
+                        } else {
+                            if (side === 'left') {
+                                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 5);
+                                showSeekFeedback('-5s');
+                            } else {
+                                videoPlayer.currentTime = Math.min(videoPlayer.duration, videoPlayer.currentTime + 5);
+                                showSeekFeedback('+5s');
+                            }
+                        }
+                    }
+                    touchCount = 0;
+                    if (clickTimeout) clearTimeout(clickTimeout);
+                    clickTimeout = null;
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
