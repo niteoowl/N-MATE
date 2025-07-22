@@ -289,9 +289,49 @@
             const WEATHER_API_KEY = decodeURIComponent("E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9%2FqBILOxzpU%2BMztJyUivBxXfKAnK3lg6w%3D%3D");
             const WEATHER_API_ENDPOINT = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0";
 
-            // 부산 지역의 기상청 격자 좌표 (예시 값)
-            const NX = 98; // 부산 기준
-            const NY = 76; // 부산 기준
+            // 기상청 격자 좌표 변환 함수
+            // LCC DFS 좌표변환을 위한 기준 설정
+            const RE = 6371.00877; // 지구 반경(km)
+            const GRID = 5.0; // 격자 간격(km)
+            const SLAT1 = 30.0; // 표준 위도1
+            const SLAT2 = 60.0; // 표준 위도2
+            const OLON = 126.0; // 기준점 경도
+            const OLAT = 38.0; // 기준점 위도
+            const XO = 43; // 기준점 X좌표
+            const YO = 136; // 기준점 Y좌표
+
+            function dfs_xy_conv(code, v1, v2) {
+                const DEGRAD = Math.PI / 180.0;
+                const RADDEG = 180.0 / Math.PI;
+
+                const re = RE / GRID;
+                const slat1 = SLAT1 * DEGRAD;
+                const slat2 = SLAT2 * DEGRAD;
+                const olon = OLON * DEGRAD;
+                const olat = OLAT * DEGRAD;
+
+                let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+                sn = Math.log(sn) / Math.log(Math.cos(slat1) / Math.cos(slat2));
+                let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+                sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
+                let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+                ro = re * sf / Math.pow(ro, sn);
+
+                let rs = {};
+                if (code === "toXY") {
+                    rs['lat'] = v1;
+                    rs['lon'] = v2;
+                    let ra = Math.tan(Math.PI * 0.25 + (v1) * DEGRAD * 0.5);
+                    ra = re * sf / Math.pow(ra, sn);
+                    let theta = v2 * DEGRAD - olon;
+                    if (theta > Math.PI) theta -= 2.0 * Math.PI;
+                    if (theta < -Math.PI) theta += 2.0 * Math.PI;
+                    theta *= sn;
+                    rs['x'] = Math.floor(ra * Math.sin(theta) + XO + 0.5);
+                    rs['y'] = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
+                }
+                return rs;
+            }
 
             // API 호출을 위한 base_date 및 base_time 계산 함수
             function getBaseTimeAndDate() {
@@ -341,6 +381,42 @@
 
                 greetingMessageElement.innerHTML = `${greeting} <span role="img" aria-label="greeting-emoji">${greetingEmoji}</span>`;
 
+                let currentNx = 98; // Default to Busan NX
+                let currentNy = 76; // Default to Busan NY
+
+                // 현재 위치 가져오기
+                if (navigator.geolocation) {
+                    try {
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
+                        });
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        const convertedCoords = dfs_xy_conv("toXY", latitude, longitude);
+                        currentNx = convertedCoords.x;
+                        currentNy = convertedCoords.y;
+                        console.log(`현재 위치: Lat ${latitude}, Lon ${longitude}, NX: ${currentNx}, NY: ${currentNy}`);
+                    } catch (error) {
+                        console.error('위치 정보를 가져오는 데 실패했습니다:', error);
+                        if (error.code === error.PERMISSION_DENIED) {
+                            weatherTextElement.textContent = '위치 권한이 거부되어 날씨 정보를 가져올 수 없습니다. (기본 위치 사용)';
+                        } else {
+                            weatherTextElement.textContent = '위치 정보를 가져올 수 없습니다. (기본 위치 사용)';
+                        }
+                        weatherIconElement.textContent = '❓';
+                        // Fallback to default Busan coordinates
+                    }
+                } else {
+                    console.warn('이 브라우저에서는 Geolocation이 지원되지 않습니다. 기본 위치를 사용합니다.');
+                    weatherTextElement.textContent = '이 브라우저에서는 위치 정보를 가져올 수 없습니다. (기본 위치 사용)';
+                    weatherIconElement.textContent = '❓';
+                    // Fallback to default Busan coordinates
+                }
+
                 // 날씨 데이터 가져오기
                 try {
                     const { baseDate, baseTime } = getBaseTimeAndDate();
@@ -351,8 +427,8 @@
                     url.searchParams.append('dataType', 'JSON');
                     url.searchParams.append('base_date', baseDate);
                     url.searchParams.append('base_time', baseTime);
-                    url.searchParams.append('nx', NX);
-                    url.searchParams.append('ny', NY);
+                    url.searchParams.append('nx', currentNx);
+                    url.searchParams.append('ny', currentNy);
 
                     const response = await fetch(url.toString());
                     const data = await response.json();
@@ -402,7 +478,7 @@
                             } else if (skyCondition === '구름많음') {
                                 weatherIcon = '☁️';
                             } else if (skyCondition === '흐림') {
-                                weatherIcon = ' overcast_cloud'; // Phosphor icon for overcast
+                                weatherIcon = '☁️'; // Using cloud emoji for overcast
                             }
                         }
 
