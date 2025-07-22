@@ -273,6 +273,47 @@
     </nav>
 
     <script>
+        // KMA Coordinate Conversion Constants
+        const RE = 6371.00877; // 지구 반경(km)
+        const GRID = 5.0;     // 격자 간격(km)
+        const SLAT1 = 30.0;   // 표준 위도1
+        const SLAT2 = 38.0;   // 표준 위도2
+        const OLON = 126.0;   // 기준점 경도
+        const OLAT = 38.0;    // 기준점 위도
+        const XO = 43;        // 기준점 X좌표
+        const YO = 136;       // 기준점 Y좌표
+
+        // Function to convert Latitude/Longitude to KMA Grid Coordinates (NX, NY)
+        function convertGridXY(lat, lon) {
+            const DEGRAD = Math.PI / 180.0;
+            const RADDEG = 180.0 / Math.PI;
+
+            const re = RE / GRID;
+            const slat1 = SLAT1 * DEGRAD;
+            const slat2 = SLAT2 * DEGRAD;
+            const olon = OLON * DEGRAD;
+            const olat = OLAT * DEGRAD;
+
+            let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+            sn = Math.log(sn) / Math.log(Math.cos(slat1) / Math.cos(slat2));
+            let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+            sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
+            let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+            ro = re * sf / Math.pow(ro, sn);
+
+            let ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5);
+            ra = re * sf / Math.pow(ra, sn);
+            let theta = lon * DEGRAD - olon;
+            if (theta > Math.PI) theta -= 2.0 * Math.PI;
+            if (theta < -Math.PI) theta += 2.0 * Math.PI;
+            theta *= sn;
+
+            const x = Math.floor(ra * Math.sin(theta) + XO + 0.5);
+            const y = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
+
+            return { x, y };
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Set current date
             const dateElement = document.getElementById('current-date');
@@ -301,40 +342,98 @@
                 greetingMessageElement.innerHTML = `${greeting} <span role="img" aria-label="greeting-emoji">${greetingEmoji}</span>`;
             }
 
-            async function fetchWeather(latitude, longitude) {
-                try {
-                    // wttr.in API를 사용하여 날씨 정보 가져오기
-                    // wttr.in은 위치를 IP 주소 기반으로 자동 감지하거나,
-                    // 'lat,lon' 형식으로 직접 지정할 수 있습니다.
-                    const weatherUrl = `https://wttr.in/${latitude},${longitude}?format=3`;
-                    const response = await fetch(weatherUrl);
+            async function fetchKmaWeather(nx, ny) {
+                // KMA API Service Key (Replace with your actual key from data.go.kr)
+                const serviceKey = 'E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9/qBILOxzpU+MztJyUivBxXfKAnK3lg6w=='; // Decoding된 인증키 사용
 
+                // Get current date and time for base_date and base_time
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const base_date = `${year}${month}${day}`;
+
+                // base_time: KMA API requires the latest full hour observation.
+                // For getUltraSrtNcst, it's typically the current hour minus one, or the latest available.
+                // Let's use the current hour and then adjust if needed based on API response.
+                let base_time_hour = now.getHours();
+                // API는 정시 단위로 발표되므로, 현재 시각이 00분~40분 사이면 이전 시각을, 41분 이후면 현재 시각을 사용
+                // (초단기실황은 40분마다 갱신되므로, 현재 시각이 40분 이전이면 이전 시간의 데이터가 최신일 수 있음)
+                if (now.getMinutes() <= 40) { // 40분 이전이면 이전 시간으로 설정
+                    base_time_hour = (base_time_hour - 1 + 24) % 24; // 이전 시간, 0시일 경우 23시로
+                }
+                const base_time = String(base_time_hour).padStart(2, '0') + '00';
+
+
+                const apiUrl = `http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
+
+                try {
+                    const response = await fetch(apiUrl);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    const data = await response.json();
 
-                    const weatherData = await response.text(); // wttr.in은 텍스트 응답을 반환합니다.
-
-                    // wttr.in format=3 예시: "Seoul: ☀️ +25°C"
-                    // 데이터를 파싱하여 아이콘과 텍스트 분리
-                    const parts = weatherData.split(':');
-                    if (parts.length > 1) {
-                        const location = parts[0].trim();
-                        const weatherInfo = parts[1].trim();
-
-                        // 이모지와 텍스트 분리 (간단한 파싱)
-                        const match = weatherInfo.match(/(.)\s(.+)/); // 첫 번째 문자를 이모지로, 나머지를 텍스트로
-                        if (match && match.length > 2) {
-                            weatherIconElement.textContent = match[1]; // 이모지
-                            weatherTextElement.textContent = `${location}: ${match[2]}`; // 나머지 텍스트
-                        } else {
-                            weatherIconElement.textContent = '❓';
-                            weatherTextElement.textContent = `${location}: ${weatherInfo}`;
-                        }
-                    } else {
-                        weatherIconElement.textContent = '❓';
-                        weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
+                    if (data.response.header.resultCode !== '00') {
+                        throw new Error(`API Error: ${data.response.header.resultMsg}`);
                     }
+
+                    const items = data.response.body.items.item;
+                    let temperature = 'N/A';
+                    let precipitationAmount = 'N/A';
+                    let skyCondition = 'N/A';
+                    let precipitationType = 'N/A';
+                    let locationName = ''; // KMA API does not directly return location name for coords
+
+                    items.forEach(item => {
+                        switch (item.category) {
+                            case 'T1H': // 기온
+                                temperature = `${item.obsrValue}°C`;
+                                break;
+                            case 'RN1': // 1시간 강수량
+                                precipitationAmount = `${item.obsrValue}mm`;
+                                break;
+                            case 'SKY': // 하늘 상태 (1:맑음, 3:구름많음, 4:흐림)
+                                if (item.obsrValue === '1') skyCondition = '맑음';
+                                else if (item.obsrValue === '3') skyCondition = '구름많음';
+                                else if (item.obsrValue === '4') skyCondition = '흐림';
+                                break;
+                            case 'PTY': // 강수 형태 (0:없음, 1:비, 2:비/눈, 3:눈, 4:소나기, 5:빗방울, 6:빗방울눈날림, 7:눈날림)
+                                if (item.obsrValue === '1') precipitationType = '비';
+                                else if (item.obsrValue === '2') precipitationType = '비/눈';
+                                else if (item.obsrValue === '3') precipitationType = '눈';
+                                else if (item.obsrValue === '4') precipitationType = '소나기';
+                                else if (item.obsrValue === '5') precipitationType = '빗방울';
+                                else if (item.obsrValue === '6') precipitationType = '빗방울눈날림';
+                                else if (item.obsrValue === '7') precipitationType = '눈날림';
+                                break;
+                        }
+                    });
+
+                    let weatherDisplay = '';
+                    let weatherEmoji = '';
+
+                    // PTY (강수 형태) 우선
+                    if (precipitationType !== 'N/A' && precipitationType !== '0') { // '0'은 "없음"을 의미
+                        weatherDisplay = `${precipitationType}, ${temperature}`;
+                        if (precipitationType === '비' || precipitationType === '소나기' || precipitationType === '빗방울') weatherEmoji = '🌧️';
+                        else if (precipitationType === '눈' || precipitationType === '눈날림') weatherEmoji = '❄️';
+                        else if (precipitationType === '비/눈' || precipitationType === '빗방울눈날림') weatherEmoji = '🌨️';
+                    } else {
+                        // PTY 없으면 SKY (하늘 상태)
+                        weatherDisplay = `${skyCondition}, ${temperature}`;
+                        if (skyCondition === '맑음') weatherEmoji = '☀️';
+                        else if (skyCondition === '구름많음') weatherEmoji = '☁️';
+                        else if (skyCondition === '흐림') weatherEmoji = '☁️'; // 흐림도 구름 이모지로
+                    }
+
+                    // 위치 이름은 Geocoding API를 사용해야 정확히 얻을 수 있습니다.
+                    // KMA API는 격자 좌표를 기반으로 하므로, 직접적인 주소 반환은 없습니다.
+                    // 여기서는 간단히 "현재 위치" 또는 "서울"로 표시합니다.
+                    locationName = '현재 위치'; // 또는 사용자의 실제 위치명 (별도의 Geocoding API 필요)
+
+                    weatherIconElement.textContent = weatherEmoji;
+                    weatherTextElement.textContent = `${locationName}: ${weatherDisplay}`;
 
                 } catch (error) {
                     console.error("날씨 정보를 가져오는 중 오류 발생:", error);
@@ -348,22 +447,25 @@
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const { latitude, longitude } = position.coords;
-                            fetchWeather(latitude, longitude);
+                            const { x, y } = convertGridXY(latitude, longitude);
+                            fetchKmaWeather(x, y);
                         },
                         (error) => {
                             console.error("위치 정보를 가져오는 중 오류 발생:", error);
                             weatherIconElement.textContent = '🚫';
                             weatherTextElement.textContent = '위치 권한이 거부되었습니다. 서울 날씨를 표시합니다.';
-                            // 위치 권한이 거부되면 서울 날씨를 기본으로 표시
-                            fetchWeather(37.5665, 126.9780); // 서울의 위도, 경도
+                            // 위치 권한이 거부되면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
+                            const seoulCoords = convertGridXY(37.5665, 126.9780); // 서울 시청 위도, 경도
+                            fetchKmaWeather(seoulCoords.x, seoulCoords.y);
                         },
-                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 } // 타임아웃 10초, 캐시 1분
                     );
                 } else {
                     weatherIconElement.textContent = '❌';
                     weatherTextElement.textContent = '이 브라우저는 위치 정보를 지원하지 않습니다. 서울 날씨를 표시합니다.';
-                    // Geolocation을 지원하지 않으면 서울 날씨를 기본으로 표시
-                    fetchWeather(37.5665, 126.9780); // 서울의 위도, 경도
+                    // Geolocation을 지원하지 않으면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
+                    const seoulCoords = convertGridXY(37.5665, 126.9780); // 서울 시청 위도, 경도
+                    fetchKmaWeather(seoulCoords.x, seoulCoords.y);
                 }
             }
 
@@ -371,62 +473,62 @@
             updateGreeting();
             getUserLocationAndWeather();
             // Update greeting every hour (optional)
-            // setInterval(updateGreeting, 3600000);
-        });
+            // setInterval(updateGreeting, 3600000); // 1시간마다 인사말 업데이트
 
-        // Task completion animation
-        const taskCheckboxes = document.querySelectorAll('.task-checkbox');
-        taskCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', (event) => {
-                const taskCard = event.target.closest('.task-card');
-                if (event.target.checked) {
-                    taskCard.classList.add('completed');
-                    // Remove the card after the animation completes
-                    taskCard.addEventListener('animationend', () => {
-                        taskCard.remove();
-                    }, { once: true });
-                }
+            // Task completion animation
+            const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+            taskCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (event) => {
+                    const taskCard = event.target.closest('.task-card');
+                    if (event.target.checked) {
+                        taskCard.classList.add('completed');
+                        // Remove the card after the animation completes
+                        taskCard.addEventListener('animationend', () => {
+                            taskCard.remove();
+                        }, { once: true });
+                    }
+                });
             });
-        });
 
-        // Mood tracker selection
-        const moodEmojis = document.querySelectorAll('.mood-emoji');
-        moodEmojis.forEach(emoji => {
-            emoji.addEventListener('click', (event) => {
-                // Remove 'selected' class from all emojis
-                moodEmojis.forEach(e => e.classList.remove('selected'));
-                // Add 'selected' class to the clicked emoji
-                event.target.classList.add('selected');
-                // You can add further logic here to save the mood
-                console.log('Selected mood:', event.target.dataset.mood);
+            // Mood tracker selection
+            const moodEmojis = document.querySelectorAll('.mood-emoji');
+            moodEmojis.forEach(emoji => {
+                emoji.addEventListener('click', (event) => {
+                    // Remove 'selected' class from all emojis
+                    moodEmojis.forEach(e => e.classList.remove('selected'));
+                    // Add 'selected' class to the clicked emoji
+                    event.target.classList.add('selected');
+                    // You can add further logic here to save the mood
+                    console.log('Selected mood:', event.target.dataset.mood);
+                });
             });
-        });
 
-        // Navigation active state (simple example)
-        const navItems = document.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', (event) => {
-                navItems.forEach(e => e.classList.remove('active'));
-                event.currentTarget.classList.add('active');
+            // Navigation active state (simple example)
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    navItems.forEach(e => e.classList.remove('active'));
+                    event.currentTarget.classList.add('active');
+                });
             });
-        });
 
-        // Daily Note Type Selection
-        const noteTypeTodayButton = document.getElementById('noteTypeToday');
-        const noteTypeDailyButton = document.getElementById('noteTypeDaily');
+            // Daily Note Type Selection
+            const noteTypeTodayButton = document.getElementById('noteTypeToday');
+            const noteTypeDailyButton = document.getElementById('noteTypeDaily');
 
-        noteTypeTodayButton.addEventListener('click', () => {
-            noteTypeTodayButton.classList.add('active-note-type');
-            noteTypeDailyButton.classList.remove('active-note-type');
-            // Logic for "오늘의 한마디" view
-            console.log('Selected: 오늘의 한마디');
-        });
+            noteTypeTodayButton.addEventListener('click', () => {
+                noteTypeTodayButton.classList.add('active-note-type');
+                noteTypeDailyButton.classList.remove('active-note-type');
+                // Logic for "오늘의 한마디" view
+                console.log('Selected: 오늘의 한마디');
+            });
 
-        noteTypeDailyButton.addEventListener('click', () => {
-            noteTypeDailyButton.classList.add('active-note-type');
-            noteTypeTodayButton.classList.remove('active-note-type');
-            // Logic for "일" view
-            console.log('Selected: 일기');
+            noteTypeDailyButton.addEventListener('click', () => {
+                noteTypeDailyButton.classList.add('active-note-type');
+                noteTypeTodayButton.classList.remove('active-note-type');
+                // Logic for "일" view
+                console.log('Selected: 일기');
+            });
         });
     </script>
 </body>
