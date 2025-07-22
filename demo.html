@@ -344,7 +344,8 @@
 
             async function fetchKmaWeather(nx, ny) {
                 // KMA API Service Key (Replace with your actual key from data.go.kr)
-                const serviceKey = 'E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9/qBILOxzpU+MztJyUivBxXfKAnK3lg6w=='; // Decoding된 인증키 사용
+                // 제공해주신 디코딩된 인증키를 사용하며, URL에 포함하기 위해 encodeURIComponent로 인코딩합니다.
+                const serviceKey = encodeURIComponent('E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9/qBILOxzpU+MztJyUivBxXfKAnK3lg6w==');
 
                 // Get current date and time for base_date and base_time
                 const now = new Date();
@@ -355,26 +356,27 @@
 
                 // base_time: KMA API requires the latest full hour observation.
                 // For getUltraSrtNcst, it's typically the current hour minus one, or the latest available.
-                // Let's use the current hour and then adjust if needed based on API response.
-                let base_time_hour = now.getHours();
                 // API는 정시 단위로 발표되므로, 현재 시각이 00분~40분 사이면 이전 시각을, 41분 이후면 현재 시각을 사용
-                // (초단기실황은 40분마다 갱신되므로, 현재 시각이 40분 이전이면 이전 시간의 데이터가 최신일 수 있음)
-                if (now.getMinutes() <= 40) { // 40분 이전이면 이전 시간으로 설정
+                // (초단기실황은 매 40분마다 갱신되므로, 현재 시각이 40분 이전이면 이전 시간의 데이터가 최신일 수 있음)
+                let base_time_hour = now.getHours();
+                if (now.getMinutes() <= 40) {
                     base_time_hour = (base_time_hour - 1 + 24) % 24; // 이전 시간, 0시일 경우 23시로
                 }
                 const base_time = String(base_time_hour).padStart(2, '0') + '00';
-
 
                 const apiUrl = `http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
 
                 try {
                     const response = await fetch(apiUrl);
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        // HTTP 오류 발생 시 상세 메시지 출력
+                        const errorText = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                     }
                     const data = await response.json();
 
                     if (data.response.header.resultCode !== '00') {
+                        // API 응답 결과 코드 오류 시 상세 메시지 출력
                         throw new Error(`API Error: ${data.response.header.resultMsg}`);
                     }
 
@@ -438,7 +440,7 @@
                 } catch (error) {
                     console.error("날씨 정보를 가져오는 중 오류 발생:", error);
                     weatherIconElement.textContent = '⚠️';
-                    weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
+                    weatherTextElement.textContent = `날씨 정보를 가져올 수 없습니다. (${error.message || error}). CORS 또는 Mixed Content 문제일 수 있습니다.`;
                 }
             }
 
@@ -451,10 +453,27 @@
                             fetchKmaWeather(x, y);
                         },
                         (error) => {
-                            console.error("위치 정보를 가져오는 중 오류 발생:", error);
+                            // Geolocation 오류 코드에 따라 메시지 분기
+                            let errorMessage = '위치 정보를 가져오는 중 오류 발생: ';
+                            switch (error.code) {
+                                case error.PERMISSION_DENIED:
+                                    errorMessage += '위치 권한이 거부되었습니다.';
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    errorMessage += '위치 정보를 사용할 수 없습니다.';
+                                    break;
+                                case error.TIMEOUT:
+                                    errorMessage += '위치 정보 요청 시간이 초과되었습니다.';
+                                    break;
+                                default:
+                                    errorMessage += error.message || '알 수 없는 오류';
+                                    break;
+                            }
+                            console.error(errorMessage, error);
+
                             weatherIconElement.textContent = '🚫';
-                            weatherTextElement.textContent = '위치 권한이 거부되었습니다. 서울 날씨를 표시합니다.';
-                            // 위치 권한이 거부되면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
+                            weatherTextElement.textContent = '위치 권한이 비활성화되었습니다. 서울 날씨를 표시합니다.';
+                            // 위치 권한이 거부되거나 오류가 발생하면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
                             const seoulCoords = convertGridXY(37.5665, 126.9780); // 서울 시청 위도, 경도
                             fetchKmaWeather(seoulCoords.x, seoulCoords.y);
                         },
