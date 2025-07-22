@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLOW - 오늘을 감각적으로 정리하다</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons CDN -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
+    <style>
+        @font-face {
+            font-family: 'IM_Hyemin-Bold';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2106@1.1/IM_Hyemin-Bold.woff2') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff; /* Changed to white background */
+            color: #333;
+            display: flex;
+            flex-direction: column; /* Allow content and nav to stack */
+            justify-content: flex-start; /* Align content to the top */
+            align-items: center; /* Center the main content horizontally */
+            min-height: 100vh;
+            padding-bottom: 3.5rem; /* Adjusted padding for the fixed navigation bar height */
+            box-sizing: border-box;
+        }
+
+        /* Main content area */
+        main {
+            max-width: 600px; /* Limit content width */
+            width: 100%;
+            border-radius: 2rem; /* Keep rounded corners for overall soft feel */
+            padding: 2.5rem; /* Internal padding for content within the main area */
+            box-sizing: border-box;
+        }
+
+        /* Custom checkbox style */
+        .task-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+
+        .task-checkbox:checked {
+            background-color: #888; /* Darker gray when checked */
+            border-color: #888;
+        }
+
+        .task-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            font-size: 16px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Animation for task completion */
+        @keyframes fadeOutShrink {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                height: auto;
+                margin-bottom: 1rem;
+            }
+            70% {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+                height: auto;
+                margin-bottom: 1rem;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+                height: 0;
+                margin-bottom: 0;
+                padding-top: 0;
+                padding-bottom: 0;
+                overflow: hidden;
+            }
+        }
+
+        .task-card.completed {
+            animation: fadeOutShrink 0.6s forwards;
+        }
+
+        /* Mood emoji selection */
+        .mood-emoji {
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
+            filter: grayscale(100%); /* Desaturate by default */
+        }
+
+        .mood-emoji.selected {
+            transform: scale(1.2);
+            filter: grayscale(0%); /* Full color when selected */
+        }
+
+        /* Mood tracker specific styles */
+        #mood-tracker {
+            background-color: transparent; /* Make background transparent */
+            box-shadow: none; /* Remove shadow */
+            padding: 1rem 0; /* Adjust padding as needed for spacing */
+        }
+
+        /* Navigation item hover/active effects */
+        .nav-item {
+            transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .nav-item:hover {
+            transform: translateY(-2px);
+            color: #555;
+        }
+        .nav-item.active {
+            color: #000; /* Active item color */
+            font-weight: bold;
+        }
+
+        /* Daily note editable div specific styles for single line effect */
+        #daily-note-editable {
+            font-family: 'IM_Hyemin-Bold', sans-serif; /* Apply the custom font */
+            border: none; /* Remove all borders */
+            border-bottom: 1px solid #E0D0D0; /* Only a bottom border for the line */
+            padding: 5px 0; /* Minimal padding to align text with the line */
+            line-height: 1.5em; /* Adjust to ensure text sits on the line */
+            min-height: 1.5em; /* Ensure it's at least one line high */
+            outline: none !important; /* Remove focus outline */
+            box-shadow: none !important; /* Remove any focus shadow/ring */
+            color: #333; /* Text color */
+            font-size: 1.125rem; /* Corresponds to text-lg in Tailwind */
+            white-space: normal; /* Allow text to wrap if it exceeds one line */
+            word-break: break-word; /* Ensure long words break */
+            overflow-wrap: break-word; /* Ensure long words break */
+            resize: vertical; /* Allow vertical resizing */
+            background-color: transparent; /* Ensure no background color */
+        }
+
+        /* Button group for daily note */
+        .note-buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Space between the text area and the button group */
+        }
+
+        .large-button-wrapper {
+            background-color: #F5F5F5; /* Very light gray background for the large button */
+            border-radius: 9999px; /* Fully rounded */
+            padding: 0.25rem; /* Small padding inside the large button */
+            display: flex;
+            gap: 0.25rem; /* Space between small buttons */
+            /* Removed box-shadow */
+        }
+
+        .small-button {
+            padding: 0.3rem 0.7rem; /* Adjusted padding to make buttons smaller */
+            border-radius: 9999px; /* Fully rounded */
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500; /* font-medium */
+            color: #333; /* Darker text (almost black) */
+            background-color: transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            white-space: nowrap; /* Prevent text wrapping */
+            /* Removed box-shadow */
+        }
+
+        .small-button.active-note-type {
+            background-color: #ffffff; /* White background when active */
+            color: #333; /* Darker text when active */
+            /* Removed box-shadow */
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <!-- 상단 날짜 + 인사 -->
+        <header class="mb-8">
+            <p id="current-date" class="text-lg text-gray-500 mb-2"></p>
+            <h1 id="greeting-message" class="text-4xl font-bold text-gray-800"></h1>
+            <!-- 날씨 정보 -->
+            <div id="weather-info" class="text-lg text-gray-600 mt-2 flex items-center">
+                <span id="weather-icon" class="mr-2 text-2xl"></span>
+                <span id="weather-text">날씨 정보를 가져오는 중...</span>
+            </div>
+        </header>
+
+        <!-- 오늘의 할 일 리스트 -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-5">오늘의 할 일</h2>
+            <div id="task-list" class="space-y-4">
+                <!-- Task Card 1 -->
+                <div class="task-card flex items-center p-5 rounded-xl border border-gray-300 bg-transparent transition-all duration-300 ease-in-out">
+                    <input type="checkbox" class="task-checkbox mr-4" id="task1">
+                    <label for="task1" class="text-lg text-gray-800 flex-grow cursor-pointer">프로젝트 기획서 초안 작성</label>
+                </div>
+                <!-- Task Card 2 -->
+                <div class="task-card flex items-center p-5 rounded-xl border border-gray-300 bg-transparent transition-all duration-300 ease-in-out">
+                    <input type="checkbox" class="task-checkbox mr-4" id="task2">
+                    <label for="task2" class="text-lg text-gray-800 flex-grow cursor-pointer">팀 미팅 준비</label>
+                </div>
+                <!-- Task Card 3 -->
+                <div class="task-card flex items-center p-5 rounded-xl border border-gray-300 bg-transparent transition-all duration-300 ease-in-out">
+                    <input type="checkbox" class="task-checkbox mr-4" id="task3">
+                    <label for="task3" class="text-lg text-gray-800 flex-grow cursor-pointer">운동 30분</label>
+                </div>
+                <!-- Task Card 4 -->
+                <div class="task-card flex items-center p-5 rounded-xl border border-gray-300 bg-transparent transition-all duration-300 ease-in-out">
+                    <input type="checkbox" class="task-checkbox mr-4" id="task4">
+                    <label for="task4" class="text-lg text-gray-800 flex-grow cursor-pointer">점심 식사 예약</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 현재 상태 감정 기록 -->
+        <section class="mb-10"> <!-- Added mb-10 for spacing before the new section -->
+            <h2 class="text-2xl font-semibold text-gray-700 mb-5">오늘의 기분은?</h2>
+            <div id="mood-tracker" class="flex justify-around items-center text-4xl rounded-xl">
+                <span class="mood-emoji" data-mood="happy" role="img" aria-label="happy">😊</span>
+                <span class="mood-emoji" data-mood="neutral" role="img" aria-label="neutral">😐</span>
+                <span class="mood-emoji" data-mood="sad" role="img" aria-label="sad">😔</span>
+                <span class="mood-emoji" data-mood="energetic" role="img" aria-label="energetic">⚡</span>
+                <span class="mood-emoji" data-mood="calm" role="img" aria-label="calm">😌</span>
+            </div>
+        </section>
+
+        <!-- 오늘의 한마디 -->
+        <section>
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-2xl font-semibold text-gray-700">오늘의 한마디</h2>
+                <!-- New button group -->
+                <div class="large-button-wrapper">
+                    <button id="noteTypeToday" class="small-button active-note-type">오늘의 한마디</button>
+                    <button id="noteTypeDaily" class="small-button">일기</button>
+                </div>
+            </div>
+            <div id="daily-note-editable" contenteditable="true" class="w-full rounded-xl text-lg text-gray-800"></div>
+        </section>
+    </main>
+
+    <!-- 하단 네비게이션 바 -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 max-w-[600px] w-full bg-white border-t border-gray-200 py-2 flex justify-around items-center z-10">
+        <a href="#" class="nav-item flex flex-col items-center text-gray-600 hover:text-gray-900 text-sm sm:text-base p-1 rounded-md">
+            <i class="ph ph-house text-2xl sm:text-3xl mb-1"></i>
+            <span>홈</span>
+        </a>
+        <a href="#" class="nav-item flex flex-col items-center text-gray-600 hover:text-gray-900 text-sm sm:text-base p-1 rounded-md active">
+            <i class="ph ph-clipboard-text text-2xl sm:text-3xl mb-1"></i>
+            <span>할 일</span>
+        </a>
+        <a href="#" class="nav-item flex flex-col items-center text-gray-600 hover:text-gray-900 text-sm sm:text-base p-1 rounded-md">
+            <i class="ph ph-lightbulb text-2xl sm:text-3xl mb-1"></i>
+            <span>아이디어</span>
+        </a>
+        <a href="#" class="nav-item flex flex-col items-center text-gray-600 hover:text-gray-900 text-sm sm:text-base p-1 rounded-md">
+            <i class="ph ph-gear text-2xl sm:text-3xl mb-1"></i>
+            <span>설정</span>
+        </a>
+    </nav>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set current date
+            const dateElement = document.getElementById('current-date');
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = today.toLocaleDateString('ko-KR', options);
+
+            // Dynamic Greeting and Weather
+            const greetingMessageElement = document.getElementById('greeting-message');
+            const weatherIconElement = document.getElementById('weather-icon');
+            const weatherTextElement = document.getElementById('weather-text');
+
+            function updateGreeting() {
+                const currentHour = new Date().getHours();
+                let greeting = "Good Evening, Jane";
+                let greetingEmoji = "🌙"; // Moon for evening
+
+                if (currentHour >= 5 && currentHour < 12) {
+                    greeting = "Good Morning, Jane";
+                    greetingEmoji = "☀️"; // Sun for morning
+                } else if (currentHour >= 12 && currentHour < 18) {
+                    greeting = "Good Afternoon, Jane";
+                    greetingEmoji = "👋"; // Waving hand for afternoon
+                }
+
+                greetingMessageElement.innerHTML = `${greeting} <span role="img" aria-label="greeting-emoji">${greetingEmoji}</span>`;
+            }
+
+            async function fetchWeather(latitude, longitude) {
+                try {
+                    // wttr.in API를 사용하여 날씨 정보 가져오기
+                    // wttr.in은 위치를 IP 주소 기반으로 자동 감지하거나,
+                    // 'lat,lon' 형식으로 직접 지정할 수 있습니다.
+                    const weatherUrl = `https://wttr.in/${latitude},${longitude}?format=3`;
+                    const response = await fetch(weatherUrl);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const weatherData = await response.text(); // wttr.in은 텍스트 응답을 반환합니다.
+
+                    // wttr.in format=3 예시: "Seoul: ☀️ +25°C"
+                    // 데이터를 파싱하여 아이콘과 텍스트 분리
+                    const parts = weatherData.split(':');
+                    if (parts.length > 1) {
+                        const location = parts[0].trim();
+                        const weatherInfo = parts[1].trim();
+
+                        // 이모지와 텍스트 분리 (간단한 파싱)
+                        const match = weatherInfo.match(/(.)\s(.+)/); // 첫 번째 문자를 이모지로, 나머지를 텍스트로
+                        if (match && match.length > 2) {
+                            weatherIconElement.textContent = match[1]; // 이모지
+                            weatherTextElement.textContent = `${location}: ${match[2]}`; // 나머지 텍스트
+                        } else {
+                            weatherIconElement.textContent = '❓';
+                            weatherTextElement.textContent = `${location}: ${weatherInfo}`;
+                        }
+                    } else {
+                        weatherIconElement.textContent = '❓';
+                        weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
+                    }
+
+                } catch (error) {
+                    console.error("날씨 정보를 가져오는 중 오류 발생:", error);
+                    weatherIconElement.textContent = '⚠️';
+                    weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
+                }
+            }
+
+            function getUserLocationAndWeather() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const { latitude, longitude } = position.coords;
+                            fetchWeather(latitude, longitude);
+                        },
+                        (error) => {
+                            console.error("위치 정보를 가져오는 중 오류 발생:", error);
+                            weatherIconElement.textContent = '🚫';
+                            weatherTextElement.textContent = '위치 권한이 거부되었습니다. 서울 날씨를 표시합니다.';
+                            // 위치 권한이 거부되면 서울 날씨를 기본으로 표시
+                            fetchWeather(37.5665, 126.9780); // 서울의 위도, 경도
+                        },
+                        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                    );
+                } else {
+                    weatherIconElement.textContent = '❌';
+                    weatherTextElement.textContent = '이 브라우저는 위치 정보를 지원하지 않습니다. 서울 날씨를 표시합니다.';
+                    // Geolocation을 지원하지 않으면 서울 날씨를 기본으로 표시
+                    fetchWeather(37.5665, 126.9780); // 서울의 위도, 경도
+                }
+            }
+
+            // Initial calls
+            updateGreeting();
+            getUserLocationAndWeather();
+            // Update greeting every hour (optional)
+            // setInterval(updateGreeting, 3600000);
+        });
+
+        // Task completion animation
+        const taskCheckboxes = document.querySelectorAll('.task-checkbox');
+        taskCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                const taskCard = event.target.closest('.task-card');
+                if (event.target.checked) {
+                    taskCard.classList.add('completed');
+                    // Remove the card after the animation completes
+                    taskCard.addEventListener('animationend', () => {
+                        taskCard.remove();
+                    }, { once: true });
+                }
+            });
+        });
+
+        // Mood tracker selection
+        const moodEmojis = document.querySelectorAll('.mood-emoji');
+        moodEmojis.forEach(emoji => {
+            emoji.addEventListener('click', (event) => {
+                // Remove 'selected' class from all emojis
+                moodEmojis.forEach(e => e.classList.remove('selected'));
+                // Add 'selected' class to the clicked emoji
+                event.target.classList.add('selected');
+                // You can add further logic here to save the mood
+                console.log('Selected mood:', event.target.dataset.mood);
+            });
+        });
+
+        // Navigation active state (simple example)
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (event) => {
+                navItems.forEach(e => e.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+            });
+        });
+
+        // Daily Note Type Selection
+        const noteTypeTodayButton = document.getElementById('noteTypeToday');
+        const noteTypeDailyButton = document.getElementById('noteTypeDaily');
+
+        noteTypeTodayButton.addEventListener('click', () => {
+            noteTypeTodayButton.classList.add('active-note-type');
+            noteTypeDailyButton.classList.remove('active-note-type');
+            // Logic for "오늘의 한마디" view
+            console.log('Selected: 오늘의 한마디');
+        });
+
+        noteTypeDailyButton.addEventListener('click', () => {
+            noteTypeDailyButton.classList.add('active-note-type');
+            noteTypeTodayButton.classList.remove('active-note-type');
+            // Logic for "일" view
+            console.log('Selected: 일기');
+        });
+    </script>
+</body>
+</html>
