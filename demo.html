@@ -158,7 +158,7 @@
         }
 
         .large-button-wrapper {
-            background-color: #F5F5F5; /* Very light gray background for the large button */
+            background-color: #000000; /* Very light gray background for the large button */
             border-radius: 9999px; /* Fully rounded */
             padding: 0.25rem; /* Small padding inside the large button */
             display: flex;
@@ -171,7 +171,7 @@
             border-radius: 9999px; /* Fully rounded */
             font-size: 0.875rem; /* text-sm */
             font-weight: 500; /* font-medium */
-            color: #333; /* Darker text (almost black) */
+            color: #ffffff; /* Darker text (almost black) */
             background-color: transparent;
             cursor: pointer;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
@@ -195,7 +195,7 @@
             <!-- 날씨 정보 -->
             <div id="weather-info" class="text-lg text-gray-600 mt-2 flex items-center">
                 <span id="weather-icon" class="mr-2 text-2xl"></span>
-                <span id="weather-text">날씨 정보를 가져오는 중...</span>
+                <span id="weather-text"></span>
             </div>
         </header>
 
@@ -273,235 +273,167 @@
     </nav>
 
     <script>
-        // KMA Coordinate Conversion Constants
-        const RE = 6371.00877; // 지구 반경(km)
-        const GRID = 5.0;     // 격자 간격(km)
-        const SLAT1 = 30.0;   // 표준 위도1
-        const SLAT2 = 38.0;   // 표준 위도2
-        const OLON = 126.0;   // 기준점 경도
-        const OLAT = 38.0;    // 기준점 위도
-        const XO = 43;        // 기준점 X좌표
-        const YO = 136;       // 기준점 Y좌표
-
-        // Function to convert Latitude/Longitude to KMA Grid Coordinates (NX, NY)
-        function convertGridXY(lat, lon) {
-            const DEGRAD = Math.PI / 180.0;
-            const RADDEG = 180.0 / Math.PI;
-
-            const re = RE / GRID;
-            const slat1 = SLAT1 * DEGRAD;
-            const slat2 = SLAT2 * DEGRAD;
-            const olon = OLON * DEGRAD;
-            const olat = OLAT * DEGRAD;
-
-            let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-            sn = Math.log(sn) / Math.log(Math.cos(slat1) / Math.cos(slat2));
-            let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-            sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
-            let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
-            ro = re * sf / Math.pow(ro, sn);
-
-            let ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5);
-            ra = re * sf / Math.pow(ra, sn);
-            let theta = lon * DEGRAD - olon;
-            if (theta > Math.PI) theta -= 2.0 * Math.PI;
-            if (theta < -Math.PI) theta += 2.0 * Math.PI;
-            theta *= sn;
-
-            const x = Math.floor(ra * Math.sin(theta) + XO + 0.5);
-            const y = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
-
-            return { x, y };
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            // Set current date
+            // 현재 날짜 설정
             const dateElement = document.getElementById('current-date');
             const today = new Date();
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             dateElement.textContent = today.toLocaleDateString('ko-KR', options);
 
-            // Dynamic Greeting and Weather
+            // 동적 인사말 및 날씨
             const greetingMessageElement = document.getElementById('greeting-message');
             const weatherIconElement = document.getElementById('weather-icon');
             const weatherTextElement = document.getElementById('weather-text');
 
-            function updateGreeting() {
+            // 날씨 API 키 및 엔드포인트
+            const WEATHER_API_KEY = decodeURIComponent("E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9%2FqBILOxzpU%2BMztJyUivBxXfKAnK3lg6w%3D%3D");
+            const WEATHER_API_ENDPOINT = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0";
+
+            // 부산 지역의 기상청 격자 좌표 (예시 값)
+            const NX = 98; // 부산 기준
+            const NY = 76; // 부산 기준
+
+            // API 호출을 위한 base_date 및 base_time 계산 함수
+            function getBaseTimeAndDate() {
+                const now = new Date();
+                let year = now.getFullYear();
+                let month = String(now.getMonth() + 1).padStart(2, '0');
+                let day = String(now.getDate()).padStart(2, '0');
+                let hours = now.getHours();
+
+                const baseTimes = [2, 5, 8, 11, 14, 17, 20, 23];
+                let baseTime = null;
+
+                // 가장 최근의 발표 시각 찾기
+                for (let i = baseTimes.length - 1; i >= 0; i--) {
+                    if (hours >= baseTimes[i]) {
+                        baseTime = String(baseTimes[i]).padStart(2, '0') + '00';
+                        break;
+                    }
+                }
+
+                // 만약 현재 시각이 02시 이전이라면, 전날 23시를 base_time으로 설정
+                if (baseTime === null) {
+                    const yesterday = new Date(now);
+                    yesterday.setDate(now.getDate() - 1);
+                    year = yesterday.getFullYear();
+                    month = String(yesterday.getMonth() + 1).padStart(2, '0');
+                    day = String(yesterday.getDate()).padStart(2, '0');
+                    baseTime = '2300';
+                }
+
+                const baseDate = `${year}${month}${day}`;
+                return { baseDate, baseTime };
+            }
+
+            async function updateGreetingAndWeather() {
                 const currentHour = new Date().getHours();
                 let greeting = "Good Evening, Jane";
-                let greetingEmoji = "🌙"; // Moon for evening
+                let greetingEmoji = "🌙"; // 저녁 인사 이모지
 
                 if (currentHour >= 5 && currentHour < 12) {
                     greeting = "Good Morning, Jane";
-                    greetingEmoji = "☀️"; // Sun for morning
+                    greetingEmoji = "☀️"; // 아침 인사 이모지
                 } else if (currentHour >= 12 && currentHour < 18) {
                     greeting = "Good Afternoon, Jane";
-                    greetingEmoji = "👋"; // Waving hand for afternoon
+                    greetingEmoji = "👋"; // 오후 인사 이모지
                 }
 
                 greetingMessageElement.innerHTML = `${greeting} <span role="img" aria-label="greeting-emoji">${greetingEmoji}</span>`;
-            }
 
-            async function fetchKmaWeather(nx, ny) {
-                // KMA API Service Key (Replace with your actual key from data.go.kr)
-                // 제공해주신 디코딩된 인증키를 사용하며, URL에 포함하기 위해 encodeURIComponent로 인코딩합니다.
-                const serviceKey = encodeURIComponent('E3Eos3zdsfvVFG4mC5qYCljIz3vEjbgfHA0Xnyl4zU7eXYLNaN5Tf9/qBILOxzpU+MztJyUivBxXfKAnK3lg6w==');
-
-                // Get current date and time for base_date and base_time
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const base_date = `${year}${month}${day}`;
-
-                // base_time: KMA API requires the latest full hour observation.
-                // For getUltraSrtNcst, it's typically the current hour minus one, or the latest available.
-                // API는 정시 단위로 발표되므로, 현재 시각이 00분~40분 사이면 이전 시각을, 41분 이후면 현재 시각을 사용
-                // (초단기실황은 매 40분마다 갱신되므로, 현재 시각이 40분 이전이면 이전 시간의 데이터가 최신일 수 있음)
-                let base_time_hour = now.getHours();
-                if (now.getMinutes() <= 40) {
-                    base_time_hour = (base_time_hour - 1 + 24) % 24; // 이전 시간, 0시일 경우 23시로
-                }
-                const base_time = String(base_time_hour).padStart(2, '0') + '00';
-
-                const apiUrl = `http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&base_date=${base_date}&base_time=${base_time}&nx=${nx}&ny=${ny}`;
-
+                // 날씨 데이터 가져오기
                 try {
-                    const response = await fetch(apiUrl);
-                    if (!response.ok) {
-                        // HTTP 오류 발생 시 상세 메시지 출력
-                        const errorText = await response.text();
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                    }
+                    const { baseDate, baseTime } = getBaseTimeAndDate();
+                    const url = new URL(`${WEATHER_API_ENDPOINT}/getVilageFcst`);
+                    url.searchParams.append('serviceKey', WEATHER_API_KEY);
+                    url.searchParams.append('pageNo', '1');
+                    url.searchParams.append('numOfRows', '100'); // 충분한 데이터 로드를 위해
+                    url.searchParams.append('dataType', 'JSON');
+                    url.searchParams.append('base_date', baseDate);
+                    url.searchParams.append('base_time', baseTime);
+                    url.searchParams.append('nx', NX);
+                    url.searchParams.append('ny', NY);
+
+                    const response = await fetch(url.toString());
                     const data = await response.json();
 
-                    if (data.response.header.resultCode !== '00') {
-                        // API 응답 결과 코드 오류 시 상세 메시지 출력
-                        throw new Error(`API Error: ${data.response.header.resultMsg}`);
-                    }
+                    if (data.response.header.resultCode === '00') {
+                        const items = data.response.body.items.item;
+                        let temperature = 'N/A';
+                        let skyCondition = 'N/A';
+                        let precipitationType = 'N/A';
 
-                    const items = data.response.body.items.item;
-                    let temperature = 'N/A';
-                    let precipitationAmount = 'N/A';
-                    let skyCondition = 'N/A';
-                    let precipitationType = 'N/A';
-                    let locationName = ''; // KMA API does not directly return location name for coords
-
-                    items.forEach(item => {
-                        switch (item.category) {
-                            case 'T1H': // 기온
-                                temperature = `${item.obsrValue}°C`;
-                                break;
-                            case 'RN1': // 1시간 강수량
-                                precipitationAmount = `${item.obsrValue}mm`;
-                                break;
-                            case 'SKY': // 하늘 상태 (1:맑음, 3:구름많음, 4:흐림)
-                                if (item.obsrValue === '1') skyCondition = '맑음';
-                                else if (item.obsrValue === '3') skyCondition = '구름많음';
-                                else if (item.obsrValue === '4') skyCondition = '흐림';
-                                break;
-                            case 'PTY': // 강수 형태 (0:없음, 1:비, 2:비/눈, 3:눈, 4:소나기, 5:빗방울, 6:빗방울눈날림, 7:눈날림)
-                                if (item.obsrValue === '1') precipitationType = '비';
-                                else if (item.obsrValue === '2') precipitationType = '비/눈';
-                                else if (item.obsrValue === '3') precipitationType = '눈';
-                                else if (item.obsrValue === '4') precipitationType = '소나기';
-                                else if (item.obsrValue === '5') precipitationType = '빗방울';
-                                else if (item.obsrValue === '6') precipitationType = '빗방울눈날림';
-                                else if (item.obsrValue === '7') precipitationType = '눈날림';
-                                break;
-                        }
-                    });
-
-                    let weatherDisplay = '';
-                    let weatherEmoji = '';
-
-                    // PTY (강수 형태) 우선
-                    if (precipitationType !== 'N/A' && precipitationType !== '0') { // '0'은 "없음"을 의미
-                        weatherDisplay = `${precipitationType}, ${temperature}`;
-                        if (precipitationType === '비' || precipitationType === '소나기' || precipitationType === '빗방울') weatherEmoji = '🌧️';
-                        else if (precipitationType === '눈' || precipitationType === '눈날림') weatherEmoji = '❄️';
-                        else if (precipitationType === '비/눈' || precipitationType === '빗방울눈날림') weatherEmoji = '🌨️';
-                    } else {
-                        // PTY 없으면 SKY (하늘 상태)
-                        weatherDisplay = `${skyCondition}, ${temperature}`;
-                        if (skyCondition === '맑음') weatherEmoji = '☀️';
-                        else if (skyCondition === '구름많음') weatherEmoji = '☁️';
-                        else if (skyCondition === '흐림') weatherEmoji = '☁️'; // 흐림도 구름 이모지로
-                    }
-
-                    // 위치 이름은 Geocoding API를 사용해야 정확히 얻을 수 있습니다.
-                    // KMA API는 격자 좌표를 기반으로 하므로, 직접적인 주소 반환은 없습니다.
-                    // 여기서는 간단히 "현재 위치" 또는 "서울"로 표시합니다.
-                    locationName = '현재 위치'; // 또는 사용자의 실제 위치명 (별도의 Geocoding API 필요)
-
-                    weatherIconElement.textContent = weatherEmoji;
-                    weatherTextElement.textContent = `${locationName}: ${weatherDisplay}`;
-
-                } catch (error) {
-                    console.error("날씨 정보를 가져오는 중 오류 발생:", error);
-                    weatherIconElement.textContent = '⚠️';
-                    weatherTextElement.textContent = `날씨 정보를 가져올 수 없습니다. (${error.message || error}). CORS 또는 Mixed Content 문제일 수 있습니다.`;
-                }
-            }
-
-            function getUserLocationAndWeather() {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            const { latitude, longitude } = position.coords;
-                            const { x, y } = convertGridXY(latitude, longitude);
-                            fetchKmaWeather(x, y);
-                        },
-                        (error) => {
-                            // Geolocation 오류 코드에 따라 메시지 분기
-                            let errorMessage = '위치 정보를 가져오는 중 오류 발생: ';
-                            switch (error.code) {
-                                case error.PERMISSION_DENIED:
-                                    errorMessage += '위치 권한이 거부되었습니다.';
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    errorMessage += '위치 정보를 사용할 수 없습니다.';
-                                    break;
-                                case error.TIMEOUT:
-                                    errorMessage += '위치 정보 요청 시간이 초과되었습니다.';
-                                    break;
-                                default:
-                                    errorMessage += error.message || '알 수 없는 오류';
-                                    break;
+                        // 필요한 날씨 정보 추출
+                        items.forEach(item => {
+                            if (item.category === 'T1H') { // 1시간 기온
+                                temperature = `${item.fcstValue}°C`;
+                            } else if (item.category === 'SKY') { // 하늘 상태
+                                // 1: 맑음, 3: 구름많음, 4: 흐림
+                                if (item.fcstValue === '1') skyCondition = '맑음';
+                                else if (item.fcstValue === '3') skyCondition = '구름많음';
+                                else if (item.fcstValue === '4') skyCondition = '흐림';
+                            } else if (item.category === 'PTY') { // 강수 형태
+                                // 0: 없음, 1: 비, 2: 비/눈, 3: 눈, 4: 소나기, 5: 빗방울, 6: 빗방울눈날림, 7: 눈날림
+                                if (item.fcstValue === '1') precipitationType = '비';
+                                else if (item.fcstValue === '2') precipitationType = '비/눈';
+                                else if (item.fcstValue === '3') precipitationType = '눈';
+                                else if (item.fcstValue === '4') precipitationType = '소나기';
+                                else if (item.fcstValue === '5') precipitationType = '빗방울';
+                                else if (item.fcstValue === '6') precipitationType = '빗방울눈날림';
+                                else if (item.fcstValue === '7') precipitationType = '눈날림';
+                                else precipitationType = '없음';
                             }
-                            console.error(errorMessage, error);
+                        });
 
-                            weatherIconElement.textContent = '🚫';
-                            weatherTextElement.textContent = '위치 권한이 비활성화되었습니다. 서울 날씨를 표시합니다.';
-                            // 위치 권한이 거부되거나 오류가 발생하면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
-                            const seoulCoords = convertGridXY(37.5665, 126.9780); // 서울 시청 위도, 경도
-                            fetchKmaWeather(seoulCoords.x, seoulCoords.y);
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 } // 타임아웃 10초, 캐시 1분
-                    );
-                } else {
-                    weatherIconElement.textContent = '❌';
-                    weatherTextElement.textContent = '이 브라우저는 위치 정보를 지원하지 않습니다. 서울 날씨를 표시합니다.';
-                    // Geolocation을 지원하지 않으면 서울 날씨를 기본으로 표시 (서울의 KMA 격자 좌표)
-                    const seoulCoords = convertGridXY(37.5665, 126.9780); // 서울 시청 위도, 경도
-                    fetchKmaWeather(seoulCoords.x, seoulCoords.y);
+                        let weatherIcon = '';
+                        let weatherText = '';
+
+                        if (precipitationType !== '없음' && precipitationType !== 'N/A') {
+                            weatherText = precipitationType;
+                            if (precipitationType === '비' || precipitationType === '소나기' || precipitationType === '빗방울') {
+                                weatherIcon = '🌧️';
+                            } else if (precipitationType === '눈' || precipitationType === '비/눈' || precipitationType === '빗방울눈날림' || precipitationType === '눈날림') {
+                                weatherIcon = '🌨️';
+                            }
+                        } else {
+                            weatherText = skyCondition;
+                            if (skyCondition === '맑음') {
+                                weatherIcon = '☀️';
+                            } else if (skyCondition === '구름많음') {
+                                weatherIcon = '☁️';
+                            } else if (skyCondition === '흐림') {
+                                weatherIcon = ' overcast_cloud'; // Phosphor icon for overcast
+                            }
+                        }
+
+                        weatherIconElement.innerHTML = weatherIcon;
+                        weatherTextElement.textContent = `${temperature}, ${weatherText}`;
+
+                    } else {
+                        console.error('날씨 API 오류:', data.response.header.resultMsg);
+                        weatherIconElement.textContent = '❓';
+                        weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
+                    }
+                } catch (error) {
+                    console.error('날씨 정보를 가져오는 중 오류 발생:', error);
+                    weatherIconElement.textContent = '❓';
+                    weatherTextElement.textContent = '날씨 정보를 가져올 수 없습니다.';
                 }
             }
 
-            // Initial calls
-            updateGreeting();
-            getUserLocationAndWeather();
-            // Update greeting every hour (optional)
-            // setInterval(updateGreeting, 3600000); // 1시간마다 인사말 업데이트
+            // 초기 호출
+            updateGreetingAndWeather();
+            // 1시간마다 업데이트 (선택 사항)
+            // setInterval(updateGreetingAndWeather, 3600000);
 
-            // Task completion animation
+            // 할 일 완료 애니메이션
             const taskCheckboxes = document.querySelectorAll('.task-checkbox');
             taskCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', (event) => {
                     const taskCard = event.target.closest('.task-card');
                     if (event.target.checked) {
                         taskCard.classList.add('completed');
-                        // Remove the card after the animation completes
+                        // 애니메이션 완료 후 카드 제거
                         taskCard.addEventListener('animationend', () => {
                             taskCard.remove();
                         }, { once: true });
@@ -509,20 +441,20 @@
                 });
             });
 
-            // Mood tracker selection
+            // 기분 트래커 선택
             const moodEmojis = document.querySelectorAll('.mood-emoji');
             moodEmojis.forEach(emoji => {
                 emoji.addEventListener('click', (event) => {
-                    // Remove 'selected' class from all emojis
+                    // 모든 이모지에서 'selected' 클래스 제거
                     moodEmojis.forEach(e => e.classList.remove('selected'));
-                    // Add 'selected' class to the clicked emoji
+                    // 클릭된 이모지에 'selected' 클래스 추가
                     event.target.classList.add('selected');
-                    // You can add further logic here to save the mood
-                    console.log('Selected mood:', event.target.dataset.mood);
+                    // 기분 저장 로직 추가 가능
+                    console.log('선택된 기분:', event.target.dataset.mood);
                 });
             });
 
-            // Navigation active state (simple example)
+            // 네비게이션 활성 상태 (간단한 예시)
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
                 item.addEventListener('click', (event) => {
@@ -531,22 +463,22 @@
                 });
             });
 
-            // Daily Note Type Selection
+            // 오늘의 한마디 / 일기 유형 선택
             const noteTypeTodayButton = document.getElementById('noteTypeToday');
             const noteTypeDailyButton = document.getElementById('noteTypeDaily');
 
             noteTypeTodayButton.addEventListener('click', () => {
                 noteTypeTodayButton.classList.add('active-note-type');
                 noteTypeDailyButton.classList.remove('active-note-type');
-                // Logic for "오늘의 한마디" view
-                console.log('Selected: 오늘의 한마디');
+                // "오늘의 한마디" 뷰 로직
+                console.log('선택됨: 오늘의 한마디');
             });
 
             noteTypeDailyButton.addEventListener('click', () => {
                 noteTypeDailyButton.classList.add('active-note-type');
                 noteTypeTodayButton.classList.remove('active-note-type');
-                // Logic for "일" view
-                console.log('Selected: 일기');
+                // "일기" 뷰 로직
+                console.log('선택됨: 일기');
             });
         });
     </script>
