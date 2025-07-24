@@ -10,3 +10,8 @@
   for = "/*"
   [headers.values]
     X-Robots-Tag = "all"
+
+[[headers]]
+  for = "/**/*.opus"
+  [headers.values]
+    Content-Type = "audio/ogg; codecs=opus"
