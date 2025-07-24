@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRC 메이커</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2e2e2e;
+            color: #ccc;
+            overflow: hidden;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #3a3a3a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        /* Textarea styling */
+        textarea {
+            background-color: #333; border: 1px solid #555; color: #eee;
+            padding: 10px; border-radius: 8px; resize: none; font-family: monospace;
+        }
+
+        /* Button base styles */
+        .btn {
+            @apply px-4 py-2 rounded-lg transition-all duration-200 flex items-center justify-center;
+            background-image: linear-gradient(135deg, #555 0%, #3a3a3a 100%);
+            color: #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn:hover { background-image: linear-gradient(135deg, #666 0%, #4a4a4a 100%); box-shadow: 0 6px 12px rgba(0,0,0,0.5); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        /* Specific button colors */
+        .btn-primary { background-image: linear-gradient(135deg, #4CAF50 0%, #3a8d3e 100%); }
+        .btn-primary:hover { background-image: linear-gradient(135deg, #45a049 0%, #357a38 100%); }
+        .btn-secondary { background-image: linear-gradient(135deg, #008CBA 0%, #006b8e 100%); }
+        .btn-secondary:hover { background-image: linear-gradient(135deg, #007bb5 0%, #005a7a 100%); }
+        .btn-danger { background-image: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        .btn-danger:hover { background-image: linear-gradient(135deg, #da190b 0%, #b71c1c 100%); }
+        .btn-toggle { background-image: linear-gradient(135deg, #FFC107 0%, #FFA000 100%); color: #333; }
+        .btn-toggle:hover { background-image: linear-gradient(135deg, #FFD54F 0%, #FFC107 100%); }
+        .btn-toggle.active { background-image: linear-gradient(135deg, #4CAF50 0%, #3a8d3e 100%); color: #fff; }
+        .btn-toggle.active:hover { background-image: linear-gradient(135deg, #45a049 0%, #357a38 100%); }
+
+        /* Less prominent button style for delete blank lines */
+        .btn-subtle {
+            background-image: linear-gradient(135deg, #444 0%, #333 100%);
+            color: #bbb;
+            box-shadow: none;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .btn-subtle:hover {
+            background-image: linear-gradient(135deg, #555 0%, #444 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transform: translateY(-1px);
+        }
+        .btn-subtle:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* LRC Output & Preview Styling */
+        #lrcOutput, #lrcOutputPreview { /* Apply scrollbar to both */
+            overflow-y: auto;
+        }
+
+        #lrcOutputPreview {
+            background-color: #333; border: 1px solid #555; color: #eee;
+            padding: 10px; border-radius: 8px; white-space: pre-wrap;
+            font-family: monospace; line-height: 1.5; min-height: 100px;
+        }
+        #lrcOutputPreview .lrc-item {
+            position: relative; padding-right: 25px; margin-bottom: 5px;
+            display: flex; align-items: flex-start;
+        }
+        #lrcOutputPreview .lrc-item.view-mode {
+            padding-right: 0; /* Remove padding when 'X' button is hidden */
+        }
+        #lrcOutputPreview .lrc-item:hover .delete-lrc-line-btn { opacity: 1; }
+        #lrcOutputPreview .highlight {
+            background-color: rgba(0, 140, 186, 0.3); border-radius: 4px;
+            padding: 2px 4px; display: block;
+        }
+        #lrcOutputPreview .lrc-time-display {
+            color: #999; font-size: 0.8em; margin-right: 10px; cursor: pointer;
+            min-width: 60px; text-align: right; flex-shrink: 0;
+        }
+        #lrcOutputPreview .lrc-time-display:hover { color: #bbb; }
+        #lrcOutputPreview .lrc-time-display.hidden-view-mode { display: none; } /* Hide in view mode */
+
+        #lrcOutputPreview .translation-original-line {
+            color: #eee; font-weight: bold; display: block; margin-bottom: 2px;
+        }
+        #lrcOutputPreview .translation-translated-line { color: #bbb; display: block; }
+        #lrcOutputPreview .lrc-lyric-content { flex-grow: 1; }
+
+        /* Delete button for individual lines */
+        .delete-lrc-line-btn {
+            position: absolute; right: 5px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #f44336; font-size: 1.2rem;
+            cursor: pointer; opacity: 0; transition: opacity 0.2s ease; padding: 0 5px;
+        }
+        .delete-lrc-line-btn:hover { color: #ff7043; }
+        .delete-lrc-line-btn.hidden-view-mode { display: none; } /* Hide in view mode */
+
+        /* Audio Player Styling */
+        .custom-audio-player {
+            background-color: #333; border-radius: 8px; padding: 15px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .progress-bar-container {
+            width: 100%; height: 8px; background-color: #555;
+            border-radius: 4px; cursor: pointer; overflow: hidden; margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 100%; width: 0%; background-color: #4CAF50;
+            border-radius: 4px; transition: width 0.1s linear;
+        }
+        .volume-slider {
+            -webkit-appearance: none; width: 100px; height: 6px;
+            background: #555; outline: none; opacity: 0.7; transition: opacity .2s; border-radius: 3px;
+        }
+        .volume-slider:hover { opacity: 1; }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 16px; height: 16px;
+            border-radius: 50%; background: #008CBA; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .volume-slider::-moz-range-thumb {
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #008CBA; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Modal Styling */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; visibility: hidden; opacity: 0; transition: visibility 0s, opacity 0.3s ease;
+        }
+        .modal-overlay.visible { visibility: visible; opacity: 1; }
+        .modal-content {
+            background-color: #3a3a3a; padding: 25px; border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5); text-align: center; color: #eee;
+            max-width: 400px; width: 90%; transform: translateY(-20px); transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content { transform: translateY(0); }
+        .modal-content h3 { font-size: 1.25rem; margin-bottom: 20px; font-weight: bold; }
+        .modal-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .modal-buttons .btn { min-width: 100px; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+    <header class="bg-[#3a3a3a] text-[#ccc] py-1 px-4 flex items-center justify-between shadow-md z-10">
+        <div class="flex items-center space-x-4">
+            <div class="flex space-x-2">
+                <div class="p-1 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="새 파일">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM13 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2zM13 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z"></path></svg>
+                </div>
+                <div class="p-1 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="저장">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>
+                </div>
+            </div>
+            <nav class="flex space-x-4 text-sm">
+                <a href="#" class="hover:text-white">파일</a>
+                <a href="#" class="hover:text-white">편집</a>
+                <a href="#" class="hover:text-white">도움말</a>
+            </nav>
+        </div>
+        <div class="p-1 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="설정">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535A4 4 0 0010 13a4 4 0 00-2.828 1.172l-.707.707A1 1 0 016 15.535V16a1 1 0 11-2 0v-.465A5.972 5.972 0 015 11a6 6 0 016-6 .5.5 0 00.5-.5V4a.5.5 0 011 0v.5A6.5 6.5 0 0117 11a5.972 5.972 0 01-1 4.535v.465a1 1 0 11-2 0v-.465z" clip-rule="evenodd"></path></svg>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="w-12 bg-[#3a3a3a] flex flex-col items-center py-2 space-y-2 shadow-md overflow-y-auto">
+            <label for="audioFileInput" class="p-2 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="오디오 로드">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"></path></svg>
+                <input type="file" id="audioFileInput" accept="audio/*" class="hidden">
+            </label>
+            <div class="p-2 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="LRC 저장">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414zM9 2a1 1 0 00-1 1v7a1 1 0 102 0V3a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            </div>
+            <div class="p-2 rounded-md hover:bg-[#4a4a4a] cursor-pointer" title="설정">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535A4 4 0 0010 13a4 4 0 00-2.828 1.172l-.707.707A1 1 0 016 15.535V16a1 1 0 11-2 0v-.465A5.972 5.972 0 015 11a6 6 0 016-6 .5.5 0 00.5-.5V4a.5.5 0 011 0v.5A6.5 6.5 0 0117 11a5.972 5.972 0 01-1 4.535v.465a1 1 0 11-2 0v-.465z" clip-rule="evenodd"></path></svg>
+            </div>
+        </aside>
+
+        <main class="flex-1 bg-[#222] p-4 flex flex-col lg:flex-row gap-4 overflow-auto">
+            <div class="flex-1 bg-[#2a2a2a] rounded-lg shadow-inner flex flex-col p-4">
+                <h2 class="text-xl font-semibold text-[#eee] mb-3">가사 편집기</h2>
+                <textarea id="lyricsInput" class="flex-1 text-sm leading-relaxed" placeholder="여기에 가사를 입력하거나 붙여넣으세요.&#10;번역 모드에서는 '원어 // 번역어' 형식으로 입력하세요."></textarea>
+                <button id="deleteBlankLinesBtn" class="btn btn-subtle mt-3 w-full max-w-xs mx-auto">공백 줄 삭제</button>
+            </div>
+
+            <div class="flex-1 bg-[#2a2a2a] rounded-lg shadow-inner flex flex-col p-4">
+                <h2 class="text-xl font-semibold text-[#eee] mb-3">오디오 컨트롤</h2>
+                <div class="custom-audio-player mb-4">
+                    <audio id="audioPlayer" class="hidden"></audio>
+                    <div id="progressBarContainer" class="progress-bar-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <div class="flex items-center space-x-4">
+                            <button id="playPauseBtn" class="btn btn-primary p-2 w-auto h-auto min-w-[40px] min-h-[40px]">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            </button>
+                            <span id="currentTimeDisplay" class="text-sm text-[#eee]">00:00 / 00:00</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.383 3.003A1 1 0 0110 3v14a1 1 0 01-1.617.797l-4.5-3.5A1 1 0 003 13V7a1 1 0 00.883-.797l4.5-3.5zM16 10a4 4 0 01-7.962.97l-.038-.002a4 4 0 017.962-.97z" clip-rule="evenodd"></path></svg>
+                            <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1" class="volume-slider">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center items-center gap-4 mb-4">
+                    <button id="addTimestampBtn" class="btn btn-secondary">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path></svg>
+                        <span class="ml-2">타임스탬프 추가</span>
+                    </button>
+                    <button id="deleteLastTimestampBtn" class="btn btn-danger">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-3.382l-.724-1.447A1 1 0 0011 2H9zm1 12a1 1 0 100-2H7a1 1 0 100 2h3z" clip-rule="evenodd"></path></svg>
+                        <span class="ml-2">마지막 삭제</span>
+                    </button>
+                    <button id="clearAllTimestampsBtn" class="btn btn-danger">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8zM10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 100-2 1 1 0 000 2zm7-1a1 1 0 11-2 0 1 1 0 012 0zm-.464 5.535A4 4 0 0010 13a4 4 0 00-2.828 1.172l-.707.707A1 1 0 016 15.535V16a1 1 0 11-2 0v-.465A5.972 5.972 0 015 11a6 6 0 016-6 .5.5 0 00.5-.5V4a.5.5 0 011 0v.5A6.5 6.5 0 0117 11a5.972 5.972 0 01-1 4.535v.465a1 1 0 11-2 0v-.465z" clip-rule="evenodd"></path></svg>
+                        <span class="ml-2">모두 지우기</span>
+                    </button>
+                    <button id="toggleTranslationModeBtn" class="btn btn-toggle">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 2a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2H7zm0 2h6v8H7V4zm0 10v2h6v-2H7z"></path></svg>
+                        <span class="ml-2">번역 모드 토글</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="bg-[#3a3a3a] h-[40vh] flex flex-col shadow-inner z-10 p-4">
+        <div class="flex-1 flex flex-col lg:flex-row gap-4 mb-4 min-h-0">
+            <div class="flex-1 flex flex-col min-h-0">
+                <h2 class="text-xl font-semibold text-[#eee] mb-3">LRC 출력</h2>
+                <textarea id="lrcOutput" class="flex-1 text-sm leading-relaxed min-h-0" placeholder="생성된 LRC 텍스트가 여기에 표시됩니다..." readonly></textarea>
+                <div class="flex justify-center gap-2 mt-3">
+                    <button id="copyLRCBtn" class="btn w-full max-w-xs">LRC 복사</button>
+                    <button id="downloadLRCBtn" class="btn btn-secondary w-full max-w-xs">LRC 다운로드</button>
+                </div>
+            </div>
+            <div class="flex-1 flex flex-col min-h-0">
+                <h2 class="text-xl font-semibold text-[#eee] mb-3">LRC 미리보기</h2>
+                <div class="flex justify-end mb-2">
+                    <button id="toggleViewEditModeBtn" class="btn btn-toggle text-sm px-3 py-1">
+                        <span id="viewEditModeText">보기 모드</span>
+                    </button>
+                </div>
+                <div id="lrcOutputPreview" class="flex-1 text-sm leading-relaxed min-h-0"></div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="confirmationModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <div class="modal-buttons">
+                <button id="confirmNoBtn" class="btn btn-secondary">아니오</button>
+                <button id="confirmYesBtn" class="btn btn-danger">예</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const $ = id => document.getElementById(id);
+        const audioFileInput = $('audioFileInput'), audioPlayer = $('audioPlayer');
+        const playPauseBtn = $('playPauseBtn'), addTimestampBtn = $('addTimestampBtn');
+        const deleteLastTimestampBtn = $('deleteLastTimestampBtn'), clearAllTimestampsBtn = $('clearAllTimestampsBtn');
+        const lyricsInput = $('lyricsInput'), lrcOutput = $('lrcOutput');
+        const currentTimeDisplay = $('currentTimeDisplay'), copyLRCBtn = $('copyLRCBtn');
+        const lrcOutputPreview = $('lrcOutputPreview'), progressBarContainer = $('progressBarContainer');
+        const progressBar = $('progressBar'), volumeSlider = $('volumeSlider');
+        const toggleTranslationModeBtn = $('toggleTranslationModeBtn');
+        const deleteBlankLinesBtn = $('deleteBlankLinesBtn');
+        const toggleViewEditModeBtn = $('toggleViewEditModeBtn');
+        const viewEditModeText = $('viewEditModeText');
+        const downloadLRCBtn = $('downloadLRCBtn'); // New: Download LRC button
+
+        const confirmationModal = $('confirmationModal'), modalTitle = $('modalTitle');
+        const modalMessage = $('modalMessage'), confirmYesBtn = $('confirmYesBtn');
+        const confirmNoBtn = $('confirmNoBtn');
+
+        // Global State
+        let lyricsLines = [];
+        let lrcParsedData = [];
+        let currentLyricIndex = 0;
+        let isTranslationMode = false;
+        let isViewMode = false; // Default to Edit Mode (false)
+        let modalCallback = null;
+
+        // Utility Functions
+        const formatTime = seconds => isNaN(seconds) ? '00:00' : `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+        const formatTimeForEdit = seconds => {
+            if (isNaN(seconds)) return '00:00.00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds - secs - mins * 60) * 1000);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(3, '0').substring(0, 2)}`;
+        };
+        const parseTimeInput = timeString => {
+            const parts = timeString.match(/(\d+):(\d+)\.?(\d+)?/);
+            if (!parts) return NaN;
+            const mins = parseInt(parts[1] || '0');
+            const secs = parseInt(parts[2] || '0');
+            const ms = parseInt((parts[3] || '0').padEnd(3, '0').substring(0, 3));
+            return mins * 60 + secs + ms / 1000;
+        };
+
+        // Modal Functionality
+        function showConfirmationModal(title, message, onConfirm) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalCallback = onConfirm;
+            confirmationModal.classList.add('visible');
+        }
+
+        // LRC Data Management
+        function updateLRCDataAndDisplay() {
+            lrcParsedData.sort((a, b) => a.time - b.time);
+            lrcOutput.value = lrcParsedData.map(data => {
+                const ms = String(Math.floor((data.time - Math.floor(data.time)) * 1000)).padStart(3, '0').substring(0, 2);
+                const time = `[${formatTime(data.time).substring(0, 5)}.${ms}]`;
+                return isTranslationMode ? `${time}${data.original} // ${data.translated}` : `${time}${data.lyric}`;
+            }).join('\n');
+            updateLRCPreviewDisplay();
+        }
+
+        function updateLRCPreviewDisplay() {
+            lrcOutputPreview.innerHTML = '';
+            lrcParsedData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.classList.add('lrc-item');
+                if (isViewMode) {
+                    div.classList.add('view-mode');
+                }
+                div.dataset.index = index;
+
+                const timeSpan = document.createElement('span');
+                timeSpan.classList.add('lrc-time-display');
+                if (isViewMode) {
+                    timeSpan.classList.add('hidden-view-mode');
+                }
+                timeSpan.textContent = `[${formatTime(item.time).substring(0, 5)}.${String(Math.floor((item.time - Math.floor(item.time)) * 1000)).padStart(3, '0').substring(0, 2)}]`;
+                timeSpan.dataset.timeValue = item.time;
+
+                timeSpan.addEventListener('click', e => {
+                    if (isViewMode) return;
+                    e.stopPropagation();
+                    const originalTimeValue = parseFloat(timeSpan.dataset.timeValue);
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = formatTimeForEdit(originalTimeValue);
+                    input.classList.add('bg-gray-700', 'text-white', 'rounded', 'px-1', 'py-0.5', 'w-24', 'text-sm');
+                    timeSpan.replaceWith(input);
+                    input.focus();
+
+                    const saveEditedTime = () => {
+                        let newTimeValue = parseTimeInput(input.value);
+                        if (isNaN(newTimeValue) || newTimeValue < 0) {
+                            input.replaceWith(timeSpan);
+                            return;
+                        }
+                        lrcParsedData[index].time = newTimeValue;
+                        updateLRCDataAndDisplay();
+                    };
+                    input.addEventListener('blur', saveEditedTime);
+                    input.addEventListener('keydown', e => { if (e.key === 'Enter') input.blur(); });
+                });
+                div.appendChild(timeSpan);
+
+                const lyricContentDiv = document.createElement('div');
+                lyricContentDiv.classList.add('lrc-lyric-content');
+                if (isTranslationMode) {
+                    const originalDiv = document.createElement('div');
+                    originalDiv.classList.add('translation-original-line');
+                    originalDiv.textContent = item.original;
+                    lyricContentDiv.appendChild(originalDiv);
+                    const translatedDiv = document.createElement('div');
+                    translatedDiv.classList.add('translation-translated-line');
+                    translatedDiv.textContent = item.translated;
+                    lyricContentDiv.appendChild(translatedDiv);
+                } else {
+                    const lyricSpan = document.createElement('span');
+                    lyricSpan.textContent = item.lyric;
+                    lyricContentDiv.appendChild(lyricSpan);
+                }
+                div.appendChild(lyricContentDiv);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('delete-lrc-line-btn');
+                if (isViewMode) {
+                    deleteButton.classList.add('hidden-view-mode');
+                }
+                deleteButton.textContent = 'X';
+                deleteButton.title = '이 항목 삭제';
+                deleteButton.addEventListener('click', () => {
+                    showConfirmationModal('항목 삭제', '이 LRC 항목을 삭제하시겠습니까?', () => {
+                        lrcParsedData.splice(index, 1);
+                        updateLRCDataAndDisplay();
+                        if (currentLyricIndex > index) currentLyricIndex--;
+                        else if (currentLyricIndex === index && currentLyricIndex > 0) currentLyricIndex--;
+                        if (currentLyricIndex >= lrcParsedData.length && lrcParsedData.length > 0) currentLyricIndex = lrcParsedData.length - 1;
+                        else if (lrcParsedData.length === 0) currentLyricIndex = 0;
+                    });
+                });
+                div.appendChild(deleteButton);
+                lrcOutputPreview.appendChild(div);
+            });
+        }
+
+        function updateLRCPreviewHighlight(currentTime) {
+            Array.from(lrcOutputPreview.children).forEach((item, i) => {
+                const lineTime = lrcParsedData[i].time;
+                const nextLineTime = (i + 1 < lrcParsedData.length) ? lrcParsedData[i + 1].time : audioPlayer.duration + 1;
+                if (currentTime >= lineTime && currentTime < nextLineTime) {
+                    item.classList.add('highlight');
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    item.classList.remove('highlight');
+                }
+            });
+            if (audioPlayer.ended) Array.from(lrcOutputPreview.children).forEach(item => item.classList.remove('highlight'));
+        }
+
+        // Event Listeners
+        audioFileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (file) {
+                audioPlayer.src = URL.createObjectURL(file);
+                audioPlayer.load();
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 8H7v4h2V8zm4 0h-2v4h2V8z" clip-rule="evenodd"></path></svg>';
+            }
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 8H7v4h2V8zm4 0h-2v4h2V8z" clip-rule="evenodd"></path></svg>';
+            } else {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>';
+            }
+        });
+
+        addTimestampBtn.addEventListener('click', () => {
+            if (currentLyricIndex >= lyricsLines.length) {
+                showConfirmationModal('오류', '더 이상 추가할 가사 줄이 없습니다.', () => {});
+                return;
+            }
+            let currentLyric = lyricsLines[currentLyricIndex];
+            
+            const currentTime = audioPlayer.currentTime;
+            let dataToAdd = isTranslationMode ? {
+                time: currentTime,
+                original: currentLyric.split('//')[0]?.trim() || '',
+                translated: currentLyric.split('//')[1]?.trim() || ''
+            } : { time: currentTime, lyric: currentLyric };
+
+            lrcParsedData.push(dataToAdd);
+            updateLRCDataAndDisplay();
+            currentLyricIndex++;
+            // Scroll lyricsInput to current line
+            const linesInInput = lyricsInput.value.split('\n');
+            if (currentLyricIndex < linesInInput.length) {
+                const charIndex = linesInInput.slice(0, currentLyricIndex).join('\n').length;
+                lyricsInput.setSelectionRange(charIndex, charIndex);
+                lyricsInput.scrollTop = lyricsInput.scrollHeight;
+            }
+        });
+
+        deleteLastTimestampBtn.addEventListener('click', () => {
+            if (lrcParsedData.length === 0) return;
+            showConfirmationModal('마지막 항목 삭제', '마지막으로 추가된 LRC 항목을 삭제하시겠습니까?', () => {
+                lrcParsedData.pop();
+                updateLRCDataAndDisplay();
+                if (currentLyricIndex > 0) currentLyricIndex--;
+            });
+        });
+
+        clearAllTimestampsBtn.addEventListener('click', () => {
+            if (lrcParsedData.length === 0) return;
+            showConfirmationModal('모든 항목 지우기', '모든 LRC 항목을 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.', () => {
+                lrcParsedData = [];
+                updateLRCDataAndDisplay();
+                currentLyricIndex = 0;
+            });
+        });
+
+        toggleTranslationModeBtn.addEventListener('click', () => {
+            showConfirmationModal('모드 전환 경고', '모드를 전환해도 현재 가사 입력 내용은 유지되지만, LRC 출력 및 미리보기 형식만 변경됩니다. 계속하시겠습니까?', () => {
+                isTranslationMode = !isTranslationMode;
+                toggleTranslationModeBtn.classList.toggle('active', isTranslationMode);
+                lyricsInput.placeholder = isTranslationMode ? "여기에 가사를 '원어 // 번역어' 형식으로 입력하세요." : "여기에 가사를 입력하거나 붙여넣으세요...";
+                updateLRCDataAndDisplay();
+            });
+        });
+
+        deleteBlankLinesBtn.addEventListener('click', () => {
+            showConfirmationModal('공백 줄 삭제', '가사 편집기의 모든 공백 줄을 삭제하시겠습니까?', () => {
+                const originalLineCount = lyricsLines.length;
+                lyricsLines = lyricsLines.filter(line => line.trim() !== '');
+                lyricsInput.value = lyricsLines.join('\n');
+                currentLyricIndex = 0; // Reset index as lines have changed
+                const deletedCount = originalLineCount - lyricsLines.length;
+                if (deletedCount > 0) {
+                    // Optional: Add a temporary notification for deleted lines
+                }
+            });
+        });
+
+        // Toggle View/Edit Mode for LRC Preview
+        toggleViewEditModeBtn.addEventListener('click', () => {
+            isViewMode = !isViewMode;
+            // Update button text to reflect the mode it will switch TO
+            viewEditModeText.textContent = isViewMode ? '편집 모드' : '보기 모드';
+            toggleViewEditModeBtn.classList.toggle('active', !isViewMode); // Active when in Edit Mode (not View Mode)
+            updateLRCPreviewDisplay(); // Re-render preview to apply mode changes
+        });
+
+        // New: Download LRC button functionality
+        downloadLRCBtn.addEventListener('click', () => {
+            const lrcContent = lrcOutput.value;
+            if (!lrcContent) {
+                showConfirmationModal('다운로드 오류', '다운로드할 LRC 내용이 없습니다.', () => {});
+                return;
+            }
+
+            const blob = new Blob([lrcContent], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'lyrics.lrc'; // Default filename
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href); // Clean up the object URL
+        });
+
+
+        confirmYesBtn.addEventListener('click', () => { confirmationModal.classList.remove('visible'); if (modalCallback) { modalCallback(); modalCallback = null; } });
+        confirmNoBtn.addEventListener('click', () => { confirmationModal.classList.remove('visible'); modalCallback = null; });
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const { currentTime, duration } = audioPlayer;
+            currentTimeDisplay.textContent = `${formatTime(currentTime)} / ${formatTime(duration)}`;
+            progressBar.style.width = `${(isFinite(duration) && duration > 0) ? (currentTime / duration) * 100 : 0}%`;
+            updateLRCPreviewHighlight(currentTime);
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => { currentTimeDisplay.textContent = `00:00 / ${formatTime(audioPlayer.duration)}`; });
+
+        progressBarContainer.addEventListener('click', e => {
+            const { clientWidth } = progressBarContainer;
+            const { offsetX } = e;
+            const { duration } = audioPlayer;
+            if (isFinite(duration) && duration > 0) audioPlayer.currentTime = (offsetX / clientWidth) * duration;
+        });
+
+        volumeSlider.addEventListener('input', () => { audioPlayer.volume = volumeSlider.value; });
+
+        lyricsInput.addEventListener('input', () => {
+            lyricsLines = lyricsInput.value.split('\n');
+            currentLyricIndex = 0;
+        });
+
+        copyLRCBtn.addEventListener('click', () => {
+            lrcOutput.select();
+            document.execCommand('copy');
+            const originalText = copyLRCBtn.textContent;
+            copyLRCBtn.textContent = '복사 완료!';
+            setTimeout(() => { copyLRCBtn.textContent = originalText; }, 1500);
+        });
+
+        // Initialization
+        updateLRCDataAndDisplay();
+    </script>
+</body>
+</html>
