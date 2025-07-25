@@ -9,6 +9,8 @@
     <!-- Inter font for Apple Music feel -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* 이제 더 이상 사용되지 않는 CSS 변수들은 제거되었습니다. */
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000; /* 기본 배경색을 검은색으로 유지 */
@@ -63,7 +65,7 @@
             box-shadow: 0 0 2px rgba(0,0,0,0.2);
         }
 
-        /* Blurred background for album art */
+        /* Blurred album art background */
         .album-art-background {
             position: absolute;
             top: 0;
@@ -72,15 +74,17 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            filter: blur(30px) saturate(1.2);
+            /* Apple Music 스타일처럼 앨범 아트의 색감을 더 자연스럽게 반영하도록 필터 조정 */
+            filter: blur(40px) saturate(1.5) brightness(0.8); /* 블러 강도, 채도, 밝기 조정 */
             transform: scale(1.1);
-            opacity: 0.3; /* 블러 처리된 앨범 아트의 가시성을 높임 */
+            opacity: 0.4; /* 블러 처리된 앨범 아트의 가시성을 높여 색상 기여도 증가 */
             z-index: -1;
         }
 
         /* Lyrics specific styling for in-place view */
         .lyrics-container {
             overflow-y: auto; /* Enable vertical scrolling */
+            /* 가사 컨테이너 상단과 하단에 투명 마스크 적용 */
             -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             scroll-behavior: smooth; /* Smooth scrolling for active lyric */
@@ -118,12 +122,12 @@
             filter: blur(0); /* Remove blur for active lyric */
         }
 
-        /* Liquid Glass effect for Mini Lyric Bar */
-        .mini-lyric-bar-glass {
-            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
-            backdrop-filter: blur(10px) saturate(180%); /* Blur and saturate for glass effect */
-            -webkit-backdrop-filter: blur(10px) saturate(180%); /* Safari support */
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+        /* Mini Lyric Bar - Only Blur Effect Applied */
+        #mini-lyric-bar {
+            background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white background */
+            backdrop-filter: blur(10px); /* Simple blur effect */
+            -webkit-backdrop-filter: blur(10px); /* Safari support */
+            /* 테두리, 그림자 등 다른 효과는 제거되었습니다. */
         }
 
         /* 이미지 복사 방지 */
@@ -218,11 +222,23 @@
             </button>
         </div>
 
-        <!-- Mini Lyric Bar -->
-        <div id="mini-lyric-bar" class="w-full mt-[-1rem] px-6 py-3 rounded-lg text-center text-sm text-gray-300 cursor-pointer hover:bg-zinc-700 transition-colors duration-200 mini-lyric-bar-glass">
+        <!-- Mini Lyric Bar - Simple Blur Effect Applied -->
+        <div id="mini-lyric-bar" class="w-full mt-[-1rem] px-6 py-3 rounded-lg text-center text-sm text-gray-300 cursor-pointer hover:bg-zinc-700 transition-colors duration-200">
             <span id="current-mini-lyric"></span>
         </div>
     </div>
+
+    <!-- SVG for Liquid Glass Distortion Filter (이제 더 이상 사용되지 않으므로 제거되었습니다.) -->
+    <!-- <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute; overflow:hidden">
+        <defs>
+            <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="var(--noise-frequency) var(--noise-frequency)" numOctaves="2" seed="92" result="noise" />
+                <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
+                <feDisplacementMap in="SourceGraphic" in2="blurred" scale="var(--distortion-strength)" xChannelSelector="R"
+                    yChannelSelector="G" />
+            </filter>
+        </defs>
+    </svg> -->
 
     <script>
         // DOMContentLoaded 이벤트 리스너: 문서가 완전히 로드된 후 스크립트 실행
@@ -346,7 +362,7 @@
                     const p = document.createElement('p');
                     p.classList.add('lyric-line'); // 기본 가사 줄 클래스
                     p.dataset.time = lyric.time; // 시간 데이터 속성 설정
-                    p.style.cursor = 'pointer'; // 클릭 가능함을 시각적으로 나타내기 위해 커서 변경
+                    p.style.cursor = 'pointer'; // 클릭 가능함을 나타내기 위해 커서 변경
 
                     const mainSpan = document.createElement('span');
                     mainSpan.textContent = lyric.text;
@@ -584,8 +600,8 @@
                 audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 10); // 10초 앞으로
             });
 
-            // 미니 가사 바 클릭 시 인플레이스 가사 뷰로 전환
-            miniLyricBar.addEventListener('click', () => toggleInPlaceLyricsView(true));
+            // 미니 가사 바 클릭 시 뷰 전환 (토글 기능)
+            miniLyricBar.addEventListener('click', () => toggleInPlaceLyricsView(!isLyricsVisible));
             // 상단 헤더의 뒤로 가기 버튼 클릭 시 뷰 전환
             toggleViewButton.addEventListener('click', () => {
                 toggleInPlaceLyricsView(!isLyricsVisible); // 현재 상태를 반전
