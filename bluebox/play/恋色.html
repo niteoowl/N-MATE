@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>BLUE PLAYERㅣ恋色</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,15 @@
             margin: 0;
             overflow: hidden; /* 스크롤바 방지 */
             position: relative; /* For background positioning */
+            
+            /* 텍스트 선택 비활성화 */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* IE/Edge */
+            user-select: none;         /* Standard */
+
+            /* 탭 하이라이트 색상 제거 (모바일 웹에서 링크/버튼 탭 시 파란색 배경 방지) */
+            -webkit-tap-highlight-color: transparent;
         }
         /* 볼륨 및 진행 바 스타일링 */
         input[type="range"] {
@@ -115,6 +124,13 @@
             backdrop-filter: blur(10px) saturate(180%); /* Blur and saturate for glass effect */
             -webkit-backdrop-filter: blur(10px) saturate(180%); /* Safari support */
             border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+        }
+
+        /* 이미지 복사 방지 */
+        #main-album-art {
+            pointer-events: none; /* 마우스 이벤트 비활성화 (우클릭 방지) */
+            -webkit-user-drag: none; /* Webkit (Chrome, Safari) 드래그 방지 */
+            user-drag: none; /* 표준 드래그 방지 (비표준) */
         }
     </style>
 </head>
@@ -420,6 +436,18 @@
              */
             const updateLyricsOnTimeUpdate = () => {
                 const currentTime = audioPlayer.currentTime;
+                const duration = audioPlayer.duration;
+
+                // 진행 바 업데이트
+                if (duration > 0) {
+                    progressBar.value = (currentTime / duration) * 100;
+                }
+
+                // 시간 표시 업데이트
+                currentTimeSpan.textContent = formatTime(currentTime);
+                remainingTimeSpan.textContent = `-${formatTime(duration - currentTime)}`;
+
+                // 가사 업데이트
                 let activeIndices = [];
                 let scrollToIndex = -1;
 
@@ -428,38 +456,31 @@
                 let latestLyricTimeStarted = -1;
                 let foundAnyActive = false;
 
-                // 현재 시간보다 작거나 같은 가장 최신 타임스탬프를 찾습니다.
-                // 이 타임스탬프가 현재 활성화되어야 할 가사 그룹의 기준이 됩니다.
                 for (let i = 0; i < lyricLines.length; i++) {
                     const lyricTime = parseFloat(lyricLines[i].dataset.time);
                     if (currentTime >= lyricTime) {
                         latestLyricTimeStarted = lyricTime;
                         foundAnyActive = true;
                     } else {
-                        // 가사가 시간 순서로 정렬되어 있으므로, 현재 시간보다 큰 가사를 만나면 반복을 중단합니다.
                         break;
                     }
                 }
 
                 if (foundAnyActive) {
-                    // `latestLyricTimeStarted`와 동일한 타임스탬프를 가진 모든 가사 줄을 수집합니다.
                     for (let i = 0; i < lyricLines.length; i++) {
                         const lyricTime = parseFloat(lyricLines[i].dataset.time);
                         if (lyricTime === latestLyricTimeStarted) {
                             activeIndices.push(i);
                         }
                     }
-                    // 스크롤 대상 인덱스는 이 활성 그룹의 첫 번째 줄로 설정합니다.
                     scrollToIndex = activeIndices[0];
                 } else {
-                    // 아직 어떤 가사도 시작되지 않았다면 (예: 노래 시작 전), 첫 번째 가사 줄을 활성화합니다.
                     if (lyricLines.length > 0) {
                         activeIndices.push(0);
                         scrollToIndex = 0;
                     }
                 }
 
-                // 활성 가사 줄 집합이 변경되었는지 확인하여 불필요한 DOM 조작을 방지합니다.
                 const currentActiveElements = lyricsContent.querySelectorAll('.lyric-line.active');
                 const currentActiveIndices = Array.from(currentActiveElements).map(el => Array.from(lyricLines).indexOf(el)).sort((a,b)=>a-b);
                 const newActiveIndicesSorted = activeIndices.sort((a,b)=>a-b);
@@ -593,6 +614,9 @@
 
             // 초기 상태 설정: 인플레이스 가사 뷰 숨기기
             toggleInPlaceLyricsView(false);
+
+            // 페이지 전체 우클릭 방지
+            document.addEventListener('contextmenu', event => event.preventDefault());
         });
     </script>
 </body>
