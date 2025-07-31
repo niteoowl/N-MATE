@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilim 검색 결과</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Inter 폰트 적용 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            color: #e0e0e0; /* Default text color for dark mode */
+            padding: 2rem 1rem; /* Mobile default padding */
+        }
+        /* 검색창 그림자 및 테두리 제거 */
+        .search-input:focus {
+            outline: none;
+            box-shadow: none;
+            border-color: transparent;
+        }
+        /* 검색 버튼 스타일: 배경색과 패딩 제거, 아이콘만 남김 */
+        .search-button {
+            color: #03c75a; /* 네이버 그린 (아이콘 색상) */
+            transition: color 0.2s; /* 호버 시 아이콘 색상 변경 */
+        }
+        .search-button:hover {
+            color: #02b34f; /* 호버 시 아이콘 색상 변경 */
+        }
+        /* 검색 결과 카드 스타일 */
+        .result-card {
+            background-color: #282828; /* Darker card background */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #3a3a3a; /* Darker border */
+            margin-bottom: 1rem;
+            cursor: pointer; /* Add pointer for clickable cards */
+        }
+        .result-card:hover {
+            background-color: #333; /* Slightly darker on hover */
+        }
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #88bbff; /* Lighter blue for links */
+            margin-bottom: 0.5rem;
+        }
+        .result-snippet {
+            font-size: 0.9rem;
+            color: #a0a0a0; /* Darker text for snippet */
+            margin-bottom: 0.5rem;
+        }
+        /* .result-url { /* Removed as per user request */
+        /* font-size: 0.8rem; */
+        /* color: #03c75a; */
+        /* word-break: break-all; */
+        /* } */
+        /* 로딩 스피너 스타일 */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #03c75a; /* Green */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #282828; /* Darker card background */
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #3a3a3a; /* Darker border */
+            width: 90%;
+            max-width: 700px;
+            max-height: 90%;
+            overflow-y: auto; /* Scroll for long content */
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #e0e0e0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .modal-close-button:hover {
+            color: #03c75a;
+        }
+        .lyrics-section {
+            background-color: #1a1a1a; /* Even darker background for lyrics */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            word-break: break-word; /* Break long words */
+            max-height: 300px; /* Limit height for scrollable lyrics */
+            overflow-y: auto;
+            border: 1px solid #3a3a3a;
+        }
+        .lyrics-section h3 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #e0e0e0;
+        }
+        .lyrics-section pre {
+            font-family: 'Inter', sans-serif; /* Ensure font is consistent */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 반응형 디자인을 위한 미디어 쿼리 */
+        @media (min-width: 768px) { /* md (768px) 이상 화면 */
+            body {
+                padding: 3rem 2rem; /* Desktop padding */
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <!-- 검색창 섹션 -->
+    <div class="w-full max-w-2xl px-4 mb-8">
+        <div class="flex items-center bg-[#212121] rounded-full overflow-hidden border border-gray-600">
+            <input type="text" id="search-input" placeholder="검색어를 입력해주세요." class="search-input flex-grow py-3 px-6 text-lg rounded-l-full focus:ring-0 focus:border-transparent bg-[#212121] text-gray-200 placeholder-gray-500">
+            <button id="search-button" class="search-button h-full px-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- 검색 결과 섹션 -->
+    <main class="w-full max-w-2xl px-4">
+        <h2 class="text-xl font-bold mb-4 text-gray-200">검색 결과</h2>
+        <div id="search-results-container">
+            <!-- 검색 결과가 여기에 동적으로 표시됩니다. -->
+            <p class="text-gray-400 text-center py-8" id="initial-message">검색어를 입력하고 결과를 확인하세요.</p>
+        </div>
+        <div id="loading-spinner" class="loader"></div>
+    </main>
+
+    <!-- LRC 파일 보기 모달 -->
+    <div id="lyrics-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-button" class="modal-close-button">&times;</button>
+            <h3 id="modal-lyrics-title" class="text-2xl font-bold mb-4 text-gray-200"></h3>
+
+            <div class="lyrics-section">
+                <h3>Plain Lyrics</h3>
+                <pre id="plain-lyrics-content"></pre>
+            </div>
+
+            <div class="lyrics-section mt-4">
+                <h3>Synced Lyrics (LRC)</h3>
+                <pre id="synced-lyrics-content"></pre>
+            </div>
+            <div id="modal-loading-spinner" class="loader"></div>
+            <p id="modal-error-message" class="text-red-400 text-center mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const searchResultsContainer = document.getElementById('search-results-container');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const initialMessage = document.getElementById('initial-message');
+
+        const lyricsModalOverlay = document.getElementById('lyrics-modal-overlay');
+        const modalCloseButton = document.getElementById('modal-close-button');
+        const modalLyricsTitle = document.getElementById('modal-lyrics-title');
+        const plainLyricsContent = document.getElementById('plain-lyrics-content');
+        const syncedLyricsContent = document.getElementById('synced-lyrics-content');
+        const modalLoadingSpinner = document.getElementById('modal-loading-spinner');
+        const modalErrorMessage = document.getElementById('modal-error-message');
+
+        // Function to display messages (e.g., no results, error) in the main search area
+        function displayMessage(message) {
+            searchResultsContainer.innerHTML = `<p class="text-gray-400 text-center py-8">${message}</p>`;
+        }
+
+        // Function to display messages in the modal
+        function displayModalMessage(message) {
+            modalErrorMessage.textContent = message;
+            modalErrorMessage.classList.remove('hidden');
+        }
+
+        // Function to fetch and display full lyrics in a modal
+        async function showLyricsModal(id) {
+            lyricsModalOverlay.classList.add('show');
+            modalLoadingSpinner.style.display = 'block';
+            modalErrorMessage.classList.add('hidden'); // Hide previous error messages
+            modalLyricsTitle.textContent = '';
+            plainLyricsContent.textContent = '로딩 중...';
+            syncedLyricsContent.textContent = '로딩 중...';
+
+            const apiUrl = `https://lrclib.net/api/get/${id}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+
+                modalLyricsTitle.textContent = `${result.trackName} - ${result.artistName}`;
+                if (result.albumName) {
+                    modalLyricsTitle.textContent += ` (${result.albumName})`;
+                }
+
+                if (result.instrumental) {
+                    plainLyricsContent.textContent = '이 곡은 기악곡입니다.';
+                    syncedLyricsContent.textContent = '이 곡은 기악곡입니다.';
+                } else {
+                    plainLyricsContent.textContent = result.plainLyrics || '가사를 찾을 수 없습니다.';
+                    syncedLyricsContent.textContent = result.syncedLyrics || '싱크된 가사를 찾을 수 없습니다.';
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch lyrics:', error);
+                displayModalMessage('가사를 불러오는 데 실패했습니다. 다시 시도해주세요.');
+                plainLyricsContent.textContent = '';
+                syncedLyricsContent.textContent = '';
+            } finally {
+                modalLoadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Function to close the lyrics modal
+        function closeLyricsModal() {
+            lyricsModalOverlay.classList.remove('show');
+            // Clear modal content when closing
+            modalLyricsTitle.textContent = '';
+            plainLyricsContent.textContent = '';
+            syncedLyricsContent.textContent = '';
+            modalErrorMessage.classList.add('hidden');
+        }
+
+        // Event listener for modal close button
+        modalCloseButton.addEventListener('click', closeLyricsModal);
+
+        // Close modal when clicking outside the content
+        lyricsModalOverlay.addEventListener('click', (event) => {
+            if (event.target === lyricsModalOverlay) {
+                closeLyricsModal();
+            }
+        });
+
+        // Function to fetch search results from LRCLIB API
+        async function fetchSearchResults(query) {
+            if (!query) {
+                displayMessage('검색어를 입력해주세요.');
+                return;
+            }
+
+            searchResultsContainer.innerHTML = ''; // Clear previous results
+            loadingSpinner.style.display = 'block'; // Show main loading spinner
+            initialMessage.style.display = 'none'; // Hide initial message
+
+            const apiUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    // Handle HTTP errors
+                    if (response.status === 404) {
+                        displayMessage('검색 결과가 없습니다.');
+                    } else {
+                        displayMessage(`검색 중 오류가 발생했습니다: ${response.statusText}`);
+                    }
+                    return;
+                }
+
+                const results = await response.json();
+
+                if (results.length === 0) {
+                    displayMessage('검색 결과가 없습니다.');
+                } else {
+                    results.forEach(result => {
+                        const resultCard = document.createElement('div');
+                        resultCard.className = 'result-card';
+                        resultCard.dataset.lyricsId = result.id; // Store LRC ID for modal
+
+                        const titleLink = document.createElement('a');
+                        // No href as click will be handled by JS
+                        titleLink.className = 'result-title hover:underline';
+                        titleLink.textContent = `${result.trackName} - ${result.artistName}`;
+                        if (result.albumName) {
+                            titleLink.textContent += ` (${result.albumName})`;
+                        }
+
+                        const snippet = document.createElement('p');
+                        snippet.className = 'result-snippet';
+                        // Display a snippet or full plain lyrics if short
+                        const plainLyricsSnippet = result.plainLyrics ? result.plainLyrics.substring(0, 150) : '';
+                        snippet.textContent = plainLyricsSnippet.length > 0 ? plainLyricsSnippet + '...' : '가사 미리보기를 사용할 수 없습니다.';
+
+                        resultCard.appendChild(titleLink);
+                        resultCard.appendChild(snippet);
+                        searchResultsContainer.appendChild(resultCard);
+
+                        // Add event listener to the entire card for showing lyrics modal
+                        resultCard.addEventListener('click', () => showLyricsModal(result.id));
+                    });
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                displayMessage('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+            } finally {
+                loadingSpinner.style.display = 'none'; // Hide main loading spinner
+            }
+        }
+
+        // Function to parse URL parameters and trigger search
+        function parseUrlAndSearch() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q'); // Get the 'q' parameter from URL
+
+            if (query) {
+                searchInput.value = query; // Populate search input with URL query
+                fetchSearchResults(query); // Trigger search
+            } else {
+                displayMessage('검색어를 입력하고 결과를 확인하세요.');
+            }
+        }
+
+        // Event listener for search button click
+        searchButton.addEventListener('click', () => {
+            const query = searchInput.value.trim();
+            fetchSearchResults(query);
+        });
+
+        // Event listener for Enter key press in search input
+        searchInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                const query = searchInput.value.trim();
+                fetchSearchResults(query);
+            }
+        });
+
+        // Call parseUrlAndSearch on page load
+        document.addEventListener('DOMContentLoaded', parseUrlAndSearch);
+
+    </script>
+</body>
+</html>
