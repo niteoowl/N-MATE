@@ -109,15 +109,16 @@
             <div class="header-inner container mx-auto max-w-screen-md p-4 md:p-8 flex items-center justify-between">
                 <div class="flex items-center">
                     <img src="https://i.postimg.cc/XvKJktcP/001-2025-08-01-T220040-650.png" alt="hanilians 로고" class="h-8 md:h-10 w-auto transition-all duration-300">
+                    <!-- 동적으로 학교 이름을 표시할 영역 -->
+                    <span id="school-name-display" class="ml-4 font-bold text-lg hidden"></span>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button class="p-2 rounded-full text-xl hover:bg-gray-700 transition-colors duration-200">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
                     </button>
-                    <!-- 로그인 상태에 따라 버튼이 동적으로 변경됩니다. -->
-                    <div id="auth-container">
-                        <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
-                    </div>
+                    <!-- 로그인 버튼과 계정 정보 표시 영역 -->
+                    <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
+                    <span id="account-info" class="font-medium text-sm text-gray-400 hidden"></span>
                 </div>
             </div>
         </header>
@@ -180,16 +181,12 @@
             </div>
         </div>
         
-        <!-- 사용자 정보 표시 섹션 -->
-        <div id="user-info-section" class="mb-4 hidden">
-            <p id="user-info-text" class="text-sm font-medium text-gray-400"></p>
-        </div>
-
         <!-- 이미지에 맞춰 추가된 섹션들 -->
         <div class="space-y-4 mt-6">
             <div class="flex items-center justify-between mb-4">
+                <!-- 동적으로 학년, 반을 표시할 영역 -->
                 <div class="flex items-center">
-                    <h1 class="text-xl font-bold">시간표</h1>
+                    <h1 id="timetable-title" class="text-xl font-bold">시간표를 불러오는 중...</h1>
                     <div class="flex items-center ml-2">
                         <button id="prev-week-button" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
@@ -206,7 +203,7 @@
             <div id="timetable-content" class="bg-[--bg-secondary] rounded-3xl overflow-hidden shadow-lg mb-4">
                 <!-- 동적으로 생성될 주간 시간표 컨테이너 -->
                 <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem]">
-                    <p>로그인 후 시간표를 확인할 수 있습니다.</p>
+                    <p>시간표를 불러오는 중...</p>
                 </div>
             </div>
             
@@ -282,33 +279,13 @@
         </div>
     </nav>
     
-    <!-- Firebase SDK를 로드합니다. -->
     <script type="module">
+        // Firebase SDK를 불러옵니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 전역 변수에서 Firebase 설정을 가져옵니다.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Firebase를 초기화합니다.
-        let app = null;
-        let auth = null;
-        let db = null;
-        
-        // Firebase 설정 변수가 있을 때만 Firebase를 초기화합니다.
-        if (firebaseConfig) {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-        } else {
-            console.error("Firebase 설정이 정의되지 않았습니다. Firebase 기능을 사용할 수 없습니다.");
-        }
-
-        // DOM이 완전히 로드된 후 스크립트를 실행합니다.
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const datePickerToggle = document.getElementById('date-picker-toggle');
             const datePickerPanel = document.getElementById('date-picker-panel');
             const closePanelButton = document.getElementById('close-panel');
@@ -325,117 +302,98 @@
             const prevWeekButton = document.getElementById('prev-week-button');
             const nextWeekButton = document.getElementById('next-week-button');
             const currentWeekDisplay = document.getElementById('current-week-display');
-            const authContainer = document.getElementById('auth-container');
-            const userInfoSection = document.getElementById('user-info-section');
-            const userInfoText = document.getElementById('user-info-text');
+            
+            // 동적으로 변경될 UI 요소들
+            const loginButton = document.getElementById('login-button');
+            const accountInfo = document.getElementById('account-info');
+            const timetableTitle = document.getElementById('timetable-title');
+            const schoolNameDisplay = document.getElementById('school-name-display');
 
             let currentDate = new Date();
             let currentWeekMonday = getMonday(currentDate);
-            let userProfile = null;
+
+            // Firebase 설정 및 초기화
+            const firebaseConfig = {
+                apiKey: "AIzaSyALUv0zMoBExmhZJd2idSfmB_-DbPAAdL8",
+                authDomain: "grind-mate-a.firebaseapp.com",
+                projectId: "grind-mate-a",
+                storageBucket: "grind-mate-a.firebasestorage.app",
+                messagingSenderId: "704910171892",
+                appId: "1:704910171892:web:908b2b625e46aa7a5e48a1",
+                measurementId: "G-WQH66CMVP1"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            let userProfile = null; // 사용자 프로필 데이터를 저장할 변수
 
             // Firebase 인증 상태 변경 리스너
-            if (auth) {
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        console.log("사용자가 로그인되었습니다:", user.uid);
-                        await fetchUserProfile(user.uid);
-                        // UI 업데이트
-                        updateAuthUI(true, userProfile);
-                        // 로그인 후 데이터 로드
-                        if (userProfile) {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // 로그인된 상태
+                    const userId = user.uid;
+                    loginButton.classList.add('hidden');
+                    accountInfo.classList.remove('hidden');
+
+                    // Firestore에서 사용자 정보 가져오기
+                    const userDocRef = doc(db, `/artifacts/${appId}/users/${userId}/profile`, 'info');
+                    try {
+                        const userDocSnap = await getDoc(userDocRef);
+                        if (userDocSnap.exists()) {
+                            userProfile = userDocSnap.data();
+                            console.log("User Profile:", userProfile);
+                            // UI 업데이트
+                            accountInfo.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반`;
+                            timetableTitle.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반 시간표`;
+                            schoolNameDisplay.textContent = userProfile.schoolName;
+                            schoolNameDisplay.classList.remove('hidden');
+                            
+                            // API 호출에 동적 데이터 사용
+                            fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
                             const today = new Date();
-                            const year = today.getFullYear();
-                            const month = String(today.getMonth() + 1).padStart(2, '0');
-                            const day = String(today.getDate()).padStart(2, '0');
-                            const dateStr = `${year}${month}${day}`;
-                            fetchMealData(dateStr, userProfile);
-                            fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                            const todayDateStr = formatDate(today);
+                            fetchMealData(todayDateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+
                         } else {
-                            // 프로필 정보가 없을 경우 메시지 표시
-                            timetableContent.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
-                            mealCard.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
+                            console.log("No such document!");
+                            // 정보가 없을 경우 기본값으로 API 호출
+                            fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
+                            const today = new Date();
+                            const todayDateStr = formatDate(today);
+                            fetchMealData(todayDateStr, 'C10', '7171018');
                         }
-                    } else {
-                        console.log("사용자가 로그아웃되었습니다.");
-                        // UI 업데이트
-                        updateAuthUI(false, null);
-                        // 로그아웃 상태에서 보여줄 콘텐츠
-                        timetableContent.innerHTML = `
-                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                            </div>
-                        `;
-                        mealCard.innerHTML = `
-                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
-                                <p>로그인 후 급식 정보를 확인할 수 있습니다.</p>
-                            </div>
-                        `;
+                    } catch (error) {
+                        console.error("Error getting user profile:", error);
+                        // 오류 발생 시 기본값으로 API 호출
+                        fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
+                        const today = new Date();
+                        const todayDateStr = formatDate(today);
+                        fetchMealData(todayDateStr, 'C10', '7171018');
                     }
-                });
-            } else {
-                console.error("Firebase 인증 객체를 사용할 수 없어 인증 상태를 확인할 수 없습니다.");
-            }
-
-            // 초기 인증 시도 (custom token 사용)
-            if (initialAuthToken && auth) {
-                try {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } catch (error) {
-                    console.error("Custom token으로 로그인하는 데 실패했습니다:", error);
-                    // 오류 발생 시 로그아웃 상태로 유지
-                }
-            }
-
-
-            // 사용자 프로필 정보를 Firestore에서 가져오는 함수
-            async function fetchUserProfile(userId) {
-                if (!db) {
-                    console.error("Firestore가 초기화되지 않았습니다.");
-                    return null;
-                }
-                const docRef = doc(db, `/artifacts/${appId}/users/${userId}/profile/user_data`);
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        userProfile = docSnap.data();
-                        console.log("사용자 프로필:", userProfile);
-                    } else {
-                        console.log("사용자 프로필이 없습니다!");
-                        userProfile = null;
-                    }
-                } catch (error) {
-                    console.error("프로필 데이터를 가져오는 데 실패했습니다:", error);
-                    userProfile = null;
-                }
-            }
-            
-            // 로그인 상태에 따라 UI를 업데이트하는 함수
-            function updateAuthUI(isLoggedIn, profile) {
-                authContainer.innerHTML = ''; // 기존 버튼 삭제
-                if (isLoggedIn && profile) {
-                    // 로그인 상태: 사용자 정보 표시
-                    const userInfoHtml = `
-                        <button class="bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm">
-                            ${profile.grade}학년 ${profile.classNum}반
-                        </button>
-                    `;
-                    authContainer.innerHTML = userInfoHtml;
-                    userInfoSection.classList.remove('hidden');
-                    userInfoText.textContent = `${profile.schoolName} ${profile.grade}학년 ${profile.classNum}반`;
                 } else {
-                    // 로그아웃 상태: 로그인 버튼 표시
-                    const loginButton = document.createElement('button');
-                    loginButton.id = 'login-button';
-                    loginButton.className = 'bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200';
-                    loginButton.textContent = '로그인';
-                    loginButton.addEventListener('click', () => {
-                        window.location.href = '/login';
-                    });
-                    authContainer.appendChild(loginButton);
-                    userInfoSection.classList.add('hidden');
+                    // 로그아웃된 상태 또는 초기 상태
+                    loginButton.classList.remove('hidden');
+                    accountInfo.classList.add('hidden');
+                    schoolNameDisplay.classList.add('hidden');
+                    timetableTitle.textContent = "시간표";
+                    
+                    // 기본값으로 API 호출
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
+                    const today = new Date();
+                    const todayDateStr = formatDate(today);
+                    fetchMealData(todayDateStr, 'C10', '7171018');
                 }
-            }
+                
+                // 인증 상태 확인 후 탭 로직 실행
+                switchTab('menu');
+            });
             
+            // signInAnonymously 호출 코드를 삭제했습니다.
+
             // 해당 날짜가 속한 주의 월요일을 구하는 함수
             function getMonday(d) {
                 d = new Date(d);
@@ -445,7 +403,7 @@
             }
 
             // NEIS API에서 급식 데이터를 가져오는 함수
-            async function fetchMealData(mlsYmd, profile) {
+            async function fetchMealData(mlsYmd, atptOfcdcScCode, sdSchulCode) {
                 const year = parseInt(mlsYmd.substring(0, 4), 10);
                 const month = parseInt(mlsYmd.substring(4, 6), 10) - 1;
                 const day = parseInt(mlsYmd.substring(6, 8), 10);
@@ -453,10 +411,6 @@
                 const dayOfWeek = selectedDate.getDay();
 
                 mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 불러오는 중...</p>`;
-                if (!profile) {
-                    mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인할 수 있습니다.</p>`;
-                    return;
-                }
 
                 if (dayOfWeek === 0 || dayOfWeek === 6) {
                     mealCard.innerHTML = `
@@ -469,7 +423,6 @@
                 }
 
                 const apiKey = '0c3b4def034a4eb5b75e830500a30898';
-                const { atptOfcdcScCode, sdSchulCode } = profile;
                 
                 const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
 
@@ -527,21 +480,13 @@
             }
 
             // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
-            async function fetchAndRenderWeeklyTimetable(mondayDate, profile) {
+            async function fetchAndRenderWeeklyTimetable(mondayDate, atptOfcdcScCode, sdSchulCode, grade, classNm) {
                 // 데이터를 불러오는 중 상태 표시
                 timetableContent.innerHTML = `
                     <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
                         <p>시간표를 불러오는 중...</p>
                     </div>
                 `;
-                if (!profile) {
-                    timetableContent.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                    return;
-                }
 
                 // 이번 주 월요일과 금요일 날짜 계산
                 const tiFromYmd = formatDate(mondayDate);
@@ -558,9 +503,8 @@
                 currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
 
                 const apiKey = '0c3b4def034a4eb5b75e830500a30898';
-                const { atptOfcdcScCode, sdSchulCode, grade, classNum } = profile;
                 
-                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
                 
                 try {
                     const response = await fetch(apiUrl);
@@ -605,6 +549,7 @@
             
             // 주간 시간표 데이터를 받아와서 동적으로 HTML 테이블을 그리는 함수 (그리드 버전)
             function renderWeeklyTimetable(data) {
+                // NEIS API 데이터의 ITRT_CNTNT와 PRFN_GRNM을 사용하여 HTML 그리드를 생성합니다.
                 data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
 
                 const days = ['월', '화', '수', '목', '금'];
@@ -779,7 +724,9 @@
 
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
                 if (userProfile) {
-                    fetchMealData(dateStr, userProfile);
+                    fetchMealData(dateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+                } else {
+                    fetchMealData(dateStr, 'C10', '7171018'); // 로그인되지 않은 경우 기본값 사용
                 }
                 datePickerPanel.classList.remove('is-visible');
             }
@@ -822,7 +769,9 @@
                     dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
 
                     if (userProfile) {
-                        fetchMealData(dateStr, userProfile);
+                        fetchMealData(dateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+                    } else {
+                        fetchMealData(dateStr, 'C10', '7171018');
                     }
                 } else {
                     fetchWeatherData();
@@ -841,18 +790,20 @@
             prevWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
+                } else {
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
                 }
             });
             nextWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
+                } else {
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
                 }
             });
 
-            // 초기 탭 로드 시 데이터 가져오기
-            switchTab('menu');
             // 초기 달력 렌더링
             renderCalendar(currentDate);
 
