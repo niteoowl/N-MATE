@@ -354,18 +354,11 @@
                     if (profileSnap.exists()) {
                         userProfile = profileSnap.data();
                         
-                        // ### 중요한 수정사항: officeCode가 없을 경우 자동으로 찾아옵니다. ###
+                        // 사용자가 프로필을 설정했지만 학교 코드가 없는 경우 (비정상적인 상태)
                         if (!userProfile.school || !userProfile.school.officeCode) {
-                            console.log("officeCode가 없어 NEIS API에서 조회합니다.");
-                            const officeCode = await fetchOfficeCode(userProfile.school.name);
-                            if (officeCode) {
-                                userProfile.school.officeCode = officeCode;
-                                console.log("officeCode를 성공적으로 가져왔습니다:", officeCode);
-                            } else {
-                                console.error("officeCode를 찾을 수 없습니다. 프로필 설정이 필요합니다.");
-                                showProfileSetupRequiredState();
-                                return;
-                            }
+                            console.error("사용자 프로필에 학교 정보가 없거나 officeCode가 누락되었습니다.");
+                            showProfileSetupRequiredState();
+                            return;
                         }
 
                         console.log("User profile loaded:", userProfile);
@@ -390,26 +383,6 @@
                 showLoginRequiredState();
             }
         });
-
-        // 학교 이름으로 교육청 코드를 찾는 함수
-        async function fetchOfficeCode(schoolName) {
-            const apiKey = '0c3b4def034a4eb5b75e830500a30898'; // NEIS API 키
-            const apiUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=1&SCHUL_NM=${encodeURIComponent(schoolName)}`;
-            
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                
-                if (data.schoolInfo && data.schoolInfo[1].row) {
-                    return data.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
-                }
-                return null;
-            } catch (error) {
-                console.error('Failed to fetch school info:', error);
-                return null;
-            }
-        }
-
 
         // 로그인 상태에 따라 UI를 업데이트하는 함수
         function updateAuthUI(userName) {
