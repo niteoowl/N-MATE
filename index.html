@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nmate</title>
+    <title>hanilians</title>
     <!-- 
         ⚠️ 경고: Tailwind CSS CDN은 개발 환경에서만 사용해야 합니다.
         실제 배포 시에는 빌드 도구를 사용하여 필요한 CSS만 추출하는 과정을 거쳐야 성능이 향상됩니다.
@@ -329,6 +329,7 @@
                 appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
                 measurementId: "G-0LCGVBKXLQ"
             };
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
             const app = firebase.initializeApp(firebaseConfig);
             auth = firebase.getAuth(app);
@@ -349,21 +350,22 @@
                 // 사용자 프로필이 없거나 로그인하지 않은 경우 기본값
                 const defaultProfile = {
                     schoolName: "남서울중학교",
-                    schoolCode: "7132131",
+                    sdSchulCode: "7132131",
                     atptOfcdcScCode: "B10",
-                    grade: "1",
-                    classNumber: "1"
+                    grade: 1,
+                    classNum: 1,
+                    name: "게스트"
                 };
-
+                
                 if (user) {
                     try {
                         const userId = user.uid;
-                        const userProfileRef = firebase.doc(db, `artifacts/${appId}/users/${userId}/profile/userProfile`);
+                        // Firestore의 사용자 프로필 문서 경로를 정확하게 지정합니다.
+                        const userProfileRef = firebase.doc(db, `artifacts/${appId}/users/${userId}/profile/user_data`);
                         const docSnap = await firebase.getDoc(userProfileRef);
                         
                         if (docSnap.exists()) {
                             userProfile = docSnap.data();
-                            // 사용자 이름과 드롭다운 UI 렌더링
                             authContainer.innerHTML = `
                                 <div class="relative">
                                     <button id="user-profile-button" class="bg-gray-700 bg-opacity-50 hover:bg-gray-700 text-white font-medium py-1.5 px-4 rounded-full flex items-center transition-colors duration-200">
@@ -375,7 +377,6 @@
                                     </div>
                                 </div>
                             `;
-                            // 로그아웃 버튼 이벤트 리스너 추가
                             document.getElementById('user-profile-button').addEventListener('click', toggleDropdown);
                             document.getElementById('logout-button').addEventListener('click', () => {
                                 firebase.signOut(auth)
@@ -388,11 +389,11 @@
                         } else {
                             // 프로필 문서가 없는 경우, 프로필 설정 버튼 표시
                             authContainer.innerHTML = `<a href="/profile-setup"><button class="login-button bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">프로필 설정</button></a>`;
-                            loadDataWithUserProfile(defaultProfile); // 기본값으로 데이터 로드
+                            // 임시로 기본값 사용
+                            loadDataWithUserProfile(defaultProfile);
                         }
                     } catch (e) {
                         console.error("Error fetching user profile:", e);
-                        // 에러 발생 시 로그인 버튼 렌더링
                         authContainer.innerHTML = `<a href="/login"><button class="login-button bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button></a>`;
                         loadDataWithUserProfile(defaultProfile);
                     }
@@ -405,25 +406,28 @@
             
             // Firebase 인증 상태 변화 감지
             firebase.onAuthStateChanged(auth, async (user) => {
+                 if (!user && initialAuthToken) {
+                    try {
+                        const credential = await firebase.signInWithCustomToken(auth, initialAuthToken);
+                        user = credential.user;
+                    } catch (error) {
+                        console.error("Custom token sign-in failed:", error);
+                    }
+                }
                 await renderAuthUI(user);
             });
 
             // 프로필 정보에 따라 데이터 로드
             function loadDataWithUserProfile(profile) {
-                // 사용자가 로그인되어 있다면 프로필 정보를, 아니라면 기본값을 사용
-                const atptOfcdcScCode = profile ? profile.atptOfcdcScCode : 'B10';
-                const sdSchulCode = profile ? profile.sdSchulCode : '7132131';
-                const grade = profile ? profile.grade : '1';
-                const classNm = profile ? profile.classNumber : '1';
-
+                userProfile = profile;
+                
                 // 제목 업데이트
-                if (profile && profile.grade && profile.classNumber && profile.schoolName) {
-                    timetableTitle.textContent = `${profile.schoolName} ${profile.grade}학년 ${profile.classNumber}반 시간표`;
+                if (userProfile && userProfile.schoolName && userProfile.grade && userProfile.classNum) {
+                    timetableTitle.textContent = `${userProfile.schoolName} ${userProfile.grade}학년 ${userProfile.classNum}반 시간표`;
                 } else {
                     timetableTitle.textContent = `시간표`;
                 }
 
-                // 급식 및 시간표 데이터 로드
                 const today = new Date();
                 const year = today.getFullYear();
                 const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -435,8 +439,9 @@
                 const dayName = daysOfWeek[selectedDate.getDay()];
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
                 
-                fetchMealData(dateStr, atptOfcdcScCode, sdSchulCode);
-                fetchAndRenderWeeklyTimetable(currentWeekMonday, atptOfcdcScCode, sdSchulCode, grade, classNm);
+                // 프로필 정보로 급식 및 시간표 API 호출
+                fetchMealData(dateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+                fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
             }
 
             // 해당 날짜가 속한 주의 월요일을 구하는 함수
@@ -531,7 +536,7 @@
             }
 
             // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
-            async function fetchAndRenderWeeklyTimetable(mondayDate, atptOfcdcScCode, sdSchulCode, grade, classNm) {
+            async function fetchAndRenderWeeklyTimetable(mondayDate, atptOfcdcScCode, sdSchulCode, grade, classNum) {
                 // 데이터를 불러오는 중 상태 표시
                 timetableContent.innerHTML = `
                     <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
@@ -555,33 +560,19 @@
 
                 const apiKey = ''; // Canvas 환경에서는 비워둡니다
                 
-                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
                 
                 try {
                     const response = await fetch(apiUrl);
                     const data = await response.json();
                     
                     if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        const today = new Date();
-                        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
-                        let messageHtml = '';
-
-                        if (dayOfWeek === 0 || dayOfWeek === 6) {
-                             messageHtml = `
-                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">주말에는 시간표 정보가 제공되지 않아요</p>
-                                    <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
-                                </div>
-                            `;
-                        } else {
-                            messageHtml = `
-                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">해당 주간의 시간표 정보가 없습니다.</p>
-                                    <p class="text-sm text-gray-400 mt-1">다른 주간을 확인하거나, 정보가 등록되었는지 확인해주세요.</p>
-                                </div>
-                            `;
-                        }
-                        timetableContent.innerHTML = messageHtml;
+                        timetableContent.innerHTML = `
+                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                                <p class="font-medium text-lg text-white">해당 주간의 시간표 정보가 없습니다.</p>
+                                <p class="text-sm text-gray-400 mt-1">다른 주간을 확인하거나, 정보가 등록되었는지 확인해주세요.</p>
+                            </div>
+                        `;
                         return;
                     }
                     
@@ -600,9 +591,6 @@
             
             // 주간 시간표 데이터를 받아와서 동적으로 HTML 테이블을 그리는 함수 (그리드 버전)
             function renderWeeklyTimetable(data) {
-                // NEIS API 데이터의 ITRT_CNTNT와 PRFN_GRNM을 사용하여 HTML 그리드를 생성합니다.
-                data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
-
                 const days = ['월', '화', '수', '목', '금'];
                 const timetableByDay = {};
                 days.forEach(day => timetableByDay[day] = []);
@@ -610,12 +598,24 @@
                 data.forEach(item => {
                     const date = item.ALL_TI_YMD;
                     const dayOfWeek = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8)).getDay();
-                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) { // 월(1) ~ 금(5)
                         const dayName = days[dayOfWeek - 1];
                         timetableByDay[dayName].push(item);
                     }
                 });
 
+                // 교시 순서대로 정렬
+                Object.keys(timetableByDay).forEach(day => {
+                    timetableByDay[day].sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+                });
+                
+                let maxPeriods = 0;
+                Object.values(timetableByDay).forEach(dayData => {
+                    if (dayData.length > maxPeriods) {
+                        maxPeriods = dayData.length;
+                    }
+                });
+                
                 let gridHtml = `
                     <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid">
                         <div class="grid-cell-day rounded-tl-3xl">교시</div>
@@ -625,8 +625,6 @@
                         <div class="grid-cell-day">목</div>
                         <div class="grid-cell-day rounded-tr-3xl">금</div>
                 `;
-                
-                const maxPeriods = Math.max(...Object.values(timetableByDay).map(dayData => dayData.length));
                 
                 for (let period = 1; period <= maxPeriods; period++) {
                     gridHtml += `<div class="grid-cell-hour">${period}</div>`;
@@ -774,7 +772,9 @@
                 const dayName = daysOfWeek[selectedDate.getDay()];
 
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
-                fetchMealData(dateStr, userProfile ? userProfile.atptOfcdcScCode : 'B10', userProfile ? userProfile.sdSchulCode : '7132131');
+                if (userProfile) {
+                     fetchMealData(dateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+                }
                 datePickerPanel.classList.remove('is-visible');
             }
 
@@ -816,7 +816,9 @@
                     const dayName = daysOfWeek[selectedDate.getDay()];
                     dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
                     
-                    fetchMealData(dateStr, userProfile ? userProfile.atptOfcdcScCode : 'B10', userProfile ? userProfile.sdSchulCode : '7132131');
+                    if (userProfile) {
+                        fetchMealData(dateStr, userProfile.atptOfcdcScCode, userProfile.sdSchulCode);
+                    }
                 } else {
                     fetchWeatherData();
                 }
@@ -834,17 +836,13 @@
             prevWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNumber);
-                } else {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'B10', '7132131', '1', '1');
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
                 }
             });
             nextWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNumber);
-                } else {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'B10', '7132131', '1', '1');
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum);
                 }
             });
 
