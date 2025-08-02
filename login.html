@@ -3,145 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE | 로그인</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>로그인 / 회원가입</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- wanted-sans 폰트 로드 -->
+    <link rel="stylesheet" href="https://fastly.jsdelivr.dev/gh/wanteddev/wanted-sans@v1.0.1/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css">
     <style>
-        /* Pretendard 웹폰트 적용 */
-        @font-face {
-            font-family: 'Pretendard-Regular';
-            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1F1F1F;
+            --text-primary: #E0E0E0;
+            --text-secondary: #A0A0A0;
+            --color-blue: #007BFF;
+            --border-color: #333333;
+            --input-bg: #2d2d2d;
+            --input-border: #4a4a4a;
         }
 
-        /* Pretendard 폰트를 기본으로 사용하고, Inter 및 sans-serif를 폴백으로 설정합니다. */
         body {
-            font-family: 'Pretendard-Regular', 'Inter', sans-serif;
-            background-color: #ffffff; /* 배경색을 이미지와 동일하게 설정 */
+            font-family: 'WantedSansVariable', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* 뷰포트 높이 전체를 차지하도록 설정 */
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* 스크롤바가 생기지 않도록 숨김 */
+            min-height: 100vh;
         }
 
-        /* 컨테이너의 최대 너비를 설정하여 좌우 여백을 시뮬레이션합니다. */
-        .container {
-            width: 100%;
-            max-width: 1920px; /* 콘텐츠 영역의 최대 너비를 1920px로 더욱 증가 */
-            padding: 0; /* 좌우 패딩 제거 */
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh; /* 컨테이너가 뷰포트 높이의 100%를 차지하도록 설정 */
-            position: relative; /* 자식 요소의 절대 위치를 위한 기준 */
+        input {
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--text-primary);
         }
 
-        /* 로고 및 텍스트 블록의 위치 조정 - 완벽한 중앙 정렬 */
-        .logo-text-block {
-            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            top: 25%; /* 대략적인 상단 위치 조정 */
-            left: 50%; /* 왼쪽에서 50% 이동 */
-            transform: translate(-50%, -50%); /* 자신의 너비/높이의 50%만큼 이동하여 정확히 중앙 정렬 */
-            text-align: center; /* 텍스트 중앙 정렬 */
-            line-height: 1.4; /* 줄 간격 조정 */
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5); /* --color-blue 사용 */
+            border-color: var(--color-blue);
         }
 
-        /* 로그인 버튼의 위치 조정 및 너비 조정 */
-        .login-button-block {
-            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            /* 기존 bottom: 10% 에 safe-area-inset-bottom을 더하여 하단 UI에 가리지 않도록 합니다. */
-            bottom: calc(10% + env(safe-area-inset-bottom, 20px)); /* 최소 20px 안전 여백 보장 */
-            left: 50%; /* 가운데 정렬을 위해 왼쪽에서 50% 이동 */
-            transform: translate(-50%, 0); /* 자신의 너비의 50%만큼 이동하여 정확히 중앙 정렬 */
-            width: calc(100% - 40px); /* 좌우 20px 패딩을 고려하여 너비 조정 */
-            max-width: 400px; /* 버튼의 최대 너비를 400px로 유지 */
-            padding: 0 20px; /* 모바일에서 좌우 여백 추가 */
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
-        }
-
-        /* 이미지 아이콘 스타일 */
-        .logo-image {
-            width: 48px; /* 이미지 아이콘 너비 */
-            height: 48px; /* 이미지 아이콘 높이 */
-            margin-bottom: 12px; /* 로고와 텍스트 사이 간격 */
-        }
-
-        /* 로그인 버튼 스타일 */
-        .login-button {
-            background-color: #3B82F6; /* 버튼 배경색 */
-            color: white;
-            font-weight: 500; /* Medium */
-            padding: 10px 28px; /* 패딩 조정 (세로 패딩을 줄여 높이 낮춤) */
-            border-radius: 14px; /* 모서리 둥글기 조정 (약간 둥글게) */
-            width: 100%; /* 부모 요소의 너비를 100% 차지하도록 */
-            transition: background-color 0.3s ease; /* 호버 효과를 위한 트랜지션 */
-        }
-
-        .login-button:hover {
-            background-color: #2563EB; /* 호버 시 버튼 색상 변경 */
-        }
-
-        /* 텍스트 크기 및 색상 조정 */
-        .main-title {
-            font-size: 1.5rem; /* 24px */
-            font-weight: 600; /* SemiBold */
-            color: #333333; /* 짙은 회색으로 변경 */
-            margin-bottom: 0.5rem; /* 8px */
-            white-space: nowrap; /* 글자 줄 바꿈 방지 */
-            overflow: hidden; /* 넘치는 내용 숨기기 */
-            text-overflow: ellipsis; /* 넘치는 내용 말줄임표 처리 */
-        }
-
-        .subtitle {
-            font-size: 0.875rem; /* 14px */
-            color: #666666; /* 중간 회색으로 변경 */
-            white-space: nowrap; /* 글자 줄 바꿈 방지 */
-            overflow: hidden; /* 넘치는 내용 숨기기 */
-            text-overflow: ellipsis; /* 넘치는 내용 말줄임표 처리 */
+        .toggle-text {
+            color: var(--color-blue);
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <!-- 로고 및 텍스트 블록 -->
-        <div class="logo-text-block">
-            <!-- 부산남중학교 로고 이미지 (실제 이미지 경로로 대체 필요) -->
-            <img src="/image/simbol.png" alt="부산남중학교 로고" class="logo-image mx-auto">
-            <h1 class="main-title">N-MATE</h1>
-            <p class="subtitle">시간표/학사일정/급식까지 모두 한곳에서 한눈에!</p>
-        </div>
+<body class="bg-[--bg-primary]">
 
-        <!-- 로그인 버튼 블록 -->
-        <div class="login-button-block">
-            <!-- 로그인 버튼에 ID 추가 (Add ID to login button) -->
-            <button id="loginButton" class="login-button">로그인</button>
+    <!-- 메인 컨테이너 -->
+    <div class="p-8 md:p-12 w-full max-w-sm">
+
+        <!-- 메시지 박스 -->
+        <div id="message-box" class="fixed top-4 left-1/2 -translate-x-1/2 p-4 rounded-xl text-center shadow-lg transition-all duration-300 transform -translate-y-20 opacity-0 z-50"></div>
+
+        <!-- 카드 컴포넌트 -->
+        <div class="bg-[--bg-secondary] p-6 sm:p-8 rounded-3xl shadow-lg w-full">
+
+            <!-- 로고/타이틀 -->
+            <div class="flex flex-col items-center mb-6">
+                <img src="https://i.postimg.cc/XvKJktcP/001-2025-08-01-T220040-650.png" alt="hanilians 로고" class="h-10 md:h-12 w-auto mb-2">
+                <p id="form-title" class="text-2xl font-bold text-white mt-4">로그인</p>
+            </div>
+
+            <!-- 로그인 폼 -->
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block text-sm font-medium text-[--text-secondary] mb-1">이메일</label>
+                    <input type="email" id="login-email" name="email" placeholder="hanilians@example.com" required class="w-full px-4 py-2 rounded-xl border-2 border-[--input-border] focus:ring-2 focus:ring-[--color-blue] transition-colors duration-200">
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-sm font-medium text-[--text-secondary] mb-1">비밀번호</label>
+                    <input type="password" id="login-password" name="password" placeholder="••••••••" required class="w-full px-4 py-2 rounded-xl border-2 border-[--input-border] focus:ring-2 focus:ring-[--color-blue] transition-colors duration-200">
+                </div>
+                <button type="submit" class="w-full bg-[--color-blue] text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition-colors duration-200">로그인</button>
+            </form>
+
+            <!-- 회원가입 폼 (처음에는 숨김) -->
+            <form id="signup-form" class="hidden">
+                <div class="mb-4">
+                    <label for="signup-email" class="block text-sm font-medium text-[--text-secondary] mb-1">이메일</label>
+                    <input type="email" id="signup-email" name="email" placeholder="hanilians@example.com" required class="w-full px-4 py-2 rounded-xl border-2 border-[--input-border] focus:ring-2 focus:ring-[--color-blue] transition-colors duration-200">
+                </div>
+                <div class="mb-4">
+                    <label for="signup-password" class="block text-sm font-medium text-[--text-secondary] mb-1">비밀번호</label>
+                    <input type="password" id="signup-password" name="password" placeholder="••••••••" required class="w-full px-4 py-2 rounded-xl border-2 border-[--input-border] focus:ring-2 focus:ring-[--color-blue] transition-colors duration-200">
+                </div>
+                <div class="mb-6">
+                    <label for="confirm-password" class="block text-sm font-medium text-[--text-secondary] mb-1">비밀번호 확인</label>
+                    <input type="password" id="confirm-password" name="confirm-password" placeholder="••••••••" required class="w-full px-4 py-2 rounded-xl border-2 border-[--input-border] focus:ring-2 focus:ring-[--color-blue] transition-colors duration-200">
+                </div>
+                <button type="submit" class="w-full bg-[--color-blue] text-white font-bold py-3 rounded-xl hover:bg-blue-600 transition-colors duration-200">회원가입</button>
+            </form>
+
+            <!-- 폼 전환 버튼 -->
+            <div class="mt-6 text-center text-sm">
+                <span id="toggle-text">계정이 없으신가요?</span>
+                <button id="toggle-form-button" class="font-bold toggle-text ml-1 hover:underline">회원가입</button>
+            </div>
         </div>
     </div>
+    
+    <!-- Firebase SDK 로드 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        
+        // Firebase 설정 가져오기
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // DOM 요소 가져오기
+        const loginForm = document.getElementById('login-form');
+        const signupForm = document.getElementById('signup-form');
+        const toggleFormButton = document.getElementById('toggle-form-button');
+        const formTitle = document.getElementById('form-title');
+        const toggleText = document.getElementById('toggle-text');
+        const messageBox = document.getElementById('message-box');
 
-    <script>
-        // DOMContentLoaded 이벤트 리스너를 사용하여 문서가 완전히 로드된 후 스크립트를 실행합니다.
-        // (Use DOMContentLoaded event listener to run the script after the document is fully loaded.)
-        document.addEventListener('DOMContentLoaded', () => {
-            // ID를 사용하여 로그인 버튼 요소를 가져옵니다.
-            // (Get the login button element using its ID.)
-            const loginButton = document.getElementById('loginButton');
-
-            // 로그인 버튼이 존재하면 클릭 이벤트 리스너를 추가합니다.
-            // (If the login button exists, add a click event listener.)
-            if (loginButton) {
-                loginButton.addEventListener('click', () => {
-                    // 현재 탭에서 '/auth' 경로로 이동합니다.
-                    // (Navigate to the '/auth' path in the current tab.)
-                    window.location.href = '/auth';
-                });
+        // 메시지 표시 함수
+        function showMessage(text, type) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('bg-green-500', 'bg-red-500', 'bg-yellow-500');
+            messageBox.classList.add('translate-y-0', 'opacity-100');
+            
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-500');
             } else {
-                console.error('로그인 버튼을 찾을 수 없습니다. (Login button not found.)');
+                messageBox.classList.add('bg-yellow-500');
+            }
+
+            setTimeout(() => {
+                messageBox.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // 로그인 폼 제출 핸들러
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target['login-email'].value;
+            const password = e.target['login-password'].value;
+
+            try {
+                // Firebase 이메일/비밀번호 로그인
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('로그인 성공:', userCredential.user);
+                showMessage('로그인 성공! 환영합니다.', 'success');
+                // 로그인 후 메인 페이지로 리디렉션
+                window.location.href = '/';
+            } catch (error) {
+                const errorCode = error.code;
+                console.error('로그인 실패:', errorCode, error.message);
+                let errorMessage = '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.';
+                if (errorCode === 'auth/invalid-email') {
+                    errorMessage = '유효하지 않은 이메일 형식입니다.';
+                } else if (errorCode === 'auth/user-not-found' || errorCode === 'auth/wrong-password') {
+                    errorMessage = '이메일 또는 비밀번호가 올바르지 않습니다.';
+                } else if (errorCode === 'auth/too-many-requests') {
+                    errorMessage = '너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.';
+                }
+                showMessage(errorMessage, 'error');
+            }
+        });
+
+        // 회원가입 폼 제출 핸들러
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = e.target['signup-email'].value;
+            const password = e.target['signup-password'].value;
+            const confirmPassword = e.target['confirm-password'].value;
+
+            if (password !== confirmPassword) {
+                showMessage('비밀번호가 일치하지 않습니다.', 'error');
+                return;
+            }
+
+            try {
+                // Firebase 이메일/비밀번호 회원가입
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('회원가입 성공:', userCredential.user);
+                showMessage('회원가입 성공! 이제 로그인할 수 있습니다.', 'success');
+                // 회원가입 성공 후 메인 페이지로 리디렉션
+                window.location.href = '/';
+            } catch (error) {
+                const errorCode = error.code;
+                console.error('회원가입 실패:', errorCode, error.message);
+                let errorMessage = '회원가입에 실패했습니다. 다시 시도해주세요.';
+                if (errorCode === 'auth/email-already-in-use') {
+                    errorMessage = '이미 사용 중인 이메일입니다.';
+                } else if (errorCode === 'auth/invalid-email') {
+                    errorMessage = '유효하지 않은 이메일 형식입니다.';
+                } else if (errorCode === 'auth/weak-password') {
+                    errorMessage = '비밀번호는 6자리 이상이어야 합니다.';
+                }
+                showMessage(errorMessage, 'error');
+            }
+        });
+
+        // 폼 전환 버튼 핸들러
+        toggleFormButton.addEventListener('click', () => {
+            const isLoginVisible = !loginForm.classList.contains('hidden');
+            loginForm.classList.toggle('hidden');
+            signupForm.classList.toggle('hidden');
+
+            if (isLoginVisible) {
+                formTitle.textContent = '회원가입';
+                toggleText.textContent = '이미 계정이 있으신가요?';
+                toggleFormButton.textContent = '로그인';
+            } else {
+                formTitle.textContent = '로그인';
+                toggleText.textContent = '계정이 없으신가요?';
+                toggleFormButton.textContent = '회원가입';
             }
         });
     </script>
