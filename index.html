@@ -439,8 +439,8 @@
                     timetableContent.innerHTML = `<p class="text-gray-400">주말에는 시간표 정보가 제공되지 않아요.</p>`;
                 } else {
                     // 평일인 경우
-                    fetchMealData(todayStr, userProfile.schoolCode, 'C10'); // 임시로 C10 사용
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.schoolCode, userProfile.grade, userProfile.classNumber, 'C10'); // 임시로 C10 사용
+                    fetchMealData(todayStr, userProfile.school.code, userProfile.school.officeCode); // school.code와 officeCode 사용
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.school.code, userProfile.grade, userProfile.classNumber, userProfile.school.officeCode); // school.code와 officeCode 사용
                 }
             } else {
                 // 사용자 프로필이 없는 경우
@@ -780,7 +780,7 @@
 
             dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
             if (userProfile) {
-                fetchMealData(dateStr, userProfile.schoolCode, 'C10');
+                fetchMealData(dateStr, userProfile.school.code, userProfile.school.officeCode);
             } else {
                 mealCard.innerHTML = `<p class="text-gray-400">로그인하여 급식 정보를 확인하세요.</p>`;
             }
@@ -825,7 +825,7 @@
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
 
                 if(userProfile) {
-                    fetchMealData(dateStr, userProfile.schoolCode, 'C10');
+                    fetchMealData(dateStr, userProfile.school.code, userProfile.school.officeCode);
                 } else {
                     mealCard.innerHTML = `<p class="text-gray-400">로그인하여 급식 정보를 확인하세요.</p>`;
                 }
@@ -847,13 +847,13 @@
         prevWeekButton.addEventListener('click', () => {
             if (userProfile) {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
-                fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.schoolCode, userProfile.grade, userProfile.classNumber, 'C10');
+                fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.school.code, userProfile.grade, userProfile.classNumber, userProfile.school.officeCode);
             }
         });
         nextWeekButton.addEventListener('click', () => {
             if (userProfile) {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
-                fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.schoolCode, userProfile.grade, userProfile.classNumber, 'C10');
+                fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.school.code, userProfile.grade, userProfile.classNumber, userProfile.school.officeCode);
             }
         });
 
