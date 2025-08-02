@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="중학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.">
-    <title>N-MATE | 전국 중학생을 위한 시간표, 급식표, 학사일정 통합 플랫폼</title>
+    <title>hanilians</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Material Symbols -->
@@ -97,6 +96,7 @@
         .timetable-grid .grid-cell:hover {
             background-color: #333333; /* hover:bg-gray-700 */
         }
+
     </style>
 </head>
 <body class="bg-[--bg-primary] text-white">
@@ -114,17 +114,9 @@
                     <button class="p-2 rounded-full text-xl hover:bg-gray-700 transition-colors duration-200">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
                     </button>
-                    <!-- 로그인 상태에 따라 표시될 요소들 -->
-                    <div id="auth-info" class="flex items-center space-x-2">
-                        <!-- 로딩 스피너 (초기 상태) -->
-                        <div id="loading-spinner" class="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-blue-500"></div>
-                        <!-- 로그인 버튼 (기본) -->
-                        <button id="login-button" class="hidden bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
-                        <!-- 사용자 정보 (로그인 시) -->
-                        <div id="user-info" class="hidden flex-col items-end">
-                            <span id="user-school-name" class="font-medium text-sm"></span>
-                            <span id="user-id" class="text-xs text-gray-500 truncate max-w-[120px]"></span>
-                        </div>
+                    <!-- 로그인 상태에 따라 버튼이 동적으로 변경됩니다. -->
+                    <div id="auth-container">
+                        <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
                     </div>
                 </div>
             </div>
@@ -188,11 +180,16 @@
             </div>
         </div>
         
+        <!-- 사용자 정보 표시 섹션 -->
+        <div id="user-info-section" class="mb-4 hidden">
+            <p id="user-info-text" class="text-sm font-medium text-gray-400"></p>
+        </div>
+
         <!-- 이미지에 맞춰 추가된 섹션들 -->
         <div class="space-y-4 mt-6">
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center">
-                    <h1 id="timetable-title" class="text-xl font-bold">시간표</h1>
+                    <h1 class="text-xl font-bold">시간표</h1>
                     <div class="flex items-center ml-2">
                         <button id="prev-week-button" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
@@ -209,7 +206,7 @@
             <div id="timetable-content" class="bg-[--bg-secondary] rounded-3xl overflow-hidden shadow-lg mb-4">
                 <!-- 동적으로 생성될 주간 시간표 컨테이너 -->
                 <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem]">
-                    <p>시간표를 불러오는 중...</p>
+                    <p>로그인 후 시간표를 확인할 수 있습니다.</p>
                 </div>
             </div>
             
@@ -285,546 +282,567 @@
         </div>
     </nav>
     
+    <!-- Firebase SDK를 로드합니다. -->
     <script type="module">
-        // Firebase 관련 모듈들을 import 합니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 설정 및 초기화
-        const firebaseConfig = JSON.parse(
-            typeof __firebase_config !== 'undefined' ? __firebase_config :
-            '{"apiKey":"AIzaSyALUv0zMoBExmhZJd2idSfmB_-DbPAAdL8","authDomain":"grind-mate-a.firebaseapp.com","projectId":"grind-mate-a","storageBucket":"grind-mate-a.firebasestorage.app","messagingSenderId":"704910171892","appId":"1:704910171892:web:908b2b625e46aa7a5e48a1","measurementId":"G-WQH66CMVP1"}'
-        );
+        // 전역 변수에서 Firebase 설정을 가져옵니다.
+        const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
+        // Firebase를 초기화합니다.
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // UI 요소들을 선택합니다.
-        const datePickerToggle = document.getElementById('date-picker-toggle');
-        const datePickerPanel = document.getElementById('date-picker-panel');
-        const closePanelButton = document.getElementById('close-panel');
-        const mainHeader = document.getElementById('main-header');
-        const menuTab = document.getElementById('menu-tab');
-        const weatherTab = document.getElementById('weather-tab');
-        const menuContent = document.getElementById('menu-content');
-        const weatherContent = document.getElementById('weather-content');
-        const mealCard = document.getElementById('meal-card');
-        const weatherCard = document.getElementById('weather-card');
-        const dateDisplay = document.getElementById('date-display');
-        const calendarContainer = document.getElementById('calendar-container');
-        const timetableContent = document.getElementById('timetable-content');
-        const timetableTitle = document.getElementById('timetable-title');
-        const prevWeekButton = document.getElementById('prev-week-button');
-        const nextWeekButton = document.getElementById('next-week-button');
-        const currentWeekDisplay = document.getElementById('current-week-display');
-        const loginButton = document.getElementById('login-button');
-        const userInfoDiv = document.getElementById('user-info');
-        const userSchoolNameSpan = document.getElementById('user-school-name');
-        const userIdSpan = document.getElementById('user-id');
-        const loadingSpinner = document.getElementById('loading-spinner');
+        // DOM이 완전히 로드된 후 스크립트를 실행합니다.
+        document.addEventListener('DOMContentLoaded', async () => {
+            const datePickerToggle = document.getElementById('date-picker-toggle');
+            const datePickerPanel = document.getElementById('date-picker-panel');
+            const closePanelButton = document.getElementById('close-panel');
+            const mainHeader = document.getElementById('main-header');
+            const menuTab = document.getElementById('menu-tab');
+            const weatherTab = document.getElementById('weather-tab');
+            const menuContent = document.getElementById('menu-content');
+            const weatherContent = document.getElementById('weather-content');
+            const mealCard = document.getElementById('meal-card');
+            const weatherCard = document.getElementById('weather-card');
+            const dateDisplay = document.getElementById('date-display');
+            const calendarContainer = document.getElementById('calendar-container');
+            const timetableContent = document.getElementById('timetable-content');
+            const prevWeekButton = document.getElementById('prev-week-button');
+            const nextWeekButton = document.getElementById('next-week-button');
+            const currentWeekDisplay = document.getElementById('current-week-display');
+            const authContainer = document.getElementById('auth-container');
+            const userInfoSection = document.getElementById('user-info-section');
+            const userInfoText = document.getElementById('user-info-text');
 
-        let currentDate = new Date();
-        let currentWeekMonday = getMonday(currentDate);
+            let currentDate = new Date();
+            let currentWeekMonday = getMonday(currentDate);
+            let userProfile = null;
 
-        let currentUserProfile = null;
-        
-        // 페이지 로드 시 초기 인증 처리
-        // onAuthStateChanged 리스너 내에서 모든 인증 및 데이터 로딩 로직을 처리하여 상태를 일관되게 만듭니다.
-        onAuthStateChanged(auth, async (user) => {
-            // UI를 초기화하고 로딩 상태를 표시합니다.
-            loadingSpinner.classList.remove('hidden');
-            loginButton.classList.add('hidden');
-            userInfoDiv.classList.add('hidden');
-            
-            // 로그인 상태가 감지되면
-            if (user) {
-                console.log('User is signed in:', user.uid);
-                
-                // Firestore에서 사용자 프로필을 가져옵니다.
-                const userProfileDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/user_profiles/profile`);
-                const docSnap = await getDoc(userProfileDocRef);
-                
-                if (docSnap.exists()) {
-                    currentUserProfile = docSnap.data();
-                    console.log("Current user profile fetched:", currentUserProfile);
-                } else {
-                    console.log("No user profile found, using default data.");
-                    currentUserProfile = {
-                        atptOfcdcScCode: "C10",
-                        classNum: "1",
-                        grade: "1",
-                        schoolName: "부산남중학교",
-                        sdSchulCode: "7171018",
-                        studentNum: "1",
-                        userId: user.uid
-                    };
-                    // 프로필이 없는 경우 기본 프로필을 생성합니다.
-                    try {
-                        await setDoc(userProfileDocRef, currentUserProfile);
-                        console.log("Default profile created successfully.");
-                    } catch (e) {
-                        console.error("Error creating default profile:", e);
+            // Firebase 인증 상태 변경 리스너
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log("사용자가 로그인되었습니다:", user.uid);
+                    await fetchUserProfile(user.uid);
+                    // UI 업데이트
+                    updateAuthUI(true, userProfile);
+                    // 로그인 후 데이터 로드
+                    if (userProfile) {
+                        const today = new Date();
+                        const year = today.getFullYear();
+                        const month = String(today.getMonth() + 1).padStart(2, '0');
+                        const day = String(today.getDate()).padStart(2, '0');
+                        const dateStr = `${year}${month}${day}`;
+                        fetchMealData(dateStr, userProfile);
+                        fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                    } else {
+                        // 프로필 정보가 없을 경우 메시지 표시
+                        timetableContent.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
+                        mealCard.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
                     }
+                } else {
+                    console.log("사용자가 로그아웃되었습니다.");
+                    // UI 업데이트
+                    updateAuthUI(false, null);
+                    // 로그아웃 상태에서 보여줄 콘텐츠
+                    timetableContent.innerHTML = `
+                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
+                        </div>
+                    `;
+                    mealCard.innerHTML = `
+                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
+                            <p>로그인 후 급식 정보를 확인할 수 있습니다.</p>
+                        </div>
+                    `;
+                }
+            });
+
+            // 초기 인증 시도 (custom token 사용)
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                }
+            } catch (error) {
+                console.error("Custom token으로 로그인하는 데 실패했습니다:", error);
+                // 오류 발생 시 로그아웃 상태로 유지
+            }
+
+            // 사용자 프로필 정보를 Firestore에서 가져오는 함수
+            async function fetchUserProfile(userId) {
+                const docRef = doc(db, `/artifacts/${appId}/users/${userId}/profile/user_data`);
+                try {
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        userProfile = docSnap.data();
+                        console.log("사용자 프로필:", userProfile);
+                    } else {
+                        console.log("사용자 프로필이 없습니다!");
+                        userProfile = null;
+                    }
+                } catch (error) {
+                    console.error("프로필 데이터를 가져오는 데 실패했습니다:", error);
+                    userProfile = null;
+                }
+            }
+            
+            // 로그인 상태에 따라 UI를 업데이트하는 함수
+            function updateAuthUI(isLoggedIn, profile) {
+                authContainer.innerHTML = ''; // 기존 버튼 삭제
+                if (isLoggedIn && profile) {
+                    // 로그인 상태: 사용자 정보 표시
+                    const userInfoHtml = `
+                        <button class="bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm">
+                            ${profile.grade}학년 ${profile.classNum}반
+                        </button>
+                    `;
+                    authContainer.innerHTML = userInfoHtml;
+                    userInfoSection.classList.remove('hidden');
+                    userInfoText.textContent = `${profile.schoolName} ${profile.grade}학년 ${profile.classNum}반`;
+                } else {
+                    // 로그아웃 상태: 로그인 버튼 표시
+                    const loginButton = document.createElement('button');
+                    loginButton.id = 'login-button';
+                    loginButton.className = 'bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200';
+                    loginButton.textContent = '로그인';
+                    loginButton.addEventListener('click', () => {
+                        window.location.href = '/login';
+                    });
+                    authContainer.appendChild(loginButton);
+                    userInfoSection.classList.add('hidden');
+                }
+            }
+            
+            // 해당 날짜가 속한 주의 월요일을 구하는 함수
+            function getMonday(d) {
+                d = new Date(d);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일(1)부터 시작
+                return new Date(d.setDate(diff));
+            }
+
+            // NEIS API에서 급식 데이터를 가져오는 함수
+            async function fetchMealData(mlsYmd, profile) {
+                const year = parseInt(mlsYmd.substring(0, 4), 10);
+                const month = parseInt(mlsYmd.substring(4, 6), 10) - 1;
+                const day = parseInt(mlsYmd.substring(6, 8), 10);
+                const selectedDate = new Date(year, month, day);
+                const dayOfWeek = selectedDate.getDay();
+
+                mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 불러오는 중...</p>`;
+                if (!profile) {
+                    mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인할 수 있습니다.</p>`;
+                    return;
                 }
 
-                // 사용자 정보로 UI를 업데이트합니다.
-                userSchoolNameSpan.textContent = currentUserProfile.schoolName || '학교 정보 없음';
-                userIdSpan.textContent = currentUserProfile.userId;
-                userInfoDiv.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
-
-            } else {
-                // 로그인되지 않은 경우
-                console.log('No user is signed in.');
-                currentUserProfile = null;
-                
-                // 로그인 버튼을 표시하고 사용자 정보는 숨깁니다.
-                loginButton.classList.remove('hidden');
-                userInfoDiv.classList.add('hidden');
-                loadingSpinner.classList.add('hidden');
-            }
-            
-            // 인증 상태에 관계없이 초기 데이터 로딩을 시작합니다.
-            updateDataBasedOnUser();
-        });
-        
-        // 로그인 페이지로 이동하는 이벤트 리스너
-        loginButton.addEventListener('click', () => {
-            window.location.href = '/login';
-        });
-
-        // 사용자 데이터에 따라 UI와 데이터를 업데이트하는 함수
-        function updateDataBasedOnUser() {
-            if (currentUserProfile) {
-                // 로그인된 경우, 사용자 프로필에 맞춰 급식과 시간표 정보를 가져옵니다.
-                timetableTitle.textContent = `${currentUserProfile.grade}학년 ${currentUserProfile.classNum}반 시간표`;
-                switchTab('menu');
-                fetchMealData(formatDate(new Date()), currentUserProfile);
-                fetchAndRenderWeeklyTimetable(currentWeekMonday, currentUserProfile);
-            } else {
-                // 로그인되지 않은 경우, 기본값으로 UI를 업데이트합니다.
-                timetableTitle.textContent = `시간표`;
-                
-                // 기본 급식 및 시간표 정보 표시
-                switchTab('menu');
-                fetchMealData(formatDate(new Date()));
-                fetchAndRenderWeeklyTimetable(currentWeekMonday);
-            }
-        }
-        
-        // 해당 날짜가 속한 주의 월요일을 구하는 함수
-        function getMonday(d) {
-            d = new Date(d);
-            const day = d.getDay();
-            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일(1)부터 시작
-            return new Date(d.setDate(diff));
-        }
-
-        // NEIS API에서 급식 데이터를 가져오는 함수
-        async function fetchMealData(mlsYmd, userData = null) {
-            const year = parseInt(mlsYmd.substring(0, 4), 10);
-            const month = parseInt(mlsYmd.substring(4, 6), 10) - 1;
-            const day = parseInt(mlsYmd.substring(6, 8), 10);
-            const selectedDate = new Date(year, month, day);
-            const dayOfWeek = selectedDate.getDay();
-
-            mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 불러오는 중...</p>`;
-
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
-                mealCard.innerHTML = `
-                    <div class="text-center p-4">
-                        <p class="font-medium text-lg text-white">주말에는 급식 정보가 제공되지 않아요</p>
-                        <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const atptOfcdcScCode = userData?.atptOfcdcScCode || 'C10'; 
-            const sdSchulCode = userData?.sdSchulCode || '7171018'; 
-            
-            const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=0c3b4def034a4eb5b75e830500a30898&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
-
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                
-                if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
                     mealCard.innerHTML = `
                         <div class="text-center p-4">
-                            <p class="font-medium text-lg text-white">방학에는 급식 정보가 제공되지 않아요</p>
-                            <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
+                            <p class="font-medium text-lg">주말에는 급식 정보가 제공되지 않아요</p>
+                            <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
                         </div>
                     `;
                     return;
                 }
+
+                const apiKey = '0c3b4def034a4eb5b75e830500a30898';
+                const { atptOfcdcScCode, sdSchulCode } = profile;
                 
-                if (data.mealServiceDietInfo && data.mealServiceDietInfo.length > 1 && data.mealServiceDietInfo[1].row) {
-                    const mealInfo = data.mealServiceDietInfo[1].row;
-                    const lunchMeal = mealInfo.find(meal => meal.MMEAL_SC_NM === '중식');
+                const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
 
-                    if (lunchMeal) {
-                        const rawDishName = lunchMeal.DDISH_NM;
-                        const cleanedDishName = rawDishName
-                            .split('<br/>')
-                            .filter(item => item.trim() !== '')
-                            .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
-                            .join('</li><li>');
-
-                        const mealHtml = `
-                            <div class="p-4 rounded-2xl w-full">
-                                <h3 class="font-bold text-lg mb-2">${lunchMeal.MMEAL_SC_NM}</h3>
-                                <p class="text-sm text-gray-400 mb-2">${lunchMeal.CAL_INFO || ''}</p>
-                                <ul class="text-sm space-y-1 text-white">
-                                    <li>${cleanedDishName}</li>
-                                </ul>
-                            </div>
-                        `;
-                        mealCard.innerHTML = mealHtml;
-                    } else {
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    
+                    if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
                         mealCard.innerHTML = `
                             <div class="text-center p-4">
-                                <p class="font-medium text-lg">선택한 날짜에 중식 정보가 없습니다.</p>
-                                <p class="text-sm text-gray-400 mt-1">다른 식사 정보를 확인해보세요.</p>
-                            </div>
-                        `;
-                    }
-                } else {
-                    mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 가져올 수 없습니다.</p>`;
-                }
-            } catch (error) {
-                console.error('Failed to fetch meal data:', error);
-                mealCard.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
-            }
-        }
-
-        // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
-        async function fetchAndRenderWeeklyTimetable(mondayDate, userData = null) {
-            timetableContent.innerHTML = `
-                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                    <p>시간표를 불러오는 중...</p>
-                </div>
-            `;
-
-            const tiFromYmd = formatDate(mondayDate);
-            const fridayDate = new Date(mondayDate);
-            fridayDate.setDate(mondayDate.getDate() + 4);
-            const tiToYmd = formatDate(fridayDate);
-
-            const fromYear = mondayDate.getFullYear();
-            const fromMonth = mondayDate.getMonth() + 1;
-            const fromDay = mondayDate.getDate();
-            const toYear = fridayDate.getFullYear();
-            const toMonth = fridayDate.getMonth() + 1;
-            const toDay = fridayDate.getDate();
-            currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
-
-            const atptOfcdcScCode = userData?.atptOfcdcScCode || 'C10';
-            const sdSchulCode = userData?.sdSchulCode || '7171018';
-            const grade = userData?.grade || '2';
-            const classNm = userData?.classNum || '1';
-            
-            const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=0c3b4def034a4eb5b75e830500a30898&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
-            
-            try {
-                const response = await fetch(apiUrl);
-                const data = await response.json();
-                
-                if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    const today = new Date();
-                    const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
-                    let messageHtml = '';
-
-                    if (dayOfWeek === 0 || dayOfWeek === 6) {
-                        messageHtml = `
-                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                <p class="font-medium text-lg text-white">주말에는 시간표 정보가 제공되지 않아요</p>
-                                <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
-                            </div>
-                        `;
-                    } else {
-                        messageHtml = `
-                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                <p class="font-medium text-lg text-white">방학에는 시간표 정보가 제공되지 않아요</p>
+                                <p class="font-medium text-lg">방학에는 급식 정보가 제공되지 않아요</p>
                                 <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
                             </div>
                         `;
+                        return;
                     }
-                    timetableContent.innerHTML = messageHtml;
-                    return;
-                }
-                
-                if (data.misTimetable && data.misTimetable.length > 1 && data.misTimetable[1].row) {
-                    const timetableData = data.misTimetable[1].row;
-                    renderWeeklyTimetable(timetableData);
-                } else {
-                    timetableContent.innerHTML = `<p class="text-red-500">시간표 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p>`;
-                }
+                    
+                    if (data.mealServiceDietInfo && data.mealServiceDietInfo.length > 1 && data.mealServiceDietInfo[1].row) {
+                        const mealInfo = data.mealServiceDietInfo[1].row;
+                        const lunchMeal = mealInfo.find(meal => meal.MMEAL_SC_NM === '중식');
 
-            } catch (error) {
-            console.error('Failed to fetch weekly timetable data:', error);
-            timetableContent.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
-            }
-        }
-        
-        // 주간 시간표 데이터를 받아와서 동적으로 HTML 테이블을 그리는 함수 (그리드 버전)
-        function renderWeeklyTimetable(data) {
-            // NEIS API 데이터의 ITRT_CNTNT와 PRFN_GRNM을 사용하여 HTML 그리드를 생성합니다.
-            data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+                        if (lunchMeal) {
+                            const rawDishName = lunchMeal.DDISH_NM;
+                            const cleanedDishName = rawDishName
+                                .split('<br/>')
+                                .filter(item => item.trim() !== '')
+                                .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
+                                .join('</li><li>');
 
-            const days = ['월', '화', '수', '목', '금'];
-            const timetableByDay = {};
-            days.forEach(day => timetableByDay[day] = []);
-
-            data.forEach(item => {
-                const date = item.ALL_TI_YMD;
-                const dayOfWeek = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8)).getDay();
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    const dayName = days[dayOfWeek - 1];
-                    timetableByDay[dayName].push(item);
-                }
-            });
-
-            let gridHtml = `
-                <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid">
-                    <div class="grid-cell-day rounded-tl-3xl">교시</div>
-                    <div class="grid-cell-day">월</div>
-                    <div class="grid-cell-day">화</div>
-                    <div class="grid-cell-day">수</div>
-                    <div class="grid-cell-day">목</div>
-                    <div class="grid-cell-day rounded-tr-3xl">금</div>
-            `;
-            
-            const maxPeriods = Math.max(...Object.values(timetableByDay).map(dayData => dayData.length));
-            
-            for (let period = 1; period <= maxPeriods; period++) {
-                gridHtml += `<div class="grid-cell-hour">${period}</div>`;
-                days.forEach((day, index) => {
-                    const subject = timetableByDay[day].find(item => parseInt(item.PERIO) === period);
-                    const isLastRow = period === maxPeriods;
-                    const isLastCol = index === days.length - 1;
-                    let cellClasses = 'grid-cell';
-
-                    if (isLastRow) {
-                        cellClasses += (index === 0) ? ' rounded-bl-3xl' : '';
-                        cellClasses += (isLastCol) ? ' rounded-br-3xl' : '';
-                    }
-
-                    gridHtml += `<div class="${cellClasses}">`;
-                    if (subject) {
-                        gridHtml += `
-                            <span class="font-medium text-sm">${subject.ITRT_CNTNT}</span>
-                            ${subject.PRFN_GRNM ? `<span class="text-xs text-gray-400 mt-1">${subject.PRFN_GRNM}</span>` : ''}
-                        `;
+                            const mealHtml = `
+                                <div class="p-4 rounded-2xl w-full">
+                                    <h3 class="font-bold text-lg mb-2">${lunchMeal.MMEAL_SC_NM}</h3>
+                                    <p class="text-sm text-gray-400 mb-2">${lunchMeal.CAL_INFO || ''}</p>
+                                    <ul class="text-sm space-y-1 text-white">
+                                        <li>${cleanedDishName}</li>
+                                    </ul>
+                                </div>
+                            `;
+                            mealCard.innerHTML = mealHtml;
+                        } else {
+                            mealCard.innerHTML = `
+                                <div class="text-center p-4">
+                                    <p class="font-medium text-lg">선택한 날짜에 중식 정보가 없습니다.</p>
+                                    <p class="text-sm text-gray-400 mt-1">다른 식사 정보를 확인해보세요.</p>
+                                </div>
+                            `;
+                        }
                     } else {
-                        gridHtml += `<span class="font-medium text-sm">-</span><span class="text-xs text-gray-400 mt-1">-</span>`;
+                        mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 가져올 수 없습니다.</p>`;
                     }
-                    gridHtml += `</div>`;
-                });
+                } catch (error) {
+                    console.error('Failed to fetch meal data:', error);
+                    mealCard.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
+                }
             }
-            gridHtml += `</div>`;
-            
-            timetableContent.innerHTML = gridHtml;
-        }
 
-        // 날씨 데이터를 가져오는 함수 (실제 API 호출을 시뮬레이션)
-        async function fetchWeatherData() {
-            weatherCard.innerHTML = `<p class="text-gray-400">날씨 정보를 불러오는 중...</p>`;
-
-            try {
-                const dummyWeatherData = {
-                    description: '맑음, 구름 조금',
-                    temp: 25,
-                    temp_max: 28,
-                    temp_min: 20
-                };
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                const description = dummyWeatherData.description;
-                const temp = dummyWeatherData.temp;
-                const tempMax = dummyWeatherData.temp_max;
-                const tempMin = dummyWeatherData.temp_min;
-
-                const weatherHtml = `
-                    <div class="bg-[--bg-secondary] p-6 rounded-2xl flex items-center space-x-4 w-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-sun text-[--text-primary]">
-                            <path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M20 16a5 5 0 0 0-8.5-4H11a6 6 0 0 0-6 6v1a3 3 0 0 0 3 3h13a4 4 0 0 0 0-8Z"/>
-                        </svg>
-                        <div>
-                            <p class="text-3xl font-bold">${temp}°C</p>
-                            <p class="text-gray-400">${description}</p>
-                            <p class="text-sm text-gray-500">최고 ${tempMax}°C / 최저 ${tempMin}°C</p>
-                        </div>
+            // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
+            async function fetchAndRenderWeeklyTimetable(mondayDate, profile) {
+                // 데이터를 불러오는 중 상태 표시
+                timetableContent.innerHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                        <p>시간표를 불러오는 중...</p>
                     </div>
                 `;
-                weatherCard.innerHTML = weatherHtml;
-            } catch (error) {
-                console.error('Failed to fetch weather data:', error);
-                weatherCard.innerHTML = `<p class="text-red-500">날씨 정보를 가져오는 데 실패했습니다.</p>`;
-            }
-        }
+                if (!profile) {
+                    timetableContent.innerHTML = `
+                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
 
-        // 달력을 렌더링하는 함수
-        function renderCalendar(date) {
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            const today = new Date();
-            const todayYear = today.getFullYear();
-            const todayMonth = today.getMonth();
-            const todayDay = today.getDate();
+                // 이번 주 월요일과 금요일 날짜 계산
+                const tiFromYmd = formatDate(mondayDate);
+                const fridayDate = new Date(mondayDate);
+                fridayDate.setDate(mondayDate.getDate() + 4);
+                const tiToYmd = formatDate(fridayDate);
 
-            const firstDayOfMonth = new Date(year, month, 1);
-            const lastDayOfMonth = new Date(year, month + 1, 0);
-            const daysInMonth = lastDayOfMonth.getDate();
-            const firstDayOfWeek = firstDayOfMonth.getDay();
+                const fromYear = mondayDate.getFullYear();
+                const fromMonth = mondayDate.getMonth() + 1;
+                const fromDay = mondayDate.getDate();
+                const toYear = fridayDate.getFullYear();
+                const toMonth = fridayDate.getMonth() + 1;
+                const toDay = fridayDate.getDate();
+                currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
 
-            currentDate = date;
-
-            let calendarHtml = `
-                <div class="flex justify-between items-center mb-4">
-                    <button id="prev-month-button" class="p-2 rounded-full hover:bg-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
-                    </button>
-                    <span id="current-month-year" class="font-bold text-lg">${year}년 ${month + 1}월</span>
-                    <button id="next-month-button" class="p-2 rounded-full hover:bg-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                    </button>
-                </div>
-                <div class="grid grid-cols-7 text-center text-sm font-medium text-gray-400 mb-2">
-                    <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-                </div>
-                <div id="calendar-days-grid" class="grid grid-cols-7 text-center">
-            `;
-
-            for (let i = 0; i < firstDayOfWeek; i++) {
-                calendarHtml += `<div class="p-2"></div>`;
-            }
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                const isToday = todayYear === year && todayMonth === month && todayDay === day;
-                const dateStr = `${year}${String(month + 1).padStart(2, '0')}${String(day).padStart(2, '0')}`;
+                const apiKey = '0c3b4def034a4eb5b75e830500a30898';
+                const { atptOfcdcScCode, sdSchulCode, grade, classNum } = profile;
                 
-                calendarHtml += `
-                    <button class="p-2 rounded-full font-medium ${isToday ? 'bg-[--color-blue] text-white' : 'hover:bg-gray-700'}" data-date="${dateStr}">
-                        ${day}
-                    </button>
-                `;
+                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
+                
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    
+                    if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                        const today = new Date();
+                        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
+                        let messageHtml = '';
+
+                        if (dayOfWeek === 0 || dayOfWeek === 6) {
+                            messageHtml = `
+                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                                    <p class="font-medium text-lg text-white">시간표 정보가 없어요</p>
+                                    <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
+                                </div>
+                            `;
+                        } else {
+                            messageHtml = `
+                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                                    <p class="font-medium text-lg text-white">방학에는 시간표 정보가 제공되지 않아요</p>
+                                    <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
+                                </div>
+                            `;
+                        }
+                        timetableContent.innerHTML = messageHtml;
+                        return;
+                    }
+                    
+                    if (data.misTimetable && data.misTimetable.length > 1 && data.misTimetable[1].row) {
+                        const timetableData = data.misTimetable[1].row;
+                        renderWeeklyTimetable(timetableData);
+                    } else {
+                        timetableContent.innerHTML = `<p class="text-red-500">시간표 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p>`;
+                    }
+
+                } catch (error) {
+                console.error('Failed to fetch weekly timetable data:', error);
+                timetableContent.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
+                }
             }
             
-            calendarHtml += `</div>`;
-            calendarContainer.innerHTML = calendarHtml;
-            
-            document.getElementById('prev-month-button').addEventListener('click', () => {
-                const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-                renderCalendar(prevMonth);
-            });
-            document.getElementById('next-month-button').addEventListener('click', () => {
-                const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-                renderCalendar(nextMonth);
-            });
-            
-            document.querySelectorAll('#calendar-days-grid button').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const selectedDate = event.target.dataset.date;
-                    handleDateClick(selectedDate);
+            // 주간 시간표 데이터를 받아와서 동적으로 HTML 테이블을 그리는 함수 (그리드 버전)
+            function renderWeeklyTimetable(data) {
+                data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+
+                const days = ['월', '화', '수', '목', '금'];
+                const timetableByDay = {};
+                days.forEach(day => timetableByDay[day] = []);
+
+                data.forEach(item => {
+                    const date = item.ALL_TI_YMD;
+                    const dayOfWeek = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8)).getDay();
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        const dayName = days[dayOfWeek - 1];
+                        timetableByDay[dayName].push(item);
+                    }
                 });
-            });
-        }
-        
-        // 날짜 선택 시 호출되는 핸들러
-        function handleDateClick(dateStr) {
-            const year = dateStr.substring(0, 4);
-            const month = dateStr.substring(4, 6);
-            const day = dateStr.substring(6, 8);
-            
-            const selectedDate = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
-            const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
-            const dayName = daysOfWeek[selectedDate.getDay()];
 
-            dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
-            fetchMealData(dateStr, currentUserProfile);
-            datePickerPanel.classList.remove('is-visible');
-        }
+                let gridHtml = `
+                    <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid">
+                        <div class="grid-cell-day rounded-tl-3xl">교시</div>
+                        <div class="grid-cell-day">월</div>
+                        <div class="grid-cell-day">화</div>
+                        <div class="grid-cell-day">수</div>
+                        <div class="grid-cell-day">목</div>
+                        <div class="grid-cell-day rounded-tr-3xl">금</div>
+                `;
+                
+                const maxPeriods = Math.max(...Object.values(timetableByDay).map(dayData => dayData.length));
+                
+                for (let period = 1; period <= maxPeriods; period++) {
+                    gridHtml += `<div class="grid-cell-hour">${period}</div>`;
+                    days.forEach((day, index) => {
+                        const subject = timetableByDay[day].find(item => parseInt(item.PERIO) === period);
+                        const isLastRow = period === maxPeriods;
+                        const isLastCol = index === days.length - 1;
+                        let cellClasses = 'grid-cell';
 
-        const togglePanel = () => {
-            datePickerPanel.classList.toggle('is-visible');
-        };
+                        if (isLastRow) {
+                            cellClasses += (index === 0) ? ' rounded-bl-3xl' : '';
+                            cellClasses += (isLastCol) ? ' rounded-br-3xl' : '';
+                        }
 
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                mainHeader.classList.add('header-scrolled');
-            } else {
-                mainHeader.classList.remove('header-scrolled');
+                        gridHtml += `<div class="${cellClasses}">`;
+                        if (subject) {
+                            gridHtml += `
+                                <span class="font-medium text-sm">${subject.ITRT_CNTNT}</span>
+                                ${subject.PRFN_GRNM ? `<span class="text-xs text-gray-400 mt-1">${subject.PRFN_GRNM}</span>` : ''}
+                            `;
+                        } else {
+                            gridHtml += `<span class="font-medium text-sm">-</span><span class="text-xs text-gray-400 mt-1">-</span>`;
+                        }
+                        gridHtml += `</div>`;
+                    });
+                }
+                gridHtml += `</div>`;
+                
+                timetableContent.innerHTML = gridHtml;
             }
-        });
 
-        const switchTab = (activeTab) => {
-            const isMenu = activeTab === 'menu';
-            menuTab.classList.toggle('border-white', isMenu);
-            menuTab.classList.toggle('text-gray-400', !isMenu);
-            menuTab.classList.toggle('border-transparent', !isMenu);
-            
-            weatherTab.classList.toggle('border-white', !isMenu);
-            weatherTab.classList.toggle('text-gray-400', isMenu);
-            weatherTab.classList.toggle('border-transparent', isMenu);
+            // 날씨 데이터를 가져오는 함수 (실제 API 호출을 시뮬레이션)
+            async function fetchWeatherData() {
+                weatherCard.innerHTML = `<p class="text-gray-400">날씨 정보를 불러오는 중...</p>`;
 
-            menuContent.classList.toggle('hidden', !isMenu);
-            weatherContent.classList.toggle('hidden', isMenu);
-            
-            if (isMenu) {
+                try {
+                    const dummyWeatherData = {
+                        description: '맑음, 구름 조금',
+                        temp: 25,
+                        temp_max: 28,
+                        temp_min: 20
+                    };
+
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    const description = dummyWeatherData.description;
+                    const temp = dummyWeatherData.temp;
+                    const tempMax = dummyWeatherData.temp_max;
+                    const tempMin = dummyWeatherData.temp_min;
+
+                    const weatherHtml = `
+                        <div class="bg-[--bg-secondary] p-6 rounded-2xl flex items-center space-x-4 w-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-sun text-[--text-primary]">
+                                <path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M20 16a5 5 0 0 0-8.5-4H11a6 6 0 0 0-6 6v1a3 3 0 0 0 3 3h13a4 4 0 0 0 0-8Z"/>
+                            </svg>
+                            <div>
+                                <p class="text-3xl font-bold">${temp}°C</p>
+                                <p class="text-gray-400">${description}</p>
+                                <p class="text-sm text-gray-500">최고 ${tempMax}°C / 최저 ${tempMin}°C</p>
+                            </div>
+                        </div>
+                    `;
+                    weatherCard.innerHTML = weatherHtml;
+                } catch (error) {
+                    console.error('Failed to fetch weather data:', error);
+                    weatherCard.innerHTML = `<p class="text-red-500">날씨 정보를 가져오는 데 실패했습니다.</p>`;
+                }
+            }
+
+            // 달력을 렌더링하는 함수
+            function renderCalendar(date) {
+                const year = date.getFullYear();
+                const month = date.getMonth();
                 const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const dateStr = `${year}${month}${day}`;
+                const todayYear = today.getFullYear();
+                const todayMonth = today.getMonth();
+                const todayDay = today.getDate();
+
+                const firstDayOfMonth = new Date(year, month, 1);
+                const lastDayOfMonth = new Date(year, month + 1, 0);
+                const daysInMonth = lastDayOfMonth.getDate();
+                const firstDayOfWeek = firstDayOfMonth.getDay();
+
+                currentDate = date;
+
+                let calendarHtml = `
+                    <div class="flex justify-between items-center mb-4">
+                        <button id="prev-month-button" class="p-2 rounded-full hover:bg-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
+                        </button>
+                        <span id="current-month-year" class="font-bold text-lg">${year}년 ${month + 1}월</span>
+                        <button id="next-month-button" class="p-2 rounded-full hover:bg-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-7 text-center text-sm font-medium text-gray-400 mb-2">
+                        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                    </div>
+                    <div id="calendar-days-grid" class="grid grid-cols-7 text-center">
+                `;
+
+                for (let i = 0; i < firstDayOfWeek; i++) {
+                    calendarHtml += `<div class="p-2"></div>`;
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const isToday = todayYear === year && todayMonth === month && todayDay === day;
+                    const dateStr = `${year}${String(month + 1).padStart(2, '0')}${String(day).padStart(2, '0')}`;
+                    
+                    calendarHtml += `
+                        <button class="p-2 rounded-full font-medium ${isToday ? 'bg-[--color-blue] text-white' : 'hover:bg-gray-700'}" data-date="${dateStr}">
+                            ${day}
+                        </button>
+                    `;
+                }
+                
+                calendarHtml += `</div>`;
+                calendarContainer.innerHTML = calendarHtml;
+                
+                document.getElementById('prev-month-button').addEventListener('click', () => {
+                    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+                    renderCalendar(prevMonth);
+                });
+                document.getElementById('next-month-button').addEventListener('click', () => {
+                    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+                    renderCalendar(nextMonth);
+                });
+                
+                document.querySelectorAll('#calendar-days-grid button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const selectedDate = event.target.dataset.date;
+                        handleDateClick(selectedDate);
+                    });
+                });
+            }
+            
+            // 날짜 선택 시 호출되는 핸들러
+            function handleDateClick(dateStr) {
+                const year = dateStr.substring(0, 4);
+                const month = dateStr.substring(4, 6);
+                const day = dateStr.substring(6, 8);
                 
                 const selectedDate = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
                 const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
                 const dayName = daysOfWeek[selectedDate.getDay()];
+
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
-
-                fetchMealData(dateStr, currentUserProfile);
-            } else {
-                fetchWeatherData();
+                if (userProfile) {
+                    fetchMealData(dateStr, userProfile);
+                }
+                datePickerPanel.classList.remove('is-visible');
             }
-        };
 
-        // 날짜를 YYYYMMDD 형식의 문자열로 변환하는 헬퍼 함수
-        function formatDate(date) {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}${month}${day}`;
-        }
+            const togglePanel = () => {
+                datePickerPanel.classList.toggle('is-visible');
+            };
 
-        // 주간 네비게이션 버튼 이벤트 리스너
-        prevWeekButton.addEventListener('click', () => {
-            currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
-            fetchAndRenderWeeklyTimetable(currentWeekMonday, currentUserProfile);
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    mainHeader.classList.add('header-scrolled');
+                } else {
+                    mainHeader.classList.remove('header-scrolled');
+                }
+            });
+
+            const switchTab = (activeTab) => {
+                const isMenu = activeTab === 'menu';
+                menuTab.classList.toggle('border-white', isMenu);
+                menuTab.classList.toggle('text-gray-400', !isMenu);
+                menuTab.classList.toggle('border-transparent', !isMenu);
+                
+                weatherTab.classList.toggle('border-white', !isMenu);
+                weatherTab.classList.toggle('text-gray-400', isMenu);
+                weatherTab.classList.toggle('border-transparent', isMenu);
+
+                menuContent.classList.toggle('hidden', !isMenu);
+                weatherContent.classList.toggle('hidden', isMenu);
+                
+                if (isMenu) {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = String(today.getMonth() + 1).padStart(2, '0');
+                    const day = String(today.getDate()).padStart(2, '0');
+                    const dateStr = `${year}${month}${day}`;
+                    
+                    const selectedDate = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
+                    const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+                    const dayName = daysOfWeek[selectedDate.getDay()];
+                    dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
+
+                    if (userProfile) {
+                        fetchMealData(dateStr, userProfile);
+                    }
+                } else {
+                    fetchWeatherData();
+                }
+            };
+
+            // 날짜를 YYYYMMDD 형식의 문자열로 변환하는 헬퍼 함수
+            function formatDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}${month}${day}`;
+            }
+
+            // 주간 네비게이션 버튼 이벤트 리스너
+            prevWeekButton.addEventListener('click', () => {
+                currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
+                if (userProfile) {
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                }
+            });
+            nextWeekButton.addEventListener('click', () => {
+                currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
+                if (userProfile) {
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                }
+            });
+
+            // 초기 탭 로드 시 데이터 가져오기
+            switchTab('menu');
+            // 초기 달력 렌더링
+            renderCalendar(currentDate);
+
+            datePickerToggle.addEventListener('click', togglePanel);
+            closePanelButton.addEventListener('click', togglePanel);
+            menuTab.addEventListener('click', () => switchTab('menu'));
+            weatherTab.addEventListener('click', () => switchTab('weather'));
         });
-        nextWeekButton.addEventListener('click', () => {
-            currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
-            fetchAndRenderWeeklyTimetable(currentWeekMonday, currentUserProfile);
-        });
-
-        // 초기 탭 로드 시 데이터 가져오기
-        switchTab('menu');
-        // 초기 주간 시간표 데이터 가져오기
-        fetchAndRenderWeeklyTimetable(currentWeekMonday, currentUserProfile);
-
-        // 초기 달력 렌더링
-        renderCalendar(currentDate);
-
-        datePickerToggle.addEventListener('click', togglePanel);
-        closePanelButton.addEventListener('click', togglePanel);
-        menuTab.addEventListener('click', () => switchTab('menu'));
-        weatherTab.addEventListener('click', () => switchTab('weather'));
-        
     </script>
 </body>
 </html>
