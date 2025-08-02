@@ -116,7 +116,6 @@
         .timetable-grid .grid-cell:hover {
             background-color: #333333; /* hover:bg-gray-700 */
         }
-
     </style>
 </head>
 <body class="bg-[--bg-primary] text-white">
@@ -374,7 +373,7 @@
                             loadDataWithUserProfile(userProfile);
                         } else {
                             // 프로필 문서가 없는 경우
-                            authContainer.innerHTML = `<button onclick="window.location.href='/profile-setup'" class="login-button bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">프로필 설정</button>`;
+                            authContainer.innerHTML = `<a href="/profile-setup"><button class="login-button bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">프로필 설정</button></a>`;
                             loadDataWithUserProfile(null); // 기본 또는 비활성 상태로 데이터 로드
                         }
                     } catch (e) {
@@ -439,7 +438,6 @@
                 fetchMealData(dateStr, sdSchulCode);
                 fetchAndRenderWeeklyTimetable(currentWeekMonday, sdSchulCode, grade, classNm);
             }
-
 
             // 해당 날짜가 속한 주의 월요일을 구하는 함수
             function getMonday(d) {
