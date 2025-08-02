@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hanilians</title>
+    <title>N-MATEㅣ학생을 위한 올인원 사이트</title>
+    <meta name="description" content="급식, 시간표, 학사일정까지 모두 한 사이트에서 한눈에 확인하세요!">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Material Symbols -->
@@ -12,13 +13,12 @@
     <!-- Firebase SDKs -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-      import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
       import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
       window.firebase = {
         initializeApp,
         getAuth,
-        signInAnonymously,
         signInWithCustomToken,
         onAuthStateChanged,
         signOut,
@@ -315,6 +315,7 @@
             let currentDate = new Date();
             let currentWeekMonday = getMonday(currentDate);
             let userProfile = null;
+            let db, auth;
 
             // Firebase 설정 (사용자 제공)
             const firebaseConfig = {
@@ -328,14 +329,17 @@
             };
 
             const app = firebase.initializeApp(firebaseConfig);
-            const auth = firebase.getAuth(app);
-            const db = firebase.getFirestore(app);
+            auth = firebase.getAuth(app);
+            db = firebase.getFirestore(app);
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
             // 드롭다운 메뉴 토글 함수
             function toggleDropdown() {
-                document.getElementById('logout-dropdown').classList.toggle('hidden');
+                const dropdown = document.getElementById('logout-dropdown');
+                if (dropdown) {
+                    dropdown.classList.toggle('hidden');
+                }
             }
 
             // 인증 UI 렌더링 함수
@@ -372,7 +376,7 @@
                             // 사용자 정보로 데이터 로드
                             loadDataWithUserProfile(userProfile);
                         } else {
-                            // 프로필 문서가 없는 경우
+                            // 프로필 문서가 없는 경우, 프로필 설정 버튼 표시
                             authContainer.innerHTML = `<a href="/profile-setup"><button class="login-button bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">프로필 설정</button></a>`;
                             loadDataWithUserProfile(null); // 기본 또는 비활성 상태로 데이터 로드
                         }
@@ -388,17 +392,8 @@
                     loadDataWithUserProfile(null);
                 }
             }
-
-            // Firebase 인증 상태 변화 감지
-            firebase.onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    await renderAuthUI(user);
-                } else {
-                    await renderAuthUI(null);
-                }
-            });
-
-            // 인증 토큰으로 로그인 시도 (캔버스 환경에서만 유효)
+            
+            // Firebase 인증 상태 변화 감지 및 초기 인증 처리
             if (initialAuthToken) {
                 try {
                     await firebase.signInWithCustomToken(auth, initialAuthToken);
@@ -406,15 +401,20 @@
                     console.error("Error signing in with custom token:", error);
                 }
             } else {
-                 await firebase.signInAnonymously(auth);
+                console.warn("No initial auth token provided. App will run in an unauthenticated state.");
             }
+
+            firebase.onAuthStateChanged(auth, async (user) => {
+                await renderAuthUI(user);
+            });
 
             // 프로필 정보에 따라 데이터 로드
             function loadDataWithUserProfile(profile) {
-                const atptOfcdcScCode = profile ? profile.schoolCode : 'C10'; // 기본값 설정
-                const sdSchulCode = profile ? profile.schoolCode : '7171018'; // 기본값 설정
-                const grade = profile ? profile.grade : '2'; // 기본값 설정
-                const classNm = profile ? profile.classNumber : '1'; // 기본값 설정
+                // 사용자가 로그인되어 있다면 프로필 정보를, 아니라면 기본값을 사용
+                const atptOfcdcScCode = profile ? profile.schoolCode : 'C10';
+                const sdSchulCode = profile ? profile.schoolCode : '7171018';
+                const grade = profile ? profile.grade : '2';
+                const classNm = profile ? profile.classNumber : '1';
 
                 // 제목 업데이트
                 if (profile) {
@@ -467,7 +467,7 @@
                     return;
                 }
                 
-                const apiKey = ''; // Leave blank for Canvas environment
+                const apiKey = ''; // Canvas 환경에서는 비워둡니다
                 const atptOfcdcScCode = 'C10'; // 경기도 교육청 코드, sdSchulCode와 함께 사용
                 
                 const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
@@ -548,7 +548,7 @@
                 const toDay = fridayDate.getDate();
                 currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
 
-                const apiKey = ''; // Leave blank for Canvas environment
+                const apiKey = ''; // Canvas 환경에서는 비워둡니다
                 const atptOfcdcScCode = 'C10'; // 경기도 교육청 코드
                 
                 const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
@@ -589,8 +589,8 @@
                     }
 
                 } catch (error) {
-                console.error('Failed to fetch weekly timetable data:', error);
-                timetableContent.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
+                    console.error('Failed to fetch weekly timetable data:', error);
+                    timetableContent.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
                 }
             }
             
@@ -846,9 +846,6 @@
 
             // 초기 탭 로드 시 데이터 가져오기
             switchTab('menu');
-            // 초기 주간 시간표 데이터 가져오기
-            // fetchAndRenderWeeklyTimetable(currentWeekMonday, '7171018', '2', '1'); // Auth listener handles this
-            
             // 초기 달력 렌더링
             renderCalendar(currentDate);
 
