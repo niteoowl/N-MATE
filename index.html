@@ -96,7 +96,6 @@
         .timetable-grid .grid-cell:hover {
             background-color: #333333; /* hover:bg-gray-700 */
         }
-
     </style>
 </head>
 <body class="bg-[--bg-primary] text-white">
@@ -116,9 +115,23 @@
                     <button class="p-2 rounded-full text-xl hover:bg-gray-700 transition-colors duration-200">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
                     </button>
-                    <!-- 로그인 버튼과 계정 정보 표시 영역 -->
-                    <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
-                    <span id="account-info" class="font-medium text-sm text-gray-400 hidden"></span>
+                    
+                    <!-- 로그인 버튼 -->
+                    <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200" onclick="window.location.href = '/auth';">로그인</button>
+                    
+                    <!-- 계정 정보 및 드롭다운 컨테이너 (기본 숨김) -->
+                    <div id="account-dropdown-container" class="relative hidden">
+                        <button id="account-info-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm flex items-center space-x-1 border border-gray-700 hover:bg-gray-700 transition-colors duration-200">
+                            <!-- 계정 정보 텍스트는 JS로 채워집니다. -->
+                            <span id="account-info-text"></span>
+                            <svg id="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        
+                        <!-- 로그아웃 드롭다운 메뉴 (기본 숨김) -->
+                        <div id="logout-menu" class="absolute top-full right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg overflow-hidden hidden transition-all duration-200 z-50">
+                            <button id="logout-button" class="w-full text-left px-4 py-2 text-sm text-white hover:bg-gray-700">로그아웃</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -143,7 +156,8 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
                 <div class="mt-auto">
-                    <h2 class="text-white text-2xl font-bold mb-2">N-MATE 3.0으로 완전히 달라졌어요!</h2>
+                    <!-- N-MATE 3.0 제목 크기를 반응형으로 조정했습니다. -->
+                    <h2 class="text-white text-xl md:text-2xl font-bold mb-2">N-MATE 3.0으로 완전히 달라졌어요!</h2>
                     <p class="text-white text-sm mb-4">오늘도 N-MATE는 변화합니다</p>
                     <button class="bg-gray-700 bg-opacity-50 hover:bg-opacity-75 text-white font-medium py-2 px-4 rounded-full flex items-center space-x-2 transition-colors duration-200">
                         <span>더 보기</span>
@@ -282,7 +296,7 @@
     <script type="module">
         // Firebase SDK를 불러옵니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -305,9 +319,15 @@
             
             // 동적으로 변경될 UI 요소들
             const loginButton = document.getElementById('login-button');
-            const accountInfo = document.getElementById('account-info');
             const timetableTitle = document.getElementById('timetable-title');
             const schoolNameDisplay = document.getElementById('school-name-display');
+
+            // 새로 추가된 UI 요소
+            const accountDropdownContainer = document.getElementById('account-dropdown-container');
+            const accountInfoButton = document.getElementById('account-info-button');
+            const accountInfoText = document.getElementById('account-info-text');
+            const logoutMenu = document.getElementById('logout-menu');
+            const logoutButton = document.getElementById('logout-button');
 
             let currentDate = new Date();
             let currentWeekMonday = getMonday(currentDate);
@@ -337,7 +357,7 @@
                     // 로그인된 상태
                     const userId = user.uid;
                     loginButton.classList.add('hidden');
-                    accountInfo.classList.remove('hidden');
+                    accountDropdownContainer.classList.remove('hidden');
 
                     // Firestore에서 사용자 정보 가져오기
                     const userDocRef = doc(db, `/artifacts/${appId}/users/${userId}/profile`, 'info');
@@ -347,7 +367,7 @@
                             userProfile = userDocSnap.data();
                             console.log("User Profile:", userProfile);
                             // UI 업데이트
-                            accountInfo.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반`;
+                            accountInfoText.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반`;
                             timetableTitle.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반 시간표`;
                             schoolNameDisplay.textContent = userProfile.schoolName;
                             schoolNameDisplay.classList.remove('hidden');
@@ -361,6 +381,7 @@
                         } else {
                             console.log("No such document!");
                             // 정보가 없을 경우 기본값으로 API 호출
+                            accountInfoText.textContent = '정보 없음'; // 사용자 정보 없음을 표시
                             fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
                             const today = new Date();
                             const todayDateStr = formatDate(today);
@@ -369,6 +390,7 @@
                     } catch (error) {
                         console.error("Error getting user profile:", error);
                         // 오류 발생 시 기본값으로 API 호출
+                        accountInfoText.textContent = '오류'; // 오류 발생 시 표시
                         fetchAndRenderWeeklyTimetable(currentWeekMonday, 'C10', '7171018', '2', '1');
                         const today = new Date();
                         const todayDateStr = formatDate(today);
@@ -377,7 +399,7 @@
                 } else {
                     // 로그아웃된 상태 또는 초기 상태
                     loginButton.classList.remove('hidden');
-                    accountInfo.classList.add('hidden');
+                    accountDropdownContainer.classList.add('hidden');
                     schoolNameDisplay.classList.add('hidden');
                     timetableTitle.textContent = "시간표";
                     
@@ -392,8 +414,6 @@
                 switchTab('menu');
             });
             
-            // signInAnonymously 호출 코드를 삭제했습니다.
-
             // 해당 날짜가 속한 주의 월요일을 구하는 함수
             function getMonday(d) {
                 d = new Date(d);
@@ -807,10 +827,34 @@
             // 초기 달력 렌더링
             renderCalendar(currentDate);
 
+            // 이벤트 리스너 설정
             datePickerToggle.addEventListener('click', togglePanel);
             closePanelButton.addEventListener('click', togglePanel);
             menuTab.addEventListener('click', () => switchTab('menu'));
             weatherTab.addEventListener('click', () => switchTab('weather'));
+
+            // 새로 추가된 이벤트 리스너: 계정 정보 버튼 클릭 시 드롭다운 메뉴 토글
+            accountInfoButton.addEventListener('click', () => {
+                const isHidden = logoutMenu.classList.contains('hidden');
+                logoutMenu.classList.toggle('hidden', !isHidden);
+            });
+
+            // 새로 추가된 이벤트 리스너: 로그아웃 버튼 클릭 시 로그아웃
+            logoutButton.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    window.location.reload(); // 로그아웃 후 페이지 새로고침
+                } catch (error) {
+                    console.error("Error signing out:", error);
+                }
+            });
+            
+            // 드롭다운 메뉴 바깥 영역 클릭 시 메뉴 숨기기
+            window.addEventListener('click', (e) => {
+                if (!accountDropdownContainer.contains(e.target)) {
+                    logoutMenu.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>
