@@ -3,11 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>hanilians</title>
+    <title>N-MATE 로그인</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // 전역 변수로 Firebase 서비스 인스턴스를 저장합니다.
+        window.firebase = {};
+        window.firebase.getAuth = getAuth;
+        window.firebase.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.firebase.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.firebase.getFirestore = getFirestore;
+        window.firebase.doc = doc;
+        window.firebase.setDoc = setDoc;
+
+        // 제공된 Firebase 설정을 사용하거나 전역 변수에서 가져옵니다.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase 앱 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 전역 변수에 인스턴스를 저장하여 다른 스크립트에서 접근할 수 있게 합니다.
+        window.firebase.app = app;
+        window.firebase.auth = auth;
+        window.firebase.db = db;
+        window.firebase.appId = appId;
+        window.firebase.initialAuthToken = initialAuthToken;
+
+        // 커스텀 토큰이 제공되면 로그인 시도
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken).catch((error) => {
+                console.error("Custom token login failed", error);
+            });
+        }
+    </script>
     <style>
         /* CSS 변수를 사용하여 색상을 정의합니다. */
         :root {
@@ -16,7 +63,9 @@
             --text-primary: #E0E0E0;
             --text-secondary: #A0A0A0;
             --color-blue: #007BFF;
-            --border-color: #1F1F1F; /* 배경색과 동일하게 설정하여 선이 보이지 않게 합니다. */
+            --border-color: #333333;
+            --checkbox-border: #4a4a4a;
+            --overlay-bg: rgba(0, 0, 0, 0.7);
         }
 
         /* wanted-sans 폰트를 로드합니다. */
@@ -26,822 +75,823 @@
             font-family: 'WantedSansVariable', sans-serif;
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            padding-bottom: 5rem;
+        }
+
+        /* 입력 필드에 포커스 시 테두리 색상 변경 */
+        input:focus {
+            outline: none;
+            border-color: var(--color-blue);
         }
         
-        /* 스크롤바 숨기기 */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        select:focus {
+            outline: none;
+            border-color: var(--color-blue);
+        }
+
+        /* 단계별 컨테이너를 상대 위치로 설정하고, 넘치는 내용을 숨깁니다. */
+        .steps-container {
+            position: relative;
+            flex-grow: 1;
+        }
+
+        /* 각 단계에 대한 기본 스타일. 애니메이션 효과를 모두 제거했습니다. */
+        .step-content {
+            display: none;
+            flex-direction: column;
+            padding: 1rem;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 현재 활성화된 단계 */
+        .step-content.is-active {
+            display: flex;
+        }
         
-        /* 슬라이드 패널 애니메이션 */
-        .slide-panel { transform: translateY(100%); transition: transform 0.3s ease-in-out; z-index: 60; }
-        .slide-panel.is-visible { transform: translateY(0); }
+        /* 커스텀 체크박스 스타일 */
+        .custom-checkbox {
+            position: relative;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .custom-checkbox svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s;
+            color: white;
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: var(--color-blue);
+            border-color: var(--color-blue);
+        }
+        .custom-checkbox input:checked ~ svg {
+            transform: translate(-50%, -50%) scale(1);
+        }
         
-        /* 스크롤 시 헤더 스타일 */
-        .header-scrolled {
+        /* 로딩 오버레이 스타일 */
+        #loading-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            z-index: 50;
-            background-color: rgba(18, 18, 18, 0.8);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .header-scrolled .header-inner { padding: 0.5rem; }
-        .header-scrolled .header-inner img { height: 2rem; }
-        
-        header, .header-inner, .header-inner img, .header-inner button { transition: all 0.3s ease-in-out; }
-        
-        .nav-inner { width: 100%; }
-        @media (min-width: 768px) { .nav-inner { max-width: 768px; margin-left: auto; margin-right: auto; } }
-        
-        .invert-icon { filter: invert(1); }
-        
-        /* 새로운 시간표 그리드 셀 스타일 */
-        /* 격자선 삭제 및 배경색 통일 */
-        .timetable-grid > div {
-            border-right: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-            background-color: var(--bg-secondary);
-        }
-        .timetable-grid > div:nth-child(6n) { border-right: none; }
-        .timetable-grid > div:nth-last-child(-n+6) { border-bottom: none; }
-        .timetable-grid .grid-cell-day,
-        .timetable-grid .grid-cell-hour {
-            min-height: 3rem;
-            background-color: var(--bg-secondary); /* 배경색 통일 */
-            font-weight: bold;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            padding: 1rem 0.75rem;
-            display: flex;
+            width: 100%;
+            height: 100%;
+            background-color: var(--overlay-bg);
+            display: none;
             justify-content: center;
             align-items: center;
-        }
-        .timetable-grid .grid-cell-hour {
-            min-height: 5rem;
-            font-size: 1.125rem; /* text-lg */
-            padding: 0.5rem;
-        }
-        .timetable-grid .grid-cell {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 0.5rem;
-            min-height: 5rem;
-            transition: background-color 0.2s;
-        }
-        .timetable-grid .grid-cell:hover {
-            background-color: #333333; /* hover:bg-gray-700 */
+            z-index: 100;
         }
 
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--color-blue);
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 메시지 박스 스타일 */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            z-index: 101;
+            display: none;
+            flex-direction: column;
+            text-align: center;
+            max-width: 90%;
+        }
+
+        #message-box-close {
+            background-color: var(--color-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            margin-top: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
-<body class="bg-[--bg-primary] text-white">
+<body class="bg-[--bg-primary] text-[--text-primary] flex flex-col min-h-screen">
+
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- 메시지 박스 -->
+    <div id="message-box">
+        <p id="message-box-text" class="text-lg font-bold"></p>
+        <button id="message-box-close">확인</button>
+    </div>
 
     <!-- 메인 컨테이너 -->
-    <div class="container mx-auto p-4 md:p-8 max-w-screen-md pt-24 md:pt-28">
-
-        <!-- 헤더 섹션 -->
-        <header id="main-header" class="fixed top-0 left-0 right-0 z-50 bg-[--bg-primary] transition-all duration-300">
-            <div class="header-inner container mx-auto max-w-screen-md p-4 md:p-8 flex items-center justify-between">
-                <div class="flex items-center">
-                    <img src="https://i.postimg.cc/XvKJktcP/001-2025-08-01-T220040-650.png" alt="hanilians 로고" class="h-8 md:h-10 w-auto transition-all duration-300">
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button class="p-2 rounded-full text-xl hover:bg-gray-700 transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M6.34 17.66l-1.41 1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
-                    </button>
-                    <!-- 로그인 상태에 따라 버튼이 동적으로 변경됩니다. -->
-                    <div id="auth-container">
-                        <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- 알림/정보 섹션 -->
-        <div class="bg-[--bg-secondary] rounded-2xl p-4 flex items-start space-x-4 mb-6">
-            <span class="text-2xl mt-1">✨</span>
-            <div>
-                <p class="font-medium">불편하게 시간표 옮길 필요 없어요</p>
-                <p class="text-[--color-blue] font-medium text-sm">시간표 이미지 다운로드하기</p>
-            </div>
-            <button class="ml-auto p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucude-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
+    <div class="container mx-auto p-4 md:p-8 max-w-screen-sm flex-grow">
+        
+        <!-- 헤더: 뒤로 가기 및 닫기 버튼만 남겼습니다. -->
+        <header class="flex items-center justify-between py-4">
+            <button id="back-button" class="text-[--text-secondary] hover:text-[--text-primary] hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
             </button>
-        </div>
-
-        <!-- 커뮤니티 섹션 -->
-        <div class="relative bg-gray-800 rounded-3xl overflow-hidden mb-6">
-            <img src="https://i.postimg.cc/wv0jSJrc/001-88.png" alt="커뮤니티 배경" class="w-full h-auto object-cover">
-            <div class="absolute inset-0 bg-black bg-opacity-50 p-6 flex flex-col justify-between">
-                <button class="ml-auto p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-                <div class="mt-auto">
-                    <h2 class="text-white text-2xl font-bold mb-2">N-MATE 3.0으로 완전히 달라졌어요!</h2>
-                    <p class="text-white text-sm mb-4">오늘도 N-MATE는 변화합니다</p>
-                    <button class="bg-gray-700 bg-opacity-50 hover:bg-opacity-75 text-white font-medium py-2 px-4 rounded-full flex items-center space-x-2 transition-colors duration-200">
-                        <span>더 보기</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 오늘의 메뉴 & 날씨 탭 섹션 -->
-        <div class="mb-4">
-            <div class="flex items-end justify-between">
-                <div class="flex items-center space-x-4">
-                    <button id="menu-tab" class="font-bold text-xl pb-1 border-b-2 border-white transition-colors duration-200">오늘의 급식</button>
-                    <button id="weather-tab" class="font-bold text-xl pb-1 text-gray-400 border-b-2 border-transparent hover:text-white transition-colors duration-200">날씨</button>
-                </div>
-                <button id="date-picker-toggle" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-            </div>
-            <div id="date-display" class="text-gray-400 text-sm mt-2"></div>
-        </div>
-
-        <!-- 오늘의 메뉴 카드 섹션 (동적 콘텐츠) -->
-        <div id="menu-content" class="mb-8">
-            <div id="meal-card" class="bg-[--bg-secondary] p-4 rounded-2xl w-full flex items-center justify-center min-h-[10rem]">
-                <p class="text-gray-400">급식 정보를 불러오는 중...</p>
-            </div>
-        </div>
-        
-        <!-- 날씨 섹션 (동적 콘텐츠) -->
-        <div id="weather-content" class="hidden mb-8">
-            <div id="weather-card" class="bg-[--bg-secondary] p-6 rounded-2xl flex items-center justify-center min-h-[10rem]">
-                <p class="text-gray-400">날씨 정보를 불러오는 중...</p>
-            </div>
-        </div>
-        
-        <!-- 사용자 정보 표시 섹션 -->
-        <div id="user-info-section" class="mb-4 hidden">
-            <p id="user-info-text" class="text-sm font-medium text-gray-400"></p>
-        </div>
-
-        <!-- 이미지에 맞춰 추가된 섹션들 -->
-        <div class="space-y-4 mt-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-bold">시간표</h1>
-                    <div class="flex items-center ml-2">
-                        <button id="prev-week-button" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
-                        </button>
-                        <button id="next-week-button" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                        </button>
-                    </div>
-                </div>
-                <span id="current-week-display" class="text-sm text-gray-400"></span>
-            </div>
-
-            <!-- 시간표 섹션 -->
-            <div id="timetable-content" class="bg-[--bg-secondary] rounded-3xl overflow-hidden shadow-lg mb-4">
-                <!-- 동적으로 생성될 주간 시간표 컨테이너 -->
-                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem]">
-                    <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                </div>
-            </div>
-            
-            <!-- 2025 수능 디데이 섹션 -->
-            <div class="mt-8">
-                <h3 class="text-xl font-bold mb-4">2025 수능 디데이</h3>
-                <div class="grid grid-cols-4 text-center">
-                    <div><p class="font-medium">3모</p><p class="text-sm text-gray-400">종료됨</p></div>
-                    <div><p class="font-medium">6모</p><p class="text-sm text-gray-400">종료됨</p></div>
-                    <div class="flex flex-col items-center"><p class="font-bold text-[--color-blue]">9모</p><p class="font-bold text-[--color-blue]">D-33</p><div class="mt-1 w-1 h-1 bg-[--color-blue] rounded-full"></div></div>
-                    <div><p class="font-bold">수능</p><p class="font-bold">D-104</p></div>
-                </div>
-            </div>
-            
-            <hr class="my-6 border-gray-700">
-
-            <!-- 학사일정 섹션 -->
-            <div>
-                <h3 class="text-xl font-bold mb-4">학사일정</h3>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center"><span class="text-xs text-gray-400 rounded-full px-2 py-1 mr-2 bg-gray-700">일반</span><span class="font-medium">개학식</span></div>
-                        <span class="text-sm text-gray-400">08.07 (목)</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center"><span class="text-xs text-[--color-blue] rounded-full px-2 py-1 mr-2 bg-blue-900 bg-opacity-30">모의고사</span><span class="font-medium">전국연합(1,2년) 대수능모의평가(3년)</span></div>
-                        <span class="text-sm text-gray-400">09.03 (수)</span>
-                    </div>
-                </div>
-                <div class="flex justify-center mt-4">
-                    <button class="flex items-center space-x-2 text-sm text-gray-400 p-2 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
-                        <span>전체 일정 보기</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                    </button>
-                </div>
-            </div>
-            
-            <hr class="my-6 border-gray-700">
-        </div>
-    </div>
-
-    <!-- 날짜 선택 패널 -->
-    <div id="date-picker-panel" class="fixed bottom-0 left-0 right-0 bg-[--bg-secondary] rounded-t-3xl shadow-lg transition-transform duration-300 slide-panel">
-        <div class="flex justify-between items-center p-4 border-b border-gray-700">
-            <h3 class="text-lg font-bold">날짜 선택</h3>
-            <button id="close-panel" class="p-2 rounded-full text-white hover:bg-gray-700 transition-colors duration-200">
+            <div class="flex-grow"></div> <!-- 버튼을 양 끝에 배치하기 위한 빈 공간 -->
+            <button class="text-[--text-secondary] hover:text-[--text-primary]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
             </button>
-        </div>
-        <!-- 달력 UI가 들어갈 곳 -->
-        <div id="calendar-container" class="p-4 h-64 overflow-y-auto no-scrollbar">
-            <!-- JavaScript로 달력이 여기에 동적으로 생성됩니다. -->
-        </div>
+        </header>
+
+        <!-- 단계별 컨테이너 -->
+        <main class="flex flex-col justify-center flex-grow p-4">
+            <div class="steps-container">
+
+                <!-- Step 0: 환영 화면 -->
+                <div id="step-0" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">N-MATE 3.0에 오신 걸 환영해요!</h1>
+                        <p class="text-[--text-secondary]">로그인하면 다음과 같은 기능을 사용할 수 있어요.</p>
+                    </div>
+                    <!-- 기능 목록 -->
+                    <ul class="space-y-4 mt-8">
+                        <li class="flex items-start space-x-3">
+                            <span class="material-symbols-outlined text-[--color-blue] mt-1">calendar_month</span>
+                            <div>
+                                <p class="font-bold">스마트한 시간표 관리</p>
+                                <p class="text-[--text-secondary] text-sm">급식, 시간표, 시험까지 한눈에!</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <span class="material-symbols-outlined text-[--color-blue] mt-1">group</span>
+                            <div>
+                                <p class="font-bold">우리 학교 커뮤니티</p>
+                                <p class="text-[--text-secondary] text-sm">친구들과 자유롭게 소통하고 정보 공유!</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start space-x-3">
+                            <span class="material-symbols-outlined text-[--color-blue] mt-1">lightbulb</span>
+                            <div>
+                                <p class="font-bold">맞춤형 학습 정보</p>
+                                <p class="text-[--text-secondary] text-sm">나에게 필요한 정보만 쏙쏙!</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Step 1: 로그인/회원가입 선택 -->
+                <div id="step-1" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">계정이 있으신가요?</h1>
+                        <p class="text-[--text-secondary]">아래에서 선택해주세요.</p>
+                    </div>
+                    <div class="mt-8 flex flex-col space-y-4">
+                         <!-- 로그인 버튼 -->
+                         <button id="to-login-button" class="bg-[--color-blue] text-white font-bold py-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200">
+                             네, 계속할게요
+                         </button>
+                         <!-- 회원가입 버튼 -->
+                         <button id="to-signup-button" class="bg-transparent border-2 border-[--color-blue] text-[--color-blue] font-bold py-4 rounded-full shadow-lg hover:bg-blue-900 transition-colors duration-200">
+                             아니요, 생성할게요
+                         </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: 로그인 - 이메일 또는 전화번호 입력 -->
+                <div id="step-2" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">로그인</h1>
+                        <p class="text-[--text-secondary]">이메일 또는 전화번호를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8">
+                        <input type="text" id="login-email-input" placeholder="이메일 또는 전화번호" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                    </div>
+                </div>
+
+                <!-- Step 3: 로그인 - 비밀번호 입력 -->
+                <div id="step-3" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">비밀번호를 입력해주세요</h1>
+                        <p class="text-[--text-secondary]"><span id="login-user-identifier" class="text-[--text-primary] font-medium"></span>에 대한</p>
+                    </div>
+                    <div class="mt-8">
+                        <input type="password" id="login-password-input" placeholder="비밀번호" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                    </div>
+                </div>
+
+                <!-- Step 4: 회원가입 - 이름, 이메일, 전화번호 입력 -->
+                <div id="step-4" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">회원가입</h1>
+                        <p class="text-[--text-secondary]">기본 정보를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <input type="text" id="signup-name-input" placeholder="이름" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                        <input type="text" id="signup-email-input" placeholder="이메일 (예: user@example.com)" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                    </div>
+                </div>
+
+                <!-- Step 5: 회원가입 - 비밀번호 설정 -->
+                <div id="step-5" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">비밀번호 설정</h1>
+                        <p class="text-[--text-secondary]">사용하실 비밀번호를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <input type="password" id="signup-password-input" placeholder="비밀번호 (8자 이상)" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                        <input type="password" id="signup-password-confirm-input" placeholder="비밀번호 확인" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                    </div>
+                </div>
+                
+                <!-- Step 6: 이용약관 및 개인정보 동의 -->
+                <div id="step-6" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">약관에 동의해주세요</h1>
+                        <p class="text-[--text-secondary]">N-MATE 서비스 이용을 위해 동의가 필요해요.</p>
+                    </div>
+                    <div class="mt-8 space-y-4">
+                        <!-- 전체 동의 -->
+                        <div class="flex items-center justify-between p-4 bg-[--bg-secondary] rounded-xl">
+                            <label for="all-agree-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                <span class="custom-checkbox flex-shrink-0">
+                                    <input type="checkbox" id="all-agree-checkbox">
+                                    <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="text-lg font-bold text-[--text-primary]">전체 동의</span>
+                            </label>
+                        </div>
+                        
+                        <!-- 구분선 -->
+                        <div class="border-t border-[--border-color] my-4"></div>
+
+                        <!-- 개별 약관 동의 목록 -->
+                        <div class="space-y-4">
+                            <!-- 이용약관 동의 (필수) -->
+                            <div class="flex items-center justify-between">
+                                <label for="tos-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="tos-checkbox" class="required">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(필수) N-MATE 이용약관</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+
+                            <!-- 개인정보처리방침 동의 (필수) -->
+                            <div class="flex items-center justify-between">
+                                <label for="privacy-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="privacy-checkbox" class="required">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(필수) 개인정보처리방침</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+
+                            <!-- 마케팅 수신 동의 (선택) -->
+                            <div class="flex items-center justify-between">
+                                <label for="marketing-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="marketing-checkbox">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(선택) 마케팅 정보 수신 동의</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 7: 학교 정보 등록 -->
+                <div id="step-7" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">학교를 등록해주세요</h1>
+                        <p class="text-[--text-secondary]">학교 정보를 등록해야 서비스 이용이 가능해요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <!-- 학교 검색 입력창 -->
+                        <div class="relative">
+                            <input type="text" id="school-search-input" placeholder="학교 검색" class="w-full bg-transparent border-b-2 border-[--border-color] text-lg py-2 focus:border-[--color-blue] transition-colors duration-200">
+                            <ul id="school-suggestions" class="absolute z-10 w-full bg-[--bg-secondary] mt-2 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden"></ul>
+                        </div>
+                        
+                        <!-- 선택된 학교 표시 -->
+                        <div id="selected-school-display" class="hidden p-4 bg-[--bg-secondary] rounded-xl flex justify-between items-center">
+                            <span id="selected-school-name" class="text-lg"></span>
+                            <button id="change-school-button" class="text-sm text-[--color-blue] hover:underline">변경</button>
+                        </div>
+                        
+                        <!-- 학년, 반 드롭다운 -->
+                        <div class="flex space-x-4">
+                            <div class="w-1/2">
+                                <label for="grade-select" class="block text-sm text-[--text-secondary] mb-2">학년</label>
+                                <select id="grade-select" class="w-full bg-[--bg-secondary] text-lg py-3 px-4 rounded-xl border-2 border-transparent focus:border-[--color-blue] transition-colors duration-200" disabled>
+                                    <option value="" selected disabled>학년 선택</option>
+                                </select>
+                            </div>
+                            <div class="w-1/2">
+                                <label for="class-select" class="block text-sm text-[--text-secondary] mb-2">반</label>
+                                <select id="class-select" class="w-full bg-[--bg-secondary] text-lg py-3 px-4 rounded-xl border-2 border-transparent focus:border-[--color-blue] transition-colors duration-200" disabled>
+                                    <option value="" selected disabled>반 선택</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
     </div>
 
-    <!-- 하단 내비게이션 바 -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-[--bg-primary] border-t border-gray-700 z-50">
-        <div class="nav-inner py-1 px-4 flex justify-around items-center">
-            <a href="#" class="flex flex-col items-center p-1.5 rounded-xl text-[--color-blue] hover:bg-gray-700 hover:text-[--color-blue] transition-colors duration-200">
-                <img src="https://www.hanilians.xyz/header/home-filled.svg" alt="홈 아이콘" class="w-7 h-7 invert-icon">
-                <span class="text-xs mt-0.5">홈</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1.5 rounded-xl text-white hover:bg-gray-700 transition-colors duration-200">
-                <span class="material-symbols-outlined text-2xl">group</span><span class="text-xs mt-0.5">커뮤니티</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1.5 rounded-xl text-white hover:bg-gray-700 transition-colors duration-200">
-                <span class="material-symbols-outlined text-2xl">calendar_month</span><span class="text-xs mt-0.5">시간표</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1.5 rounded-xl text-white hover:bg-gray-700 transition-colors duration-200">
-                <span class="material-symbols-outlined text-2xl">bookmark</span><span class="text-xs mt-0.5">메모</span>
-            </a>
+    <!-- 하단 고정 버튼 -->
+    <footer class="fixed bottom-0 left-0 right-0 z-50 bg-[--bg-primary] p-4">
+        <div class="container mx-auto max-w-screen-sm">
+            <!-- nextButton은 step-1에서 숨김 처리됨. -->
+            <button id="next-button" class="block mx-auto bg-[--color-blue] text-white font-bold py-4 rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200 w-full sm:w-[550px] disabled:bg-gray-700 disabled:text-gray-400" disabled>
+                다음
+            </button>
         </div>
-    </nav>
-    
-    <!-- Firebase SDK를 로드합니다. -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    </footer>
 
-        // 전역 변수에서 Firebase 설정을 가져옵니다.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Firebase 전역 객체 가져오기
+            const { auth, db, appId, signInWithEmailAndPassword, createUserWithEmailAndPassword, doc, setDoc } = window.firebase;
 
-        // Firebase를 초기화합니다.
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+            // NEIS API 설정
+            const NEIS_API_KEY = "0c3b4def034a4eb5b75e830500a30898";
+            const NEIS_API_URL = "https://open.neis.go.kr/hub/schoolInfo";
 
-        // DOM이 완전히 로드된 후 스크립트를 실행합니다.
-        document.addEventListener('DOMContentLoaded', async () => {
-            const datePickerToggle = document.getElementById('date-picker-toggle');
-            const datePickerPanel = document.getElementById('date-picker-panel');
-            const closePanelButton = document.getElementById('close-panel');
-            const mainHeader = document.getElementById('main-header');
-            const menuTab = document.getElementById('menu-tab');
-            const weatherTab = document.getElementById('weather-tab');
-            const menuContent = document.getElementById('menu-content');
-            const weatherContent = document.getElementById('weather-content');
-            const mealCard = document.getElementById('meal-card');
-            const weatherCard = document.getElementById('weather-card');
-            const dateDisplay = document.getElementById('date-display');
-            const calendarContainer = document.getElementById('calendar-container');
-            const timetableContent = document.getElementById('timetable-content');
-            const prevWeekButton = document.getElementById('prev-week-button');
-            const nextWeekButton = document.getElementById('next-week-button');
-            const currentWeekDisplay = document.getElementById('current-week-display');
-            const authContainer = document.getElementById('auth-container');
-            const userInfoSection = document.getElementById('user-info-section');
-            const userInfoText = document.getElementById('user-info-text');
+            const step0 = document.getElementById('step-0');
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            const step3 = document.getElementById('step-3');
+            const step4 = document.getElementById('step-4');
+            const step5 = document.getElementById('step-5');
+            const step6 = document.getElementById('step-6');
+            const step7 = document.getElementById('step-7'); // 학교 정보 단계
 
-            let currentDate = new Date();
-            let currentWeekMonday = getMonday(currentDate);
-            let userProfile = null;
+            const nextButton = document.getElementById('next-button');
+            const backButton = document.getElementById('back-button');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const messageBox = document.getElementById('message-box');
+            const messageBoxText = document.getElementById('message-box-text');
+            const messageBoxClose = document.getElementById('message-box-close');
 
-            // Firebase 인증 상태 변경 리스너
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    console.log("사용자가 로그인되었습니다:", user.uid);
-                    await fetchUserProfile(user.uid);
-                    // UI 업데이트
-                    updateAuthUI(true, userProfile);
-                    // 로그인 후 데이터 로드
-                    if (userProfile) {
-                        const today = new Date();
-                        const year = today.getFullYear();
-                        const month = String(today.getMonth() + 1).padStart(2, '0');
-                        const day = String(today.getDate()).padStart(2, '0');
-                        const dateStr = `${year}${month}${day}`;
-                        fetchMealData(dateStr, userProfile);
-                        fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
-                    } else {
-                        // 프로필 정보가 없을 경우 메시지 표시
-                        timetableContent.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
-                        mealCard.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
-                    }
-                } else {
-                    console.log("사용자가 로그아웃되었습니다.");
-                    // UI 업데이트
-                    updateAuthUI(false, null);
-                    // 로그아웃 상태에서 보여줄 콘텐츠
-                    timetableContent.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                    mealCard.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
-                            <p>로그인 후 급식 정보를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                }
-            });
+            const toLoginButton = document.getElementById('to-login-button');
+            const toSignupButton = document.getElementById('to-signup-button');
 
-            // 초기 인증 시도 (custom token 사용)
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                }
-            } catch (error) {
-                console.error("Custom token으로 로그인하는 데 실패했습니다:", error);
-                // 오류 발생 시 로그아웃 상태로 유지
-            }
-
-            // 사용자 프로필 정보를 Firestore에서 가져오는 함수
-            async function fetchUserProfile(userId) {
-                const docRef = doc(db, `/artifacts/${appId}/users/${userId}/profile/user_data`);
-                try {
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        userProfile = docSnap.data();
-                        console.log("사용자 프로필:", userProfile);
-                    } else {
-                        console.log("사용자 프로필이 없습니다!");
-                        userProfile = null;
-                    }
-                } catch (error) {
-                    console.error("프로필 데이터를 가져오는 데 실패했습니다:", error);
-                    userProfile = null;
-                }
-            }
+            const loginEmailInput = document.getElementById('login-email-input');
+            const loginPasswordInput = document.getElementById('login-password-input');
+            const loginUserIdentifier = document.getElementById('login-user-identifier');
             
-            // 로그인 상태에 따라 UI를 업데이트하는 함수
-            function updateAuthUI(isLoggedIn, profile) {
-                authContainer.innerHTML = ''; // 기존 버튼 삭제
-                if (isLoggedIn && profile) {
-                    // 로그인 상태: 사용자 정보 표시
-                    const userInfoHtml = `
-                        <button class="bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm">
-                            ${profile.grade}학년 ${profile.classNum}반
-                        </button>
-                    `;
-                    authContainer.innerHTML = userInfoHtml;
-                    userInfoSection.classList.remove('hidden');
-                    userInfoText.textContent = `${profile.schoolName} ${profile.grade}학년 ${profile.classNum}반`;
-                } else {
-                    // 로그아웃 상태: 로그인 버튼 표시
-                    const loginButton = document.createElement('button');
-                    loginButton.id = 'login-button';
-                    loginButton.className = 'bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200';
-                    loginButton.textContent = '로그인';
-                    loginButton.addEventListener('click', () => {
-                        window.location.href = '/login';
-                    });
-                    authContainer.appendChild(loginButton);
-                    userInfoSection.classList.add('hidden');
-                }
-            }
+            const signupNameInput = document.getElementById('signup-name-input');
+            const signupEmailInput = document.getElementById('signup-email-input');
+            const signupPasswordInput = document.getElementById('signup-password-input');
+            const signupPasswordConfirmInput = document.getElementById('signup-password-confirm-input');
+
+            // 약관 동의 관련 요소들
+            const allAgreeCheckbox = document.getElementById('all-agree-checkbox');
+            const tosCheckbox = document.getElementById('tos-checkbox');
+            const privacyCheckbox = document.getElementById('privacy-checkbox');
+            const marketingCheckbox = document.getElementById('marketing-checkbox');
+
+            // 학교 정보 관련 요소들
+            const schoolSearchInput = document.getElementById('school-search-input');
+            const schoolSuggestions = document.getElementById('school-suggestions');
+            const selectedSchoolDisplay = document.getElementById('selected-school-display');
+            const selectedSchoolName = document.getElementById('selected-school-name');
+            const changeSchoolButton = document.getElementById('change-school-button');
+            const gradeSelect = document.getElementById('grade-select');
+            const classSelect = document.getElementById('class-select');
             
-            // 해당 날짜가 속한 주의 월요일을 구하는 함수
-            function getMonday(d) {
-                d = new Date(d);
-                const day = d.getDay();
-                const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 월요일(1)부터 시작
-                return new Date(d.setDate(diff));
-            }
+            const steps = [step0, step1, step2, step3, step4, step5, step6, step7];
+            let currentStep = 0;
 
-            // NEIS API에서 급식 데이터를 가져오는 함수
-            async function fetchMealData(mlsYmd, profile) {
-                const year = parseInt(mlsYmd.substring(0, 4), 10);
-                const month = parseInt(mlsYmd.substring(4, 6), 10) - 1;
-                const day = parseInt(mlsYmd.substring(6, 8), 10);
-                const selectedDate = new Date(year, month, day);
-                const dayOfWeek = selectedDate.getDay();
-
-                mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 불러오는 중...</p>`;
-                if (!profile) {
-                    mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인할 수 있습니다.</p>`;
-                    return;
-                }
-
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    mealCard.innerHTML = `
-                        <div class="text-center p-4">
-                            <p class="font-medium text-lg">주말에는 급식 정보가 제공되지 않아요</p>
-                            <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const apiKey = '0c3b4def034a4eb5b75e830500a30898';
-                const { atptOfcdcScCode, sdSchulCode } = profile;
-                
-                const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
-
-                try {
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-                    
-                    if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        mealCard.innerHTML = `
-                            <div class="text-center p-4">
-                                <p class="font-medium text-lg">방학에는 급식 정보가 제공되지 않아요</p>
-                                <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    if (data.mealServiceDietInfo && data.mealServiceDietInfo.length > 1 && data.mealServiceDietInfo[1].row) {
-                        const mealInfo = data.mealServiceDietInfo[1].row;
-                        const lunchMeal = mealInfo.find(meal => meal.MMEAL_SC_NM === '중식');
-
-                        if (lunchMeal) {
-                            const rawDishName = lunchMeal.DDISH_NM;
-                            const cleanedDishName = rawDishName
-                                .split('<br/>')
-                                .filter(item => item.trim() !== '')
-                                .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
-                                .join('</li><li>');
-
-                            const mealHtml = `
-                                <div class="p-4 rounded-2xl w-full">
-                                    <h3 class="font-bold text-lg mb-2">${lunchMeal.MMEAL_SC_NM}</h3>
-                                    <p class="text-sm text-gray-400 mb-2">${lunchMeal.CAL_INFO || ''}</p>
-                                    <ul class="text-sm space-y-1 text-white">
-                                        <li>${cleanedDishName}</li>
-                                    </ul>
-                                </div>
-                            `;
-                            mealCard.innerHTML = mealHtml;
-                        } else {
-                            mealCard.innerHTML = `
-                                <div class="text-center p-4">
-                                    <p class="font-medium text-lg">선택한 날짜에 중식 정보가 없습니다.</p>
-                                    <p class="text-sm text-gray-400 mt-1">다른 식사 정보를 확인해보세요.</p>
-                                </div>
-                            `;
-                        }
-                    } else {
-                        mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 가져올 수 없습니다.</p>`;
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch meal data:', error);
-                    mealCard.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
-                }
-            }
-
-            // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
-            async function fetchAndRenderWeeklyTimetable(mondayDate, profile) {
-                // 데이터를 불러오는 중 상태 표시
-                timetableContent.innerHTML = `
-                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                        <p>시간표를 불러오는 중...</p>
-                    </div>
-                `;
-                if (!profile) {
-                    timetableContent.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // 이번 주 월요일과 금요일 날짜 계산
-                const tiFromYmd = formatDate(mondayDate);
-                const fridayDate = new Date(mondayDate);
-                fridayDate.setDate(mondayDate.getDate() + 4);
-                const tiToYmd = formatDate(fridayDate);
-
-                const fromYear = mondayDate.getFullYear();
-                const fromMonth = mondayDate.getMonth() + 1;
-                const fromDay = mondayDate.getDate();
-                const toYear = fridayDate.getFullYear();
-                const toMonth = fridayDate.getMonth() + 1;
-                const toDay = fridayDate.getDate();
-                currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
-
-                const apiKey = '0c3b4def034a4eb5b75e830500a30898';
-                const { atptOfcdcScCode, sdSchulCode, grade, classNum } = profile;
-                
-                const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
-                
-                try {
-                    const response = await fetch(apiUrl);
-                    const data = await response.json();
-                    
-                    if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                        const today = new Date();
-                        const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
-                        let messageHtml = '';
-
-                        if (dayOfWeek === 0 || dayOfWeek === 6) {
-                            messageHtml = `
-                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">시간표 정보가 없어요</p>
-                                    <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
-                                </div>
-                            `;
-                        } else {
-                            messageHtml = `
-                                <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">방학에는 시간표 정보가 제공되지 않아요</p>
-                                    <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
-                                </div>
-                            `;
-                        }
-                        timetableContent.innerHTML = messageHtml;
-                        return;
-                    }
-                    
-                    if (data.misTimetable && data.misTimetable.length > 1 && data.misTimetable[1].row) {
-                        const timetableData = data.misTimetable[1].row;
-                        renderWeeklyTimetable(timetableData);
-                    } else {
-                        timetableContent.innerHTML = `<p class="text-red-500">시간표 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p>`;
-                    }
-
-                } catch (error) {
-                console.error('Failed to fetch weekly timetable data:', error);
-                timetableContent.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
-                }
-            }
-            
-            // 주간 시간표 데이터를 받아와서 동적으로 HTML 테이블을 그리는 함수 (그리드 버전)
-            function renderWeeklyTimetable(data) {
-                data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
-
-                const days = ['월', '화', '수', '목', '금'];
-                const timetableByDay = {};
-                days.forEach(day => timetableByDay[day] = []);
-
-                data.forEach(item => {
-                    const date = item.ALL_TI_YMD;
-                    const dayOfWeek = new Date(date.slice(0, 4), date.slice(4, 6) - 1, date.slice(6, 8)).getDay();
-                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                        const dayName = days[dayOfWeek - 1];
-                        timetableByDay[dayName].push(item);
-                    }
-                });
-
-                let gridHtml = `
-                    <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid">
-                        <div class="grid-cell-day rounded-tl-3xl">교시</div>
-                        <div class="grid-cell-day">월</div>
-                        <div class="grid-cell-day">화</div>
-                        <div class="grid-cell-day">수</div>
-                        <div class="grid-cell-day">목</div>
-                        <div class="grid-cell-day rounded-tr-3xl">금</div>
-                `;
-                
-                const maxPeriods = Math.max(...Object.values(timetableByDay).map(dayData => dayData.length));
-                
-                for (let period = 1; period <= maxPeriods; period++) {
-                    gridHtml += `<div class="grid-cell-hour">${period}</div>`;
-                    days.forEach((day, index) => {
-                        const subject = timetableByDay[day].find(item => parseInt(item.PERIO) === period);
-                        const isLastRow = period === maxPeriods;
-                        const isLastCol = index === days.length - 1;
-                        let cellClasses = 'grid-cell';
-
-                        if (isLastRow) {
-                            cellClasses += (index === 0) ? ' rounded-bl-3xl' : '';
-                            cellClasses += (isLastCol) ? ' rounded-br-3xl' : '';
-                        }
-
-                        gridHtml += `<div class="${cellClasses}">`;
-                        if (subject) {
-                            gridHtml += `
-                                <span class="font-medium text-sm">${subject.ITRT_CNTNT}</span>
-                                ${subject.PRFN_GRNM ? `<span class="text-xs text-gray-400 mt-1">${subject.PRFN_GRNM}</span>` : ''}
-                            `;
-                        } else {
-                            gridHtml += `<span class="font-medium text-sm">-</span><span class="text-xs text-gray-400 mt-1">-</span>`;
-                        }
-                        gridHtml += `</div>`;
-                    });
-                }
-                gridHtml += `</div>`;
-                
-                timetableContent.innerHTML = gridHtml;
-            }
-
-            // 날씨 데이터를 가져오는 함수 (실제 API 호출을 시뮬레이션)
-            async function fetchWeatherData() {
-                weatherCard.innerHTML = `<p class="text-gray-400">날씨 정보를 불러오는 중...</p>`;
-
-                try {
-                    const dummyWeatherData = {
-                        description: '맑음, 구름 조금',
-                        temp: 25,
-                        temp_max: 28,
-                        temp_min: 20
-                    };
-
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-
-                    const description = dummyWeatherData.description;
-                    const temp = dummyWeatherData.temp;
-                    const tempMax = dummyWeatherData.temp_max;
-                    const tempMin = dummyWeatherData.temp_min;
-
-                    const weatherHtml = `
-                        <div class="bg-[--bg-secondary] p-6 rounded-2xl flex items-center space-x-4 w-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-sun text-[--text-primary]">
-                                <path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="M4.93 19.07l1.41-1.41"/><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M20 16a5 5 0 0 0-8.5-4H11a6 6 0 0 0-6 6v1a3 3 0 0 0 3 3h13a4 4 0 0 0 0-8Z"/>
-                            </svg>
-                            <div>
-                                <p class="text-3xl font-bold">${temp}°C</p>
-                                <p class="text-gray-400">${description}</p>
-                                <p class="text-sm text-gray-500">최고 ${tempMax}°C / 최저 ${tempMin}°C</p>
-                            </div>
-                        </div>
-                    `;
-                    weatherCard.innerHTML = weatherHtml;
-                } catch (error) {
-                    console.error('Failed to fetch weather data:', error);
-                    weatherCard.innerHTML = `<p class="text-red-500">날씨 정보를 가져오는 데 실패했습니다.</p>`;
-                }
-            }
-
-            // 달력을 렌더링하는 함수
-            function renderCalendar(date) {
-                const year = date.getFullYear();
-                const month = date.getMonth();
-                const today = new Date();
-                const todayYear = today.getFullYear();
-                const todayMonth = today.getMonth();
-                const todayDay = today.getDate();
-
-                const firstDayOfMonth = new Date(year, month, 1);
-                const lastDayOfMonth = new Date(year, month + 1, 0);
-                const daysInMonth = lastDayOfMonth.getDate();
-                const firstDayOfWeek = firstDayOfMonth.getDay();
-
-                currentDate = date;
-
-                let calendarHtml = `
-                    <div class="flex justify-between items-center mb-4">
-                        <button id="prev-month-button" class="p-2 rounded-full hover:bg-gray-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
-                        </button>
-                        <span id="current-month-year" class="font-bold text-lg">${year}년 ${month + 1}월</span>
-                        <button id="next-month-button" class="p-2 rounded-full hover:bg-gray-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg>
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-7 text-center text-sm font-medium text-gray-400 mb-2">
-                        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-                    </div>
-                    <div id="calendar-days-grid" class="grid grid-cols-7 text-center">
-                `;
-
-                for (let i = 0; i < firstDayOfWeek; i++) {
-                    calendarHtml += `<div class="p-2"></div>`;
-                }
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const isToday = todayYear === year && todayMonth === month && todayDay === day;
-                    const dateStr = `${year}${String(month + 1).padStart(2, '0')}${String(day).padStart(2, '0')}`;
-                    
-                    calendarHtml += `
-                        <button class="p-2 rounded-full font-medium ${isToday ? 'bg-[--color-blue] text-white' : 'hover:bg-gray-700'}" data-date="${dateStr}">
-                            ${day}
-                        </button>
-                    `;
-                }
-                
-                calendarHtml += `</div>`;
-                calendarContainer.innerHTML = calendarHtml;
-                
-                document.getElementById('prev-month-button').addEventListener('click', () => {
-                    const prevMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-                    renderCalendar(prevMonth);
-                });
-                document.getElementById('next-month-button').addEventListener('click', () => {
-                    const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-                    renderCalendar(nextMonth);
-                });
-                
-                document.querySelectorAll('#calendar-days-grid button').forEach(button => {
-                    button.addEventListener('click', (event) => {
-                        const selectedDate = event.target.dataset.date;
-                        handleDateClick(selectedDate);
-                    });
-                });
-            }
-            
-            // 날짜 선택 시 호출되는 핸들러
-            function handleDateClick(dateStr) {
-                const year = dateStr.substring(0, 4);
-                const month = dateStr.substring(4, 6);
-                const day = dateStr.substring(6, 8);
-                
-                const selectedDate = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
-                const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
-                const dayName = daysOfWeek[selectedDate.getDay()];
-
-                dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
-                if (userProfile) {
-                    fetchMealData(dateStr, userProfile);
-                }
-                datePickerPanel.classList.remove('is-visible');
-            }
-
-            const togglePanel = () => {
-                datePickerPanel.classList.toggle('is-visible');
+            // 로딩 상태를 보여주는 함수
+            const showLoading = (show) => {
+                loadingOverlay.style.display = show ? 'flex' : 'none';
             };
 
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 50) {
-                    mainHeader.classList.add('header-scrolled');
-                } else {
-                    mainHeader.classList.remove('header-scrolled');
-                }
+            // 메시지 박스를 보여주는 함수
+            const showMessage = (text) => {
+                messageBoxText.textContent = text;
+                messageBox.style.display = 'flex';
+            };
+
+            messageBoxClose.addEventListener('click', () => {
+                messageBox.style.display = 'none';
             });
 
-            const switchTab = (activeTab) => {
-                const isMenu = activeTab === 'menu';
-                menuTab.classList.toggle('border-white', isMenu);
-                menuTab.classList.toggle('text-gray-400', !isMenu);
-                menuTab.classList.toggle('border-transparent', !isMenu);
-                
-                weatherTab.classList.toggle('border-white', !isMenu);
-                weatherTab.classList.toggle('text-gray-400', isMenu);
-                weatherTab.classList.toggle('border-transparent', isMenu);
+            // 버튼 상태 업데이트 함수
+            const updateButtonState = () => {
+                switch(currentStep) {
+                    case 4: // 회원가입 - 기본 정보
+                        nextButton.disabled = (signupNameInput.value.trim() === '' || signupEmailInput.value.trim() === '');
+                        break;
+                    case 5: // 회원가입 - 비밀번호
+                        nextButton.disabled = (signupPasswordInput.value.length < 8 || signupPasswordInput.value !== signupPasswordConfirmInput.value);
+                        break;
+                    case 6: // 약관 동의
+                        const requiredChecked = tosCheckbox.checked && privacyCheckbox.checked;
+                        nextButton.disabled = !requiredChecked;
+                        break;
+                    case 7: // 학교 정보
+                        const isSchoolSelected = selectedSchoolName.textContent.trim() !== '';
+                        const isGradeSelected = gradeSelect.value !== '';
+                        const isClassSelected = classSelect.value !== '';
+                        nextButton.disabled = !(isSchoolSelected && isGradeSelected && isClassSelected);
+                        break;
+                    default:
+                        nextButton.disabled = false;
+                        break;
+                }
+            };
+            
+            // 입력 필드와 체크박스에 이벤트 리스너 추가
+            [signupNameInput, signupEmailInput, signupPasswordInput, signupPasswordConfirmInput].forEach(input => {
+                input.addEventListener('input', updateButtonState);
+            });
+            [tosCheckbox, privacyCheckbox, marketingCheckbox].forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    allAgreeCheckbox.checked = tosCheckbox.checked && privacyCheckbox.checked && marketingCheckbox.checked;
+                    updateButtonState();
+                });
+            });
 
-                menuContent.classList.toggle('hidden', !isMenu);
-                weatherContent.classList.toggle('hidden', isMenu);
+            allAgreeCheckbox.addEventListener('change', () => {
+                const isChecked = allAgreeCheckbox.checked;
+                tosCheckbox.checked = isChecked;
+                privacyCheckbox.checked = isChecked;
+                marketingCheckbox.checked = isChecked;
+                updateButtonState();
+            });
+
+            // 학교 검색 로직 (NEIS API 연동)
+            const searchSchools = async (query) => {
+                if (query.length < 2) {
+                    schoolSuggestions.innerHTML = '';
+                    schoolSuggestions.classList.add('hidden');
+                    return;
+                }
+
+                const url = `${NEIS_API_URL}?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=10&SCHUL_NM=${encodeURIComponent(query)}`;
                 
-                if (isMenu) {
-                    const today = new Date();
-                    const year = today.getFullYear();
-                    const month = String(today.getMonth() + 1).padStart(2, '0');
-                    const day = String(today.getDate()).padStart(2, '0');
-                    const dateStr = `${year}${month}${day}`;
+                try {
+                    showLoading(true);
+                    const response = await fetch(url);
+                    const data = await response.json();
                     
-                    const selectedDate = new Date(year, parseInt(month, 10) - 1, parseInt(day, 10));
-                    const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
-                    const dayName = daysOfWeek[selectedDate.getDay()];
-                    dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
+                    schoolSuggestions.innerHTML = '';
 
-                    if (userProfile) {
-                        fetchMealData(dateStr, userProfile);
+                    // 응답 데이터 구조 확인
+                    if (data && data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const schools = data.schoolInfo[1].row;
+                        schools.forEach(school => {
+                            const li = document.createElement('li');
+                            // 학교 이름과 지역명을 함께 표시
+                            li.textContent = `${school.SCHUL_NM} (${school.LCTN_SC_NM})`;
+                            li.dataset.schoolName = school.SCHUL_NM; // 실제 학교 이름 저장
+                            li.dataset.schoolCode = school.SD_SCHUL_CODE; // 학교 코드 저장
+                            li.dataset.schoolKind = school.SCHUL_KND_SC_NM; // 학교 종류 저장 (학년 수 결정을 위함)
+                            li.classList.add('p-4', 'hover:bg-gray-700', 'cursor-pointer', 'rounded-lg');
+                            li.addEventListener('click', () => {
+                                // 학교 종류(li.dataset.schoolKind)도 함께 전달
+                                selectSchool(li.dataset.schoolName, li.textContent, li.dataset.schoolCode, li.dataset.schoolKind);
+                            });
+                            schoolSuggestions.appendChild(li);
+                        });
+                        schoolSuggestions.classList.remove('hidden');
+                    } else {
+                        const li = document.createElement('li');
+                        li.textContent = '검색 결과가 없습니다.';
+                        li.classList.add('p-4', 'text-[--text-secondary]');
+                        schoolSuggestions.appendChild(li);
+                        schoolSuggestions.classList.remove('hidden');
                     }
-                } else {
-                    fetchWeatherData();
+                } catch (error) {
+                    console.error("학교 검색 실패:", error);
+                    showMessage("학교 검색 중 오류가 발생했습니다. 다시 시도해주세요.");
+                } finally {
+                    showLoading(false);
                 }
             };
 
-            // 날짜를 YYYYMMDD 형식의 문자열로 변환하는 헬퍼 함수
-            function formatDate(date) {
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-                return `${year}${month}${day}`;
-            }
-
-            // 주간 네비게이션 버튼 이벤트 리스너
-            prevWeekButton.addEventListener('click', () => {
-                currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
-                if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
-                }
-            });
-            nextWeekButton.addEventListener('click', () => {
-                currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
-                if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
-                }
+            // debounce 함수로 API 호출 빈도 제어
+            let debounceTimer;
+            schoolSearchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    searchSchools(e.target.value);
+                }, 500);
             });
 
-            // 초기 탭 로드 시 데이터 가져오기
-            switchTab('menu');
-            // 초기 달력 렌더링
-            renderCalendar(currentDate);
+            // 학교 선택 함수
+            const selectSchool = (schoolName, fullSchoolName, schoolCode, schoolKind) => {
+                schoolSearchInput.value = '';
+                schoolSearchInput.classList.add('hidden');
+                schoolSuggestions.classList.add('hidden');
+                
+                selectedSchoolName.textContent = fullSchoolName; // UI에는 전체 이름을 표시
+                selectedSchoolName.dataset.schoolName = schoolName; // 실제 학교 이름 저장
+                selectedSchoolName.dataset.schoolCode = schoolCode; // 학교 코드 저장
+                selectedSchoolName.dataset.schoolKind = schoolKind; // 학교 종류 저장
+                selectedSchoolDisplay.classList.remove('hidden');
 
-            datePickerToggle.addEventListener('click', togglePanel);
-            closePanelButton.addEventListener('click', togglePanel);
-            menuTab.addEventListener('click', () => switchTab('menu'));
-            weatherTab.addEventListener('click', () => switchTab('weather'));
+                // 학년 드롭다운 동적 생성
+                populateGradeSelect(schoolKind);
+
+                gradeSelect.disabled = false;
+                classSelect.disabled = false;
+                updateButtonState();
+            };
+
+            // 학교 종류에 따라 학년 드롭다운을 채우는 함수
+            const populateGradeSelect = (schoolKind) => {
+                gradeSelect.innerHTML = '<option value="" selected disabled>학년 선택</option>';
+                let maxGrade = 3;
+
+                // 학교 종류에 따라 최대 학년 설정
+                if (schoolKind.includes('초등학교')) {
+                    maxGrade = 6;
+                } else if (schoolKind.includes('중학교') || schoolKind.includes('고등학교')) {
+                    maxGrade = 3;
+                }
+                
+                for (let i = 1; i <= maxGrade; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${i}학년`;
+                    gradeSelect.appendChild(option);
+                }
+
+                // 학년이 변경되면 반 드롭다운을 초기화
+                gradeSelect.addEventListener('change', () => {
+                    populateClassSelect();
+                    updateButtonState();
+                }, { once: true }); // 첫 번째 변경에만 반응하도록 설정
+
+                // 반 드롭다운 초기화
+                populateClassSelect();
+            };
+            
+            // 반 드롭다운을 채우는 함수
+            const populateClassSelect = () => {
+                classSelect.innerHTML = '<option value="" selected disabled>반 선택</option>';
+                // NEIS API에서 반 정보를 제공하지 않으므로, 임시로 10반까지 표시
+                for (let i = 1; i <= 10; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${i}반`;
+                    classSelect.appendChild(option);
+                }
+            };
+
+
+            // 학교 변경 버튼 클릭 이벤트
+            changeSchoolButton.addEventListener('click', () => {
+                schoolSearchInput.classList.remove('hidden');
+                selectedSchoolDisplay.classList.add('hidden');
+                selectedSchoolName.textContent = '';
+                selectedSchoolName.dataset.schoolName = '';
+                selectedSchoolName.dataset.schoolCode = '';
+                selectedSchoolName.dataset.schoolKind = '';
+                gradeSelect.disabled = true;
+                classSelect.disabled = true;
+                gradeSelect.innerHTML = '<option value="" selected disabled>학년 선택</option>';
+                classSelect.innerHTML = '<option value="" selected disabled>반 선택</option>';
+                updateButtonState();
+            });
+            
+            [gradeSelect, classSelect].forEach(select => {
+                select.addEventListener('change', updateButtonState);
+            });
+
+            // 로그인 처리 함수
+            const handleLogin = async () => {
+                const email = loginEmailInput.value.trim();
+                const password = loginPasswordInput.value;
+
+                if (!email || !password) {
+                    showMessage("이메일과 비밀번호를 입력해주세요.");
+                    return;
+                }
+
+                showLoading(true);
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    showMessage("로그인에 성공했습니다!");
+                    console.log("로그인 성공!");
+                } catch (error) {
+                    console.error("로그인 실패:", error);
+                    let errorMessage = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+                    if (error.code === 'auth/wrong-password') {
+                        errorMessage = "비밀번호가 올바르지 않습니다.";
+                    } else if (error.code === 'auth/user-not-found') {
+                        errorMessage = "해당 이메일의 사용자를 찾을 수 없습니다.";
+                    }
+                    showMessage(errorMessage);
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            // 회원가입 처리 함수
+            const handleSignup = async () => {
+                const name = signupNameInput.value.trim();
+                const email = signupEmailInput.value.trim();
+                const password = signupPasswordInput.value;
+                // UI에 표시된 전체 이름이 아닌, 실제 학교 이름을 사용
+                const schoolName = selectedSchoolName.dataset.schoolName; 
+                const schoolCode = selectedSchoolName.dataset.schoolCode;
+                const grade = gradeSelect.value;
+                const classNum = classSelect.value;
+                
+                if (!name || !email || !password || !schoolName || !schoolCode || !grade || !classNum) {
+                    showMessage("모든 정보를 올바르게 입력해주세요.");
+                    return;
+                }
+
+                showLoading(true);
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Firestore에 사용자 추가 정보 저장
+                    const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/userProfile`);
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        name: name,
+                        email: email,
+                        school: {
+                            name: schoolName,
+                            code: schoolCode
+                        },
+                        grade: grade,
+                        class: classNum,
+                        createdAt: new Date()
+                    });
+                    
+                    showMessage("회원가입에 성공했습니다! 환영합니다!");
+                    console.log("회원가입 성공!");
+
+                } catch (error) {
+                    console.error("회원가입 실패:", error);
+                    let errorMessage = "회원가입에 실패했습니다. 다시 시도해주세요.";
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = "이미 사용 중인 이메일 주소입니다.";
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = "비밀번호는 최소 6자 이상이어야 합니다.";
+                    }
+                    showMessage(errorMessage);
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+
+            // 단계 업데이트 함수
+            const updateStep = (newStep) => {
+                if (steps[currentStep]) {
+                    steps[currentStep].classList.remove('is-active');
+                }
+                
+                if (steps[newStep]) {
+                    steps[newStep].classList.add('is-active');
+                }
+                
+                currentStep = newStep;
+
+                switch(currentStep) {
+                    case 0:
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.add('hidden');
+                        break;
+                    case 1:
+                        nextButton.classList.add('hidden');
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 2: // 로그인
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 3: // 로그인 - 비밀번호
+                        nextButton.classList.remove('hidden');
+                        const loginIdentifier = loginEmailInput.value;
+                        if (loginIdentifier === '') {
+                             updateStep(2);
+                             return;
+                        }
+                        loginUserIdentifier.textContent = loginIdentifier;
+                        nextButton.textContent = '로그인';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 4: // 회원가입 - 기본 정보
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 5: // 회원가입 - 비밀번호
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 6: // 이용약관 및 개인정보 동의
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 7: // 학교 정보
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '가입 완료';
+                        backButton.classList.remove('hidden');
+                        break;
+                    default:
+                        break;
+                }
+                updateButtonState();
+            };
+
+            nextButton.addEventListener('click', () => {
+                if (currentStep === 0) {
+                    updateStep(1);
+                } else if (currentStep === 2) {
+                    updateStep(3);
+                } else if (currentStep === 3) {
+                    handleLogin();
+                } else if (currentStep === 4) {
+                    updateStep(5);
+                } else if (currentStep === 5) {
+                    updateStep(6);
+                } else if (currentStep === 6) {
+                    updateStep(7);
+                } else if (currentStep === 7) {
+                    handleSignup();
+                }
+            });
+
+            backButton.addEventListener('click', () => {
+                if (currentStep === 1) {
+                    updateStep(0);
+                } else if (currentStep === 2) {
+                    updateStep(1);
+                } else if (currentStep === 3) {
+                    updateStep(2);
+                } else if (currentStep === 4) {
+                    updateStep(1);
+                } else if (currentStep === 5) {
+                    updateStep(4);
+                } else if (currentStep === 6) {
+                    updateStep(5);
+                } else if (currentStep === 7) {
+                    updateStep(6);
+                }
+            });
+
+            toLoginButton.addEventListener('click', () => updateStep(2));
+            toSignupButton.addEventListener('click', () => updateStep(4));
+
+            // 초기 단계 설정
+            step0.classList.add('is-active');
+            nextButton.textContent = '다음';
+            updateButtonState();
         });
     </script>
 </body>
