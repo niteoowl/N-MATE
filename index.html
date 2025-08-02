@@ -287,7 +287,7 @@
     <script type="module">
         // Firebase 관련 모듈들을 import 합니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 설정 및 초기화
@@ -296,7 +296,8 @@
             '{"apiKey":"AIzaSyALUv0zMoBExmhZJd2idSfmB_-DbPAAdL8","authDomain":"grind-mate-a.firebaseapp.com","projectId":"grind-mate-a","storageBucket":"grind-mate-a.firebasestorage.app","messagingSenderId":"704910171892","appId":"1:704910171892:web:908b2b625e46aa7a5e48a1","measurementId":"G-WQH66CMVP1"}'
         );
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -328,6 +329,7 @@
         let currentWeekMonday = getMonday(currentDate);
 
         let currentUserProfile = null;
+        let isAuthReady = false;
 
         // Firebase 인증 상태 변경 리스너
         onAuthStateChanged(auth, async (user) => {
@@ -379,6 +381,23 @@
                 updateUIWithUserData();
             }
         });
+        
+        // 페이지 로드 시 초기 인증 처리
+        async function handleInitialAuth() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log('Signed in with custom token.');
+                } else {
+                    await signInAnonymously(auth);
+                    console.log('Signed in anonymously.');
+                }
+            } catch (error) {
+                console.error('Initial authentication failed:', error);
+            } finally {
+                isAuthReady = true;
+            }
+        }
         
         // 로그인 버튼 클릭 시 /login으로 이동
         loginButton.addEventListener('click', () => {
@@ -814,6 +833,9 @@
         closePanelButton.addEventListener('click', togglePanel);
         menuTab.addEventListener('click', () => switchTab('menu'));
         weatherTab.addEventListener('click', () => switchTab('weather'));
+        
+        // 페이지 로드 시 인증 프로세스 시작
+        handleInitialAuth();
     </script>
 </body>
 </html>
