@@ -1,12 +1,9 @@
-
-
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATEㅣ학생을 위한 올인원 사이트</title>
-    <meta name="description" content="급식, 시간표, 학사일정까지 모두 한 사이트에서 한눈에 확인하세요!">
+    <title>hanilians</title>
     <!-- 
         ⚠️ 경고: Tailwind CSS CDN은 개발 환경에서만 사용해야 합니다.
         실제 배포 시에는 빌드 도구를 사용하여 필요한 CSS만 추출하는 과정을 거쳐야 성능이 향상됩니다.
@@ -410,7 +407,7 @@
                 const classNm = profile ? profile.classNumber : '1';
 
                 // 제목 업데이트
-                if (profile) {
+                if (profile && profile.grade && profile.classNumber) {
                     timetableTitle.textContent = `${profile.grade}학년 ${profile.classNumber}반 시간표`;
                 } else {
                     timetableTitle.textContent = `시간표`;
@@ -472,8 +469,8 @@
                     if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
                         mealCard.innerHTML = `
                             <div class="text-center p-4">
-                                <p class="font-medium text-lg">방학에는 급식 정보가 제공되지 않아요</p>
-                                <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
+                                <p class="font-medium text-lg">선택한 날짜에 급식 정보가 없습니다.</p>
+                                <p class="text-sm text-gray-400 mt-1">다른 날짜를 선택해주세요.</p>
                             </div>
                         `;
                         return;
@@ -556,17 +553,17 @@
                         let messageHtml = '';
 
                         if (dayOfWeek === 0 || dayOfWeek === 6) {
-                            messageHtml = `
+                             messageHtml = `
                                 <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">시간표 정보가 없어요</p>
+                                    <p class="font-medium text-lg text-white">주말에는 시간표 정보가 제공되지 않아요</p>
                                     <p class="text-sm text-gray-400 mt-1">즐거운 주말 보내세요!</p>
                                 </div>
                             `;
                         } else {
                             messageHtml = `
                                 <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                                    <p class="font-medium text-lg text-white">방학에는 시간표 정보가 제공되지 않아요</p>
-                                    <p class="text-sm text-gray-400 mt-1">즐거운 방학 보내세요!</p>
+                                    <p class="font-medium text-lg text-white">해당 주간의 시간표 정보가 없습니다.</p>
+                                    <p class="text-sm text-gray-400 mt-1">다른 주간을 확인하거나, 정보가 등록되었는지 확인해주세요.</p>
                                 </div>
                             `;
                         }
