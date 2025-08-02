@@ -347,39 +347,69 @@
         // Firebase Auth 상태 변화를 감지하는 리스너
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // 사용자가 로그인된 경우
                 try {
                     const profileRef = doc(db, 'artifacts', appId, 'users', user.uid, 'profile', 'userProfile');
                     const profileSnap = await getDoc(profileRef);
 
                     if (profileSnap.exists()) {
-                        // 프로필 문서가 존재하는 경우
                         userProfile = profileSnap.data();
+                        
+                        // ### 중요한 수정사항: officeCode가 없을 경우 자동으로 찾아옵니다. ###
+                        if (!userProfile.school || !userProfile.school.officeCode) {
+                            console.log("officeCode가 없어 NEIS API에서 조회합니다.");
+                            const officeCode = await fetchOfficeCode(userProfile.school.name);
+                            if (officeCode) {
+                                userProfile.school.officeCode = officeCode;
+                                console.log("officeCode를 성공적으로 가져왔습니다:", officeCode);
+                            } else {
+                                console.error("officeCode를 찾을 수 없습니다. 프로필 설정이 필요합니다.");
+                                showProfileSetupRequiredState();
+                                return;
+                            }
+                        }
+
                         console.log("User profile loaded:", userProfile);
                         updateAuthUI(userProfile.name);
                         loadPersonalizedContent();
                     } else {
-                        // 프로필 문서가 없는 경우: 로그인 상태는 유지하되, 프로필 설정 필요 메시지 표시
                         console.log("No user profile document found, but user is logged in.");
-                        const userName = user.email || '사용자'; // 이메일 또는 기본 이름 사용
-                        userProfile = null; // 프로필 정보 초기화
+                        const userName = user.email || '사용자';
+                        userProfile = null;
                         updateAuthUI(userName);
                         showProfileSetupRequiredState();
                     }
                 } catch (error) {
-                    // Firestore 데이터 조회 중 오류 발생
                     console.error("Error fetching user profile:", error);
                     updateAuthUI(user.email || '사용자');
                     showProfileSetupRequiredState();
                 }
             } else {
-                // 사용자가 로그아웃된 경우
                 console.log("User is signed out.");
                 userProfile = null;
                 updateAuthUI(null);
                 showLoginRequiredState();
             }
         });
+
+        // 학교 이름으로 교육청 코드를 찾는 함수
+        async function fetchOfficeCode(schoolName) {
+            const apiKey = '0c3b4def034a4eb5b75e830500a30898'; // NEIS API 키
+            const apiUrl = `https://open.neis.go.kr/hub/schoolInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=1&SCHUL_NM=${encodeURIComponent(schoolName)}`;
+            
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.schoolInfo && data.schoolInfo[1].row) {
+                    return data.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
+                }
+                return null;
+            } catch (error) {
+                console.error('Failed to fetch school info:', error);
+                return null;
+            }
+        }
+
 
         // 로그인 상태에 따라 UI를 업데이트하는 함수
         function updateAuthUI(userName) {
@@ -436,11 +466,15 @@
                 if (dayOfWeek === 0 || dayOfWeek === 6) {
                     // 주말인 경우
                     mealCard.innerHTML = `<p class="text-gray-400">주말에는 급식 정보가 제공되지 않아요.</p>`;
-                    timetableContent.innerHTML = `<p class="text-gray-400">주말에는 시간표 정보가 제공되지 않아요.</p>`;
+                    timetableContent.innerHTML = `
+                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                            <p>주말에는 시간표 정보가 제공되지 않아요.</p>
+                        </div>
+                    `;
                 } else {
                     // 평일인 경우
-                    fetchMealData(todayStr, userProfile.school.code, userProfile.school.officeCode); // school.code와 officeCode 사용
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.school.code, userProfile.grade, userProfile.classNumber, userProfile.school.officeCode); // school.code와 officeCode 사용
+                    fetchMealData(todayStr, userProfile.school.code, userProfile.school.officeCode);
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.school.code, userProfile.grade, userProfile.classNumber, userProfile.school.officeCode);
                 }
             } else {
                 // 사용자 프로필이 없는 경우
