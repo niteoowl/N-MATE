@@ -346,6 +346,15 @@
             // 인증 UI 렌더링 함수
             async function renderAuthUI(user) {
                 authContainer.innerHTML = ''; // 기존 내용 초기화
+                // 사용자 프로필이 없거나 로그인하지 않은 경우 기본값
+                const defaultProfile = {
+                    schoolName: "남서울중학교",
+                    schoolCode: "7132131",
+                    atptOfcdcScCode: "B10",
+                    grade: "1",
+                    classNumber: "1"
+                };
+
                 if (user) {
                     try {
                         const userId = user.uid;
@@ -379,18 +388,18 @@
                         } else {
                             // 프로필 문서가 없는 경우, 프로필 설정 버튼 표시
                             authContainer.innerHTML = `<a href="/profile-setup"><button class="login-button bg-gray-700 bg-opacity-50 font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">프로필 설정</button></a>`;
-                            loadDataWithUserProfile(null); // 기본 또는 비활성 상태로 데이터 로드
+                            loadDataWithUserProfile(defaultProfile); // 기본값으로 데이터 로드
                         }
                     } catch (e) {
                         console.error("Error fetching user profile:", e);
                         // 에러 발생 시 로그인 버튼 렌더링
                         authContainer.innerHTML = `<a href="/login"><button class="login-button bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button></a>`;
-                        loadDataWithUserProfile(null);
+                        loadDataWithUserProfile(defaultProfile);
                     }
                 } else {
                     // 로그인되지 않은 경우
                     authContainer.innerHTML = `<a href="/login"><button class="login-button bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button></a>`;
-                    loadDataWithUserProfile(null);
+                    loadDataWithUserProfile(defaultProfile);
                 }
             }
             
@@ -402,13 +411,14 @@
             // 프로필 정보에 따라 데이터 로드
             function loadDataWithUserProfile(profile) {
                 // 사용자가 로그인되어 있다면 프로필 정보를, 아니라면 기본값을 사용
-                const sdSchulCode = profile ? profile.schoolCode : '7171018';
-                const grade = profile ? profile.grade : '2';
+                const atptOfcdcScCode = profile ? profile.atptOfcdcScCode : 'B10';
+                const sdSchulCode = profile ? profile.sdSchulCode : '7132131';
+                const grade = profile ? profile.grade : '1';
                 const classNm = profile ? profile.classNumber : '1';
 
                 // 제목 업데이트
-                if (profile && profile.grade && profile.classNumber) {
-                    timetableTitle.textContent = `${profile.grade}학년 ${profile.classNumber}반 시간표`;
+                if (profile && profile.grade && profile.classNumber && profile.schoolName) {
+                    timetableTitle.textContent = `${profile.schoolName} ${profile.grade}학년 ${profile.classNumber}반 시간표`;
                 } else {
                     timetableTitle.textContent = `시간표`;
                 }
@@ -425,8 +435,8 @@
                 const dayName = daysOfWeek[selectedDate.getDay()];
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
                 
-                fetchMealData(dateStr, sdSchulCode);
-                fetchAndRenderWeeklyTimetable(currentWeekMonday, sdSchulCode, grade, classNm);
+                fetchMealData(dateStr, atptOfcdcScCode, sdSchulCode);
+                fetchAndRenderWeeklyTimetable(currentWeekMonday, atptOfcdcScCode, sdSchulCode, grade, classNm);
             }
 
             // 해당 날짜가 속한 주의 월요일을 구하는 함수
@@ -438,7 +448,7 @@
             }
 
             // NEIS API에서 급식 데이터를 가져오는 함수
-            async function fetchMealData(mlsYmd, sdSchulCode) {
+            async function fetchMealData(mlsYmd, atptOfcdcScCode, sdSchulCode) {
                 const year = parseInt(mlsYmd.substring(0, 4), 10);
                 const month = parseInt(mlsYmd.substring(4, 6), 10) - 1;
                 const day = parseInt(mlsYmd.substring(6, 8), 10);
@@ -458,7 +468,6 @@
                 }
                 
                 const apiKey = ''; // Canvas 환경에서는 비워둡니다
-                const atptOfcdcScCode = 'C10'; // 경기도 교육청 코드, sdSchulCode와 함께 사용
                 
                 const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
                 
@@ -482,17 +491,18 @@
 
                         if (lunchMeal) {
                             const rawDishName = lunchMeal.DDISH_NM;
+                            // 알레르기 정보 등 괄호 안의 숫자 제거
                             const cleanedDishName = rawDishName
                                 .split('<br/>')
                                 .filter(item => item.trim() !== '')
-                                .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
+                                .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
                                 .join('</li><li>');
 
                             const mealHtml = `
                                 <div class="p-4 rounded-2xl w-full">
                                     <h3 class="font-bold text-lg mb-2">${lunchMeal.MMEAL_SC_NM}</h3>
                                     <p class="text-sm text-gray-400 mb-2">${lunchMeal.CAL_INFO || ''}</p>
-                                    <ul class="text-sm space-y-1 text-white">
+                                    <ul class="text-sm space-y-1 text-white list-disc list-inside">
                                         <li>${cleanedDishName}</li>
                                     </ul>
                                 </div>
@@ -507,7 +517,12 @@
                             `;
                         }
                     } else {
-                        mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 가져올 수 없습니다.</p>`;
+                        mealCard.innerHTML = `
+                            <div class="text-center p-4">
+                                <p class="font-medium text-lg">급식 정보를 가져올 수 없습니다.</p>
+                                <p class="text-sm text-gray-400 mt-1">API 응답 구조를 확인하세요.</p>
+                            </div>
+                        `;
                     }
                 } catch (error) {
                     console.error('Failed to fetch meal data:', error);
@@ -516,7 +531,7 @@
             }
 
             // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
-            async function fetchAndRenderWeeklyTimetable(mondayDate, sdSchulCode, grade, classNm) {
+            async function fetchAndRenderWeeklyTimetable(mondayDate, atptOfcdcScCode, sdSchulCode, grade, classNm) {
                 // 데이터를 불러오는 중 상태 표시
                 timetableContent.innerHTML = `
                     <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
@@ -539,7 +554,6 @@
                 currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
 
                 const apiKey = ''; // Canvas 환경에서는 비워둡니다
-                const atptOfcdcScCode = 'C10'; // 경기도 교육청 코드
                 
                 const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
                 
@@ -760,7 +774,7 @@
                 const dayName = daysOfWeek[selectedDate.getDay()];
 
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
-                fetchMealData(dateStr, userProfile ? userProfile.schoolCode : '7171018');
+                fetchMealData(dateStr, userProfile ? userProfile.atptOfcdcScCode : 'B10', userProfile ? userProfile.sdSchulCode : '7132131');
                 datePickerPanel.classList.remove('is-visible');
             }
 
@@ -802,7 +816,7 @@
                     const dayName = daysOfWeek[selectedDate.getDay()];
                     dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
                     
-                    fetchMealData(dateStr, userProfile ? userProfile.schoolCode : '7171018');
+                    fetchMealData(dateStr, userProfile ? userProfile.atptOfcdcScCode : 'B10', userProfile ? userProfile.sdSchulCode : '7132131');
                 } else {
                     fetchWeatherData();
                 }
@@ -820,17 +834,17 @@
             prevWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.schoolCode, userProfile.grade, userProfile.classNumber);
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNumber);
                 } else {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, '7171018', '2', '1');
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'B10', '7132131', '1', '1');
                 }
             });
             nextWeekButton.addEventListener('click', () => {
                 currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
                 if (userProfile) {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.schoolCode, userProfile.grade, userProfile.classNumber);
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile.atptOfcdcScCode, userProfile.sdSchulCode, userProfile.grade, userProfile.classNumber);
                 } else {
-                    fetchAndRenderWeeklyTimetable(currentWeekMonday, '7171018', '2', '1');
+                    fetchAndRenderWeeklyTimetable(currentWeekMonday, 'B10', '7132131', '1', '1');
                 }
             });
 
