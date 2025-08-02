@@ -289,14 +289,23 @@
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // 전역 변수에서 Firebase 설정을 가져옵니다.
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         // Firebase를 초기화합니다.
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app = null;
+        let auth = null;
+        let db = null;
+        
+        // Firebase 설정 변수가 있을 때만 Firebase를 초기화합니다.
+        if (firebaseConfig) {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } else {
+            console.error("Firebase 설정이 정의되지 않았습니다. Firebase 기능을 사용할 수 없습니다.");
+        }
 
         // DOM이 완전히 로드된 후 스크립트를 실행합니다.
         document.addEventListener('DOMContentLoaded', async () => {
@@ -325,56 +334,65 @@
             let userProfile = null;
 
             // Firebase 인증 상태 변경 리스너
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    console.log("사용자가 로그인되었습니다:", user.uid);
-                    await fetchUserProfile(user.uid);
-                    // UI 업데이트
-                    updateAuthUI(true, userProfile);
-                    // 로그인 후 데이터 로드
-                    if (userProfile) {
-                        const today = new Date();
-                        const year = today.getFullYear();
-                        const month = String(today.getMonth() + 1).padStart(2, '0');
-                        const day = String(today.getDate()).padStart(2, '0');
-                        const dateStr = `${year}${month}${day}`;
-                        fetchMealData(dateStr, userProfile);
-                        fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+            if (auth) {
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log("사용자가 로그인되었습니다:", user.uid);
+                        await fetchUserProfile(user.uid);
+                        // UI 업데이트
+                        updateAuthUI(true, userProfile);
+                        // 로그인 후 데이터 로드
+                        if (userProfile) {
+                            const today = new Date();
+                            const year = today.getFullYear();
+                            const month = String(today.getMonth() + 1).padStart(2, '0');
+                            const day = String(today.getDate()).padStart(2, '0');
+                            const dateStr = `${year}${month}${day}`;
+                            fetchMealData(dateStr, userProfile);
+                            fetchAndRenderWeeklyTimetable(currentWeekMonday, userProfile);
+                        } else {
+                            // 프로필 정보가 없을 경우 메시지 표시
+                            timetableContent.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
+                            mealCard.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
+                        }
                     } else {
-                        // 프로필 정보가 없을 경우 메시지 표시
-                        timetableContent.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
-                        mealCard.innerHTML = `<p class="text-center text-gray-400 p-4">사용자 프로필 정보를 불러올 수 없습니다. 로그아웃 후 다시 시도해주세요.</p>`;
+                        console.log("사용자가 로그아웃되었습니다.");
+                        // UI 업데이트
+                        updateAuthUI(false, null);
+                        // 로그아웃 상태에서 보여줄 콘텐츠
+                        timetableContent.innerHTML = `
+                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
+                                <p>로그인 후 시간표를 확인할 수 있습니다.</p>
+                            </div>
+                        `;
+                        mealCard.innerHTML = `
+                            <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
+                                <p>로그인 후 급식 정보를 확인할 수 있습니다.</p>
+                            </div>
+                        `;
                     }
-                } else {
-                    console.log("사용자가 로그아웃되었습니다.");
-                    // UI 업데이트
-                    updateAuthUI(false, null);
-                    // 로그아웃 상태에서 보여줄 콘텐츠
-                    timetableContent.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem] p-4">
-                            <p>로그인 후 시간표를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                    mealCard.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
-                            <p>로그인 후 급식 정보를 확인할 수 있습니다.</p>
-                        </div>
-                    `;
-                }
-            });
+                });
+            } else {
+                console.error("Firebase 인증 객체를 사용할 수 없어 인증 상태를 확인할 수 없습니다.");
+            }
 
             // 초기 인증 시도 (custom token 사용)
-            try {
-                if (initialAuthToken) {
+            if (initialAuthToken && auth) {
+                try {
                     await signInWithCustomToken(auth, initialAuthToken);
+                } catch (error) {
+                    console.error("Custom token으로 로그인하는 데 실패했습니다:", error);
+                    // 오류 발생 시 로그아웃 상태로 유지
                 }
-            } catch (error) {
-                console.error("Custom token으로 로그인하는 데 실패했습니다:", error);
-                // 오류 발생 시 로그아웃 상태로 유지
             }
+
 
             // 사용자 프로필 정보를 Firestore에서 가져오는 함수
             async function fetchUserProfile(userId) {
+                if (!db) {
+                    console.error("Firestore가 초기화되지 않았습니다.");
+                    return null;
+                }
                 const docRef = doc(db, `/artifacts/${appId}/users/${userId}/profile/user_data`);
                 try {
                     const docSnap = await getDoc(docRef);
