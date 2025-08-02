@@ -589,10 +589,11 @@
                             li.dataset.schoolName = school.SCHUL_NM; // 실제 학교 이름 저장
                             li.dataset.schoolCode = school.SD_SCHUL_CODE; // 학교 코드 저장
                             li.dataset.schoolKind = school.SCHUL_KND_SC_NM; // 학교 종류 저장 (학년 수 결정을 위함)
+                            li.dataset.officeCode = school.ATPT_OFCDC_SC_CODE; // 교육청 코드 저장
                             li.classList.add('p-4', 'hover:bg-gray-700', 'cursor-pointer', 'rounded-lg');
                             li.addEventListener('click', () => {
                                 // 학교 종류(li.dataset.schoolKind)도 함께 전달
-                                selectSchool(li.dataset.schoolName, li.textContent, li.dataset.schoolCode, li.dataset.schoolKind);
+                                selectSchool(li.dataset.schoolName, li.textContent, li.dataset.schoolCode, li.dataset.schoolKind, li.dataset.officeCode);
                             });
                             schoolSuggestions.appendChild(li);
                         });
@@ -622,7 +623,7 @@
             });
 
             // 학교 선택 함수
-            const selectSchool = (schoolName, fullSchoolName, schoolCode, schoolKind) => {
+            const selectSchool = (schoolName, fullSchoolName, schoolCode, schoolKind, schoolOfficeCode) => {
                 schoolSearchInput.value = '';
                 schoolSearchInput.classList.add('hidden');
                 schoolSuggestions.classList.add('hidden');
@@ -631,6 +632,7 @@
                 selectedSchoolName.dataset.schoolName = schoolName; // 실제 학교 이름 저장
                 selectedSchoolName.dataset.schoolCode = schoolCode; // 학교 코드 저장
                 selectedSchoolName.dataset.schoolKind = schoolKind; // 학교 종류 저장
+                selectedSchoolName.dataset.schoolOfficeCode = schoolOfficeCode; // 교육청 코드 저장
                 selectedSchoolDisplay.classList.remove('hidden');
 
                 // 학년 드롭다운 동적 생성
@@ -691,6 +693,7 @@
                 selectedSchoolName.dataset.schoolName = '';
                 selectedSchoolName.dataset.schoolCode = '';
                 selectedSchoolName.dataset.schoolKind = '';
+                selectedSchoolName.dataset.schoolOfficeCode = '';
                 gradeSelect.disabled = true;
                 classSelect.disabled = true;
                 gradeSelect.innerHTML = '<option value="" selected disabled>학년 선택</option>';
@@ -739,10 +742,11 @@
                 // UI에 표시된 전체 이름이 아닌, 실제 학교 이름을 사용
                 const schoolName = selectedSchoolName.dataset.schoolName; 
                 const schoolCode = selectedSchoolName.dataset.schoolCode;
+                const schoolOfficeCode = selectedSchoolName.dataset.schoolOfficeCode; // 교육청 코드 추가
                 const grade = gradeSelect.value;
                 const classNum = classSelect.value;
                 
-                if (!name || !email || !password || !schoolName || !schoolCode || !grade || !classNum) {
+                if (!name || !email || !password || !schoolName || !schoolCode || !schoolOfficeCode || !grade || !classNum) {
                     showMessage("모든 정보를 올바르게 입력해주세요.");
                     return;
                 }
@@ -760,7 +764,8 @@
                         email: email,
                         school: {
                             name: schoolName,
-                            code: schoolCode
+                            code: schoolCode,
+                            officeCode: schoolOfficeCode // 교육청 코드 저장
                         },
                         grade: grade,
                         class: classNum,
