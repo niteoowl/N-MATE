@@ -51,7 +51,7 @@
         .header-scrolled .header-inner { padding: 0.5rem; }
         .header-scrolled .header-inner img { height: 2rem; }
         
-        header, .header-inner, .header-inner img, .header-inner button { transition: all 0.3s ease-in-out; }
+        header, .header-inner, .header-inner button { transition: all 0.3s ease-in-out; }
         
         .nav-inner { width: 100%; }
         @media (min-width: 768px) { .nav-inner { max-width: 768px; margin-left: auto; margin-right: auto; } }
@@ -120,7 +120,28 @@
         }
         .dropdown-content a:hover { background-color: #333333; }
         .dropdown:hover .dropdown-content { display: block; }
-
+        
+        /* 커스텀 메시지 박스 스타일 */
+        #message-box {
+            position: fixed;
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        #message-box.show {
+            display: block;
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-[--bg-primary] text-white">
@@ -136,9 +157,9 @@
                 </div>
                 <div id="auth-buttons" class="flex items-center space-x-4">
                     <!-- 로그인 상태에 따라 이 영역의 내용이 변경됩니다. -->
-                    <!-- 로그인 버튼 -->
+                    <!-- 로그인 버튼 (기본적으로 표시) -->
                     <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
-                    <!-- 로그인된 사용자 프로필 (숨겨져 있음) -->
+                    <!-- 로그인된 사용자 프로필 (로그인 시에만 표시) -->
                     <div id="user-profile-dropdown" class="hidden dropdown">
                         <button id="user-profile-button" class="bg-gray-700 bg-opacity-50 text-white font-medium py-1.5 px-4 rounded-full flex items-center space-x-2 transition-colors duration-200">
                             <span id="user-name"></span>
@@ -151,6 +172,11 @@
                 </div>
             </div>
         </header>
+        
+        <!-- 커스텀 메시지 박스 -->
+        <div id="message-box" class="hidden">
+            <p id="message-text"></p>
+        </div>
 
         <!-- 알림/정보 섹션 -->
         <div class="bg-[--bg-secondary] rounded-2xl p-4 flex items-start space-x-4 mb-6">
@@ -313,16 +339,8 @@
         import { getAuth, onAuthStateChanged, signInWithCustomToken, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 설정 (사용자 요청에 따라 업데이트)
-        const firebaseConfig = {
-            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
-            authDomain: "n-mate.firebaseapp.com",
-            projectId: "n-mate",
-            storageBucket: "n-mate.firebasestorage.app",
-            messagingSenderId: "691313471077",
-            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            measurementId: "G-0LCGVBKXLQ"
-        };
+        // Firebase 설정 (환경 변수 사용)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 
         // 전역 변수
         const app = initializeApp(firebaseConfig);
@@ -351,6 +369,8 @@
         const nextWeekButton = document.getElementById('next-week-button');
         const currentWeekDisplay = document.getElementById('current-week-display');
         const timetableTitle = document.getElementById('timetable-title');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
         
         // 인증 관련 UI
         const loginButton = document.getElementById('login-button');
@@ -360,77 +380,120 @@
 
         let currentDate = new Date();
         let currentWeekMonday = getMonday(currentDate);
-        
+
+        // 메시지 박스를 표시하는 함수
+        function showMessage(text) {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('show');
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => messageBox.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // 초기 인증 시도
+            console.log("DOM Content Loaded. Initiating authentication.");
             if (typeof __initial_auth_token !== 'undefined') {
+                console.log("Canvas auth token found. Attempting sign-in with custom token.");
                 try {
                     await signInWithCustomToken(auth, __initial_auth_token);
+                    console.log("Sign-in with custom token successful.");
                 } catch (error) {
                     console.error("Error signing in with custom token:", error);
-                    await signInAnonymously(auth);
+                    // 토큰 오류 시 onAuthStateChanged 콜백이 null을 받아 처리하게 됩니다.
                 }
             } else {
-                await signInAnonymously(auth);
+                console.log("No Canvas auth token found. Attempting anonymous sign-in.");
+                try {
+                    await signInAnonymously(auth);
+                    console.log("Anonymous sign-in successful.");
+                } catch (error) {
+                    console.error("Error signing in anonymously:", error);
+                }
             }
         });
 
+        // onAuthStateChanged는 인증 상태가 변경될 때마다 실행되는 가장 신뢰할 수 있는 핸들러입니다.
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // 사용자가 로그인됨
+            console.log("onAuthStateChanged fired. Current user object:", user);
+            if (user && !user.isAnonymous) {
+                // 사용자가 로그인됨 (익명 사용자가 아님)
+                console.log("User is authenticated and not anonymous. Hiding login button, showing user profile dropdown.");
                 loginButton.classList.add('hidden');
                 userProfileDropdown.classList.remove('hidden');
-
+                
                 const userId = user.uid;
+                console.log("User ID:", userId);
+                
                 // Firestore에서 사용자 프로필 문서 가져오기
                 const docRef = doc(db, `artifacts/${appId}/users/${userId}/profile/userProfile`);
                 try {
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
                         userProfileData = docSnap.data();
-                        console.log("User profile data:", userProfileData);
-                        userNameSpan.textContent = userProfileData.name || '사용자';
+                        console.log("User profile found. Displaying user name:", userProfileData.name);
+                        // 프로필 이름이 없으면 빈 문자열을 사용합니다.
+                        userNameSpan.textContent = userProfileData.name || '';
                         updateTimetableTitle();
                         // 로그인 후, 개인화된 데이터로 급식 및 시간표 로드
                         switchTab('menu');
                         fetchAndRenderWeeklyTimetable(currentWeekMonday);
                     } else {
-                        console.log("No user profile document found!");
-                        userNameSpan.textContent = '사용자';
-                        timetableContent.innerHTML = `<p class="text-gray-400">사용자 정보를 찾을 수 없습니다. 프로필을 설정해주세요.</p>`;
-                        mealCard.innerHTML = `<p class="text-gray-400">사용자 정보를 찾을 수 없습니다. 프로필을 설정해주세요.</p>`;
+                        // 프로필 문서가 없으면, 사용자 이름을 표시하지 않음
+                        console.warn("User profile document not found. Displaying empty user name.");
+                        userNameSpan.textContent = '';
+                        updateTimetableTitle();
+                        // 사용자 프로필이 없는 경우에도 시간표와 급식 정보를 기본 상태로 표시
+                        timetableContent.innerHTML = `<p class="text-gray-400">사용자 프로필이 없어 개인화된 시간표를 불러올 수 없습니다.</p>`;
+                        mealCard.innerHTML = `<p class="text-gray-400">사용자 프로필이 없어 개인화된 급식 정보를 불러올 수 없습니다.</p>`;
                     }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
+                    // 오류 발생 시에도 사용자 이름을 표시하지 않음
+                    userNameSpan.textContent = '';
                     timetableContent.innerHTML = `<p class="text-red-500">프로필 정보를 가져오는 중 오류가 발생했습니다.</p>`;
                     mealCard.innerHTML = `<p class="text-red-500">프로필 정보를 가져오는 중 오류가 발생했습니다.</p>`;
                 }
             } else {
-                // 사용자가 로그아웃됨
+                // 사용자가 로그아웃됨 또는 익명 사용자
+                console.log("User is not authenticated or is anonymous. Hiding user profile dropdown, showing login button.");
                 loginButton.classList.remove('hidden');
                 userProfileDropdown.classList.add('hidden');
                 userProfileData = null;
                 // 로그아웃 시 기본 콘텐츠 표시
                 timetableTitle.textContent = `시간표`;
-                timetableContent.innerHTML = `<p class="text-gray-400">로그인 후 시간표를 확인하세요.</p>`;
-                mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인하세요.</p>`;
+                timetableContent.innerHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem]">
+                        <p>로그인 후 시간표를 확인하세요.</p>
+                    </div>
+                `;
+                mealCard.innerHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
+                        <p>로그인 후 급식 정보를 확인하세요.</p>
+                    </div>
+                `;
             }
         });
 
         // 로그아웃 이벤트 리스너
         logoutButton.addEventListener('click', async (e) => {
             e.preventDefault();
+            console.log("Logout button clicked. Signing out...");
             try {
                 await signOut(auth);
-                console.log("User signed out successfully.");
+                showMessage("로그아웃되었습니다.");
+                console.log("Sign-out successful.");
             } catch (error) {
                 console.error("Error signing out:", error);
+                showMessage("로그아웃 중 오류가 발생했습니다.");
             }
         });
 
         // 로그인 버튼 클릭 시 로그인 페이지로 이동 (시뮬레이션)
         loginButton.addEventListener('click', () => {
-            window.location.href = '/login';
+            console.log("Login button clicked. Displaying message.");
+            showMessage("로그인 기능은 현재 개발 중입니다.");
         });
 
         function updateTimetableTitle() {
@@ -452,7 +515,12 @@
         // NEIS API에서 급식 데이터를 가져오는 함수
         async function fetchMealData(mlsYmd) {
             if (!userProfileData || !userProfileData.schoolCode) {
-                mealCard.innerHTML = `<p class="text-gray-400">사용자 정보를 찾을 수 없습니다. 프로필을 설정해주세요.</p>`;
+                console.log("Not logged in or missing school code. Cannot fetch meal data.");
+                mealCard.innerHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[10rem]">
+                        <p>로그인 후 급식 정보를 확인하세요.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -479,12 +547,14 @@
             const sdSchulCode = userProfileData.schoolCode; // 사용자 프로필에서 학교 코드 사용
             
             const apiUrl = `https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${mlsYmd}`;
+            console.log("Fetching meal data from NEIS API for date:", mlsYmd);
 
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
                 
                 if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    console.log("NEIS API returned INFO-200 (no data). Assuming vacation.");
                     mealCard.innerHTML = `
                         <div class="text-center p-4">
                             <p class="font-medium text-lg">방학에는 급식 정보가 제공되지 않아요</p>
@@ -495,6 +565,7 @@
                 }
                 
                 if (data.mealServiceDietInfo && data.mealServiceDietInfo.length > 1 && data.mealServiceDietInfo[1].row) {
+                    console.log("Meal data received. Rendering to UI.");
                     const mealInfo = data.mealServiceDietInfo[1].row;
                     const lunchMeal = mealInfo.find(meal => meal.MMEAL_SC_NM === '중식');
 
@@ -503,7 +574,7 @@
                         const cleanedDishName = rawDishName
                             .split('<br/>')
                             .filter(item => item.trim() !== '')
-                            .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
+                            .map(item => item.replace(/\s*\(\d+\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\.?\d*\)?/g, '').trim())
                             .join('</li><li>');
 
                         const mealHtml = `
@@ -517,6 +588,7 @@
                         `;
                         mealCard.innerHTML = mealHtml;
                     } else {
+                        console.log("Lunch meal not found for the selected date.");
                         mealCard.innerHTML = `
                             <div class="text-center p-4">
                                 <p class="font-medium text-lg">선택한 날짜에 중식 정보가 없습니다.</p>
@@ -525,6 +597,7 @@
                         `;
                     }
                 } else {
+                    console.error("NEIS API response structure is unexpected or missing mealServiceDietInfo.");
                     mealCard.innerHTML = `<p class="text-gray-400">급식 정보를 가져올 수 없습니다.</p>`;
                 }
             } catch (error) {
@@ -536,7 +609,12 @@
         // NEIS API에서 주간 시간표 데이터를 가져와서 렌더링하는 함수
         async function fetchAndRenderWeeklyTimetable(mondayDate) {
             if (!userProfileData || !userProfileData.schoolCode || !userProfileData.grade || !userProfileData.classNumber) {
-                timetableContent.innerHTML = `<p class="text-gray-400">사용자 정보를 찾을 수 없습니다. 프로필을 설정해주세요.</p>`;
+                console.log("Not logged in or missing user profile data. Cannot fetch timetable.");
+                timetableContent.innerHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[35rem]">
+                        <p>로그인 후 시간표를 확인하세요.</p>
+                    </div>
+                `;
                 return;
             }
 
@@ -568,12 +646,14 @@
             const classNm = userProfileData.classNumber;
             
             const apiUrl = `https://open.neis.go.kr/hub/misTimetable?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_Ymd=${tiToYmd}`;
+            console.log("Fetching timetable data from NEIS API for period:", tiFromYmd, "to", tiToYmd);
             
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
                 
                 if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    console.log("NEIS API returned INFO-200 (no data). Assuming vacation or weekend.");
                     const today = new Date();
                     const dayOfWeek = today.getDay(); // 0 = Sunday, 6 = Saturday
                     let messageHtml = '';
@@ -598,9 +678,11 @@
                 }
                 
                 if (data.misTimetable && data.misTimetable.length > 1 && data.misTimetable[1].row) {
+                    console.log("Timetable data received. Rendering to UI.");
                     const timetableData = data.misTimetable[1].row;
                     renderWeeklyTimetable(timetableData);
                 } else {
+                    console.error("NEIS API response structure is unexpected or missing misTimetable.");
                     timetableContent.innerHTML = `<p class="text-red-500">시간표 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p>`;
                 }
 
@@ -673,6 +755,7 @@
         // 날씨 데이터를 가져오는 함수 (실제 API 호출을 시뮬레이션)
         async function fetchWeatherData() {
             weatherCard.innerHTML = `<p class="text-gray-400">날씨 정보를 불러오는 중...</p>`;
+            console.log("Fetching weather data...");
 
             try {
                 const dummyWeatherData = {
@@ -702,6 +785,7 @@
                     </div>
                 `;
                 weatherCard.innerHTML = weatherHtml;
+                console.log("Weather data loaded and rendered.");
             } catch (error) {
                 console.error('Failed to fetch weather data:', error);
                 weatherCard.innerHTML = `<p class="text-red-500">날씨 정보를 가져오는 데 실패했습니다.</p>`;
@@ -777,6 +861,7 @@
         
         // 날짜 선택 시 호출되는 핸들러
         function handleDateClick(dateStr) {
+            console.log("Date selected:", dateStr);
             const year = dateStr.substring(0, 4);
             const month = dateStr.substring(4, 6);
             const day = dateStr.substring(6, 8);
@@ -787,8 +872,10 @@
 
             dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
             if (userProfileData) {
+                console.log("User is logged in. Fetching meal data for selected date.");
                 fetchMealData(dateStr);
             } else {
+                console.log("User is not logged in. Showing placeholder for meal card.");
                 mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인하세요.</p>`;
             }
             datePickerPanel.classList.remove('is-visible');
@@ -807,6 +894,7 @@
         });
 
         const switchTab = (activeTab) => {
+            console.log("Switching tab to:", activeTab);
             const isMenu = activeTab === 'menu';
             menuTab.classList.toggle('border-white', isMenu);
             menuTab.classList.toggle('text-gray-400', !isMenu);
@@ -832,8 +920,10 @@
                 dateDisplay.textContent = `${year}년 ${parseInt(month, 10)}월 ${parseInt(day, 10)}일 (${dayName})`;
 
                 if (userProfileData) {
+                    console.log("User is logged in. Fetching today's meal data.");
                     fetchMealData(dateStr);
                 } else {
+                    console.log("User is not logged in. Showing placeholder for meal card.");
                     mealCard.innerHTML = `<p class="text-gray-400">로그인 후 급식 정보를 확인하세요.</p>`;
                 }
             } else {
@@ -852,12 +942,14 @@
         // 주간 네비게이션 버튼 이벤트 리스너
         prevWeekButton.addEventListener('click', () => {
             if (userProfileData) {
+                console.log("Previous week button clicked. Fetching previous week's timetable.");
                 currentWeekMonday.setDate(currentWeekMonday.getDate() - 7);
                 fetchAndRenderWeeklyTimetable(currentWeekMonday);
             }
         });
         nextWeekButton.addEventListener('click', () => {
             if (userProfileData) {
+                console.log("Next week button clicked. Fetching next week's timetable.");
                 currentWeekMonday.setDate(currentWeekMonday.getDate() + 7);
                 fetchAndRenderWeeklyTimetable(currentWeekMonday);
             }
