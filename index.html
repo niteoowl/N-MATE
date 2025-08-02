@@ -97,7 +97,6 @@
         .timetable-grid .grid-cell:hover {
             background-color: #333333; /* hover:bg-gray-700 */
         }
-        
     </style>
 </head>
 <body class="bg-[--bg-primary] text-white">
@@ -117,8 +116,10 @@
                     </button>
                     <!-- 로그인 상태에 따라 표시될 요소들 -->
                     <div id="auth-info" class="flex items-center space-x-2">
+                        <!-- 로딩 스피너 (초기 상태) -->
+                        <div id="loading-spinner" class="animate-spin rounded-full h-5 w-5 border-2 border-gray-400 border-t-blue-500"></div>
                         <!-- 로그인 버튼 (기본) -->
-                        <button id="login-button" class="bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
+                        <button id="login-button" class="hidden bg-transparent font-medium py-1.5 px-4 rounded-full text-sm border border-gray-700 hover:bg-gray-700 transition-colors duration-200">로그인</button>
                         <!-- 사용자 정보 (로그인 시) -->
                         <div id="user-info" class="hidden flex-col items-end">
                             <span id="user-school-name" class="font-medium text-sm"></span>
@@ -288,7 +289,7 @@
         // Firebase 관련 모듈들을 import 합니다.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithCustomToken, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase 설정 및 초기화
         const firebaseConfig = JSON.parse(
@@ -324,101 +325,91 @@
         const userInfoDiv = document.getElementById('user-info');
         const userSchoolNameSpan = document.getElementById('user-school-name');
         const userIdSpan = document.getElementById('user-id');
+        const loadingSpinner = document.getElementById('loading-spinner');
 
         let currentDate = new Date();
         let currentWeekMonday = getMonday(currentDate);
 
         let currentUserProfile = null;
-        let isAuthReady = false;
-
-        // Firebase 인증 상태 변경 리스너
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // 로그인된 사용자
-                console.log('User is signed in:', user.uid);
-                // 사용자 프로필 문서를 실시간으로 감지
-                const userDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/user_profiles/profile`);
-                
-                onSnapshot(userDocRef, async (docSnap) => {
-                    if (docSnap.exists()) {
-                        currentUserProfile = docSnap.data();
-                        console.log("Current user profile:", currentUserProfile);
-                        updateUIWithUserData();
-                    } else {
-                        console.log("No user profile found, creating a default one.");
-                        // 프로필이 없으면 기본 데이터로 생성
-                        currentUserProfile = {
-                            atptOfcdcScCode: "C10",
-                            classNum: "1",
-                            grade: "1",
-                            schoolName: "부산남중학교",
-                            sdSchulCode: "7171018",
-                            studentNum: "1",
-                            userId: user.uid
-                        };
-                        try {
-                            await setDoc(userDocRef, currentUserProfile);
-                            console.log("Default profile created successfully.");
-                            updateUIWithUserData();
-                        } catch (e) {
-                            console.error("Error creating default profile:", e);
-                        }
-                    }
-                });
-
-                // 로그인 버튼 숨기고 사용자 정보 표시
-                loginButton.classList.add('hidden');
-                userInfoDiv.classList.remove('hidden');
-
-            } else {
-                // 로그인되지 않은 사용자
-                console.log('No user is signed in.');
-                currentUserProfile = null;
-                // 사용자 정보 숨기고 로그인 버튼 표시
-                loginButton.classList.remove('hidden');
-                userInfoDiv.classList.add('hidden');
-                // 기본값으로 UI 업데이트
-                updateUIWithUserData();
-            }
-        });
         
         // 페이지 로드 시 초기 인증 처리
-        async function handleInitialAuth() {
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log('Signed in with custom token.');
+        // onAuthStateChanged 리스너 내에서 모든 인증 및 데이터 로딩 로직을 처리하여 상태를 일관되게 만듭니다.
+        onAuthStateChanged(auth, async (user) => {
+            // UI를 초기화하고 로딩 상태를 표시합니다.
+            loadingSpinner.classList.remove('hidden');
+            loginButton.classList.add('hidden');
+            userInfoDiv.classList.add('hidden');
+            
+            // 로그인 상태가 감지되면
+            if (user) {
+                console.log('User is signed in:', user.uid);
+                
+                // Firestore에서 사용자 프로필을 가져옵니다.
+                const userProfileDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/user_profiles/profile`);
+                const docSnap = await getDoc(userProfileDocRef);
+                
+                if (docSnap.exists()) {
+                    currentUserProfile = docSnap.data();
+                    console.log("Current user profile fetched:", currentUserProfile);
                 } else {
-                    await signInAnonymously(auth);
-                    console.log('Signed in anonymously.');
+                    console.log("No user profile found, using default data.");
+                    currentUserProfile = {
+                        atptOfcdcScCode: "C10",
+                        classNum: "1",
+                        grade: "1",
+                        schoolName: "부산남중학교",
+                        sdSchulCode: "7171018",
+                        studentNum: "1",
+                        userId: user.uid
+                    };
+                    // 프로필이 없는 경우 기본 프로필을 생성합니다.
+                    try {
+                        await setDoc(userProfileDocRef, currentUserProfile);
+                        console.log("Default profile created successfully.");
+                    } catch (e) {
+                        console.error("Error creating default profile:", e);
+                    }
                 }
-            } catch (error) {
-                console.error('Initial authentication failed:', error);
-            } finally {
-                isAuthReady = true;
+
+                // 사용자 정보로 UI를 업데이트합니다.
+                userSchoolNameSpan.textContent = currentUserProfile.schoolName || '학교 정보 없음';
+                userIdSpan.textContent = currentUserProfile.userId;
+                userInfoDiv.classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
+
+            } else {
+                // 로그인되지 않은 경우
+                console.log('No user is signed in.');
+                currentUserProfile = null;
+                
+                // 로그인 버튼을 표시하고 사용자 정보는 숨깁니다.
+                loginButton.classList.remove('hidden');
+                userInfoDiv.classList.add('hidden');
+                loadingSpinner.classList.add('hidden');
             }
-        }
+            
+            // 인증 상태에 관계없이 초기 데이터 로딩을 시작합니다.
+            updateDataBasedOnUser();
+        });
         
-        // 로그인 버튼 클릭 시 /login으로 이동
+        // 로그인 페이지로 이동하는 이벤트 리스너
         loginButton.addEventListener('click', () => {
             window.location.href = '/login';
         });
 
-        // 사용자 데이터에 따라 UI를 업데이트하는 함수
-        function updateUIWithUserData() {
+        // 사용자 데이터에 따라 UI와 데이터를 업데이트하는 함수
+        function updateDataBasedOnUser() {
             if (currentUserProfile) {
-                userSchoolNameSpan.textContent = currentUserProfile.schoolName || '학교 정보 없음';
-                userIdSpan.textContent = currentUserProfile.userId;
+                // 로그인된 경우, 사용자 프로필에 맞춰 급식과 시간표 정보를 가져옵니다.
                 timetableTitle.textContent = `${currentUserProfile.grade}학년 ${currentUserProfile.classNum}반 시간표`;
-                
-                // 사용자 데이터로 급식 및 시간표 정보 새로고침
-                switchTab(menuTab.classList.contains('border-white') ? 'menu' : 'weather');
+                switchTab('menu');
+                fetchMealData(formatDate(new Date()), currentUserProfile);
                 fetchAndRenderWeeklyTimetable(currentWeekMonday, currentUserProfile);
             } else {
-                // 로그인되지 않은 경우 기본값으로 설정
+                // 로그인되지 않은 경우, 기본값으로 UI를 업데이트합니다.
                 timetableTitle.textContent = `시간표`;
                 
-                // 기본값으로 급식 및 시간표 정보 표시
+                // 기본 급식 및 시간표 정보 표시
                 switchTab('menu');
                 fetchMealData(formatDate(new Date()));
                 fetchAndRenderWeeklyTimetable(currentWeekMonday);
@@ -834,8 +825,6 @@
         menuTab.addEventListener('click', () => switchTab('menu'));
         weatherTab.addEventListener('click', () => switchTab('weather'));
         
-        // 페이지 로드 시 인증 프로세스 시작
-        handleInitialAuth();
     </script>
 </body>
 </html>
