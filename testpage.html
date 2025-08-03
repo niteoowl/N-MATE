@@ -270,14 +270,14 @@
                 </div>
             </div>
             
-            <!-- 2025 수능 디데이 섹션 -->
+            <!-- 두근두근 설레는 시험 섹션 (수정된 부분) -->
             <div class="mt-8">
-                <h3 class="text-xl font-bold mb-4">2025 수능 디데이</h3>
-                <div class="grid grid-cols-4 text-center">
-                    <div><p class="font-medium">3모</p><p class="text-sm text-gray-400">종료됨</p></div>
-                    <div><p class="font-medium">6모</p><p class="text-sm text-gray-400">종료됨</p></div>
-                    <div class="flex flex-col items-center"><p class="font-bold text-[--color-blue]">9모</p><p class="font-bold text-[--color-blue]">D-33</p><div class="mt-1 w-1 h-1 bg-[--color-blue] rounded-full"></div></div>
-                    <div><p class="font-bold">수능</p><p class="font-bold">D-104</p></div>
+                <h3 class="text-xl font-bold mb-4">두근두근 설레는 시험</h3>
+                <div id="exam-dday-section" class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+                    <!-- JavaScript로 동적으로 시험 디데이가 추가됩니다 -->
+                    <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                        <p class="text-gray-400">시험 일정을 불러오는 중...</p>
+                    </div>
                 </div>
             </div>
             
@@ -370,7 +370,9 @@
         const currentWeekDisplay = document.getElementById('current-week-display');
         const timetableTitle = document.getElementById('timetable-title');
         const authUiContainer = document.getElementById('auth-ui-container');
-        const academicScheduleContent = document.getElementById('academic-schedule-content'); // 학사일정 컨테이너
+        const academicScheduleContent = document.getElementById('academic-schedule-content');
+        // 새로운 시험 디데이 섹션
+        const examDdaySection = document.getElementById('exam-dday-section');
 
         let currentDate = new Date();
         let currentWeekMonday = getMonday(currentDate);
@@ -494,6 +496,8 @@
                 
                 // 학사일정 정보 가져오기
                 fetchAcademicSchedule(userProfile.sdSchulCode, userProfile.atptOfcdcScCode);
+                // 시험 디데이 정보 가져오기 (새로 추가)
+                fetchAndRenderExamDdays(userProfile.sdSchulCode, userProfile.atptOfcdcScCode);
 
             } else {
                 // 사용자 프로필이 없는 경우
@@ -520,6 +524,11 @@
                     <p class="text-gray-400">로그인하여 학사일정을 확인하세요.</p>
                 </div>
             `;
+            examDdaySection.innerHTML = `
+                <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                    <p class="text-gray-400">로그인하여 시험 일정을 확인하세요.</p>
+                </div>
+            `;
         }
 
         // 프로필 설정 필요 상태 UI (로그인은 되었지만 프로필이 없는 경우)
@@ -542,6 +551,11 @@
                     <p class="text-gray-400">프로필 설정을 완료해야 학사일정을 확인할 수 있어요.</p>
                 </div>
              `;
+             examDdaySection.innerHTML = `
+                <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                    <p class="text-gray-400">프로필 설정을 완료해야 시험 일정을 확인할 수 있어요.</p>
+                </div>
+            `;
         }
 
 
@@ -567,6 +581,26 @@
             const month = dateStr.substring(4, 6);
             const day = dateStr.substring(6, 8);
             return `${year}.${month}.${day}`;
+        }
+        
+        // 두 날짜 간의 D-Day를 계산하는 헬퍼 함수
+        function calculateDday(targetDateStr) {
+            const today = new Date();
+            const targetDate = new Date(targetDateStr.substring(0, 4), parseInt(targetDateStr.substring(4, 6)) - 1, targetDateStr.substring(6, 8));
+            
+            today.setHours(0, 0, 0, 0); // 오늘 날짜의 자정을 기준으로 계산
+            targetDate.setHours(0, 0, 0, 0);
+
+            const diffTime = targetDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) {
+                return 'D-Day';
+            } else if (diffDays > 0) {
+                return `D-${diffDays}`;
+            } else {
+                return `D+${Math.abs(diffDays)}`;
+            }
         }
 
         // NEIS API에서 급식 데이터를 가져오는 함수 (매개변수 추가)
@@ -742,7 +776,111 @@
             timetableContent.innerHTML = gridHtml;
         }
         
-        // 새로운 함수: NEIS API에서 학사일정 데이터를 가져오는 함수
+        // 새로운 함수: NEIS API에서 학사일정 데이터를 가져와서 시험 디데이를 계산하고 렌더링
+        async function fetchAndRenderExamDdays(schoolCode, officeCode) {
+            examDdaySection.innerHTML = `
+                <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                    <p class="text-gray-400">시험 일정을 불러오는 중...</p>
+                </div>
+            `;
+
+            const currentYear = new Date().getFullYear();
+            const AA_FROM_YMD = `${currentYear}0101`;
+            const AA_TO_YMD = `${currentYear}1231`;
+            const apiKey = '0c3b4def034a4eb5b75e830500a30898';
+            const apiUrl = `https://open.neis.go.kr/hub/SchoolSchedule?KEY=${apiKey}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&AA_FROM_YMD=${AA_FROM_YMD}&AA_TO_YMD=${AA_TO_YMD}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
+                    examDdaySection.innerHTML = `
+                        <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                            <p class="text-gray-400">시험 정보가 없습니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (data.SchoolSchedule && data.SchoolSchedule.length > 1 && data.SchoolSchedule[1].row) {
+                    const scheduleData = data.SchoolSchedule[1].row;
+                    
+                    const examDates = {
+                        '중간고사': null,
+                        '기말고사': null,
+                        '영어듣기평가': null,
+                    };
+                    
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    // 학사일정 데이터를 순회하며 가장 빠른 시험 날짜를 찾습니다.
+                    scheduleData.forEach(event => {
+                        const eventName = event.EVENT_NM;
+                        const eventDateStr = event.AA_YMD;
+                        
+                        // 이미 날짜를 찾은 시험은 건너뜁니다.
+                        if (examDates['중간고사'] && examDates['기말고사'] && examDates['영어듣기평가']) return;
+                        
+                        // 정규표현식을 사용하여 유연하게 일정을 찾습니다.
+                        if (eventName.includes('중간') && eventName.includes('고사') && !examDates['중간고사']) {
+                            examDates['중간고사'] = eventDateStr;
+                        } else if (eventName.includes('기말') && eventName.includes('고사') && !examDates['기말고사']) {
+                            examDates['기말고사'] = eventDateStr;
+                        } else if (eventName.includes('영어듣기') && eventName.includes('평가') && !examDates['영어듣기평가']) {
+                            examDates['영어듣기평가'] = eventDateStr;
+                        }
+                    });
+
+                    let examHtml = '';
+                    let foundExam = false;
+
+                    // 찾은 시험 날짜를 바탕으로 D-Day를 계산하고 HTML을 생성합니다.
+                    for (const examName in examDates) {
+                        const examDateStr = examDates[examName];
+                        if (examDateStr) {
+                            foundExam = true;
+                            const dDay = calculateDday(examDateStr);
+                            let statusText = dDay;
+                            let statusColor = 'text-[--color-blue]';
+                            
+                            // 날짜가 이미 지났으면 "종료됨"으로 표시
+                            if (dDay.startsWith('D+')) {
+                                statusText = '종료됨';
+                                statusColor = 'text-gray-400';
+                            }
+
+                            examHtml += `
+                                <div class="p-4 bg-[--bg-secondary] rounded-2xl flex flex-col items-center justify-center h-24">
+                                    <p class="font-medium">${examName}</p>
+                                    <p class="font-bold ${statusColor}">${statusText}</p>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    if (foundExam) {
+                        examDdaySection.innerHTML = examHtml;
+                    } else {
+                        examDdaySection.innerHTML = `
+                            <div class="flex items-center justify-center col-span-2 sm:col-span-3 h-24">
+                                <p class="text-gray-400">예정된 시험 정보가 없습니다.</p>
+                            </div>
+                        `;
+                    }
+
+                } else {
+                    examDdaySection.innerHTML = `<p class="text-red-500">시험 정보를 가져올 수 없습니다.</p>`;
+                }
+
+            } catch (error) {
+                console.error('Failed to fetch exam D-day data:', error);
+                examDdaySection.innerHTML = `<p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p>`;
+            }
+        }
+        
+        // 기존 함수: NEIS API에서 학사일정 데이터를 가져와서 렌더링하는 함수
         async function fetchAcademicSchedule(schoolCode, officeCode) {
             academicScheduleContent.innerHTML = `
                 <div class="flex items-center justify-center p-4">
