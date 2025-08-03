@@ -739,10 +739,9 @@
                 const name = signupNameInput.value.trim();
                 const email = signupEmailInput.value.trim();
                 const password = signupPasswordInput.value;
-                // UI에 표시된 전체 이름이 아닌, 실제 학교 이름을 사용
                 const schoolName = selectedSchoolName.dataset.schoolName; 
                 const schoolCode = selectedSchoolName.dataset.schoolCode;
-                const schoolOfficeCode = selectedSchoolName.dataset.schoolOfficeCode; // 교육청 코드 추가
+                const schoolOfficeCode = selectedSchoolName.dataset.schoolOfficeCode;
                 const grade = gradeSelect.value;
                 const classNum = classSelect.value;
                 
@@ -756,22 +755,20 @@
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    // Firestore에 사용자 추가 정보 저장
-                    const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/userProfile`);
+                    // Firestore에 사용자 추가 정보 저장 - 요청하신 형식으로 변경
+                    // 예시에서 제공된 'studentNum' 필드는 사용자 입력으로 제공되지 않아 제거했습니다.
+                    const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/user_data`);
                     await setDoc(userRef, {
-                        uid: user.uid,
-                        name: name,
-                        email: email,
-                        school: {
-                            name: schoolName,
-                            code: schoolCode,
-                            officeCode: schoolOfficeCode // 교육청 코드 저장
-                        },
-                        grade: grade,
-                        class: classNum,
-                        createdAt: new Date()
+                        atptOfcdcScCode: schoolOfficeCode,
+                        classNum: parseInt(classNum, 10),
+                        grade: parseInt(grade, 10),
+                        schoolName: schoolName,
+                        sdSchulCode: schoolCode,
+                        updatedAt: new Date()
                     });
                     
+                    // 기존에 저장되던 uid, name, email 필드는 요청하신 형식에 없으므로 제외했습니다.
+
                     showMessage("회원가입에 성공했습니다! 환영합니다!");
                     console.log("회원가입 성공!");
 
