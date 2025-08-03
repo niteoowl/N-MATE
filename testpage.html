@@ -646,19 +646,19 @@
             });
 
             let gridHtml = `
-                <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid">
-                    <div class="grid-cell-day rounded-tl-3xl">교시</div>
-                    <div class="grid-cell-day">월</div>
-                    <div class="grid-cell-day">화</div>
-                    <div class="grid-cell-day">수</div>
-                    <div class="grid-cell-day">목</div>
-                    <div class="grid-cell-day rounded-tr-3xl">금</div>
+                <div class="grid grid-cols-6 text-center text-sm font-medium timetable-grid overflow-x-auto no-scrollbar">
+                    <div class="grid-cell-day rounded-tl-3xl min-w-[50px] md:min-w-0">교시</div>
+                    <div class="grid-cell-day min-w-[100px] md:min-w-0">월</div>
+                    <div class="grid-cell-day min-w-[100px] md:min-w-0">화</div>
+                    <div class="grid-cell-day min-w-[100px] md:min-w-0">수</div>
+                    <div class="grid-cell-day min-w-[100px] md:min-w-0">목</div>
+                    <div class="grid-cell-day rounded-tr-3xl min-w-[100px] md:min-w-0">금</div>
             `;
             
             const maxPeriods = Math.max(...Object.values(timetableByDay).map(dayData => dayData.length));
             
             for (let period = 1; period <= maxPeriods; period++) {
-                gridHtml += `<div class="grid-cell-hour">${period}</div>`;
+                gridHtml += `<div class="grid-cell-hour min-w-[50px] md:min-w-0">${period}</div>`;
                 days.forEach((day, index) => {
                     const subject = timetableByDay[day].find(item => parseInt(item.PERIO) === period);
                     const isLastRow = period === maxPeriods;
@@ -670,7 +670,7 @@
                         cellClasses += (isLastCol) ? ' rounded-br-3xl' : '';
                     }
 
-                    gridHtml += `<div class="${cellClasses}">`;
+                    gridHtml += `<div class="${cellClasses} min-w-[100px] md:min-w-0">`;
                     if (subject) {
                         gridHtml += `
                             <span class="font-medium text-sm">${subject.ITRT_CNTNT}</span>
