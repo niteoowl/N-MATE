@@ -755,10 +755,11 @@
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
                     
-                    // Firestore에 사용자 추가 정보 저장 - 요청하신 형식으로 변경
-                    // 예시에서 제공된 'studentNum' 필드는 사용자 입력으로 제공되지 않아 제거했습니다.
+                    // Firestore에 사용자 추가 정보 저장
                     const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/user_data`);
                     await setDoc(userRef, {
+                        // 요청하신 대로 name 필드를 추가했습니다.
+                        name: name,
                         atptOfcdcScCode: schoolOfficeCode,
                         classNum: parseInt(classNum, 10),
                         grade: parseInt(grade, 10),
@@ -766,8 +767,6 @@
                         sdSchulCode: schoolCode,
                         updatedAt: new Date()
                     });
-                    
-                    // 기존에 저장되던 uid, name, email 필드는 요청하신 형식에 없으므로 제외했습니다.
 
                     showMessage("회원가입에 성공했습니다! 환영합니다!");
                     console.log("회원가입 성공!");
