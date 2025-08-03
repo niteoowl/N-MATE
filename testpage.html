@@ -805,31 +805,35 @@
 
                 if (data.SchoolSchedule && data.SchoolSchedule.length > 1 && data.SchoolSchedule[1].row) {
                     const scheduleData = data.SchoolSchedule[1].row;
-                    
-                    const examDates = {
-                        '중간고사': null,
-                        '기말고사': null,
-                        '영어듣기평가': null,
-                    };
-                    
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
 
-                    // 학사일정 데이터를 순회하며 가장 빠른 시험 날짜를 찾습니다.
+                    const exams = {
+                        '1학기 중간고사': null,
+                        '1학기 기말고사': null,
+                        '2학기 중간고사': null,
+                        '2학기 기말고사': null,
+                    };
+
+                    // 학사일정 데이터를 순회하며 가장 가까운 시험 일정을 찾습니다.
+                    scheduleData.sort((a, b) => a.AA_YMD.localeCompare(b.AA_YMD));
+                    
                     scheduleData.forEach(event => {
                         const eventName = event.EVENT_NM;
-                        const eventDateStr = event.AA_YMD;
-                        
-                        // 이미 날짜를 찾은 시험은 건너뜁니다.
-                        if (examDates['중간고사'] && examDates['기말고사'] && examDates['영어듣기평가']) return;
-                        
-                        // 정규표현식을 사용하여 유연하게 일정을 찾습니다.
-                        if (eventName.includes('중간') && eventName.includes('고사') && !examDates['중간고사']) {
-                            examDates['중간고사'] = eventDateStr;
-                        } else if (eventName.includes('기말') && eventName.includes('고사') && !examDates['기말고사']) {
-                            examDates['기말고사'] = eventDateStr;
-                        } else if (eventName.includes('영어듣기') && eventName.includes('평가') && !examDates['영어듣기평가']) {
-                            examDates['영어듣기평가'] = eventDateStr;
+                        const eventDate = new Date(event.AA_YMD.slice(0, 4), parseInt(event.AA_YMD.slice(4, 6)) - 1, event.AA_YMD.slice(6, 8));
+                        eventDate.setHours(0, 0, 0, 0);
+
+                        // 오늘 날짜 이후의 일정만 고려합니다.
+                        if (eventDate >= today) {
+                            if (eventName.includes('1학기') && eventName.includes('중간') && eventName.includes('고사') && !exams['1학기 중간고사']) {
+                                exams['1학기 중간고사'] = event.AA_YMD;
+                            } else if (eventName.includes('1학기') && eventName.includes('기말') && eventName.includes('고사') && !exams['1학기 기말고사']) {
+                                exams['1학기 기말고사'] = event.AA_YMD;
+                            } else if (eventName.includes('2학기') && eventName.includes('중간') && eventName.includes('고사') && !exams['2학기 중간고사']) {
+                                exams['2학기 중간고사'] = event.AA_YMD;
+                            } else if (eventName.includes('2학기') && eventName.includes('기말') && eventName.includes('고사') && !exams['2학기 기말고사']) {
+                                exams['2학기 기말고사'] = event.AA_YMD;
+                            }
                         }
                     });
 
@@ -837,30 +841,32 @@
                     let foundExam = false;
 
                     // 찾은 시험 날짜를 바탕으로 D-Day를 계산하고 HTML을 생성합니다.
-                    for (const examName in examDates) {
-                        const examDateStr = examDates[examName];
+                    for (const examName in exams) {
+                        const examDateStr = exams[examName];
                         if (examDateStr) {
                             foundExam = true;
                             const dDay = calculateDday(examDateStr);
                             let statusText = dDay;
                             let statusColor = 'text-[--color-blue]';
                             
-                            // 날짜가 이미 지났으면 "종료됨"으로 표시
-                            if (dDay.startsWith('D+')) {
-                                statusText = '종료됨';
-                                statusColor = 'text-gray-400';
+                            // 7일 이내면 색상 변경
+                            if (dDay.startsWith('D-') && parseInt(dDay.split('-')[1]) <= 7) {
+                                statusColor = 'text-red-500';
                             }
-
-                            examHtml += `
-                                <div class="p-4 bg-[--bg-secondary] rounded-2xl flex flex-col items-center justify-center h-24">
-                                    <p class="font-medium">${examName}</p>
-                                    <p class="font-bold ${statusColor}">${statusText}</p>
-                                </div>
-                            `;
+                            
+                            // 종료된 시험은 표시하지 않습니다.
+                            if (!dDay.startsWith('D+')) {
+                                examHtml += `
+                                    <div class="p-4 bg-[--bg-secondary] rounded-2xl flex flex-col items-center justify-center h-24">
+                                        <p class="font-medium">${examName}</p>
+                                        <p class="font-bold text-2xl ${statusColor}">${statusText}</p>
+                                    </div>
+                                `;
+                            }
                         }
                     }
 
-                    if (foundExam) {
+                    if (foundExam && examHtml !== '') {
                         examDdaySection.innerHTML = examHtml;
                     } else {
                         examDdaySection.innerHTML = `
@@ -869,7 +875,6 @@
                             </div>
                         `;
                     }
-
                 } else {
                     examDdaySection.innerHTML = `<p class="text-red-500">시험 정보를 가져올 수 없습니다.</p>`;
                 }
