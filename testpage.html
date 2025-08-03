@@ -105,6 +105,37 @@
             visibility: visible;
             transform: translateY(0);
         }
+        
+        /* 커뮤니티 배너 컨테이너의 최소 높이 상향 조정 */
+        .community-banner {
+            min-height: 200px; /* 모바일에서 충분한 높이를 확보 */
+            position: relative; /* 자식 요소의 절대 위치 기준 */
+        }
+        
+        /* 텍스트 컨테이너의 높이를 조정 */
+        .community-text-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 100px; /* 텍스트가 들어갈 최소 높이 */
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        /* 반응형 폰트 크기 및 패딩 재조정 */
+        @media (min-width: 768px) {
+            .community-banner {
+                min-height: 250px; /* 데스크톱에서 더 높은 높이 확보 */
+            }
+            .community-text-container {
+                padding: 1.5rem;
+                min-height: 120px;
+            }
+        }
     </style>
     <!-- Firebase SDK Scripts -->
     <script type="module">
@@ -167,17 +198,16 @@
         </div>
 
         <!-- 커뮤니티 섹션 -->
-        <!-- 텍스트 잘림 문제를 해결하기 위해 패딩과 폰트 크기를 모바일 우선으로 수정 -->
-        <div class="relative bg-gray-800 rounded-3xl overflow-hidden mb-6">
-            <img src="https://i.postimg.cc/wv0jSJrc/001-88.png" alt="커뮤니티 배경" class="w-full h-auto object-cover">
+        <!-- 이미지 높이 문제 해결을 위해 min-height를 설정하고 텍스트 컨테이너를 조정 -->
+        <div class="relative bg-gray-800 rounded-3xl overflow-hidden mb-6 community-banner">
+            <img src="https://i.postimg.cc/wv0jSJrc/001-88.png" alt="커뮤니티 배경" class="w-full h-full absolute top-0 left-0 object-cover">
             <div class="absolute inset-0 bg-black bg-opacity-50 p-4 md:p-6 flex flex-col justify-between">
                 <button class="ml-auto p-2 rounded-full text-white hover:bg-gray-700 hover:bg-opacity-75 transition-colors duration-200">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
                 <div class="mt-auto">
-                    <!-- 모바일에서 텍스트가 잘리지 않도록 폰트 크기를 sm:text-base md:text-xl로 변경 -->
+                    <!-- 텍스트 잘림 문제를 해결하기 위해 폰트 크기를 모바일 우선으로 수정 -->
                     <h2 class="text-white text-base md:text-xl font-bold mb-2">N-MATE 3.0으로 완전히 달라졌어요!</h2>
-                    <!-- 모바일에서 텍스트가 잘리지 않도록 폰트 크기를 sm:text-xs md:text-sm로 변경 -->
                     <p class="text-white text-xs md:text-sm mb-4">오늘도 N-MATE는 변화합니다</p>
                     <button class="bg-gray-700 bg-opacity-50 hover:bg-opacity-75 text-white font-medium py-2 px-4 rounded-full flex items-center space-x-2 transition-colors duration-200">
                         <span>더 보기</span>
