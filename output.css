@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Variables */
+:root {
+  --bg-primary: #17171c;
+  --bg-secondary: #201f27;
+  --bg-hover: #33323a;
+  --text-primary: #E0E0E0;
+  --text-secondary: #A0A0A0;
+  --color-blue: #007BFF;
+  --border-color: #201f27;
+}
+
+/* Container Customization */
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Font (to use WantedSansVariable, make sure to import the font in HTML or CSS) */
+@font-face {
+  font-family: 'WantedSansVariable';
+  src: url('/fonts/WantedSansVariable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* Example utility overrides or extensions (if any specific ones are needed) */
+
+/* Dark Background Defaults */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'WantedSansVariable', sans-serif;
+}
+
+/* Button Hover */
+.button {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease;
+}
+.button:hover {
+  background-color: var(--bg-hover);
+}
+
+/* Text classes */
+.text-primary {
+  color: var(--text-primary);
+}
+.text-secondary {
+  color: var(--text-secondary);
+}
+.bg-primary {
+  background-color: var(--bg-primary);
+}
+.bg-secondary {
+  background-color: var(--bg-secondary);
+}
+.bg-hover {
+  background-color: var(--bg-hover);
+}
+.border-color {
+  border-color: var(--border-color);
+}
+.text-blue {
+  color: var(--color-blue);
+}
+
+/* Add any used Tailwind utility classes below (based on your usage) */
+.flex {
+  display: flex;
+}
+.items-center {
+  align-items: center;
+}
+.justify-center {
+  justify-content: center;
+}
+.p-1 {
+  padding: 0.25rem;
+}
+.p-2 {
+  padding: 0.5rem;
+}
+.p-4 {
+  padding: 1rem;
+}
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+.transition-colors {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+}
+.duration-200 {
+  transition-duration: 200ms;
+}
+.text-[--text-secondary] {
+  color: var(--text-secondary);
+}
+.hover\:bg-[--bg-secondary]:hover {
+  background-color: var(--bg-secondary);
+}
+.hover\:text-white:hover {
+  color: white;
+}
+.text-white {
+  color: white;
+}
+.text-sm {
+  font-size: 0.875rem;
+}
+.text-base {
+  font-size: 1rem;
+}
+.text-xl {
+  font-size: 1.25rem;
+}
+.text-2xl {
+  font-size: 1.5rem;
+}
+.w-full {
+  width: 100%;
+}
+.max-w-screen-sm {
+  max-width: 640px;
+}
+.max-w-screen-md {
+  max-width: 768px;
+}
+.max-w-screen-lg {
+  max-width: 1024px;
+}
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+.mt-4 {
+  margin-top: 1rem;
+}
+.mb-4 {
+  margin-bottom: 1rem;
+}
+.shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15);
+}
+.rounded-2xl {
+  border-radius: 1rem;
+}
+.bg-opacity-50 {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.backdrop-blur {
+  backdrop-filter: blur(8px);
+}
+.gap-2 {
+  gap: 0.5rem;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.grid {
+  display: grid;
+}
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.aspect-square {
+  aspect-ratio: 1 / 1;
+}
+.aspect-video {
+  aspect-ratio: 16 / 9;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
