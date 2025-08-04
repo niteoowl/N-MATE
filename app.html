@@ -3,540 +3,760 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE | OneBox Store</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- PWA Manifest Link -->
+    <title>N-MATE (엔메이트) - Google Play 앱</title>
+    <!-- PWA를 위한 매니페스트 파일 연결 -->
     <link rel="manifest" href="/manifest.json">
+    <!-- Tailwind CSS 스크립트 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ffffff; /* 배경색을 흰색으로 변경 */
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            display: flex; /* Make body a flex container */
-            flex-direction: column; /* Stack children vertically */
-            min-height: 100vh; /* Ensure body takes full viewport height */
+            font-family: 'Roboto', sans-serif;
+            background-color: #f1f3f4;
+            color: #202124;
         }
-        /* Line clamping for text truncation - Removed as we're now toggling visibility of full content */
-        /* .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
+        .container-play {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .app-header {
+            display: flex;
+            align-items: flex-start;
+            padding: 24px;
+            background-color: #ffffff;
+        }
+        .app-icon {
+            width: 96px;
+            height: 96px;
+            min-width: 96px;
+            min-height: 96px;
+            border-radius: 20px;
             overflow: hidden;
-        } */
-        /* Underline effect on hover for links */
-        .text-blue-500:hover {
-            text-decoration: underline;
+            background-color: #e8f0fe;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 기존 텍스트 아이콘 스타일 제거, 이미지에 맞게 수정 */
+        }
+        .app-details {
+            margin-left: 16px;
+            flex-grow: 1;
+        }
+        .rating-reviews {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .rating-reviews > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 16px;
+            border-right: 1px solid #dadce0;
+        }
+        .rating-reviews > div:last-child {
+            border-right: none;
+        }
+        .rating-value {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .star-icon {
+            width: 16px;
+            height: 16px;
+            fill: #70757a;
+            color: #70757a;
+        }
+        /* PWA 설치 버튼 스타일 */
+        .install-button {
+            background-color: #01875f;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 24px;
+            transition: background-color 0.2s;
+        }
+        .install-button:hover {
+            background-color: #01664a;
+        }
+        /* PWA 제거 버튼 스타일 */
+        .uninstall-button {
+            background-color: #f1f3f4;
+            color: #5f6368;
+            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 24px;
+            transition: background-color 0.2s;
+            border: 1px solid #dadce0;
+        }
+        .uninstall-button:hover {
+            background-color: #e8eaed;
         }
 
-        /* Custom style for carousel buttons to ensure visibility on small screens */
-        .carousel-button {
+        /* 스크린샷 섹션 디자인 수정 및 버튼 추가 */
+        .screenshots-wrapper {
+            position: relative;
+            padding: 16px 0;
+        }
+        .screenshots-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 16px;
+            padding: 0 27px; /* 좌우 여백을 더 넓게 설정 */
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            cursor: grab; /* 스와이프를 시사하는 커서 추가 */
+            scroll-behavior: smooth; /* 부드러운 스크롤 효과 */
+        }
+        .screenshots-container::-webkit-scrollbar {
+            display: none;
+        }
+        .screenshot-item {
+            width: 220px;
+            min-width: 220px;
+            height: 400px;
+            background-color: #e8eaed;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid #dadce0;
+            cursor: pointer; /* 클릭 가능함을 시사하는 커서 추가 */
+        }
+        .scroll-button {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: rgba(255, 255, 255, 0.75); /* Semi-transparent background */
-            border-radius: 9999px; /* Full rounded */
-            padding: 0.5rem; /* p-2 */
-            transition: background-color 0.2s ease, opacity 0.2s ease;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #dadce0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
             z-index: 10;
+            transition: background-color 0.2s;
+        }
+        .scroll-button:hover {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #prev-scroll-btn {
+            left: 24px;
+        }
+        #next-scroll-btn {
+            right: 24px;
+        }
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .screenshots-container {
+                padding: 0 16px;
+            }
+            #prev-scroll-btn {
+                left: 4px;
+            }
+            #next-scroll-btn {
+                right: 4px;
+            }
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-top: 1px solid #dadce0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .section-header:hover {
+            background-color: #f8f9fa;
+        }
+        .section-header h2 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        .description-text {
+            padding: 0 24px 24px;
+            color: #5f6368;
+            line-height: 1.6;
+        }
+        /* 데이터 보안 전체화면 박스 관련 CSS */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 100%;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: left 0.3s ease-in-out;
+        }
+        .fullscreen-overlay.is-visible {
+            left: 0;
+        }
+        .fullscreen-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #dadce0;
+        }
+        .close-button {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+        .fullscreen-content {
+            padding: 24px;
         }
 
-        .carousel-button:hover {
-            background-color: rgba(255, 255, 255, 1); /* Fully opaque on hover */
+        /* 리뷰 작성 영역 및 별점 스타일 */
+        .rating-stars {
+            display: flex;
+            gap: 4px;
+        }
+        .rating-stars svg {
+            cursor: pointer;
         }
 
-        .carousel-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        /* 새로운 리뷰 디자인 스타일 */
+        .review-box {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #dadce0;
+        }
+        .review-box:last-child {
+            margin-bottom: 0;
+        }
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .review-header h3 {
+            font-size: 16px;
+            font-weight: 500;
+            color: #202124;
+        }
+        .review-header span {
+            font-size: 12px;
+            color: #70757a;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+        .review-rating-stars {
+            color: #ffc107;
+            font-size: 14px;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+        .review-text {
+            font-size: 14px;
+            color: #5f6368;
+            line-height: 1.5;
+            margin-top: 8px;
         }
 
-        /* Specific style for sticky header blur effect */
-        .sticky-header-scrolled {
-            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white */
-            backdrop-filter: blur(10px); /* Apply blur effect */
-            -webkit-backdrop-filter: blur(10px); /* For Safari support */
+        /* 전체 화면 갤러리 스타일 */
+        .fullscreen-gallery-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none; /* 초기에는 숨김 */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+        .fullscreen-gallery-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        #fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        .gallery-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            user-select: none;
+            transition: background-color 0.2s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent; /* 탭 하이라이트 제거 */
+        }
+        .gallery-button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        #prev-btn {
+            left: 20px;
+        }
+        #next-btn {
+            right: 20px;
+        }
+        #close-gallery {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sticky Header for Scroll Effect -->
-    <header class="fixed top-0 left-0 right-0 z-20 w-full max-w-xl mx-auto py-2 px-6 transition-colors duration-300 bg-opacity-0" id="sticky-header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <!-- Store Logo -->
-                <img src="https://i.postimg.cc/fRQNJRbq/001-82.png" alt="App Store Logo" class="h-8 mr-2">
-                <!-- This will be the shrinking title, initially hidden -->
-                <h1 class="text-xl font-bold text-gray-900 opacity-0 transition-opacity duration-300" id="header-title-sticky">N-MATE</h1>
-            </div>
-            <!-- Back Button on Sticky Header (optional, if needed for complex navigation) -->
-            <!-- <a href="#" class="text-blue-500 hover:text-blue-600 font-semibold flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-                투데이
-            </a> -->
+<div class="container-play">
+
+    <!-- 앱 헤더 섹션 -->
+    <div class="app-header">
+        <!-- 요청에 따라 로고 이미지를 URL로 변경했습니다. -->
+        <div class="app-icon">
+            <img src="https://nmate.kr/image/favicon.png" alt="앱 로고" class="w-full h-full object-cover">
         </div>
-    </header>
-
-    <!-- Main Container - Adjusted max-width and added mx-auto for centering. Added pt-16 for sticky header space. -->
-    <div class="w-full max-w-xl bg-white rounded-3xl overflow-hidden mx-auto pt-16 pb-16"> <!-- Added pb-16 for bottom nav bar -->
-
-        <!-- Back Button (Simple representation, now scrolls with content) -->
-        <div class="px-6 pt-4">
-            <a href="javascript:history.back()" class="text-blue-500 hover:text-blue-600 font-semibold flex items-center">
-                <!-- Simple left arrow SVG icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                </svg>
-                
-            </a>
-        </div>
-
-        <!-- App Header Section - Now this part scrolls -->
-        <section class="flex flex-col md:flex-row items-center md:items-start px-6 pt-4 pb-0 md:pb-0">
-            <!-- App Icon -->
-            <img src="https://i.postimg.cc/6pwt3pj6/001-100.png" alt="App Icon" class="w-28 h-28 md:w-32 md:h-32 rounded-2xl md:rounded-3xl mb-4 md:mb-0 md:mr-6 object-cover flex-shrink-0">
-            <!-- Fallback if image fails -->
-            <script>
-                document.querySelector('img[alt="App Icon"]').onerror = function() {
-                    this.src = 'https://placehold.co/120x120/4a90e2/ffffff?text=APP';
-                };
-            </script>
-            <!-- Right Content Area: App Info + Button Group -->
-            <div class="flex-grow w-full md:flex md:flex-row md:items-start md:justify-between text-center md:text-left">
-                <!-- App Name, Description, Developer (Left Part) -->
-                <div class="flex-grow">
-                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-1 transition-opacity duration-300" id="main-app-title">N-MATE</h1>
-                    <p class="text-gray-600 text-base mb-2">부산남중 학생을 위한 학교생활 올인원 앱</p>
-                    <p class="text-blue-500 text-sm md:text-base mb-1">OneBox</p>
-                </div>
-
-                <!-- Get Button and In-App Purchase (Right Part) -->
-                <div class="flex flex-col items-center md:items-end mt-4 md:mt-0 md:ml-4 flex-shrink-0">
-                    <button id="install-button" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2.5 px-8 rounded-full text-lg transition-colors duration-200">
-                        받기
-                    </button>
-                    <p class="text-gray-500 text-xs mt-1">인앱 구매</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Rating and Age Rating Section -->
-        <section class="flex justify-around items-center px-6 py-4 border-b border-gray-200">
-            <div class="text-center">
-                <p class="text-xl font-bold text-gray-900">4.8</p>
-                <p class="text-sm text-gray-500">★★★★★</p>
-                <p class="text-xs text-gray-500">평가</p>
-            </div>
-            <div class="h-10 w-px bg-gray-300"></div>
-            <div class="text-center">
-                <p class="text-xl font-bold text-gray-900">4+</p>
-                <p class="text-sm text-gray-500">연령</p>
-                <p class="text-xs text-gray-500">세 이상</p>
-            </div>
-            <div class="h-10 w-px bg-gray-300"></div>
-            <div class="text-center">
-                <p class="text-xl font-bold text-gray-900">#1</p>
-                <p class="text-sm text-gray-500">모험</p>
-                <p class="text-xs text-gray-500">게임</p>
-            </div>
-        </section>
-
-        <!-- Screenshots Section - Now a carousel -->
-        <section class="px-6 py-4"> <!-- Section has consistent padding -->
-            <h2 class="text-xl font-bold text-gray-900 mb-4">미리보기</h2>
-            <div class="relative"> <!-- Carousel wrapper for buttons -->
-                <!-- Screenshots Container (overflow-x-hidden to hide scrollbar) -->
-                <div id="screenshots-container" class="flex overflow-x-hidden space-x-4 pb-4">
-                    <!-- Screenshot 1 -->
-                    <img src="https://i.postimg.cc/tTKx6bPR/1.png" alt="Screenshot 1" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
-                    <script>
-                        document.querySelector('img[alt="Screenshot 1"]').onerror = function() {
-                            this.src = 'https://placehold.co/200x350/a78bfa/ffffff?text=Screenshot+1';
-                        };
-                    </script>
-                    <!-- Screenshot 2 -->
-                    <img src="https://i.postimg.cc/C5Xysv74/g-1.png" alt="Screenshot 2" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
-                    <script>
-                        document.querySelector('img[alt="Screenshot 2"]').onerror = function() {
-                            this.src = 'https://placehold.co/200x350/60a5fa/ffffff?text=Screenshot+2';
-                        };
-                    </script>
-                    <!-- Screenshot 3 -->
-                    <img src="https://i.postimg.cc/HxcMjnrP/3.png" alt="Screenshot 3" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
-                    <script>
-                        document.querySelector('img[alt="Screenshot 3"]').onerror = function() {
-                            this.src = 'https://placehold.co/200x350/34d399/ffffff?text=Screenshot+3';
-                        };
-                    </script>
-                     <!-- Screenshot 4 -->
-                    <img src="https://i.postimg.cc/5tkvxL2C/4.png" alt="Screenshot 4" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
-                    <script>
-                        document.querySelector('img[alt="Screenshot 4"]').onerror = function() {
-                            this.src = 'https://placehold.co/200x350/fbbf24/ffffff?text=Screenshot+4';
-                        };
-                    </script>
-                    <!-- Screenshot 5 -->
-                    <img src="https://i.postimg.cc/D01bdNdr/5.png" alt="Screenshot 5" class="flex-shrink-0 w-48 h-88 md:w-64 md:h-112 rounded-2xl object-cover border border-gray-200">
-                    <script>
-                        document.querySelector('img[alt="Screenshot 5"]').onerror = function() {
-                            this.src = 'https://placehold.co/200x350/a78bfa/ffffff?text=Screenshot+5';
-                        };
-                    </script>
-                </div>
-                <!-- Carousel Navigation Buttons -->
-                <button id="left-arrow" class="carousel-button left-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <button id="right-arrow" class="carousel-button right-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
-            </div>
-        </section>
-
-        <!-- Description Section -->
-        <section class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">설명</h2>
-            <!-- Initial summary text -->
-            <div id="description-summary" class="text-gray-700 text-sm leading-relaxed mb-2">
-                N-MATE는 부산남중학교 학생들의 원활한 학교생활을 지원하기 위해 제공되는 통합 서비스 앱입니다.
-                시간표, 급식, 학사일정, 캘린더, 커뮤니티 등 학교생활에 필요한 주요 기능을 하나의 앱에서 제공합니다.
-            </div>
-            <!-- Full description content (initially hidden) -->
-            <div id="full-description-content" class="text-gray-700 text-sm leading-relaxed hidden">
-                <p class="mb-2">
-                    N-MATE는 부산남중학교 학생들의 원활한 학교생활을 지원하기 위해 제공되는 통합 서비스 앱입니다.
-                    시간표, 급식, 학사일정, 캘린더, 커뮤니티 등 학교생활에 필요한 주요 기능을 하나의 앱에서 제공합니다.
-                </p>
-                <p>
-                    학생별 시간표를 바로 확인할 수 있으며,
-                    급식 정보 및 각종 학교 행사·시험 일정도 간편하게 조회할 수 있습니다.
-                    또한, 개인 일정을 직접 추가할 수 있어 자기주도적인 일정 관리가 가능합니다.
-                </p>
-                <p class="mt-2">
-                    반별 커뮤니티 게시판을 통해 학생 간 소통이 가능하며,
-                    공지사항이나 숙제 등의 알림은 푸시 기능으로 실시간 전달됩니다.
-                </p>
-                <p class="mt-2">
-                    광고 없이 제공되며,
-                    가볍고 직관적인 인터페이스로 학생들이 편리하게 사용할 수 있도록 구성되어 있습니다.
-                </p>
-            </div>
-            <button id="toggle-description" class="text-blue-500 hover:text-blue-600 text-sm font-semibold">
-                더 보기
-            </button>
-        </section>
-
-        <!-- What's New Section (Simplified) -->
-        <section class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900 mb-2">새로운 기능</h2>
-            <p class="text-gray-500 text-sm mb-2">버전 2.1</p>
-            <!-- Initial summary text -->
-            <div id="whats-new-summary" class="text-gray-700 text-sm leading-relaxed mb-2">
-                내 일정 추가 기능 출시 <br>
-                메인화면 레이아웃 개선 및 시인성 향상<br>
-            </div>
-            <!-- Full whats new content (initially hidden) -->
-            <div id="full-whats-new-content" class="text-gray-700 text-sm leading-relaxed hidden">
-                <p class="mb-2">내 일정 추가 기능 출시</p>
-                <p class="mb-2">메인화면 레이아웃 개선 및 시인성 향상</p>
-                <p>버그 수정 및 안정성 향상</p>
-            </div>
-            <button id="toggle-whats-new" class="text-blue-500 hover:text-blue-600 text-sm font-semibold mt-2">
-                더 보기
-            </button>
-        </section>
-
-        <!-- Information Section -->
-        <section class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">정보</h2>
-            <div class="space-y-3">
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">제공</span>
-                    <span>OneBox</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">크기</span>
-                    <span>85.2 MB</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">카테고리</span>
-                    <span>교육</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">호환성</span>
-                    <span>iPhone, iPad, iPod touch</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">언어</span>
-                    <span>한국어, 영어</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">연령 등급</span>
-                    <span>4+</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">저작권</span>
-                    <span>© 2025 OneBox</span>
-                </div>
-                <div class="flex justify-between items-center text-gray-700 text-sm">
-                    <span class="font-semibold">인앱 구매</span>
-                    <span>아니요</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Ratings & Reviews Section -->
-        <section class="px-6 py-4">
-            <h2 class="text-xl font-bold text-gray-900 mb-4">평가 및 리뷰</h2>
-            <div class="flex items-center mb-4">
-                <div class="text-5xl font-bold text-gray-900 mr-4">4.8</div>
+        <div class="app-details">
+            <h1 class="text-2xl font-medium">N-MATE (엔메이트)</h1>
+            <p class="text-sm text-gray-500 mt-1">MateNet</p>
+            
+            <div class="rating-reviews">
                 <div>
-                    <div class="text-yellow-500 text-2xl mb-1">★★★★★</div>
-                    <p class="text-gray-500 text-sm">평가</p>
+                    <span class="rating-value">4.5★</span>
+                    <span class="text-xs text-gray-500 mt-1">리뷰 1,234개</span>
+                </div>
+                <div>
+                    <svg class="star-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.1-4.5h7.6z"/></svg>
+                    <span class="text-xs text-gray-500 mt-1">만 3세 이상</span>
+                </div>
+                <div>
+                    <svg class="star-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span class="text-xs text-gray-500 mt-1">10만+ 다운로드</span>
                 </div>
             </div>
-            <div class="space-y-4">
-                <!-- Sample Review 1 -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <p class="font-semibold text-gray-800">학교생활이 편해졌어요!</p>
-                        <p class="text-xs text-gray-500">2일 전</p>
-                    </div>
-                    <div class="text-yellow-500 text-lg mb-1">★★★★★</div>
-                    <p class="text-gray-700 text-sm leading-relaxed">
-                        시간표랑 급식 확인하는 게 너무 편해졌어요. 학사일정도 한눈에 볼 수 있어서 정말 유용합니다!
-                    </p>
-                </div>
-                <!-- Sample Review 2 -->
-                <div class="bg-gray-50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <p class="font-semibold text-gray-800">커뮤니티 기능 최고!</p>
-                        <p class="text-xs text-gray-500">1주 전</p>
-                    </div>
-                    <div class="text-yellow-500 text-lg mb-1">★★★★☆</div>
-                    <p class="text-gray-700 text-sm leading-relaxed">
-                        반 친구들이랑 쉽게 소통할 수 있어서 좋아요. 공지사항도 바로 알림으로 와서 놓칠 일이 없네요.
-                    </p>
-                </div>
-            </div>
-        </section>
-
+        </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30 max-w-xl mx-auto">
-        <div class="flex justify-around items-center h-16 text-xs text-gray-500 font-medium">
-            <a href="#" class="flex flex-col items-center p-1 text-blue-600"> <!-- Active state example -->
-                <!-- Using generic placeholder SVG for icons -->
-                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
-                </svg>
-                <span>투데이</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1">
-                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 6H12L10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V8C22 6.9 21.1 6 20 6ZM20 18H4V8H20V18Z"/>
-                </svg>
-                <span>게임</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1">
-                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.07V14H13v5.07c3.35-.37 6-3.3 6-6.91 0-3.87-3.13-7-7-7s-7 3.13-7 7c0 3.61 2.65 6.54 6 6.91z"/>
-                </svg>
-                <span>앱</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1">
-                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v-6h-2v6zm0-8h2V7h-2v2z"/>
-                </svg>
-                <span>아케이드</span>
-            </a>
-            <a href="#" class="flex flex-col items-center p-1">
-                <svg class="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/>
-                </svg>
-                <span>검색</span>
-            </a>
+    <!-- PWA 설치/제거 버튼 컨테이너 -->
+    <div class="px-6 py-4" id="pwa-buttons-container">
+        <!-- 설치 버튼 (초기에는 숨김) -->
+        <button id="install-button" class="install-button w-full hidden">설치</button>
+        <!-- 제거 버튼 (초기에는 숨김) -->
+        <button id="uninstall-button" class="uninstall-button w-full hidden">제거</button>
+    </div>
+
+    <!-- 스크린샷 섹션 -->
+    <div class="screenshots-wrapper">
+        <div class="screenshots-container" id="screenshots-container">
+            <img src="https://i.postimg.cc/tTKx6bPR/1.png" alt="앱 스크린샷 1" class="screenshot-item" onerror="this.src='https://placehold.co/220x400/e8eaed/e8eaed?text=　'">
+            <img src="https://i.postimg.cc/C5Xysv74/g-1.png" alt="앱 스크린샷 2" class="screenshot-item" onerror="this.src='https://placehold.co/220x400/e8eaed/e8eaed?text=　'">
+            <img src="https://i.postimg.cc/HxcMjnrP/3.png" alt="앱 스크린샷 3" class="screenshot-item" onerror="this.src='https://placehold.co/220x400/e8eaed/e8eaed?text=　'">
+            <img src="https://i.postimg.cc/5tkvxL2C/4.png" alt="앱 스크린샷 4" class="screenshot-item" onerror="this.src='https://placehold.co/220x400/e8eaed/e8eaed?text=　'">
+            <img src="https://i.postimg.cc/D01bdNdr/5.png" alt="앱 스크린샷 5" class="screenshot-item" onerror="this.src='https://placehold.co/220x400/e8eaed/e8eaed?text=　'">
         </div>
-    </nav>
+        <button id="prev-scroll-btn" class="scroll-button">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button id="next-scroll-btn" class="scroll-button">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
 
-    <script>
-        let deferredPrompt; // Variable to store the install event
+    <!-- 이 앱 정보 섹션 (항상 펼쳐짐) -->
+    <div class="section-header">
+        <h2>이 앱 정보</h2>
+    </div>
+    <div class="description-text">
+        <p>대한민국의 중학생을 대상으로 하는 학교생활 정보 제공 사이트. 급식, 시간표, 학사일정 정보를 제공합니다.</p>
+        <h3 class="text-lg font-medium text-black mt-4">주요 기능</h3>
+        <ul class="list-disc list-inside mt-2">
+            <li><strong>급식:</strong> 각 학교의 일일 급식 정보(메뉴명, 칼로리)를 실시간으로 제공합니다.</li>
+            <li><strong>시간표:</strong> 과목명, 교사명을 실시간으로 제공합니다.</li>
+            <li><strong>학사일정:</strong> 주요 일정(개학일, 기말고사 등)에 대한 D-Day 카운트다운을 확인할 수 있습니다.</li>
+            <li><strong>기타:</strong> 생일 축하 배너 등 사용자 참여형 기능이 있습니다.</li>
+        </ul>
+        <h3 class="text-lg font-medium text-black mt-4">앱 버전 정보</h3>
+        <ul class="list-disc list-inside mt-2">
+            <li><strong>현재 버전:</strong> 3.0v (2025년 8월 3일 배포)</li>
+            <li><strong>주요 개선 사항:</strong> 최적화 문제 해결, 계정 내 정보 수정 기능 추가.</li>
+            <li><strong>특이 사항:</strong> 아직 베타 버전이며, 홈 탭만 변경되었습니다.</li>
+        </ul>
+    </div>
 
-        // PWA install prompt event listener
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Prevent the mini-infobar from appearing on mobile
-            deferredPrompt = e; // Stash the event so it can be triggered later.
-            // You might want to show a custom install button or UI element here
-            console.log('beforeinstallprompt event fired and captured.');
-            // Optionally, make the install button visible here if it's hidden by default
-            // document.getElementById('install-button').style.display = 'block';
+    <!-- 데이터 보안 섹션 (전체화면 박스 호출) -->
+    <div class="section-header cursor-pointer" onclick="showSecurityOverlay()">
+        <h2>데이터 보안</h2>
+        <svg class="w-6 h-6 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+
+    <!-- 별점 및 리뷰 섹션 (항상 펼쳐짐 + 작성 가능) -->
+    <div class="px-6 py-4 border-t border-gray-200">
+        <h2 class="text-xl font-medium mb-4">평가 및 리뷰</h2>
+        
+        <!-- 전체 별점 표시 영역 (이미지 디자인 반영) -->
+        <div class="flex items-end mb-6">
+            <span class="text-6xl font-medium mr-4">4.8</span>
+            <div>
+                <div class="flex text-yellow-500 text-3xl">
+                    ★★★★★
+                </div>
+                <p class="text-sm text-gray-500 mt-1">평가</p>
+            </div>
+        </div>
+
+        <!-- 리뷰 작성 영역 -->
+        <div class="py-4 border-t border-gray-200">
+            <h3 class="text-lg font-medium mb-4">나의 리뷰 작성</h3>
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-sm font-medium">별점 주기:</span>
+                <div id="star-rating" class="rating-stars">
+                    <!-- 별점 SVG 아이콘 -->
+                    <svg class="star-icon text-gray-400 w-6 h-6" data-value="1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.1-4.5h7.6z"/></svg>
+                    <svg class="star-icon text-gray-400 w-6 h-6" data-value="2" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.1-4.5h7.6z"/></svg>
+                    <svg class="star-icon text-gray-400 w-6 h-6" data-value="3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6-1-4.5h7.6z"/></svg>
+                    <svg class="star-icon text-gray-400 w-6 h-6" data-value="4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.1-4.5h7.6z"/></svg>
+                    <svg class="star-icon text-gray-400 w-6 h-6" data-value="5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6.1 4.5 2.4 7.4-6.3-4.6-6.3 4.6 2.4-7.4-6.1-4.5h7.6z"/></svg>
+                </div>
+            </div>
+            <textarea id="review-text" rows="4" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#01875f]" placeholder="리뷰를 작성해주세요..."></textarea>
+            <div class="flex justify-end mt-2">
+                <button onclick="submitReview()" class="bg-[#01875f] text-white font-medium py-2 px-4 rounded-full hover:bg-[#01664a] transition-colors">게시</button>
+            </div>
+        </div>
+
+        <!-- 기존 리뷰 목록 (이미지 디자인 반영) -->
+        <div id="reviews-list" class="py-4 border-t border-gray-200">
+            <!-- 예시 리뷰 1 -->
+            <div class="review-box">
+                <div class="review-header">
+                    <h3>학교생활이 편해졌어요!</h3>
+                    <span>2일 전</span>
+                </div>
+                <div class="review-rating-stars">
+                    ★★★★★
+                </div>
+                <p class="review-text">시간표랑 급식 확인하는 게 너무 편해졌어요. 학사일정도 한눈에 볼 수 있어서 정말 유용합니다!</p>
+            </div>
+
+            <!-- 예시 리뷰 2 -->
+            <div class="review-box">
+                <div class="review-header">
+                    <h3>커뮤니티 기능 최고!</h3>
+                    <span>1주 전</span>
+                </div>
+                <div class="review-rating-stars">
+                    ★★★★★
+                </div>
+                <p class="review-text">반 친구들이랑 쉽게 소통할 수 있어서 좋아요. 공지사항도 바로 알림으로 와서 놓칠 일이 없네요.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 데이터 보안 전체화면 박스 -->
+<div id="security-overlay" class="fullscreen-overlay">
+    <div class="fullscreen-header">
+        <svg onclick="hideSecurityOverlay()" class="close-button" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <h2 class="text-xl font-medium ml-4">데이터 보안</h2>
+    </div>
+    <div class="fullscreen-content">
+        <p>개발자가 개인정보 수집 및 처리 방법에 대해 제공한 정보입니다. 자세한 내용은 <a href="#" class="text-[#01875f] font-medium">개발자에게 문의</a>하세요.</p>
+    </div>
+</div>
+
+<!-- 전체 화면 갤러리 오버레이 -->
+<div id="fullscreen-gallery-overlay" class="fullscreen-gallery-overlay">
+    <button id="close-gallery">✕</button>
+    <button id="prev-btn" class="gallery-button">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </button>
+    <img id="fullscreen-image" src="" alt="확대된 앱 스크린샷">
+    <button id="next-btn" class="gallery-button">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </button>
+</div>
+
+<script>
+    // PWA 설치 관련 변수 및 함수
+    let deferredPrompt; // beforeinstallprompt 이벤트를 저장할 변수
+
+    // 브라우저가 설치 프롬프트를 표시할 준비가 되었을 때 이 이벤트가 발생합니다.
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // 기본 프롬프트 동작을 막음
+        e.preventDefault();
+        // 이벤트를 저장하여 나중에 버튼 클릭 시 사용할 수 있도록 함
+        deferredPrompt = e;
+        // 설치 버튼을 보이게 함
+        checkPWAInstalled();
+    });
+
+    // PWA가 성공적으로 설치되었을 때 이 이벤트가 발생합니다.
+    window.addEventListener('appinstalled', (e) => {
+        console.log('PWA was successfully installed.');
+        // 설치 프롬프트가 완료되면 이벤트를 초기화
+        deferredPrompt = null;
+        // 설치 상태를 다시 확인하여 버튼을 변경합니다.
+        checkPWAInstalled();
+    });
+
+    const installButton = document.getElementById('install-button');
+    const uninstallButton = document.getElementById('uninstall-button');
+
+    // '설치' 버튼 클릭 이벤트 리스너
+    installButton.addEventListener('click', async () => {
+        // 설치 프롬프트가 저장되어 있는지 확인
+        if (deferredPrompt) {
+            // 저장된 이벤트를 사용하여 프롬프트 표시
+            deferredPrompt.prompt();
+            // 사용자의 선택을 기다림 (이벤트 리스너는 appinstalled에서 처리)
+        }
+    });
+
+    // '제거' 버튼 클릭 이벤트 리스너 (실제 제거 기능은 없으며 시뮬레이션용)
+    uninstallButton.addEventListener('click', () => {
+        console.log('Uninstall button was clicked. Actual PWA uninstall must be done manually from the device settings.');
+        // 사용자에게 실제 제거 방법을 안내하는 메시지 표시 (alert 대신 콘솔 로그 사용)
+        // 실제로는 사용자가 기기 설정에서 직접 제거해야 합니다.
+        // 이 부분은 UI/UX를 개선하여 사용자에게 정보를 제공할 수 있습니다.
+    });
+
+    // PWA가 이미 설치되었는지 확인하는 함수
+    function checkPWAInstalled() {
+        const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+
+        if (isInstalled) {
+            // PWA가 설치된 경우
+            installButton.classList.add('hidden');
+            uninstallButton.classList.remove('hidden');
+            console.log('PWA is already installed.');
+        } else if (deferredPrompt) {
+            // PWA가 설치되지 않았고, 설치 프롬프트 이벤트가 발생한 경우
+            installButton.classList.remove('hidden');
+            uninstallButton.classList.add('hidden');
+        } else {
+            // PWA가 설치되지 않았고, 설치 프롬프트 이벤트가 발생하지 않은 경우
+            // (e.g., 모바일이 아닌 데스크톱 브라우저)
+            installButton.classList.add('hidden');
+            uninstallButton.classList.add('hidden');
+        }
+    }
+
+    let currentRating = 0; // 현재 선택된 별점
+    let allScreenshots = []; // 모든 스크린샷 이미지를 저장할 배열
+    let currentScreenshotIndex = 0; // 현재 전체 화면으로 보고 있는 스크린샷의 인덱스
+
+    // '데이터 보안' 전체화면 박스를 보여주는 함수
+    function showSecurityOverlay() {
+        const securityOverlay = document.getElementById('security-overlay');
+        securityOverlay.style.display = 'block';
+        setTimeout(() => {
+            securityOverlay.classList.add('is-visible');
+        }, 10);
+    }
+
+    // '데이터 보안' 전체화면 박스를 숨기는 함수
+    function hideSecurityOverlay() {
+        const securityOverlay = document.getElementById('security-overlay');
+        securityOverlay.classList.remove('is-visible');
+        securityOverlay.addEventListener('transitionend', function handler() {
+            securityOverlay.style.display = 'none';
+            securityOverlay.removeEventListener('transitionend', handler);
+        });
+    }
+
+    // 전체 화면 갤러리를 여는 함수
+    function openGallery(index) {
+        if (index < 0 || index >= allScreenshots.length) return;
+        
+        currentScreenshotIndex = index;
+        const overlay = document.getElementById('fullscreen-gallery-overlay');
+        const fullscreenImage = document.getElementById('fullscreen-image');
+        
+        fullscreenImage.src = allScreenshots[currentScreenshotIndex].src;
+        overlay.classList.add('show');
+    }
+
+    // 전체 화면 갤러리를 닫는 함수
+    function closeGallery() {
+        const overlay = document.getElementById('fullscreen-gallery-overlay');
+        overlay.classList.remove('show');
+    }
+
+    // 갤러리 이미지 이동 함수 (direction: 1 = 다음, -1 = 이전)
+    function navigateGallery(direction) {
+        let newIndex = currentScreenshotIndex + direction;
+
+        // 인덱스가 범위를 벗어나면 처음/마지막으로 순환
+        if (newIndex >= allScreenshots.length) {
+            newIndex = 0;
+        } else if (newIndex < 0) {
+            newIndex = allScreenshots.length - 1;
+        }
+
+        openGallery(newIndex);
+    }
+
+    // 스크린샷 목록을 좌우로 스크롤하는 함수 (direction: 1 = 다음, -1 = 이전)
+    function scrollScreenshots(direction) {
+        const container = document.getElementById('screenshots-container');
+        // 스크롤 거리를 정확히 계산 (이미지 너비 + gap)
+        const scrollDistance = allScreenshots[0].offsetWidth + 16;
+        container.scrollBy({
+            left: direction * scrollDistance,
+            behavior: 'smooth'
+        });
+    }
+    
+    // 별점 시스템을 동적으로 처리하는 함수
+    function setupStarRating() {
+        const stars = document.querySelectorAll('#star-rating svg');
+        stars.forEach(star => {
+            star.addEventListener('mouseover', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                highlightStars(value);
+            });
+            star.addEventListener('mouseout', () => {
+                highlightStars(currentRating);
+            });
+            star.addEventListener('click', () => {
+                currentRating = parseInt(star.getAttribute('data-value'));
+                highlightStars(currentRating);
+            });
+        });
+    }
+
+    // 별점 하이라이트 기능
+    function highlightStars(value) {
+        const stars = document.querySelectorAll('#star-rating svg');
+        stars.forEach(star => {
+            if (parseInt(star.getAttribute('data-value')) <= value) {
+                star.classList.remove('text-gray-400');
+                star.classList.add('text-yellow-500');
+            } else {
+                star.classList.remove('text-yellow-500');
+                star.classList.add('text-gray-400');
+            }
+        });
+    }
+
+    // 리뷰 게시 기능
+    function submitReview() {
+        const reviewText = document.getElementById('review-text').value;
+        if (currentRating === 0 || reviewText.trim() === '') {
+            console.log('별점과 리뷰 내용을 모두 입력해주세요.');
+            return;
+        }
+
+        const reviewsList = document.getElementById('reviews-list');
+        const newReview = document.createElement('div');
+        newReview.classList.add('review-box');
+        newReview.innerHTML = `
+            <div class="review-header">
+                <h3>익명의 사용자</h3>
+                <span>오늘</span>
+            </div>
+            <div class="review-rating-stars">
+                ${'★'.repeat(currentRating)}
+            </div>
+            <p class="review-text">${reviewText}</p>
+        `;
+        
+        reviewsList.prepend(newReview);
+        document.getElementById('review-text').value = '';
+        currentRating = 0;
+        highlightStars(0);
+    }
+
+    // 스와이프 제스처 로직
+    let touchStartX = 0;
+    const swipeThreshold = 50; // 스와이프 감지를 위한 최소 이동 거리 (픽셀)
+
+    // 메인 스크린샷 컨테이너에 스와이프 이벤트 리스너 추가
+    document.getElementById('screenshots-container').addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    });
+
+    document.getElementById('screenshots-container').addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const deltaX = touchEndX - touchStartX;
+
+        if (deltaX > swipeThreshold) {
+            scrollScreenshots(-1); // 오른쪽으로 스와이프 (이전으로 이동)
+        } else if (deltaX < -swipeThreshold) {
+            scrollScreenshots(1);  // 왼쪽으로 스와이프 (다음으로 이동)
+        }
+    });
+
+    // 전체 화면 갤러리 오버레이에 스와이프 이벤트 리스너 추가
+    document.getElementById('fullscreen-gallery-overlay').addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    });
+
+    document.getElementById('fullscreen-gallery-overlay').addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const deltaX = touchEndX - touchStartX;
+
+        if (deltaX > swipeThreshold) {
+            navigateGallery(-1); // 오른쪽으로 스와이프 (이전으로 이동)
+        } else if (deltaX < -swipeThreshold) {
+            navigateGallery(1); // 왼쪽으로 스와이프 (다음으로 이동)
+        }
+    });
+    
+    // 초기화 함수
+    function init() {
+        // PWA 설치 상태를 확인하여 버튼을 초기화합니다.
+        checkPWAInstalled();
+
+        allScreenshots = Array.from(document.querySelectorAll('.screenshot-item'));
+        
+        // 스크린샷 이미지에 클릭 이벤트 리스너 추가
+        allScreenshots.forEach((img, index) => {
+            img.addEventListener('click', () => {
+                openGallery(index);
+            });
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Register Service Worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then((reg) => {
-                        console.log('Service Worker registered successfully. Scope is ' + reg.scope);
-                    }).catch((error) => {
-                        console.log('Service Worker registration failed: ' + error);
-                    });
-            }
+        // 갤러리 닫기 버튼 이벤트 리스너 추가
+        document.getElementById('close-gallery').addEventListener('click', closeGallery);
 
-            // Description "더 보기" / "간략히 보기" toggle
-            const descriptionSummary = document.getElementById('description-summary');
-            const fullDescriptionContent = document.getElementById('full-description-content');
-            const toggleDescriptionButton = document.getElementById('toggle-description');
+        // 갤러리 이동 버튼 이벤트 리스너 추가
+        document.getElementById('prev-btn').addEventListener('click', () => navigateGallery(-1));
+        document.getElementById('next-btn').addEventListener('click', () => navigateGallery(1));
 
-            if (toggleDescriptionButton) {
-                toggleDescriptionButton.addEventListener('click', function() {
-                    if (fullDescriptionContent.classList.contains('hidden')) {
-                        // Show full content and hide summary
-                        descriptionSummary.classList.add('hidden');
-                        fullDescriptionContent.classList.remove('hidden');
-                        this.textContent = '간략히 보기';
-                    } else {
-                        // Hide full content and show summary
-                        fullDescriptionContent.classList.add('hidden');
-                        descriptionSummary.classList.remove('hidden');
-                        this.textContent = '더 보기';
-                    }
-                });
-            }
+        // 메인 스크롤 버튼 이벤트 리스너 추가
+        document.getElementById('prev-scroll-btn').addEventListener('click', () => scrollScreenshots(-1));
+        document.getElementById('next-scroll-btn').addEventListener('click', () => scrollScreenshots(1));
 
-            // What's New "더 보기" / "간략히 보기" toggle
-            const whatsNewSummary = document.getElementById('whats-new-summary');
-            const fullWhatsNewContent = document.getElementById('full-whats-new-content');
-            const toggleWhatsNewButton = document.getElementById('toggle-whats-new');
+        // 별점 시스템 초기화
+        setupStarRating();
+    }
+    
+    // 페이지 로드 시 초기화 함수 실행
+    window.onload = init;
+</script>
 
-            if (toggleWhatsNewButton) {
-                toggleWhatsNewButton.addEventListener('click', function() {
-                    if (fullWhatsNewContent.classList.contains('hidden')) {
-                        // Show full content and hide summary
-                        whatsNewSummary.classList.add('hidden');
-                        fullWhatsNewContent.classList.remove('hidden');
-                        this.textContent = '간략히 보기';
-                    } else {
-                        // Hide full content and show summary
-                        fullWhatsNewContent.classList.add('hidden');
-                        whatsNewSummary.classList.remove('hidden');
-                        this.textContent = '더 보기';
-                    }
-                });
-            }
-
-            // Carousel logic for screenshots
-            const screenshotsContainer = document.getElementById('screenshots-container');
-            const leftArrow = document.getElementById('left-arrow');
-            const rightArrow = document.getElementById('right-arrow');
-
-            // Determine scroll amount based on screenshot width + space-x-4
-            // Assuming w-48 (192px) for mobile, w-64 (256px) for md and up, and space-x-4 (16px)
-            const getScrollAmount = () => {
-                const firstScreenshot = screenshotsContainer.querySelector('img');
-                if (firstScreenshot) {
-                    const style = window.getComputedStyle(firstScreenshot);
-                    const width = parseFloat(style.width);
-                    const margin = parseFloat(style.marginRight || '16px'); // Default to 16px for space-x-4
-                    return width + margin;
-                }
-                return 272; // Fallback value if no screenshot is found (md:w-64 + space-x-4)
-            };
-
-            function updateArrowVisibility() {
-                // Hide left arrow if at the beginning
-                if (screenshotsContainer.scrollLeft <= 0) {
-                    leftArrow.disabled = true;
-                } else {
-                    leftArrow.disabled = false;
-                }
-
-                // Hide right arrow if at the end (allow for slight floating point inaccuracies)
-                const scrollableWidth = screenshotsContainer.scrollWidth - screenshotsContainer.clientWidth;
-                if (screenshotsContainer.scrollLeft >= scrollableWidth - 1) { // -1 for tolerance
-                    rightArrow.disabled = true;
-                } else {
-                    rightArrow.disabled = false;
-                }
-            }
-
-            leftArrow.addEventListener('click', () => {
-                screenshotsContainer.scrollBy({
-                    left: -getScrollAmount(),
-                    behavior: 'smooth'
-                });
-            });
-
-            rightArrow.addEventListener('click', () => {
-                screenshotsContainer.scrollBy({
-                    left: getScrollAmount(),
-                    behavior: 'smooth'
-                });
-            });
-
-            // Update arrow visibility on scroll and resize
-            screenshotsContainer.addEventListener('scroll', updateArrowVisibility);
-            window.addEventListener('resize', updateArrowVisibility);
-
-            // Initial check when page loads
-            updateArrowVisibility();
-
-
-            // Header scroll effect logic
-            const stickyHeader = document.getElementById('sticky-header');
-            const mainAppTitle = document.getElementById('main-app-title');
-            const headerTitleSticky = document.getElementById('header-title-sticky');
-            const scrollThreshold = 100; // Pixels to scroll before effect activates
-
-            const updateHeaderOnScroll = () => {
-                if (window.scrollY > scrollThreshold) {
-                    stickyHeader.classList.add('sticky-header-scrolled'); // Use custom class for blur
-                    stickyHeader.classList.remove('bg-opacity-0');
-                    mainAppTitle.classList.add('opacity-0'); // Fade out large title
-                    headerTitleSticky.classList.remove('opacity-0'); // Fade in sticky title
-                } else {
-                    stickyHeader.classList.remove('sticky-header-scrolled'); // Remove custom class
-                    stickyHeader.classList.add('bg-opacity-0');
-                    mainAppTitle.classList.remove('opacity-0'); // Fade in large title
-                    headerTitleSticky.classList.add('opacity-0'); // Fade out sticky title
-                }
-            };
-
-            window.addEventListener('scroll', updateHeaderOnScroll);
-            // Initial call to set header state on page load
-            updateHeaderOnScroll();
-
-            // PWA Install Button Click Listener
-            const installButton = document.getElementById('install-button');
-            if (installButton) {
-                installButton.addEventListener('click', async () => {
-                    if (deferredPrompt) {
-                        deferredPrompt.prompt(); // Show the install prompt
-                        const { outcome } = await deferredPrompt.userChoice; // Wait for the user to respond
-                        console.log(`User response to the install prompt: ${outcome}`);
-                        // Optionally, reset deferredPrompt to null if you want to prevent showing it again
-                        deferredPrompt = null;
-                        // You might want to hide the install button here if it was shown
-                        // installButton.style.display = 'none';
-                    } else {
-                        // If deferredPrompt is not available, it means the browser did not fire beforeinstallprompt
-                        // or the app is already installed.
-                        console.log('PWA installation prompt not available or already installed.');
-                        // You can provide alternative instructions for installation (e.g., "Add to Home Screen" for iOS)
-                        alert('이 앱은 웹 브라우저의 "홈 화면에 추가" 기능을 통해 설치할 수 있습니다.'); // Using alert as a temporary workaround for demonstration.
-                    }
-                });
-            }
-        });
-    </script>
 </body>
 </html>
