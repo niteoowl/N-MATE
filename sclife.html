@@ -158,6 +158,10 @@
 
         try {
             const response = await fetch(apiUrl);
+            // HTTP 응답이 정상인지 확인 (ok 속성 사용)
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             
             // 데이터가 없거나 오류인 경우 처리
@@ -193,7 +197,7 @@
                     mealCard.innerHTML = `<div class="p-4 text-center"><p class="text-gray-400">선택한 날짜에 중식 정보가 없습니다.</p></div>`;
                 }
             } else {
-                mealCard.innerHTML = `<div class="p-4 text-center"><p class="text-red-500">급식 정보를 가져올 수 없습니다.</p></div>`;
+                mealCard.innerHTML = `<div class="p-4 text-center"><p class="text-red-500">급식 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p></div>`;
             }
         } catch (error) {
             console.error('Failed to fetch meal data:', error);
@@ -238,6 +242,9 @@
 
         try {
             const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
 
             if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
@@ -296,7 +303,7 @@
                 if (subject) {
                     gridHtml += `<span class="font-medium text-sm">${subject.ITRT_CNTNT}</span>${subject.PRFN_GRNM ? `<span class="text-xs text-gray-400 mt-1">${subject.PRFN_GRNM}</span>` : ''}`;
                 } else {
-                    gridHtml += `<span class="font-medium text-sm">-</span><span class="text-xs text-gray-400 mt-1">-</span>`;
+                    gridHtml += `<span class="font-medium text-sm">-</span>`;
                 }
                 gridHtml += `</div>`;
             });
@@ -318,6 +325,9 @@
 
         try {
             const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const data = await response.json();
             
             if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
@@ -361,7 +371,7 @@
                     }
                 });
             } else {
-                academicScheduleContent.innerHTML = `<div class="p-4"><p class="text-red-500">학사일정 정보를 가져올 수 없습니다.</p></div>`;
+                academicScheduleContent.innerHTML = `<div class="p-4"><p class="text-red-500">학사일정 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p></div>`;
             }
         } catch (error) {
             console.error('Failed to fetch academic schedule data:', error);
@@ -403,26 +413,35 @@
     
     async function loadTabContent(tabName) {
         // 유저 프로필 정보가 없으면 설정 필요 메시지 표시
-        if (!userProfile || !userProfile.sdSchulCode || !userProfile.atptOfcdcScCode) {
-            showProfileSetupRequiredState();
+        if (!userProfile) {
+            showLoginRequiredState();
             return;
         }
         
+        // 프로필에 학교 정보가 없으면 설정 필요 메시지 표시
+        if (!userProfile.sdSchulCode || !userProfile.atptOfcdcScCode) {
+            showProfileSetupRequiredState();
+            return;
+        }
+
+        const schoolCode = userProfile.sdSchulCode;
+        const officeCode = userProfile.atptOfcdcScCode;
+        
         switch (tabName) {
             case 'meal':
-                fetchMealData(currentMealDate, userProfile.sdSchulCode, userProfile.atptOfcdcScCode, mealContentArea, mealDateDisplay);
+                fetchMealData(currentMealDate, schoolCode, officeCode, mealContentArea, mealDateDisplay);
                 break;
             case 'timetable':
                 // 시간표는 학년/반 정보가 필요
                 if (userProfile.grade && userProfile.classNum) {
                     timetableTitle.textContent = `${userProfile.grade}학년 ${userProfile.classNum}반 시간표`;
-                    fetchAndRenderWeeklyTimetable(currentTimetableMonday, userProfile.sdSchulCode, userProfile.grade, userProfile.classNum, userProfile.atptOfcdcScCode, timetableContentArea, currentWeekDisplay);
+                    fetchAndRenderWeeklyTimetable(currentTimetableMonday, schoolCode, userProfile.grade, userProfile.classNum, officeCode, timetableContentArea, currentWeekDisplay);
                 } else {
                     timetableContentArea.innerHTML = `<div class="text-center p-12 min-h-[35rem] flex flex-col items-center justify-center"><p class="text-gray-400">프로필 설정을 완료해야 시간표를 확인할 수 있어요.</p></div>`;
                 }
                 break;
             case 'schedule':
-                fetchAcademicSchedule(userProfile.sdSchulCode, userProfile.atptOfcdcScCode, academicScheduleContent);
+                fetchAcademicSchedule(schoolCode, officeCode, academicScheduleContent);
                 break;
         }
     }
