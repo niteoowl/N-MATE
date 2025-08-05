@@ -511,23 +511,152 @@
             `,
             'sclife.html': () => `
                 <!-- 학교생활 페이지 콘텐츠 -->
-                <div class="min-h-[calc(100vh-10rem)] p-6 flex flex-col items-center justify-center text-center">
-                    <h2 class="text-4xl font-bold mb-4">학교생활</h2>
-                    <p class="text-lg text-gray-400">학교생활에 대한 콘텐츠가 여기에 표시됩니다.</p>
+                <div class="flex flex-col gap-6 animate-fadeInUp">
+                    <h2 class="text-3xl font-bold mb-4">학교생활</h2>
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">새로운 공지사항</h3>
+                        <ul class="space-y-4">
+                            <li class="flex flex-col">
+                                <span class="text-sm text-gray-400">2024.08.05</span>
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">2024학년도 2학기 학사일정 확정 안내</a>
+                            </li>
+                            <li class="flex flex-col">
+                                <span class="text-sm text-gray-400">2024.08.01</span>
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">여름방학 기간 중 도서관 운영 시간 안내</a>
+                            </li>
+                            <li class="flex flex-col">
+                                <span class="text-sm text-gray-400">2024.07.28</span>
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">교내 동아리 박람회 참가 신청</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">주요 학교 소식</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-[--bg-primary] rounded-2xl">
+                                <h4 class="font-bold text-base mb-1">체육대회 사진첩 오픈!</h4>
+                                <p class="text-sm text-gray-400">즐거웠던 체육대회 사진을 확인해보세요.</p>
+                            </div>
+                            <div class="p-4 bg-[--bg-primary] rounded-2xl">
+                                <h4 class="font-bold text-base mb-1">독서의 달 행사 안내</h4>
+                                <p class="text-sm text-gray-400">다양한 독서 이벤트가 준비되어 있습니다.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `,
             'community.html': () => `
                 <!-- 커뮤니티 페이지 콘텐츠 -->
-                <div class="min-h-[calc(100vh-10rem)] p-6 flex flex-col items-center justify-center text-center">
-                    <h2 class="text-4xl font-bold mb-4">커뮤니티</h2>
-                    <p class="text-lg text-gray-400">자유롭게 소통할 수 있는 커뮤니티 공간입니다.</p>
+                <div class="flex flex-col gap-6 animate-fadeInUp">
+                    <h2 class="text-3xl font-bold mb-4">자유롭게 소통하는 공간</h2>
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">자유 게시판</h3>
+                        <ul class="space-y-4">
+                            <li class="flex flex-col">
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">[고민] 학원 숙제가 너무 많아요...</a>
+                                <div class="flex items-center text-sm text-gray-400 mt-1">
+                                    <span>닉네임1</span>
+                                    <span class="ml-2">| 2024.08.05</span>
+                                </div>
+                            </li>
+                            <li class="flex flex-col">
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">추천하는 공부법 공유해요!</a>
+                                <div class="flex items-center text-sm text-gray-400 mt-1">
+                                    <span>닉네임2</span>
+                                    <span class="ml-2">| 2024.08.04</span>
+                                </div>
+                            </li>
+                            <li class="flex flex-col">
+                                <a href="#" class="font-medium text-lg hover:text-[--color-blue] transition-colors">[질문] 학교 축제 때 뭐 입을까요?</a>
+                                <div class="flex items-center text-sm text-gray-400 mt-1">
+                                    <span>닉네임3</span>
+                                    <span class="ml-2">| 2024.08.03</span>
+                                </div>
+                            </li>
+                        </ul>
+                        <a href="#" class="mt-4 inline-block text-[--color-blue] hover:underline transition-colors">더보기 &gt;</a>
+                    </div>
+                    
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">공동구매</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div class="p-4 bg-[--bg-primary] rounded-2xl flex items-center space-x-4">
+                                <div class="w-16 h-16 bg-gray-700 rounded-lg flex-shrink-0"></div>
+                                <div>
+                                    <h4 class="font-bold text-base">단체 맨투맨 공구</h4>
+                                    <p class="text-sm text-gray-400">마감 임박! 5명 남았습니다.</p>
+                                </div>
+                            </div>
+                            <div class="p-4 bg-[--bg-primary] rounded-2xl flex items-center space-x-4">
+                                 <div class="w-16 h-16 bg-gray-700 rounded-lg flex-shrink-0"></div>
+                                <div>
+                                    <h4 class="font-bold text-base">스터디 플래너 공구</h4>
+                                    <p class="text-sm text-gray-400">이번 주까지 주문 받아요!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `,
             'more.html': () => `
                 <!-- 더보기 페이지 콘텐츠 -->
-                <div class="min-h-[calc(100vh-10rem)] p-6 flex flex-col items-center justify-center text-center">
-                    <h2 class="text-4xl font-bold mb-4">더보기</h2>
-                    <p class="text-lg text-gray-400">더 다양한 기능을 확인해 보세요.</p>
+                <div class="flex flex-col gap-6 animate-fadeInUp">
+                    <h2 class="text-3xl font-bold mb-4">더보기</h2>
+                    
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">계정</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">프로필 수정</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">알림 설정</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">내 학교 변경</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">고객센터</h3>
+                         <ul class="space-y-2">
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">공지사항</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">자주 묻는 질문</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">1:1 문의</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-[--bg-secondary] rounded-3xl p-6">
+                        <h3 class="text-xl font-bold mb-4">기타</h3>
+                         <ul class="space-y-2">
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">앱 버전 정보</span>
+                                <span class="text-gray-400">1.0.0</span>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">개인정보처리방침</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                            <li class="flex items-center justify-between py-2 border-b border-gray-700 last:border-b-0">
+                                <span class="font-medium">서비스 이용 약관</span>
+                                <a href="#" class="text-gray-400 hover:text-white transition-colors">&gt;</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             `,
             '404.html': () => `
