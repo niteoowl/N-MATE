@@ -308,11 +308,16 @@
                         console.log("No user profile document found, but user is logged in.");
                         userProfile = null;
                     }
+                    
+                    // Firestore에 저장된 Name 값 또는 이메일(없을 경우)을 사용하도록 수정
+                    const displayName = userProfile && userProfile.Name ? userProfile.Name : '사용자';
+                    updateAuthUI(displayName);
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
                     userProfile = null;
+                    // 오류 발생 시에도 기본값으로 UI 업데이트
+                    updateAuthUI('사용자');
                 }
-                updateAuthUI(user.email || '사용자');
             } else {
                 console.log("User is signed out.");
                 userProfile = null;
