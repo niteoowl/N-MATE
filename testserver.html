@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-MATE | 전국 중학생을 위한 시간표, 급식표, 학사일정 통합 플랫폼</title>
+    <link rel="stylesheet" href="output.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script>
+    <style>
+        /* CSS 변수를 사용하여 색상을 정의합니다. */
+        :root {
+            --bg-primary: #17171c;
+            --bg-secondary: #201f27;
+            --text-primary: #E0E0E0;
+            --text-secondary: #A0A0A0;
+            --color-blue: #007BFF;
+            --border-color: #201f27;
+            --bg-hover: #33323a;
+        }
+
+        body {
+            font-family: 'WantedSansVariable', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            background-color: rgba(23, 23, 28, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header img {
+            height: 40px;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #17171b;
+            border-top: 1px solid #33323a;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+        }
+
+        main {
+            padding: 6rem 1rem 5rem;
+            max-width: 768px;
+            margin: 0 auto;
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 고정 헤더 -->
+    <header>
+        <img src="https://i.postimg.cc/XvKJktcP/001-2025-08-01-T220040-650.png" alt="N-MATE 로고">
+        <div id="auth-ui-container">
+            <!-- 로그인 또는 사용자 정보가 동적으로 추가됩니다 -->
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main id="pjax-container">
+        <div class="animate-fadeIn">
+            <div class="bg-[--bg-secondary] rounded-2xl p-4 flex items-start space-x-2 mb-6">
+                <span class="text-2xl mt-1 flex-shrink-0">✨</span>
+                <div>
+                    <p class="font-medium text-base">새로워진 N-MATE, 어떠세요?</p>
+                    <p class="text-white font-medium text-sm">피드백하러 가기</p>
+                </div>
+                <button class="ml-auto p-1.5 rounded-full text-white hover:bg-[--bg-secondary] transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <!-- 추가 콘텐츠는 원본 코드를 복사하여 여기에 추가 -->
+        </div>
+    </main>
+
+    <!-- 하단 고정 네비게이션 -->
+    <nav>
+        <a href="/home" data-pjax>
+            <img src="https://www.hanilians.xyz/header/home-filled.svg" alt="홈 아이콘" class="w-7 h-7 invert-icon">
+            <span>홈</span>
+        </a>
+        <a href="/school-life" data-pjax>
+            <img src="https://www.hanilians.xyz/header/news.svg" alt="학교생활 아이콘" class="w-7 h-7">
+            <span>학교생활</span>
+        </a>
+        <a href="/community" data-pjax>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="#9D9D9D" stroke-width="1.5"/>
+                <path d="M16 12.5H14M10 12.5H8M12.5 16V14M12.5 10V8" stroke="#9D9D9D" stroke-width="1.5"/>
+            </svg>
+            <span>커뮤니티</span>
+        </a>
+        <a href="/more" data-pjax>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="6" cy="12" r="2" fill="#9D9D9D"/>
+                <circle cx="12" cy="12" r="2" fill="#9D9D9D"/>
+                <circle cx="18" cy="12" r="2" fill="#9D9D9D"/>
+            </svg>
+            <span>더보기</span>
+        </a>
+    </nav>
+
+    <script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script>
+    <script>
+        // PJAX 초기화
+        document.addEventListener('DOMContentLoaded', function () {
+            const pjax = new Pjax({
+                elements: 'a[data-pjax]', // data-pjax 속성이 있는 링크만 동작
+                selectors: ['title', '#pjax-container'], // 업데이트할 요소들
+                cacheBust: false, // 캐싱 방지
+            });
+
+            // 페이지 전환 완료 후 초기화 작업
+            document.addEventListener('pjax:complete', function () {
+                console.log('PJAX 로드 완료');
+                initializePage();
+            });
+        });
+
+        function initializePage() {
+            console.log('페이지 초기화 완료');
+        }
+    </script>
+</body>
+</html>
