@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>학교생활 정보 앱</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+<style>
+:root{
+  /* 다크모드 테마 (토스 앱 느낌) */
+  --brand:#6A5AF8;
+  --brand-600:#5748D8;
+  --brand-50:#2E265C;
+
+  --bg:#121212;
+  --surface:#1F1F1F;
+  --text:#FFFFFF;
+  --muted:#A9A9A9;
+  --hairline:#333333;
+
+  --radius:16px;
+  --radius-sm:12px;
+
+  --app-max:1024px;
+  --app-pad:16px;
+  --bar-h:56px;
+  --tab-h:64px;
+}
+
+/* 라이트모드 테마 (다크모드 변수 오버라이드) */
+body.light-mode {
+  --bg:#F5F7FA;
+  --surface:#FFFFFF;
+  --text:#0F172A;
+  --muted:#667085;
+  --hairline:#E5E7EB;
+
+  /* 라이트모드에서 일부 요소 색상 재정의 */
+  --brand:#4A90E2;
+  --brand-600:#3A7ACF;
+  --brand-50:#EAF2FF;
+}
+
+/* 전체 화면에 중앙 앱 캔버스(태블릿) 고정 */
+html,body{height:100%; margin:0}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+.app-wrap{
+  height:100dvh;
+  display:grid; place-items:center;
+  padding:calc(env(safe-area-inset-top,0px)) 0 calc(env(safe-area-inset-bottom,0px));
+}
+.shell{
+  width:clamp(360px, 78vw, var(--app-max));
+  height:100dvh;
+  display:grid; grid-template-rows:var(--bar-h) 1fr var(--tab-h);
+  background:var(--surface);
+  border-left:1px solid var(--hairline);
+  border-right:1px solid var(--hairline);
+}
+
+/* 상단 앱바 */
+.appbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 14px;
+  border-bottom:1px solid var(--hairline);
+  background:var(--surface);
+  position: relative;
+}
+.appbar .title{font-weight:800; letter-spacing:-0.2px}
+.appbar .actions{display:flex; gap:8px}
+
+/* 모든 버튼에 클릭 효과 적용 */
+.btn, .chip, .icon-btn, .quick-item, .fab, .card-link {
+    transition: transform 0.1s ease-in-out;
+}
+.btn:active, .chip:active, .icon-btn:active, .quick-item:active, .fab:active, .card-link:active {
+    transform: scale(0.98);
+}
+
+.btn, .chip{
+  border:1px solid var(--hairline); background:var(--surface); color:var(--text);
+  height:34px; padding:0 12px; border-radius:12px; font-weight:700; cursor:pointer;
+}
+.icon-btn{
+  width:34px; height:34px; border:1px solid var(--hairline); border-radius:12px; background:var(--surface); color:var(--text); cursor:pointer;
+  display: grid;
+  place-items: center;
+}
+.material-symbols-outlined {
+    font-size: 20px;
+    font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
+}
+.icon-btn .moon-icon {
+    display: none;
+}
+body.light-mode .icon-btn .sun-icon {
+    display: none;
+}
+body.light-mode .icon-btn .moon-icon {
+    display: block;
+}
+/* 라이트 모드에서 아이콘 색상 변경 */
+body.light-mode .material-symbols-outlined {
+    color: var(--text);
+}
+
+
+/* 페이지 컨테이너: 스크롤 방지 */
+.page-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.page{
+  display: none; /* 기본적으로 페이지를 숨김 */
+  width: 100%;
+  height: 100%;
+  overflow-y: auto; /* 개별 페이지 스크롤 허용 */
+  padding:var(--app-pad) var(--app-pad) calc(var(--app-pad) + 24px);
+  box-sizing: border-box; /* 패딩이 너비/높이에 포함되도록 설정 */
+}
+.page.active {
+    display: block; /* 활성화된 페이지를 표시 */
+}
+
+.section-title{margin:6px 2px 10px; font-weight:800; font-size:15px}
+.sub{font-size:12px; color:var(--muted)}
+.card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.hidden{display: none;}
+
+/* 카드/라인: 그림자 없음 */
+.card{
+  background:var(--surface); border:1px solid var(--hairline);
+  border-radius:var(--radius); padding:16px;
+}
+.card-link {
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.1s ease-in-out;
+}
+.card-link:hover {
+    background-color: var(--hairline);
+}
+
+/* 리스트 */
+.list{margin-top:10px; border:1px solid var(--hairline); border-radius:14px; overflow:hidden}
+.cell{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--hairline); background:var(--surface)}
+.cell:last-child{border-bottom:none}
+.avatar{width:40px; height:40px; border-radius:12px; background:var(--brand-50); color:var(--brand); display:grid; place-items:center; font-weight:800}
+.cell .meta{flex:1}
+.title{font-weight:700}
+.amount{font-weight:800}
+.positive{color:#16A34A}
+.negative{color:#DC2626}
+
+/* FAB + 탭바: 앱 패턴 유지 */
+.fab{
+  position:fixed;
+  left:50%;
+  transform:translateX(calc(-50% + min(39vw, var(--app-max)/2 - 24px)));
+  bottom:calc(var(--tab-h) + 18px);
+  width:56px; height:56px; border-radius:16px;
+  background:var(--brand); color:#fff; display:grid; place-items:center; font-weight:800; border:0;
+}
+.tabbar{
+  border-top:1px solid var(--hairline);
+  background:rgba(31,31,31,0.96); backdrop-filter:saturate(180%) blur(8px);
+}
+body.light-mode .tabbar {
+  background:rgba(255,255,255,0.96);
+}
+
+.tabs{height:var(--tab-h); display:grid; grid-template-columns:repeat(4,1fr)}
+.tab{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  color:var(--muted); font-size:12px; border:0; background:transparent; cursor:pointer;
+}
+.tab .dot{width:6px; height:6px; border-radius:50%; background:transparent}
+.tab.active{color:var(--brand)}
+.tab.active .dot{background:var(--brand)}
+
+/* 링크/포커스 */
+a, button{color:inherit}
+:focus-visible{outline:2px solid var(--brand); outline-offset:2px; border-radius:10px}
+
+/* 반응형: 폰에서는 2열 그리드, 태블릿은 4열 유지 */
+@media (max-width: 560px){
+  .quick-grid{grid-template-columns:repeat(2,1fr)}
+}
+/* 넓은 데스크톱에서도 ‘앱 한 장’ 느낌 유지 */
+@media (min-width: 1400px){
+  .shell{width:clamp(360px, 56vw, var(--app-max))}
+}
+
+/* iOS 홈 인디케이터 여백 */
+.tabbar{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 0px);}
+
+/* 학교생활 서브 탭 */
+.school-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.school-tabs .chip {
+    flex: 1;
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    color: var(--muted);
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+.school-tabs .chip.active {
+    background: var(--brand-50);
+    color: var(--brand);
+    border-color: var(--brand-50);
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 10;
+}
+.modal-overlay.open {
+    display: block;
+}
+.modal-content {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%;
+    max-height: 80%; /* 모달 최대 높이 설정 */
+    overflow-y: auto; /* 내용이 넘치면 스크롤 가능 */
+    background: var(--surface);
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+    padding: 16px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    box-sizing: border-box; /* 패딩이 너비/높이에 포함되도록 설정 */
+}
+.modal-content.is-open {
+    transform: translateY(0);
+}
+.modal-close-handle {
+    width: 40px;
+    height: 4px;
+    background-color: var(--muted);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+    cursor: pointer;
+}
+
+/* 달력 스타일 */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.calendar-header .month-year {
+    font-size: 18px;
+    font-weight: 700;
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    gap: 8px;
+}
+.calendar-grid .day {
+    padding: 8px;
+    font-weight: 500;
+    border-radius: 50%;
+    cursor: pointer;
+}
+.calendar-grid .day.today {
+    background: var(--brand);
+    color: white;
+}
+.calendar-grid .weekday {
+    font-weight: 700;
+    color: var(--muted);
+}
+
+/* 커스텀 스크롤바 스타일 */
+body::-webkit-scrollbar,
+.page::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+body::-webkit-scrollbar-thumb,
+.page::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+}
+
+body.light-mode::-webkit-scrollbar-thumb,
+.page.light-mode::-webkit-scrollbar-thumb,
+.modal-content.light-mode::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+body::-webkit-scrollbar-track,
+.page::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 커뮤니티 그리드 스타일 */
+.community-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.community-item {
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 14px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.community-item .category {
+    font-size: 12px;
+    color: var(--brand);
+}
+
+.community-item .post-title {
+    font-weight: 700;
+    font-size: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.community-item .preview {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.community-item .meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: auto;
+}
+
+/* 로그인 버튼 숨기기/보이기 */
+#loginBtn.hidden { display: none; }
+#userProfileBtn {
+  font-weight:700;
+  background:transparent;
+  border:none;
+  cursor:pointer;
+  position: relative;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 12px;
+}
+#userProfileBtn:hover { background-color: var(--hairline); }
+
+/* 드롭다운 메뉴 스타일 */
+#profileDropdown {
+  position: absolute;
+  top: 50px;
+  right: 14px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 8px;
+  z-index: 20;
+  width: 150px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: none;
+}
+#profileDropdown.show { display: block; }
+.dropdown-item {
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.dropdown-item:hover { background-color: var(--hairline); }
+</style>
+</head>
+<body>
+  <div class="app-wrap">
+    <div class="shell" aria-label="앱 캔버스">
+
+      <!-- 앱바 -->
+      <header class="appbar">
+        <div class="title" id="appTitle">홈</div>
+        <div class="actions">
+          <button class="btn" id="loginBtn">로그인</button>
+          <button id="userProfileBtn" class="hidden">
+            <span id="userNameText"></span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <!-- 드롭다운 메뉴 -->
+          <div id="profileDropdown" class="hidden">
+            <div class="dropdown-item" id="editProfileBtn">프로필 편집</div>
+            <div class="dropdown-item" id="logoutBtn">로그아웃</div>
+          </div>
+          <button class="icon-btn" id="modeToggleBtn" aria-label="라이트모드/다크모드 토글">
+            <span class="material-symbols-outlined sun-icon">light_mode</span>
+            <span class="material-symbols-outlined moon-icon">dark_mode</span>
+          </button>
+        </div>
+      </header>
+      
+      <!-- 페이지 컨테이너 -->
+      <div class="page-container" id="pageContainer">
+        <!-- 페이지: 홈 -->
+        <main class="page active" id="page-home" role="region" aria-label="홈">
+          <section class="card">
+            <div class="card-title-row">
+                <div class="section-title">오늘의 학교생활</div>
+                <button id="today-info-btn" class="icon-btn" aria-label="오늘의 학교생활 정보 더보기">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                </button>
+            </div>
+            <div class="sub">오늘의 급식과 시간표를 확인하세요.</div>
+            <div style="margin-top:10px; display:grid; gap:10px; grid-template-columns:repeat(2,1fr)">
+              <div class="card" style="padding:12px">
+                <div class="title">점심 급식</div>
+                <div class="sub" style="margin-top:4px" id="todayLunchMenu">로딩 중...</div>
+              </div>
+              <div class="card card-link timetable-quick-card" style="padding:12px">
+                <div class="title">총 <span id="timetablePeriodCount">...</span>교시</div>
+                <div class="sub" style="margin-top:4px">자세한 시간표 보기</div>
+              </div>
+            </div>
+          </section>
+
+          <div class="card-title-row">
+              <h3 class="section-title">커뮤니티 새 소식 🔥</h3>
+              <button class="btn" style="height:28px">더보기</button>
+          </div>
+          <div class="community-grid" role="region" aria-label="커뮤니티 최신 글">
+              <div class="community-item">
+                  <div class="category">#자유게시판</div>
+                  <div class="post-title">봉사활동 신청 안내</div>
+                  <div class="preview">이번 학기 봉사활동 신청을 6월 25일까지 받습니다. 신청서 양식은 학생회관 2층 게시판에서 확인해 주세요.</div>
+                  <div class="meta">이종현 · 4일 전</div>
+              </div>
+              <div class="community-item">
+                  <div class="category">#자유게시판</div>
+                  <div class="post-title">학교 축제 아이디어 공모</div>
+                  <div class="preview">다가오는 가을 축제 '하나 되는 우리'의 아이디어를 공모합니다! 공연, 부스, 이벤트 등 자유롭게 제안해 주세요.</div>
+                  <div class="meta">코코몽 · 9일 전</div>
+              </div>
+              <div class="community-item">
+                  <div class="category">#자유게시판</div>
+                  <div class="post-title">기숙사생 외박 신청 안내</div>
+                  <div class="preview">여름방학 기간 동안 기숙사 외박을 희망하는 학생들은 7월 5일까지 신청해 주시기 바랍니다.</div>
+                  <div class="meta">오렌지 · 13일 전</div>
+              </div>
+              <div class="community-item">
+                  <div class="category">#자유게시판</div>
+                  <div class="post-title">체육대회 종목 투표</div>
+                  <div class="preview">올해 체육대회에서 진행할 종목을 투표로 결정합니다. 농구, 피구, 이어달리기 등 선호하는 종목에 투표해 주세요.</div>
+                  <div class="meta">체육부 · 18일 전</div>
+              </div>
+          </div>
+
+          <h3 class="section-title">다가오는 학사일정</h3>
+          <div class="list" role="list" id="schoolScheduleList">
+            <div class="cell" role="listitem">
+              <div class="avatar">로</div>
+              <div class="meta">
+                <div class="title">학사일정 로딩 중...</div>
+                <div class="sub">사용자 프로필을 불러오는 중입니다.</div>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <!-- 페이지: 학교생활 -->
+        <main class="page" id="page-school" role="region" aria-label="학교생활">
+          <div class="school-tabs">
+            <button class="chip active" data-target="meal">급식</button>
+            <button class="chip" data-target="timetable">시간표</button>
+            <button class="chip" data-target="schedule">학사일정</button>
+          </div>
+          
+          <div id="content-meal">
+              <section class="card">
+                  <div class="section-title">급식</div>
+                  <div class="sub">오늘의 점심 메뉴</div>
+                  <div style="margin-top:10px;">
+                      <div class="list">
+                          <div class="cell">
+                              <div class="meta">
+                                  <div class="title">점심</div>
+                                  <div class="sub" id="schoolMealMenu">로딩 중...</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </section>
+          </div>
+
+          <!-- initially hidden -->
+          <div id="content-timetable" class="hidden">
+              <section class="card">
+                  <div class="section-title">시간표</div>
+                  <div class="sub">오늘의 수업 시간표</div>
+                  <div style="margin-top:10px;">
+                      <div class="list" id="schoolTimetableList">
+                          <div class="cell">
+                              <div class="meta">
+                                  <div class="title">로딩 중...</div>
+                                  <div class="sub">사용자 프로필을 불러오는 중입니다.</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </section>
+          </div>
+
+          <!-- initially hidden -->
+          <div id="content-schedule" class="hidden">
+              <section class="card">
+                  <div class="section-title">학사일정</div>
+                  <div class="sub">다가오는 주요 일정</div>
+                  <div style="margin-top:10px;">
+                      <div class="list" id="schoolScheduleFullList">
+                          <div class="cell">
+                              <div class="meta">
+                                  <div class="title">로딩 중...</div>
+                                  <div class="sub">사용자 프로필을 불러오는 중입니다.</div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </section>
+          </div>
+        </main>
+
+        <!-- 페이지: 커뮤니티 -->
+        <main class="page" id="page-community" role="region" aria-label="커뮤니티">
+          <section class="card">
+            <div class="section-title">커뮤니티</div>
+            <div class="sub">자유 게시판, 동아리</div>
+            <div style="margin-top:10px; border:1px dashed var(--hairline); border-radius:12px; padding:16px; text-align:center;">
+              <p style="color:var(--muted)">다양한 소식을 공유해보세요!</p>
+              <button class="chip" style="margin-top:12px; background:var(--brand); color:white; border-color:var(--brand);">글쓰기</button>
+            </div>
+          </section>
+        </main>
+
+        <!-- 페이지: 더보기 -->
+        <main class="page" id="page-more" role="region" aria-label="더보기">
+          <section class="card">
+            <div class="section-title">더보기</div>
+            <div class="sub">설정, 정보, 고객센터</div>
+            <div style="margin-top:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px">
+              <button class="quick-item"><div class="quick-ico">설</div><div>설정</div></button>
+              <button class="quick-item"><div class="quick-ico">공</div><div>공지사항</div></button>
+              <button class="quick-item"><div class="quick-ico">도</div><div>도움말</div></button>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <!-- 하단 탭바 -->
+      <nav class="tabbar" role="tablist" aria-label="하단 내비게이션">
+        <div class="tabs">
+          <button class="tab active" data-target="home" role="tab" aria-selected="true">홈<span class="dot" aria-hidden="true"></span></button>
+          <button class="tab" data-target="school" role="tab" aria-selected="false">학교생활<span class="dot" aria-hidden="true"></span></button>
+          <button class="tab" data-target="community" role="tab" aria-selected="false">커뮤니티<span class="dot" aria-hidden="true"></span></button>
+          <button class="tab" data-target="more" role="tab" aria-selected="false">더보기<span class="dot" aria-hidden="true"></span></button>
+        </div>
+      </nav>
+
+      <!-- FAB -->
+      <button class="fab" aria-label="새 글쓰기">＋</button>
+    </div>
+  </div>
+
+  <!-- 달력 모달 -->
+  <div class="modal-overlay" id="calendarModal">
+    <div class="modal-content">
+        <div class="modal-close-handle" id="modalCloseHandle"></div>
+        <div class="calendar-header">
+            <button class="icon-btn prev-month">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7z"/></svg>
+            </button>
+            <span class="month-year">2025년 9월</span>
+            <button class="icon-btn next-month">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M10 6l-6 6 6 6z" transform="rotate(180 12 12)"/></svg>
+            </button>
+        </div>
+        <div class="calendar-grid">
+            <span class="weekday" style="color:#DC2626">일</span>
+            <span class="weekday">월</span>
+            <span class="weekday">화</span>
+            <span class="weekday">수</span>
+            <span class="weekday">목</span>
+            <span class="weekday">금</span>
+            <span class="weekday" style="color:#4A90E2">토</span>
+            <span class="day muted">31</span>
+            <span class="day">1</span>
+            <span class="day">2</span>
+            <span class="day">3</span>
+            <span class="day">4</span>
+            <span class="day">5</span>
+            <span class="day">6</span>
+            <span class="day">7</span>
+            <span class="day">8</span>
+            <span class="day">9</span>
+            <span class="day">10</span>
+            <span class="day">11</span>
+            <span class="day">12</span>
+            <span class="day">13</span>
+            <span class="day">14</span>
+            <span class="day">15</span>
+            <span class="day">16</span>
+            <span class="day">17</span>
+            <span class="day">18</span>
+            <span class="day">19</span>
+            <span class="day">20</span>
+            <span class="day">21</span>
+            <span class="day">22</span>
+            <span class="day">23</span>
+            <span class="day">24</span>
+            <span class="day">25</span>
+            <span class="day">26</span>
+            <span class="day">27</span>
+            <span class="day">28</span>
+            <span class="day">29</span>
+            <span class="day">30</span>
+        </div>
+    </div>
+  </div>
+
+<script type="module">
+  // Firebase SDK imports
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+  import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+  import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+  // Firestore & Auth 전역 변수
+  let app, auth, db;
+  let userId;
+  let userProfile = null;
+
+  // Firebase 설정 및 초기화
+  const firebaseConfig = {
+    apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+    authDomain: "n-mate.firebaseapp.com",
+    projectId: "n-mate",
+    storageBucket: "n-mate.firebasestorage.app",
+    messagingSenderId: "691313471077",
+    appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+    measurementId: "G-0LCGVBKXLQ"
+  };
+
+  const __app_id = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+  // API 키와 엔드포인트
+  const neisApiKey = "cbb4da48e87445f68c2732368454ebc3";
+  const neisApiUrl = "https://open.neis.go.kr/hub/";
+
+  // UI 요소
+  const loginBtn = document.getElementById('loginBtn');
+  const userProfileBtn = document.getElementById('userProfileBtn');
+  const userNameText = document.getElementById('userNameText');
+  const profileDropdown = document.getElementById('profileDropdown');
+  const editProfileBtn = document.getElementById('editProfileBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const todayLunchMenu = document.getElementById('todayLunchMenu');
+  const timetablePeriodCount = document.getElementById('timetablePeriodCount');
+  const schoolMealMenu = document.getElementById('schoolMealMenu');
+  const schoolTimetableList = document.getElementById('schoolTimetableList');
+  const schoolScheduleFullList = document.getElementById('schoolScheduleFullList');
+  const schoolScheduleList = document.getElementById('schoolScheduleList');
+
+  // Firebase 초기화
+  const initializeFirebase = async () => {
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+
+      // 사용자 인증 상태 변화 감지
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userId = user.uid;
+          // Firestore에서 프로필 문서 리스너 설정
+          const userProfileRef = doc(db, `artifacts/${__app_id}/users/${userId}/profile/user_data`);
+          onSnapshot(userProfileRef, (docSnap) => {
+            if (docSnap.exists()) {
+              userProfile = docSnap.data();
+              console.log("프로필 로드 완료:", userProfile);
+              updateUIForLoggedInUser(userProfile);
+            } else {
+              console.log("프로필 데이터가 없습니다.");
+              updateUIForLoggedInUser(null);
+            }
+          });
+        } else {
+          // 로그아웃 상태일 때 UI 업데이트
+          updateUIForLoggedOutUser();
+        }
+      });
+
+      // 요청에 따라 익명 로그인 대신 커스텀 토큰 로그인만 사용합니다.
+      if (typeof __initial_auth_token !== 'undefined') {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        console.error("커스텀 인증 토큰이 없어 로그인할 수 없습니다.");
+      }
+
+    } catch (error) {
+      console.error("Firebase 초기화 또는 로그인 실패:", error);
+    }
+  };
+
+  // 로그인 상태일 때 UI 업데이트
+  const updateUIForLoggedInUser = (profile) => {
+    loginBtn.classList.add('hidden');
+    userProfileBtn.classList.remove('hidden');
+    userNameText.textContent = profile?.name ? `${profile.name}님` : '사용자';
+    
+    // 나이스 API 데이터 가져오기
+    if (profile) {
+      fetchNeisData(profile);
+    }
+  };
+  
+  // 로그아웃 상태일 때 UI 업데이트
+  const updateUIForLoggedOutUser = () => {
+    loginBtn.classList.remove('hidden');
+    userProfileBtn.classList.add('hidden');
+    // 데이터 초기화
+    todayLunchMenu.textContent = '로그인이 필요합니다.';
+    timetablePeriodCount.textContent = '...';
+    schoolMealMenu.textContent = '로그인이 필요합니다.';
+    schoolTimetableList.innerHTML = `<div class="cell"><div class="meta"><div class="title">로그인이 필요합니다.</div><div class="sub">프로필을 설정하면 시간표를 볼 수 있어요.</div></div></div>`;
+    schoolScheduleFullList.innerHTML = `<div class="cell"><div class="meta"><div class="title">로그인이 필요합니다.</div><div class="sub">프로필을 설정하면 학사일정을 볼 수 있어요.</div></div></div>`;
+    schoolScheduleList.innerHTML = `<div class="cell"><div class="meta"><div class="title">로그인이 필요합니다.</div><div class="sub">프로필을 설정하면 학사일정을 볼 수 있어요.</div></div></div>`;
+  };
+
+  // 나이스 API에서 데이터 가져오기
+  const fetchNeisData = async (profile) => {
+    if (!profile.sdSchulCode || !profile.atptOfcdcScCode || !profile.grade || !profile.classNum) {
+      console.error("나이스 API를 호출할 프로필 정보가 불완전합니다.");
+      return;
+    }
+
+    const today = new Date();
+    const YMD = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const YM = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}`;
+    const apiBase = `${neisApiUrl}`;
+    
+    const fetchData = async (endpoint, params) => {
+      const url = new URL(apiBase + endpoint);
+      url.searchParams.append('KEY', neisApiKey);
+      url.searchParams.append('Type', 'json');
+      url.searchParams.append('pIndex', 1);
+      url.searchParams.append('pSize', 100);
+      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+      
+      try {
+        const response = await fetch(url.toString());
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("나이스 API 호출 실패:", error);
+        return null;
+      }
+    };
+    
+    // 급식 정보 로드
+    const mealParams = {
+      ATPT_OFCDC_SC_CODE: profile.atptOfcdcScCode,
+      SD_SCHUL_CODE: profile.sdSchulCode,
+      MLSV_YMD: YMD
+    };
+    const mealData = await fetchData('mealServiceDietInfo', mealParams);
+    if (mealData && mealData.mealServiceDietInfo && mealData.mealServiceDietInfo[1].row.length > 0) {
+      const lunch = mealData.mealServiceDietInfo[1].row.find(item => item.MMEAL_SC_NM === '중식');
+      if (lunch) {
+        const menu = lunch.DDISH_NM.replace(/<br\/>/g, ', ').replace(/\s*\(\d+\.\d+\)\s*/g, '').trim();
+        todayLunchMenu.textContent = menu;
+        schoolMealMenu.textContent = menu;
+      } else {
+        todayLunchMenu.textContent = '오늘의 점심 급식 정보가 없습니다.';
+        schoolMealMenu.textContent = '오늘의 점심 급식 정보가 없습니다.';
+      }
+    } else {
+        todayLunchMenu.textContent = '급식 정보 없음';
+        schoolMealMenu.textContent = '급식 정보 없음';
+    }
+
+    // 시간표 정보 로드
+    const timetableParams = {
+      ATPT_OFCDC_SC_CODE: profile.atptOfcdcScCode,
+      SD_SCHUL_CODE: profile.sdSchulCode,
+      AY: new Date().getFullYear(),
+      GRADE: profile.grade,
+      CLASS_NM: profile.classNum,
+      TI_FROM_YMD: YMD,
+      TI_TO_YMD: YMD
+    };
+    const timetableData = await fetchData('hisTimetable', timetableParams);
+    if (timetableData && timetableData.hisTimetable && timetableData.hisTimetable[1].row.length > 0) {
+      const timetable = timetableData.hisTimetable[1].row;
+      let timetableHtml = '';
+      timetable.sort((a, b) => parseInt(a.PERIO, 10) - parseInt(b.PERIO, 10)).forEach(item => {
+        timetableHtml += `<div class="cell">
+                            <div class="meta">
+                              <div class="title">${item.PERIO}교시: ${item.ITRT_CNTNT}</div>
+                              <div class="sub">${item.CLASS_NM}반 교실</div>
+                            </div>
+                          </div>`;
+      });
+      schoolTimetableList.innerHTML = timetableHtml;
+      timetablePeriodCount.textContent = timetable.length;
+    } else {
+      schoolTimetableList.innerHTML = `<div class="cell"><div class="meta"><div class="title">시간표 정보 없음</div></div></div>`;
+      timetablePeriodCount.textContent = '0';
+    }
+
+    // 학사일정 정보 로드
+    const scheduleParams = {
+      ATPT_OFCDC_SC_CODE: profile.atptOfcdcScCode,
+      SD_SCHUL_CODE: profile.sdSchulCode,
+      AA_FROM_YMD: YM + '01',
+      AA_TO_YMD: YM + '31'
+    };
+    const scheduleData = await fetchData('schulAcdmcrInfo', scheduleParams);
+    if (scheduleData && scheduleData.schulAcdmcrInfo && scheduleData.schulAcdmcrInfo[1].row.length > 0) {
+      const schedules = scheduleData.schulAcdmcrInfo[1].row.slice(0, 2); // 홈 화면은 2개만 표시
+      let scheduleHtml = '';
+      schedules.forEach(item => {
+        scheduleHtml += `<div class="cell" role="listitem">
+                            <div class="avatar">${item.EVENT_NM.substring(0, 1)}</div>
+                            <div class="meta">
+                              <div class="title">${item.EVENT_NM}</div>
+                              <div class="sub">${item.AA_YMD.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}</div>
+                            </div>
+                          </div>`;
+      });
+      schoolScheduleList.innerHTML = scheduleHtml;
+
+      // 전체 일정 로드 (학교생활 페이지)
+      const allSchedules = scheduleData.schulAcdmcrInfo[1].row;
+      let fullScheduleHtml = '';
+      allSchedules.forEach(item => {
+        fullScheduleHtml += `<div class="cell" role="listitem">
+                            <div class="meta">
+                              <div class="title">${item.EVENT_NM}</div>
+                              <div class="sub">${item.AA_YMD.replace(/(\d{4})(\d{2})(\d{2})/, '$1.$2.$3')}</div>
+                            </div>
+                          </div>`;
+      });
+      schoolScheduleFullList.innerHTML = fullScheduleHtml;
+
+    } else {
+      schoolScheduleList.innerHTML = `<div class="cell"><div class="meta"><div class="title">학사일정 정보 없음</div><div class="sub"></div></div></div>`;
+      schoolScheduleFullList.innerHTML = `<div class="cell"><div class="meta"><div class="title">학사일정 정보 없음</div><div class="sub"></div></div></div>`;
+    }
+
+  };
+
+  // 탭 라우팅
+  const tabs = document.querySelectorAll('.tab');
+  const pages = document.querySelectorAll('.page');
+  const appTitle = document.getElementById('appTitle');
+
+  const updatePage = (targetId) => {
+    tabs.forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+      if (t.dataset.target === targetId) {
+        t.classList.add('active');
+        t.setAttribute('aria-selected', 'true');
+      }
+    });
+
+    pages.forEach(page => {
+      if (page.id === `page-${targetId}`) {
+        page.classList.add('active');
+      } else {
+        page.classList.remove('active');
+      }
+    });
+
+    const titles = {home:'홈', school:'학교생활', community:'커뮤니티', more:'더보기'};
+    appTitle.textContent = titles[targetId] || '앱';
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      updatePage(tab.dataset.target);
+    });
+  });
+
+  // 학교생활 페이지 서브 탭 라우팅
+  const schoolTabs = document.querySelectorAll('.school-tabs .chip');
+  const schoolContents = {
+      meal: document.getElementById('content-meal'),
+      timetable: document.getElementById('content-timetable'),
+      schedule: document.getElementById('content-schedule')
+  };
+
+  const updateSchoolContent = (target) => {
+      schoolTabs.forEach(t => t.classList.remove('active'));
+      const activeTab = document.querySelector(`.school-tabs .chip[data-target="${target}"]`);
+      if (activeTab) activeTab.classList.add('active');
+      Object.entries(schoolContents).forEach(([k, el]) => el.classList.toggle('hidden', k !== target));
+  };
+
+  schoolTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+          updateSchoolContent(tab.dataset.target);
+      });
+  });
+
+  // 홈 화면 시간표 카드 클릭 시 상세 시간표로 이동
+  const timetableQuickCard = document.querySelector('.timetable-quick-card');
+  if (timetableQuickCard) {
+      timetableQuickCard.addEventListener('click', () => {
+          updatePage('school');
+          updateSchoolContent('timetable');
+      });
+  }
+
+  // 메시지 팝업을 표시하는 범용 함수
+  const showMessagePopup = (message) => {
+      const messagePopup = document.createElement('div');
+      messagePopup.textContent = message;
+      messagePopup.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          padding: 16px 24px;
+          background-color: rgba(0, 0, 0, 0.8);
+          color: white;
+          border-radius: 12px;
+          z-index: 1000;
+          opacity: 0;
+          transition: opacity 0.3s ease-in-out;
+      `;
+      document.body.appendChild(messagePopup);
+      
+      setTimeout(() => messagePopup.style.opacity = '1', 10);
+      setTimeout(() => {
+          messagePopup.style.opacity = '0';
+          setTimeout(() => document.body.removeChild(messagePopup), 300);
+      }, 1500);
+  };
+
+  // 모드 토글
+  const modeToggleBtn = document.getElementById('modeToggleBtn');
+  modeToggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('light-mode');
+    const isLightMode = document.body.classList.contains('light-mode');
+    modeToggleBtn.setAttribute('aria-label', isLightMode ? '다크모드로 전환' : '라이트모드로 전환');
+  });
+
+  // 로그인 버튼 클릭 시 로그인 페이지로 이동
+  loginBtn.addEventListener('click', () => {
+      showMessagePopup('로그인 페이지로 이동합니다!');
+      window.location.href = '/login'; // 실제 로그인 페이지로 이동
+  });
+
+  // FAB 클릭 시 메시지 표시
+  document.querySelector('.fab').addEventListener('click', ()=>{
+    showMessagePopup('새 글쓰기 페이지로 이동합니다!');
+  });
+
+  // 사용자 프로필 버튼 클릭 시 드롭다운 토글
+  userProfileBtn.addEventListener('click', () => {
+    profileDropdown.classList.toggle('show');
+  });
+
+  // 드롭다운 외부 클릭 시 닫기
+  window.addEventListener('click', (e) => {
+    if (!userProfileBtn.contains(e.target) && !profileDropdown.contains(e.target)) {
+      profileDropdown.classList.remove('show');
+    }
+  });
+
+  // 드롭다운 아이템 클릭 이벤트
+  editProfileBtn.addEventListener('click', () => {
+    showMessagePopup('프로필 편집 페이지로 이동합니다!');
+    profileDropdown.classList.remove('show');
+  });
+
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await signOut(auth);
+      showMessagePopup('로그아웃 되었습니다.');
+      profileDropdown.classList.remove('show');
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      showMessagePopup('로그아웃에 실패했습니다.');
+    }
+  });
+
+  // 달력 모달 로직
+  const calendarModal = document.getElementById('calendarModal');
+  const modalContent = document.querySelector('.modal-content');
+  const todayInfoBtn = document.getElementById('today-info-btn');
+  const modalCloseHandle = document.getElementById('modalCloseHandle');
+
+  todayInfoBtn.addEventListener('click', () => {
+      calendarModal.classList.add('open');
+      setTimeout(() => {
+          modalContent.classList.add('is-open');
+      }, 10);
+  });
+
+  function closeModal() {
+      modalContent.classList.remove('is-open');
+      modalContent.addEventListener('transitionend', () => {
+          calendarModal.classList.remove('open');
+      }, { once: true });
+  }
+
+  modalCloseHandle.addEventListener('click', closeModal);
+  calendarModal.addEventListener('click', (e) => {
+      if (e.target.id === 'calendarModal') {
+          closeModal();
+      }
+  });
+
+  // 앱 초기화
+  window.addEventListener('load', () => {
+    initializeFirebase();
+  });
+</script>
+</body>
+</html>
