@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>미래교육저널 | 학교 생활 플랫폼 ‘N-MATE’, 혼자서 만들어낸 기록</title>
+  <title>미래교육저널 | N-MATE 혼자 개발한 강기훈 군을 만나다</title>
   <meta name="description" content="단 한 명의 학생 개발자가 만든 학교 생활 플랫폼 'N-MATE'의 역사와 비전에 대한 심층 인터뷰를 담았습니다." />
   <meta name="keywords" content="미래교육저널, 교육, 에듀테크, 학교, 학생개발자, N-MATE, 강기훈" />
   <meta name="author" content="미래교육저널 편집국" />
@@ -13,7 +13,7 @@
   <!-- Open Graph -->
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="미래교육저널" />
-  <meta property="og:title" content="학교 생활 플랫폼 ‘N-MATE’, 혼자서 만들어낸 기록" />
+  <meta property="og:title" content="N-MATE 혼자 개발한 강기훈 군을 만나다" />
   <meta property="og:description" content="단 한 명의 학생 개발자가 만든 학교 생활 플랫폼 'N-MATE'의 역사와 비전" />
   <meta property="og:url" content="https://www.futureedu-journal.kr/article/n-mate-interview" />
   <meta property="og:image" content="https://i.postimg.cc/25Xg3HZF/002.png" />
@@ -23,7 +23,7 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="학교 생활 플랫폼 ‘N-MATE’, 혼자서 만들어낸 기록" />
+  <meta name="twitter:title" content="N-MATE 혼자 개발한 강기훈 군을 만나다" />
   <meta name="twitter:description" content="한 명의 학생 개발자가 교육 현장을 어떻게 바꿀 수 있는지 보여주는 상징적인 사례" />
   <meta name="twitter:image" content="https://i.postimg.cc/25Xg3HZF/002.png" />
 
@@ -122,10 +122,10 @@
       display:flex;flex-wrap:wrap;gap:12px;align-items:center;font-size:13px;color:var(--muted);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0
     }
     .byline .dot{width:3px;height:3px;border-radius:50%;background:#cbd5e1;display:inline-block;margin:0 6px}
-    .tools{display:flex;gap:8px;margin:12px 0}
-    .tool-btn{border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:8px;font-size:13px;color:#374151}
+    .tools{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+    .tool-btn{border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:8px;font-size:13px;color:#374151;cursor:pointer}
     .react{margin-left:auto;display:flex;gap:10px}
-    .react button{border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:8px;font-size:13px}
+    .react button{border:1px solid var(--line);background:#fff;padding:8px 10px;border-radius:8px;font-size:13px;cursor:pointer}
 
     /* Article body */
     .article{padding:0}
@@ -142,7 +142,7 @@
     .tags{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
     .tag{background:#f1f5f9;color:#0f172a;border:1px solid #e2e8f0;padding:6px 10px;border-radius:999px;font-size:13px}
     .sharebar{display:flex;gap:8px;margin-top:8px}
-    .sharebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;font-size:13px}
+    .sharebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 10px;font-size:13px;cursor:pointer}
 
     /* Related */
     .related{margin-top:24px}
@@ -166,26 +166,176 @@
       width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;margin:6px 0
     }
     .newsletter button{
-      width:100%;background:var(--brand);border:none;color:#fff;border-radius:8px;padding:10px;font-weight:700
+      width:100%;background:var(--brand);border:none;color:#fff;border-radius:8px;padding:10px;font-weight:700;cursor:pointer
     }
-    /* Comments placeholder */
-    .comments{
-      margin-top:20px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:14px;color:#475569
+    /* Comments section */
+    .comments-section{
+        margin-top: 20px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        color: #475569;
+    }
+    .comments-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .comment-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .comment-item {
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .comment-item:last-child {
+        border-bottom: none;
+    }
+    .comment-author {
+        font-weight: bold;
+        color: var(--text);
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .comment-author .date {
+        font-size: 12px;
+        font-weight: normal;
+        color: var(--muted);
+    }
+    .comment-content {
+        margin-top: 8px;
+        font-size: 15px;
+        line-height: 1.5;
+        color: #374151;
+    }
+    
+    /* Custom Message Box */
+    .message-box {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 14px;
+        z-index: 999;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+    }
+    .message-box.show {
+        opacity: 1;
     }
 
     /* Footer */
-    footer{background:#0a0f1c;color:#c7d2fe;margin-top:40px}
+    footer{background:#f3f4f6;color:#4b5563;margin-top:40px}
     footer .container{padding:24px 16px}
     .foot-grid{display:grid;gap:18px}
     @media(min-width:768px){.foot-grid{grid-template-columns:2fr 1fr 1fr}}
-    .corp{font-size:13px;color:#a5b4fc}
+    .corp{font-size:13px;color:#6b7280}
 
     /* Back to top */
     .to-top{
       position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;border:none;border-radius:999px;
-      padding:10px 12px;box-shadow:0 6px 16px rgba(0,0,0,.18);display:none
+      padding:10px 12px;box-shadow:0 6px 16px rgba(0,0,0,.18);display:none;cursor:pointer
     }
     .to-top.show{display:block}
+
+    /* TTS Controls Styling */
+    .tts-controls {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        opacity: 0;
+        visibility: hidden;
+    }
+    .tts-controls.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .tts-progress-container {
+        width: 100%;
+        height: 6px;
+        background-color: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .tts-progress-bar {
+        width: 0;
+        height: 100%;
+        background-color: var(--brand);
+        transition: width 0.3s ease-in-out;
+    }
+    .tts-status {
+        text-align: center;
+        font-size: 14px;
+        color: var(--muted);
+    }
+    .tts-controls-row {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+    }
+    .tts-control-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        background-color: var(--brand);
+        color: #fff;
+        transition: background-color 0.2s ease;
+    }
+    .tts-control-btn:hover {
+        background-color: var(--brand-ink);
+    }
+    .tts-control-btn.pause {
+        background-color: #fca5a5;
+        color: #b91c1c;
+    }
+    .tts-adjustments {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        font-size: 14px;
+    }
+    .tts-adjustments span {
+        font-weight: 500;
+        color: #475569;
+    }
+    .tts-adjustments input[type="range"] {
+        width: 100px;
+        cursor: pointer;
+    }
+    .tts-reading-text {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 50px;
+        color: var(--text);
+        font-style: italic;
+        font-size: 15px;
+        line-height: 1.5;
+        overflow: auto;
+    }
   </style>
 
   <!-- Schema.org NewsArticle -->
@@ -193,7 +343,7 @@
   {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
-    "headline": "학교 생활 플랫폼 ‘N-MATE’, 혼자서 만들어낸 기록",
+    "headline": "N-MATE 혼자 개발한 강기훈 군을 만나다",
     "image": ["https://i.postimg.cc/25Xg3HZF/002.png"],
     "datePublished": "2025-09-03T09:00:00+09:00",
     "dateModified": "2025-09-03T21:07:00+09:00",
@@ -218,7 +368,7 @@
     <!-- Topbar -->
     <div class="topbar">
       <div class="container">
-        <div>2025.09.03(수) 21:07 | 최신 업데이트</div>
+        <div id="current-time"></div>
         <div>구독 1개월 무료 체험</div>
       </div>
     </div>
@@ -257,7 +407,7 @@
         </div>
 
         <span class="category">인터뷰</span>
-        <h1 id="headline" class="headline">학교 생활 플랫폼 ‘N-MATE’, 혼자서 만들어낸 기록</h1>
+        <h1 id="headline" class="headline">N-MATE 혼자 개발한 강기훈 군을 만나다</h1>
         <p class="dek">최근 중학교 현장에서 학생들 사이에 빠르게 확산되고 있는 학교 생활 플랫폼 ‘N-MATE’. 급식, 시간표, 학사일정을 통합 제공하는 이 서비스는 놀랍게도 단 한 명의 학생 개발자, 강기훈 군에 의해 탄생했다.</p>
 
         <div class="byline">
@@ -277,6 +427,7 @@
           <button class="tool-btn" id="fontMinus">가-</button>
           <button class="tool-btn" id="fontPlus">가+</button>
           <button class="tool-btn" onclick="window.print()">인쇄</button>
+          <button class="tool-btn" id="readAloud">기사 읽어주기</button>
         </div>
         <div class="ad">
           <a href="#">
@@ -294,8 +445,7 @@
               </a>
             </div>
             <p><strong>― 개발 초기 이야기를 들려주신다면요.</strong></p>
-            <p>강기훈 군: 처음 시작은 2024년 7월이었습니다. 당시에는 제 학교인 부산남중학교 학생들을 대상으로 ‘부산남중 알리미’라는 이름의 웹페이지를 만들었어요. 단순히 급식과 일정, 시간표를 보여주는 정도였는데, 친구들의 반응이 예상보다 훨씬 뜨거웠습니다.</p>
-            <p>“매일 급식을 검색하지 않아도 된다”, “시간표를 카톡 단톡방에서 찾을 필요가 없다” 같은 피드백이 이어졌죠. 이 경험이 계기가 되어 ‘이걸 더 많은 학교에도 적용할 수 있겠다’는 확신이 들었고, 그때부터 본격적인 확장을 고민하게 됐습니다. 이후 2025년 1월 4일, ‘N-MATE’라는 이름을 붙이고 2.0 버전을 공개했어요. 여기서부터는 단순한 웹페이지가 아니라 플랫폼으로 발전하기 시작했습니다.</p>
+            <p>강기훈 군: 처음 개발을 시작한 건 초등학교 6학년 때였어요. 당시에는 간단한 웹페이지를 만들면서 코딩을 독학했죠. 초등학교 친구들이 '오늘 급식 메뉴는 뭐야?'라고 매번 묻는 것을 보고, 매일 똑같은 정보를 찾아야 하는 불편함을 해결하고 싶었어요. 그래서 2024년 7월에 초등학교 친구들을 위한 간단한 알림 웹페이지를 만들었는데, 친구들이 "매일 급식을 검색하지 않아도 된다", "시간표를 카톡 단톡방에서 찾을 필요가 없다" 같은 긍정적인 피드백을 주었어요. 이 경험이 계기가 되어 중학교에 와서 '부산남중 알리미'를 개발하게 되었습니다. 이후 2025년 1월 4일, ‘N-MATE’라는 이름을 붙이고 2.0 버전을 공개하면서 단순한 웹페이지가 아닌 플랫폼으로 발전하기 시작했습니다.</p>
             <p><strong>― 2.0 버전의 주요 변화는 무엇이었습니까.</strong></p>
             <p>강기훈 군: 1.0이 사실상 정보 나열에 가까웠다면, 2.0에서는 탭 구조를 도입해 정보를 체계적으로 정리했습니다. 그리고 학생들이 단순히 ‘보는 것’에 그치지 않고, 서로 의견을 나눌 수 있도록 커뮤니티 기능을 넣었어요. 하지만 동시에 문제점도 있었습니다. 페이지 로딩 속도가 느려지고, 계정 관리가 제한적이었죠. 특히 전학이나 학급 이동 시 새 계정을 만들어야 하는 불편이 컸습니다. 이 부분은 학생들 사이에서도 많이 지적되었고, 저 역시 개선해야겠다는 생각을 하게 된 계기였습니다.</p>
             <div class="ad">
@@ -332,6 +482,30 @@
             <p>강기훈 군: 저는 모든 학생이 자기만의 길을 찾을 수 있는 '네비게이터'를 만들고 싶었습니다. 코딩을 몰라도, 기술이 없어도 괜찮습니다. 중요한 건 '내가 무엇을 하고 싶은가'라는 질문을 멈추지 않는 용기입니다. N-MATE가 그 질문에 대한 작은 답을 찾는 시작점이 되기를 바랍니다. </p>
             <p>혼자서 시작한 작은 웹페이지가 전국적인 학교 플랫폼으로 성장한 N-MATE. 강기훈 군의 여정은 한 명의 학생 개발자가 교육 현장을 어떻게 바꿀 수 있는지를 보여주는 상징적인 사례다. 미래교육저널은 N-MATE가 앞으로 또 어떤 혁신을 만들어낼지 주목하고 있다.</p>
           </div>
+          
+          <div id="tts-controls" class="tts-controls">
+            <div class="tts-status">
+                <span id="ttsStatusText">준비됨</span>
+            </div>
+            <div class="tts-progress-container">
+                <div class="tts-progress-bar" id="ttsProgressBar"></div>
+            </div>
+            <div id="ttsReadingText" class="tts-reading-text"></div>
+            <div class="tts-controls-row">
+                <button id="ttsPlayPauseBtn" class="tts-control-btn">▶︎ 재생</button>
+                <button id="ttsStopBtn" class="tts-control-btn">◼︎ 정지</button>
+            </div>
+            <div class="tts-adjustments">
+                <div>
+                    <span>속도:</span>
+                    <input type="range" id="ttsRate" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <div>
+                    <span>음조:</span>
+                    <input type="range" id="ttsPitch" min="0" max="2" value="1" step="0.1">
+                </div>
+            </div>
+          </div>
 
           <div class="tags" aria-label="태그">
             <span class="tag">#N-MATE</span>
@@ -346,32 +520,357 @@
           </div>
         </section>
 
-        <section class="related">
-          <h3>관련 기사</h3>
-          <div class="rel-grid">
-            <a class="rel-card" href="#">
-              <div class="meta">
-                <div class="k">에듀테크</div>
-                <div class="t">10대 개발자, 미래를 열다</div>
-              </div>
-            </a>
-            <a class="rel-card" href="#">
-              <div class="meta">
-                <div class="k">학교</div>
-                <div class="t">학생이 만든 교내 데이터 분석 서비스</div>
-              </div>
-            </a>
-            <a class="rel-card" href="#">
-              <div class="meta">
-                <div class="k">정책</div>
-                <div class="t">AI 학습 튜터 도입 효과와 과제</div>
-              </div>
-            </a>
-          </div>
-        </section>
-
-        <section class="comments" aria-label="댓글">
-          댓글 영역(위젯 연동 자리). 실명/익명 전환, 최신/추천 정렬 지원.
+        <section class="comments-section" aria-label="댓글 섹션">
+            <div class="comments-header">
+                <span>댓글 43개</span>
+                <button style="border:none;background:none;color:var(--muted);font-size:14px;cursor:pointer;">새로고침</button>
+            </div>
+            <div class="comment-list">
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">방금 전</span>
+                    </div>
+                    <div class="comment-content">
+                        참.대단하네요.어린.학생이. 저 어릴적엔 이런 생각도 못해봤는데.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        요즘 학생들 정말 똑똑하네. 기특하네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        그래도 공부는 소홀히 하지 않고 잘 하고 있겠지요? 멋지네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">4분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        우리 손주도 이런 거 배우고 있는데, 이게 쉽지가 않다고 들었는데. 기특하네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">6분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        이렇게 주변을 돌아보며 불편을 해결하려는 마음이 참 보기 좋네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">8분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        어휴, 새벽까지 코딩을 한다니 몸 상하겠어요. 부모님은 걱정이시겠네.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">10분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        요즘 세상은 별별 신기한 게 다 나오네. 학생들이 만든 거라니.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">12분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        아니 글쎄, 학교에서 이런 걸 만든대요. 세상 좋아졌지.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">15분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        정말 미래가 기대되는 학생이네. 큰 인물 될 것 같아.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">18분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        세상에... 기사를 보면서 내내 감탄했네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">20분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        우리 애가 이거 쓴다고 자랑하던데, 대단한 학생이었구만.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">25분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        자꾸 고생한단 얘기가 나오니 마음이 아프네요. 밥은 잘 먹고 다니려나.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">30분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        손재주가 보통이 아니네. 아주 훌륭해요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">35분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        학교에서도 응원을 많이 해줘야 할 텐데.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">40분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        이런 친구들이 세상을 바꾸는 거죠.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">45분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        기사 잘 읽었습니다. 요즘 아이들 보면 신기하다니까.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">50분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        우리 아이도 이런 걸 보고 배웠으면.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">55분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        아주 영특한 아이네.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        이런 게 바로 창의력 교육이 아닌가 싶네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 5분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        세상에나, 애들 용돈도 아껴서 서버비 내는거 아닌지.. 기특하네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 10분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        혼자서 했다는 게 정말 대단하네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 15분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        이런 기사는 널리 알려져야 해요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 20분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        부모님은 아주 자랑스러우시겠어.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 25분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        말 한마디 한마디가 참 어른스럽네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 30분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        너무 과로하지 않았으면 하는 마음이네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 35분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        우리 세대랑은 정말 다르네.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 40분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        배울 점이 참 많은 학생이에요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 45분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        친구들을 생각하는 마음이 예쁘네.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 50분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        요즘 아이들은 정말... 대단해요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">1시간 55분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        세상 참 좋아졌어요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        혼자서 이 많은 걸 다 해냈다니...
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 10분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        마냥 공부만 하는 줄 알았는데 이런 재주도 있네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 20분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        학생의 용기와 노력이 참 값지네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 30분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        우리 딸도 이거 쓰던데!
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 40분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        어른들이 배워야 할 점이네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">2시간 50분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        이런 게 바로 인재 육성이겠죠.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        마음이 따뜻해지는 기사입니다.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 10분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        훌륭한 개발자가 되길 바랍니다.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 20분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        응원하는 마음 전합니다.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 30분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        작은 시작이 이렇게 커질 수 있다는 걸 보여주네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 40분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        젊은이의 패기가 보기 좋습니다.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">3시간 50분 전</span>
+                    </div>
+                    <div class="comment-content">
+                        아주 귀감이 되는 이야기네요.
+                    </div>
+                </div>
+                <div class="comment-item">
+                    <div class="comment-author">
+                        익명 <span class="date">4시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        건강 잘 챙기면서 하길 바란다네.
+                    </div>
+                </div>
+            </div>
         </section>
       </article>
 
@@ -405,7 +904,7 @@
         </div>
         <div class="ad side-card">
           <a href="#">
-            <img src="https://assets.vlitag.com/ads/970x250/15.jpg" alt="광고 이미지" />
+            <img src="https://health.chosun.com/images/2025/am_list_rm_250902.jpg" alt="광고 이미지" />
           </a>
         </div>
       </aside>
@@ -430,24 +929,26 @@
       <div>
         <h4>섹션</h4>
         <ul class="corp">
-          <li><a href="#" style="color:#c7d2fe">교육정책</a></li>
-          <li><a href="#" style="color:#c7d2fe">학교</a></li>
-          <li><a href="#" style="color:#c7d2fe">입시</a></li>
-          <li><a href="#" style="color:#c7d2fe">에듀테크</a></li>
+          <li><a href="#" style="color:#6b7280">교육정책</a></li>
+          <li><a href="#" style="color:#6b7280">학교</a></li>
+          <li><a href="#" style="color:#6b7280">입시</a></li>
+          <li><a href="#" style="color:#6b7280">에듀테크</a></li>
         </ul>
       </div>
       <div>
         <h4>고객센터</h4>
         <ul class="corp">
-          <li><a href="#" style="color:#c7d2fe">문의하기</a></li>
-          <li><a href="#" style="color:#c7d2fe">개인정보처리방침</a></li>
-          <li><a href="#" style="color:#c7d2fe">이용약관</a></li>
+          <li><a href="#" style="color:#6b7280">문의하기</a></li>
+          <li><a href="#" style="color:#6b7280">개인정보처리방침</a></li>
+          <li><a href="#" style="color:#6b7280">이용약관</a></li>
         </ul>
       </div>
     </div>
   </footer>
 
   <button class="to-top" id="toTop" aria-label="맨 위로">↑</button>
+  
+  <div id="message-box" class="message-box"></div>
 
   <script>
     // 폰트 크기 조절
@@ -459,9 +960,19 @@
       document.getElementById('fontPlus').addEventListener('click', ()=>{ size = clamp(size+1); body.style.fontSize = size+'px'; });
     })();
 
+    // 커스텀 메시지 박스
+    function showMessageBox(message) {
+        const msgBox = document.getElementById('message-box');
+        msgBox.textContent = message;
+        msgBox.classList.add('show');
+        setTimeout(() => {
+            msgBox.classList.remove('show');
+        }, 3000);
+    }
+
     // 공유
     function shareCopy(){
-      navigator.clipboard.writeText(location.href).then(()=>alert('링크가 복사됐어요.'));
+      navigator.clipboard.writeText(location.href).then(()=>showMessageBox('링크가 복사되었어요!'));
     }
     function shareNative(){
       if (navigator.share){
@@ -469,7 +980,7 @@
       } else { shareCopy(); }
     }
     function shareKakao(){
-      alert('카카오톡 공유 연동 자리 (SDK 연결 필요)');
+      showMessageBox('카카오톡 공유 연동을 위한 SDK가 필요합니다.');
     }
 
     // 맨 위로
@@ -487,6 +998,160 @@
       const scrolled = (scrollY / height) * 100;
       document.getElementById('progressBar').style.width = scrolled + '%';
     });
+
+    // 실시간 시간 업데이트
+    function updateTime() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const timeString = `${year}.${month}.${day}(${dayOfWeek}) ${hours}:${minutes} | 최신 업데이트`;
+        document.getElementById('current-time').textContent = timeString;
+    }
+    
+    // 페이지 로드 시 시간 설정 및 1분마다 업데이트
+    updateTime();
+    setInterval(updateTime, 60000);
+
+    // TTS(Text-to-Speech) 기능
+    (function(){
+      const readAloudBtn = document.getElementById('readAloud');
+      const articleBody = document.getElementById('articleBody');
+      const ttsControls = document.getElementById('tts-controls');
+      const ttsPlayPauseBtn = document.getElementById('ttsPlayPauseBtn');
+      const ttsStopBtn = document.getElementById('ttsStopBtn');
+      const ttsRateInput = document.getElementById('ttsRate');
+      const ttsPitchInput = document.getElementById('ttsPitch');
+      const ttsReadingText = document.getElementById('ttsReadingText');
+      const ttsProgressBar = document.getElementById('ttsProgressBar');
+      const ttsStatusText = document.getElementById('ttsStatusText');
+      
+      let isReading = false;
+      let isPaused = false;
+      let currentText = '';
+      let textLength = 0;
+      const utterance = new SpeechSynthesisUtterance();
+
+      if ('speechSynthesis' in window) {
+        // 음성 설정
+        const setVoice = () => {
+          const voices = window.speechSynthesis.getVoices();
+          const koreanVoice = voices.find(voice => voice.lang === 'ko-KR');
+          if (koreanVoice) {
+            utterance.voice = koreanVoice;
+          }
+        };
+
+        // 음성 목록이 로드되면 음성 설정
+        window.speechSynthesis.onvoiceschanged = setVoice;
+        setVoice();
+
+        // 음성 재생 이벤트 리스너
+        utterance.onstart = () => {
+            ttsControls.classList.add('show');
+            ttsPlayPauseBtn.innerHTML = '❚❚ 일시정지';
+            ttsStatusText.textContent = '재생 중...';
+            isReading = true;
+            isPaused = false;
+        };
+        utterance.onend = () => {
+            isReading = false;
+            isPaused = false;
+            ttsControls.classList.remove('show');
+            ttsPlayPauseBtn.innerHTML = '▶︎ 재생';
+            ttsProgressBar.style.width = '0%';
+            ttsReadingText.textContent = '';
+            ttsStatusText.textContent = '재생 완료';
+        };
+        utterance.onpause = () => {
+            isPaused = true;
+            ttsPlayPauseBtn.innerHTML = '▶︎ 재생';
+            ttsStatusText.textContent = '일시정지됨';
+        };
+        utterance.onresume = () => {
+            isPaused = false;
+            ttsPlayPauseBtn.innerHTML = '❚❚ 일시정지';
+            ttsStatusText.textContent = '재생 중...';
+        };
+        utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+                const progress = (event.charIndex / textLength) * 100;
+                ttsProgressBar.style.width = `${progress}%`;
+                
+                // 현재 읽고 있는 문장 표시 (간단한 구현)
+                const start = currentText.lastIndexOf('.', event.charIndex) + 1 || 0;
+                const end = currentText.indexOf('.', event.charIndex) + 1 || currentText.length;
+                const sentence = currentText.substring(start, end).trim();
+                ttsReadingText.textContent = sentence;
+            }
+        };
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesis error:', event);
+            isReading = false;
+            isPaused = false;
+            ttsControls.classList.remove('show');
+            ttsPlayPauseBtn.innerHTML = '▶︎ 재생';
+            showMessageBox('음성 읽기 중 오류가 발생했습니다.');
+        };
+
+        // '기사 읽어주기' 버튼 클릭 이벤트
+        readAloudBtn.addEventListener('click', () => {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                // If it's speaking, cancel and then immediately return to prevent a new speech from starting.
+                isReading = false;
+                isPaused = false;
+                ttsControls.classList.remove('show');
+                ttsPlayPauseBtn.innerHTML = '▶︎ 재생';
+            } else {
+                const textToRead = articleBody.innerText.replace(/\s+/g, ' ').trim();
+                currentText = textToRead;
+                textLength = textToRead.length;
+                
+                utterance.text = textToRead;
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        // 재생/일시정지 버튼
+        ttsPlayPauseBtn.addEventListener('click', () => {
+            if (window.speechSynthesis.speaking && !isPaused) {
+                window.speechSynthesis.pause();
+            } else if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            } else {
+                // Not speaking at all, so start from the beginning
+                const textToRead = articleBody.innerText.replace(/\s+/g, ' ').trim();
+                currentText = textToRead;
+                textLength = textToRead.length;
+                utterance.text = textToRead;
+                window.speechSynthesis.speak(utterance);
+            }
+        });
+
+        // 정지 버튼
+        ttsStopBtn.addEventListener('click', () => {
+            window.speechSynthesis.cancel();
+        });
+
+        // 속도 및 음조 슬라이더
+        ttsRateInput.addEventListener('input', () => {
+            utterance.rate = ttsRateInput.value;
+        });
+
+        ttsPitchInput.addEventListener('input', () => {
+            utterance.pitch = ttsPitchInput.value;
+        });
+
+      } else {
+        readAloudBtn.disabled = true;
+        readAloudBtn.textContent = '읽기 기능 미지원';
+      }
+    })();
   </script>
 </body>
 </html>
