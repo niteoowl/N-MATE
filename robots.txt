@@ -5,6 +5,7 @@ Disallow: /write
 Disallow: /404
 Disallow: /more
 Disallow: /settings
+Disallow: /news
 Allow: /
 
 Sitemap: https://nmate.kr/sitemap.xml
