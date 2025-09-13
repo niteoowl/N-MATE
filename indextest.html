@@ -472,7 +472,7 @@
                     </li>
                 </ul>
             </div>
-            
+
             <div class="h-6"></div>
 
             <!-- 시험 디데이 섹션 -->
@@ -558,17 +558,9 @@
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
             // Firebase 구성 유효성 검사
+            // 설정 정보가 없으면 초기화를 시도하지 않고, 콘솔에만 오류를 기록합니다.
             if (!firebaseConfig) {
-                console.error("오류: Firebase 구성이 유효하지 않습니다. firebaseConfig가 정의되어 있는지 확인하세요.");
-                // 초기화 로직을 여기서 중단합니다.
-                document.body.innerHTML = `
-                    <div class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-                        <div class="text-center p-8 bg-white rounded-lg shadow-xl">
-                            <h2 class="text-2xl font-bold text-red-600 mb-4">Firebase 구성 오류</h2>
-                            <p class="text-gray-700">Firebase API 키가 누락되었습니다. 관리자에게 문의하세요.</p>
-                        </div>
-                    </div>
-                `;
+                console.error("Firebase 구성 오류: 환경 변수(__firebase_config)가 정의되지 않았습니다. 앱은 기본 UI만 표시됩니다.");
                 return;
             }
 
@@ -626,7 +618,7 @@
                 });
             }
 
-            // 초기 인증 처리 (익명 로그인 기능 삭제)
+            // 초기 인증 처리
             // 사용자 정의 인증 토큰이 있을 때만 로그인 시도
             if (initialAuthToken) {
                 try {
