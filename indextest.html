@@ -30,6 +30,21 @@
         .dropdown-menu.active {
             display: block;
         }
+        .calendar-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+        }
+        .calendar-container {
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(100%);
+        }
+        .calendar-overlay.active {
+            opacity: 1;
+        }
+        .calendar-container.active {
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -71,18 +86,12 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 메뉴
                 </h2>
-                <div class="flex space-x-2">
-                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
-                        </svg>
-                    </button>
-                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z" transform="scale(-1, 1) translate(-256, 0)"></path>
-                        </svg>
-                    </button>
-                </div>
+                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                <button id="show-calendar-btn-mobile" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                    </svg>
+                </button>
             </div>
 
             <!-- 급식 카드들 (중식만 남김) -->
@@ -299,18 +308,12 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 메뉴
                 </h2>
-                <div class="flex space-x-2">
-                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
-                        </svg>
-                    </button>
-                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z" transform="scale(-1, 1) translate(-256, 0)"></path>
-                        </svg>
-                    </button>
-                </div>
+                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                    </svg>
+                </button>
             </div>
 
             <!-- 급식 카드들 (중식만 남김) -->
@@ -431,6 +434,45 @@
         </main>
     </div>
 
+    <!-- Calendar Modal Overlay -->
+    <div id="calendar-overlay" class="fixed inset-0 z-50 flex items-end justify-center calendar-overlay hidden">
+        <div id="calendar-container" class="w-full max-w-sm mx-auto bg-white rounded-t-3xl shadow-xl p-6 calendar-container">
+            <!-- Calendar Header with month navigation -->
+            <div class="flex justify-between items-center mb-4">
+                <button id="prev-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                    </svg>
+                </button>
+                <span id="calendar-header" class="text-xl font-bold"></span>
+                <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                    </svg>
+                </button>
+                <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Weekday Headers -->
+            <div class="grid grid-cols-7 text-center font-semibold text-sm text-gray-500 mb-2">
+                <div>일</div>
+                <div>월</div>
+                <div>화</div>
+                <div>수</div>
+                <div>목</div>
+                <div>금</div>
+                <div>토</div>
+            </div>
+            <!-- Calendar Grid -->
+            <div id="calendar-grid" class="grid grid-cols-7 text-center">
+                <!-- 날짜들이 여기에 동적으로 삽입됩니다 -->
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
@@ -471,12 +513,25 @@
         const dropdownMenuDesktop = document.getElementById('dropdown-menu-desktop');
         const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
 
+        const showCalendarBtnMobile = document.getElementById('show-calendar-btn-mobile');
+        const showCalendarBtnDesktop = document.getElementById('show-calendar-btn-desktop');
+        const calendarOverlay = document.getElementById('calendar-overlay');
+        const calendarContainer = document.getElementById('calendar-container');
+        const calendarHeader = document.getElementById('calendar-header');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const closeCalendarBtn = document.getElementById('close-calendar-btn');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+
         const lunchListMobile = document.getElementById('lunch-list-mobile');
         const lunchListDesktop = document.getElementById('lunch-list-desktop');
         const timetableListMobile = document.getElementById('timetable-list-mobile');
         const timetableListDesktop = document.getElementById('timetable-list-desktop');
         const scheduleListMobile = document.getElementById('schedule-list-mobile');
         const scheduleListDesktop = document.getElementById('schedule-list-desktop');
+
+        let userSchoolData = null;
+        let selectedDate = new Date();
 
         // 로그아웃 함수
         const handleLogout = async () => {
@@ -517,15 +572,108 @@
             }
         });
 
-        // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode) => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const date = `${year}${month}${day}`;
+        // 캘린더 관련 함수
+        const showCalendar = () => {
+            renderCalendar(selectedDate);
+            calendarOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                calendarOverlay.classList.add('active');
+                calendarContainer.classList.add('active');
+            }, 10);
+        };
 
-            const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${date}`;
+        const hideCalendar = () => {
+            calendarOverlay.classList.remove('active');
+            calendarContainer.classList.remove('active');
+            setTimeout(() => {
+                calendarOverlay.classList.add('hidden');
+            }, 300);
+        };
+
+        const renderCalendar = (date) => {
+            calendarGrid.innerHTML = '';
+            const today = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+
+            calendarHeader.textContent = `${year}년 ${month + 1}월`;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const startingDay = firstDayOfMonth.getDay();
+            const daysInMonth = lastDayOfMonth.getDate();
+
+            // 공백 채우기
+            for (let i = 0; i < startingDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'w-8 h-8 md:w-10 md:h-10';
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            // 날짜 채우기
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer';
+                dayCell.textContent = i;
+                dayCell.dataset.date = i;
+                dayCell.dataset.month = month;
+                dayCell.dataset.year = year;
+
+                const cellDate = new Date(year, month, i);
+
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('bg-blue-500', 'text-white');
+                } else if (cellDate.toDateString() === selectedDate.toDateString()) {
+                    dayCell.classList.add('bg-gray-200', 'text-gray-900');
+                }
+
+                calendarGrid.appendChild(dayCell);
+            }
+        };
+
+        const handleDateClick = (event) => {
+            const day = event.target.dataset.date;
+            if (day) {
+                const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), parseInt(day));
+                selectedDate = newDate;
+                hideCalendar();
+                if (userSchoolData) {
+                    const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
+                    fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, selectedDate);
+                    fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum, selectedDate);
+                    fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, selectedDate);
+                }
+            }
+        };
+
+        // 이전 달 버튼 클릭 핸들러
+        const handlePrevMonth = () => {
+            selectedDate.setMonth(selectedDate.getMonth() - 1);
+            renderCalendar(selectedDate);
+        };
+
+        // 다음 달 버튼 클릭 핸들러
+        const handleNextMonth = () => {
+            selectedDate.setMonth(selectedDate.getMonth() + 1);
+            renderCalendar(selectedDate);
+        };
+        
+        if (showCalendarBtnMobile) showCalendarBtnMobile.addEventListener('click', showCalendar);
+        if (showCalendarBtnDesktop) showCalendarBtnDesktop.addEventListener('click', showCalendar);
+        if (closeCalendarBtn) closeCalendarBtn.addEventListener('click', hideCalendar);
+        if (calendarGrid) calendarGrid.addEventListener('click', handleDateClick);
+        if (prevMonthBtn) prevMonthBtn.addEventListener('click', handlePrevMonth);
+        if (nextMonthBtn) nextMonthBtn.addEventListener('click', handleNextMonth);
+
+
+        // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+
+            const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
 
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
@@ -556,14 +704,13 @@
         };
 
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, grade, classNum) => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const date = `${year}${month}${day}`;
+        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, grade, classNum, date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
 
-            const url = `${NEIS_BASE_URL}elsTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${date}`;
+            const url = `${NEIS_BASE_URL}elsTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
             
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
@@ -601,10 +748,9 @@
         };
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode) => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
+        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
             
             const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_YMD_FROM=${year}${month}01&AA_YMD_TO=${year}${month}31`;
             
@@ -616,7 +762,7 @@
                 }
                 data.forEach(item => {
                     const schedule = item.EVENT_NM;
-                    const date = item.AA_YMD;
+                    const dateString = item.AA_YMD;
                     const li = document.createElement('li');
                     li.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
                     li.innerHTML = `
@@ -624,7 +770,7 @@
                             <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
                             <span>${schedule}</span>
                         </div>
-                        <span class="text-gray-500">${date.slice(0, 4)}.${date.slice(4, 6)}.${date.slice(6, 8)}</span>
+                        <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
                     `;
                     listElement.appendChild(li);
                 });
@@ -665,20 +811,17 @@
                 onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
                     if (docSnapshot.exists()) {
                         const data = docSnapshot.data();
+                        userSchoolData = data; // 전역 변수에 학교 정보 저장
                         const userName = data.name || "사용자";
                         if (userNameMobile) userNameMobile.textContent = userName;
                         if (userNameDesktop) userNameDesktop.textContent = userName;
 
-                        // NEIS API 호출에 필요한 학교 코드 추출
-                        const atptOfcdcScCode = data.atptOfcdcScCode;
-                        const sdSchulCode = data.sdSchulCode;
-                        const grade = data.grade;
-                        const classNum = data.classNum;
+                        const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
 
                         if (atptOfcdcScCode && sdSchulCode) {
-                            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode);
-                            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum);
-                            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode);
+                            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, selectedDate);
+                            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum, selectedDate);
+                            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, selectedDate);
                         } else {
                             console.error("학교 정보가 프로필에 없습니다.");
                             lunchListMobile.innerHTML = '<li>학교 정보가 없어 급식 데이터를 불러올 수 없습니다.</li>';
