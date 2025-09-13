@@ -1,1051 +1,631 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>학교생활 정보 앱</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-<style>
-:root{
-  /* 다크모드 테마 (토스 앱 느낌) */
-  --brand:#6A5AF8;
-  --brand-600:#5748D8;
-  --brand-50:#2E265C;
-
-  --bg:#121212;
-  --surface:#1F1F1F;
-  --text:#FFFFFF;
-  --muted:#A9A9A9;
-  --hairline:#333333;
-
-  --radius:16px;
-  --radius-sm:12px;
-
-  --app-max:1024px;
-  --app-pad:16px;
-  --bar-h:56px;
-  --tab-h:64px;
-}
-
-/* 라이트모드 테마 (다크모드 변수 오버라이드) */
-body.light-mode {
-  --bg:#F5F7FA;
-  --surface:#FFFFFF;
-  --text:#0F172A;
-  --muted:#667085;
-  --hairline:#E5E7EB;
-
-  /* 라이트모드에서 일부 요소 색상 재정의 */
-  --brand:#4A90E2;
-  --brand-600:#3A7ACF;
-  --brand-50:#EAF2FF;
-}
-
-/* 전체 화면에 중앙 앱 캔버스(태블릿) 고정 */
-html,body{height:100%; margin:0}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
-  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-}
-.app-wrap{
-  height:100dvh;
-  display:grid; place-items:center;
-  padding:calc(env(safe-area-inset-top,0px)) 0 calc(env(safe-area-inset-bottom,0px));
-}
-.shell{
-  width:clamp(360px, 78vw, var(--app-max));
-  height:100dvh;
-  display:grid; grid-template-rows:var(--bar-h) 1fr var(--tab-h);
-  background:var(--surface);
-  border-left:1px solid var(--hairline);
-  border-right:1px solid var(--hairline);
-}
-
-/* 상단 앱바 */
-.appbar{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 14px;
-  border-bottom:1px solid var(--hairline);
-  background:var(--surface);
-}
-.appbar .title{font-weight:800; letter-spacing:-0.2px}
-.appbar .actions{display:flex; gap:8px; position: relative;}
-
-/* 모든 버튼에 클릭 효과 적용 */
-.btn, .chip, .icon-btn, .quick-item, .fab, .card-link, .dropdown-btn {
-    transition: transform 0.1s ease-in-out;
-}
-.btn:active, .chip:active, .icon-btn:active, .quick-item:active, .fab:active, .card-link:active, .dropdown-btn:active {
-    transform: scale(0.98);
-}
-
-.btn, .chip{
-  border:1px solid var(--hairline); background:var(--surface); color:var(--text);
-  height:34px; padding:0 12px; border-radius:12px; font-weight:700; cursor:pointer;
-}
-.icon-btn{
-  width:34px; height:34px; border:1px solid var(--hairline); border-radius:12px; background:var(--surface); color:var(--text); cursor:pointer;
-  display: grid;
-  place-items: center;
-}
-.material-symbols-outlined {
-    font-size: 20px;
-    font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24
-}
-.icon-btn .moon-icon {
-    display: none;
-}
-body.light-mode .icon-btn .sun-icon {
-    display: none;
-}
-body.light-mode .icon-btn .moon-icon {
-    display: block;
-}
-/* 라이트 모드에서 아이콘 색상 변경 */
-body.light-mode .material-symbols-outlined {
-    color: var(--text);
-}
-
-
-/* 페이지 컨테이너: 스크롤 방지 */
-.page-container {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.page{
-  display: none; /* 기본적으로 페이지를 숨김 */
-  width: 100%;
-  height: 100%;
-  overflow-y: auto; /* 개별 페이지 스크롤 허용 */
-  padding:var(--app-pad) var(--app-pad) calc(var(--app-pad) + 24px);
-  box-sizing: border-box; /* 패딩이 너비/높이에 포함되도록 설정 */
-}
-.page.active {
-    display: block; /* 활성화된 페이지를 표시 */
-}
-
-.section-title{margin:6px 2px 10px; font-weight:800; font-size:15px}
-.sub{font-size:12px; color:var(--muted)}
-.card-title-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.hidden{display: none;}
-
-/* 카드/라인: 그림자 없음 */
-.card{
-  background:var(--surface); border:1px solid var(--hairline);
-  border-radius:var(--radius); padding:16px;
-}
-.card-link {
-    display: block;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    transition: background-color 0.1s ease-in-out;
-}
-.card-link:hover {
-    background-color: var(--hairline);
-}
-
-/* 리스트 */
-.list{margin-top:10px; border:1px solid var(--hairline); border-radius:14px; overflow:hidden}
-.cell{display:flex; align-items:center; gap:12px; padding:14px 16px; border-bottom:1px solid var(--hairline); background:var(--surface)}
-.cell:last-child{border-bottom:none}
-.avatar{width:40px; height:40px; border-radius:12px; background:var(--brand-50); color:var(--brand); display:grid; place-items:center; font-weight:800}
-.cell .meta{flex:1}
-.title{font-weight:700}
-.amount{font-weight:800}
-.positive{color:#16A34A}
-.negative{color:#DC2626}
-
-/* FAB + 탭바: 앱 패턴 유지 */
-.fab{
-  position:fixed;
-  left:50%;
-  transform:translateX(calc(-50% + min(39vw, var(--app-max)/2 - 24px)));
-  bottom:calc(var(--tab-h) + 18px);
-  width:56px; height:56px; border-radius:16px;
-  background:var(--brand); color:#fff; display:grid; place-items:center; font-weight:800; border:0;
-}
-.tabbar{
-  border-top:1px solid var(--hairline);
-  background:rgba(31,31,31,0.96); backdrop-filter:saturate(180%) blur(8px);
-}
-body.light-mode .tabbar {
-  background:rgba(255,255,255,0.96);
-}
-
-.tabs{height:var(--tab-h); display:grid; grid-template-columns:repeat(4,1fr)}
-.tab{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-  color:var(--muted); font-size:12px; border:0; background:transparent; cursor:pointer;
-}
-.tab .dot{width:6px; height:6px; border-radius:50%; background:transparent}
-.tab.active{color:var(--brand)}
-.tab.active .dot{background:var(--brand)}
-
-/* 링크/포커스 */
-a, button{color:inherit}
-:focus-visible{outline:2px solid var(--brand); outline-offset:2px; border-radius:10px}
-
-/* 반응형: 폰에서는 2열 그리드, 태블릿은 4열 유지 */
-@media (max-width: 560px){
-  .quick-grid{grid-template-columns:repeat(2,1fr)}
-}
-/* 넓은 데스크톱에서도 ‘앱 한 장’ 느낌 유지 */
-@media (min-width: 1400px){
-  .shell{width:clamp(360px, 56vw, var(--app-max))}
-}
-
-/* iOS 홈 인디케이터 여백 */
-.tabbar{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 0px);}
-
-/* 학교생활 서브 탭 */
-.school-tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-.school-tabs .chip {
-    flex: 1;
-    border: 1px solid var(--hairline);
-    background: var(--surface);
-    color: var(--muted);
-    height: 40px;
-    padding: 0 16px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-}
-.school-tabs .chip.active {
-    background: var(--brand-50);
-    color: var(--brand);
-    border-color: var(--brand-50);
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.4);
-    display: none;
-    z-index: 10;
-}
-.modal-overlay.open {
-    display: block;
-}
-.modal-content {
-    position: absolute;
-    bottom: 0; left: 0;
-    width: 100%;
-    max-height: 80%; /* 모달 최대 높이 설정 */
-    overflow-y: auto; /* 내용이 넘치면 스크롤 가능 */
-    background: var(--surface);
-    border-top-left-radius: var(--radius);
-    border-top-right-radius: var(--radius);
-    padding: 16px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease-in-out;
-    box-sizing: border-box; /* 패딩이 너비/높이에 포함되도록 설정 */
-}
-.modal-content.is-open {
-    transform: translateY(0);
-}
-.modal-close-handle {
-    width: 40px;
-    height: 4px;
-    background-color: var(--muted);
-    border-radius: 2px;
-    margin: 0 auto 16px;
-    cursor: pointer;
-}
-
-/* 달력 스타일 */
-.calendar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-.calendar-header .month-year {
-    font-size: 18px;
-    font-weight: 700;
-}
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    gap: 8px;
-}
-.calendar-grid .day {
-    padding: 8px;
-    font-weight: 500;
-    border-radius: 50%;
-    cursor: pointer;
-}
-.calendar-grid .day.today {
-    background: var(--brand);
-    color: white;
-}
-.calendar-grid .weekday {
-    font-weight: 700;
-    color: var(--muted);
-}
-
-/* 커스텀 스크롤바 스타일 */
-body::-webkit-scrollbar,
-.page::-webkit-scrollbar,
-.modal-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-body::-webkit-scrollbar-thumb,
-.page::-webkit-scrollbar-thumb,
-.modal-content::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 10px;
-}
-
-body.light-mode::-webkit-scrollbar-thumb,
-.page.light-mode::-webkit-scrollbar-thumb,
-.modal-content.light-mode::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
-}
-
-body::-webkit-scrollbar-track,
-.page::-webkit-scrollbar-track,
-.modal-content::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-/* 커뮤니티 그리드 스타일 */
-.community-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-    margin-top: 10px;
-}
-
-.community-item {
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  border-radius: var(--radius);
-  padding: 14px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.community-item .category {
-    font-size: 12px;
-    color: var(--brand);
-}
-
-.community-item .post-title {
-    font-weight: 700;
-    font-size: 15px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
-}
-
-.community-item .preview {
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--muted);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
-}
-
-.community-item .meta {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: auto;
-}
-
-/* 사용자 드롭다운 메뉴 스타일 */
-.user-dropdown-container {
-    position: relative;
-    display: none; /* 기본적으로 숨김 */
-}
-
-.user-dropdown-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid var(--hairline);
-    background: var(--surface);
-    color: var(--text);
-    height: 34px;
-    padding: 0 12px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.user-dropdown-menu {
-    position: absolute;
-    top: 40px;
-    right: 0;
-    width: 150px;
-    background: var(--surface);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 20;
-    display: none;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.user-dropdown-menu.active {
-    display: flex;
-}
-
-.user-dropdown-menu button {
-    background: transparent;
-    border: none;
-    color: var(--text);
-    padding: 12px 16px;
-    text-align: left;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.1s ease-in-out;
-}
-
-.user-dropdown-menu button:hover {
-    background-color: var(--hairline);
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-MATE</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #ffffff;
+        }
+        .scrollable-content {
+            padding-bottom: 96px; 
+        }
+        @media (min-width: 768px) {
+            .scrollable-content {
+                padding-bottom: 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="app-wrap">
-    <div class="shell" aria-label="앱 캔버스">
 
-      <!-- 앱바 -->
-      <header class="appbar">
-        <div class="title" id="appTitle">홈</div>
-        <div class="actions">
-          <!-- 로그인 버튼 -->
-          <a href="/login" class="btn" id="loginBtn">로그인</a>
+    <!-- 모바일 UI (768px 미만에서만 보임) -->
+    <div class="h-screen flex flex-col md:hidden">
+        <!-- 상단 헤더 -->
+        <header class="bg-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <!-- N-MATE 로고 이미지로 변경 -->
+                <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+            </div>
+            <!-- 로그인 버튼 (모바일) -->
+            <button id="login-button-mobile" class="
+                px-4 py-2
+                font-semibold text-sm
+                rounded-full
+                border-2 border-blue-500
+                bg-transparent text-blue-500
+                transition-colors duration-300
+                hover:bg-blue-500 hover:text-white
+            ">
+                로그인
+            </button>
+        </header>
 
-          <!-- 사용자 드롭다운 (로그인 시 표시) -->
-          <div class="user-dropdown-container" id="userDropdownContainer">
-              <button class="user-dropdown-btn" id="userDropdownBtn">
-                  <span id="userName">사용자</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-              </button>
-              <div class="user-dropdown-menu" id="userDropdownMenu">
-                  <button id="editProfileBtn">프로필 편집</button>
-                  <button id="logoutBtn">로그아웃</button>
-              </div>
-          </div>
-          <button class="icon-btn" id="modeToggleBtn" aria-label="라이트모드/다크모드 토글">
-            <span class="material-symbols-outlined sun-icon">light_mode</span>
-            <span class="material-symbols-outlined moon-icon">dark_mode</span>
-          </button>
-        </div>
-      </header>
-      
-      <!-- 페이지 컨테이너 -->
-      <div class="page-container" id="pageContainer">
-        <!-- 페이지: 홈 -->
-        <main class="page active" id="page-home" role="region" aria-label="홈">
-          <section class="card">
-            <div class="card-title-row">
-                <div class="section-title">오늘의 학교생활</div>
-                <button id="today-info-btn" class="icon-btn" aria-label="오늘의 학교생활 정보 더보기">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
+
+            <!-- 오늘의 메뉴 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 메뉴
+                </h2>
+                <div class="flex space-x-2">
+                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                        </svg>
+                    </button>
+                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z" transform="scale(-1, 1) translate(-256, 0)"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 급식 카드들 (중식만 남김) -->
+            <div class="grid grid-cols-1 gap-4">
+                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                        중식
+                    </h3>
+                    <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                        <li>친환경검정콩밥 (5)</li>
+                        <li>청국장찌개 (5)</li>
+                        <li>마늘삼겹살수육 (5.6.10)</li>
+                        <li>부추무침 (13)</li>
+                        <li>상추쌈 (5.6.9.13)</li>
+                        <li>묵은지 (9)</li>
+                        <li>보쌈김치(완) (9)</li>
+                        <li>양념-채(제거) (2)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="h-4"></div>
+
+            <!-- 오늘의 시간표 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 시간표
+                    <span class="ml-2 text-xl">🗓️</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+            </div>
+
+            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">1교시</span>
+                        <span>수학 I</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">2교시</span>
+                        <span>국어 문학</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">3교시</span>
+                        <span>영어</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">4교시</span>
+                        <span>한국사</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">5교시</span>
+                        <span>과학탐구</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 이번 달 학사일정 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    이번 달 학사일정
+                    <span class="ml-2 text-xl">🗓️</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+            </div>
+
+            <!-- 학사일정 리스트 -->
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(1년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.02</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(2년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.03</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(3년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.04</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>체험학습</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.29</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>1,2학년 중간고사 1일</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.29</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>1,2학년 중간고사 2일</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.30</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="h-4"></div>
+
+            <!-- 시험 디데이 섹션 -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    시험 디데이
+                    <span class="ml-2 text-xl">⏰</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+            </div>
+
+            <div class="flex justify-around items-center text-center">
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">3모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">6모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">9모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">수능</span>
+                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                </div>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 오늘의 뉴스 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 뉴스
+                    <span class="ml-2 text-xl">📰</span>
+                </h2>
+                <a href="https://www.jayuilbo.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+            </div>
+
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "AI 기술, 교육 현장에 혁신을 가져오다"</h3>
+                            <p class="text-xs text-gray-500 mt-1">미래 교육을 위한 AI 활용 방안에 대한 기사입니다.</p>
+                        </a>
+                    </li>
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "친환경 급식, 학생들의 건강을 책임진다"</h3>
+                            <p class="text-xs text-gray-500 mt-1">유기농 식자재를 활용한 급식 개선 소식입니다.</p>
+                        </a>
+                    </li>
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "수능 D-61, 막판 스퍼트 전략은?"</h3>
+                            <p class="text-xs text-gray-500 mt-1">수험생들을 위한 효과적인 마무리 학습법을 다룹니다.</p>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </main>
+        
+        <!-- 하단 내비게이션 바 -->
+        <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
+            <div class="flex justify-around items-center px-4 py-3">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link" data-target="home">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="calendar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">학사일정</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="community">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="more">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- PC UI (768px 이상에서만 보임) -->
+    <div class="hidden h-screen md:flex md:flex-row">
+        <!-- 좌측 사이드바 -->
+        <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
+            <div>
+                <div class="mb-4">
+                    <!-- N-MATE 로고 이미지로 변경 -->
+                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                </div>
+                <nav class="space-y-1">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                        </svg>
+                        <span>홈</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                        </svg>
+                        <span>학사일정</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                        <span>커뮤니티</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                        <span>더보기</span>
+                    </a>
+                </nav>
+            </div>
+            <!-- 로그인 버튼 (PC) -->
+            <div class="mt-4">
+                <button id="login-button-pc" class="
+                    w-full
+                    px-6 py-3
+                    font-semibold
+                    rounded-lg
+                    border-2 border-blue-500
+                    bg-transparent text-blue-500
+                    transition-colors duration-300
+                    hover:bg-blue-500 hover:text-white
+                ">
+                    로그인
                 </button>
             </div>
-            <div class="sub">오늘의 급식과 시간표를 확인하세요.</div>
-            <div style="margin-top:10px; display:grid; gap:10px; grid-template-columns:repeat(2,1fr)">
-              <div class="card" style="padding:12px">
-                <div class="title">점심 급식</div>
-                <div class="sub" style="margin-top:4px" id="mealMenu">급식 정보를 불러오는 중...</div>
-              </div>
-              <div class="card card-link timetable-quick-card" style="padding:12px">
-                <div class="title">오늘의 시간표</div>
-                <div class="sub" style="margin-top:4px" id="timetableInfo">시간표 정보를 불러오는 중...</div>
-              </div>
-            </div>
-          </section>
+        </aside>
 
-          <div class="card-title-row">
-              <h3 class="section-title">커뮤니티 새 소식 🔥</h3>
-              <button class="btn" style="height:28px">더보기</button>
-          </div>
-          <div class="community-grid" role="region" aria-label="커뮤니티 최신 글">
-              <div class="community-item">
-                  <div class="category">#자유게시판</div>
-                  <div class="post-title">봉사활동 신청 안내</div>
-                  <div class="preview">이번 학기 봉사활동 신청을 6월 25일까지 받습니다. 신청서 양식은 학생회관 2층 게시판에서 확인해 주세요.</div>
-                  <div class="meta">이종현 · 4일 전</div>
-              </div>
-              <div class="community-item">
-                  <div class="category">#자유게시판</div>
-                  <div class="post-title">학교 축제 아이디어 공모</div>
-                  <div class="preview">다가오는 가을 축제 '하나 되는 우리'의 아이디어를 공모합니다! 공연, 부스, 이벤트 등 자유롭게 제안해 주세요.</div>
-                  <div class="meta">코코몽 · 9일 전</div>
-              </div>
-              <div class="community-item">
-                  <div class="category">#자유게시판</div>
-                  <div class="post-title">기숙사생 외박 신청 안내</div>
-                  <div class="preview">여름방학 기간 동안 기숙사 외박을 희망하는 학생들은 7월 5일까지 신청해 주시기 바랍니다.</div>
-                  <div class="meta">오렌지 · 13일 전</div>
-              </div>
-              <div class="community-item">
-                  <div class="category">#자유게시판</div>
-                  <div class="post-title">체육대회 종목 투표</div>
-                  <div class="preview">올해 체육대회에서 진행할 종목을 투표로 결정합니다. 농구, 피구, 이어달리기 등 선호하는 종목에 투표해 주세요.</div>
-                  <div class="meta">체육부 · 18일 전</div>
-              </div>
-          </div>
+        <!-- 우측 메인 콘텐츠 영역 -->
+        <main class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+            <!-- 상단 검색 및 알림 영역 -->
+            
+            <!-- 오늘의 메뉴 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 메뉴
+                </h2>
+                <div class="flex space-x-2">
+                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                        </svg>
+                    </button>
+                    <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z" transform="scale(-1, 1) translate(-256, 0)"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
-          <h3 class="section-title">다가오는 학사일정</h3>
-          <div class="list" role="list">
-            <div class="cell" role="listitem">
-              <div class="avatar">기</div>
-              <div class="meta">
-                <div class="title">기말고사 시작</div>
-                <div class="sub">2025.07.01</div>
-              </div>
+            <!-- 급식 카드들 (중식만 남김) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                        중식
+                    </h3>
+                    <ul class="mt-2 space-y-1 text-sm text-gray-700">
+                        <li>친환경검정콩밥 (5)</li>
+                        <li>청국장찌개 (5)</li>
+                        <li>마늘삼겹살수육 (5.6.10)</li>
+                        <li>부추무침 (13)</li>
+                        <li>상추쌈 (5.6.9.13)</li>
+                        <li>묵은지 (9)</li>
+                        <li>보쌈김치(완) (9)</li>
+                        <li>양념-채(제거) (2)</li>
+                    </ul>
+                </div>
             </div>
-            <div class="cell" role="listitem">
-              <div class="avatar">여</div>
-              <div class="meta">
-                <div class="title">여름방학식</div>
-                <div class="sub">2025.07.10</div>
-              </div>
+            
+            <div class="h-6"></div>
+
+            <!-- 오늘의 시간표 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 시간표
+                    <span class="ml-2 text-xl">🗓️</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
-          </div>
+
+            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">1교시</span>
+                        <span>수학 I</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">2교시</span>
+                        <span>국어 문학</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">3교시</span>
+                        <span>영어</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">4교시</span>
+                        <span>한국사</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <span class="font-semibold text-gray-900">5교시</span>
+                        <span>과학탐구</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 이번 달 학사일정 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    이번 달 학사일정
+                    <span class="ml-2 text-xl">🗓️</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+            </div>
+
+            <!-- 학사일정 리스트 -->
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(1년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.02</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(2년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.03</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>영어듣기(3년)</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.04</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>체험학습</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.29</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>1,2학년 중간고사 1일</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.29</span>
+                    </li>
+                    <li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>1,2학년 중간고사 2일</span>
+                        </div>
+                        <span class="text-gray-500">2025.09.30</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="h-6"></div>
+
+            <!-- 시험 디데이 섹션 -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    시험 디데이
+                    <span class="ml-2 text-xl">⏰</span>
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+            </div>
+
+            <div class="flex justify-around items-center text-center">
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">3모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">6모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">9모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">수능</span>
+                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                </div>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 오늘의 뉴스 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 뉴스
+                    <span class="ml-2 text-xl">📰</span>
+                </h2>
+                <a href="https://www.jayuilbo.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+            </div>
+
+            <div>
+                <ul class="text-sm text-gray-700">
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "AI 기술, 교육 현장에 혁신을 가져오다"</h3>
+                            <p class="text-xs text-gray-500 mt-1">미래 교육을 위한 AI 활용 방안에 대한 기사입니다.</p>
+                        </a>
+                    </li>
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "친환경 급식, 학생들의 건강을 책임진다"</h3>
+                            <p class="text-xs text-gray-500 mt-1">유기농 식자재를 활용한 급식 개선 소식입니다.</p>
+                        </a>
+                    </li>
+                    <li class="py-2 border-b border-gray-200 last:border-b-0">
+                        <a href="#" class="block">
+                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "수능 D-61, 막판 스퍼트 전략은?"</h3>
+                            <p class="text-xs text-gray-500 mt-1">수험생들을 위한 효과적인 마무리 학습법을 다룹니다.</p>
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </main>
-
-        <!-- 페이지: 학교생활 -->
-        <main class="page" id="page-school" role="region" aria-label="학교생활">
-          <div class="school-tabs">
-            <button class="chip active" data-target="meal">급식</button>
-            <button class="chip" data-target="timetable">시간표</button>
-            <button class="chip" data-target="schedule">학사일정</button>
-          </div>
-          
-          <div id="content-meal">
-              <section class="card">
-                  <div class="section-title">급식</div>
-                  <div class="sub">오늘의 점심 메뉴</div>
-                  <div style="margin-top:10px;">
-                      <div class="list">
-                          <div class="cell">
-                              <div class="meta">
-                                  <div class="title">점심</div>
-                                  <div class="sub" id="schoolMealMenu">급식 정보를 불러오는 중...</div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </section>
-          </div>
-
-          <!-- initially hidden -->
-          <div id="content-timetable" class="hidden">
-              <section class="card">
-                  <div class="section-title">시간표</div>
-                  <div class="sub">오늘의 수업 시간표</div>
-                  <div style="margin-top:10px;">
-                      <div class="list" id="schoolTimetable">
-                          <!-- Nice API data will be inserted here -->
-                      </div>
-                  </div>
-              </section>
-          </div>
-
-          <!-- initially hidden -->
-          <div id="content-schedule" class="hidden">
-              <section class="card">
-                  <div class="section-title">학사일정</div>
-                  <div class="sub">다가오는 주요 일정</div>
-                  <div style="margin-top:10px;">
-                      <div class="list">
-                          <div class="cell">
-                              <div class="meta">
-                                  <div class="title">7월 1일</div>
-                                  <div class="sub">기말고사 시작</div>
-                              </div>
-                          </div>
-                          <div class="cell">
-                              <div class="meta">
-                                  <div class="title">7월 10일</div>
-                                  <div class="sub">여름방학식</div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </section>
-          </div>
-        </main>
-
-        <!-- 페이지: 커뮤니티 -->
-        <main class="page" id="page-community" role="region" aria-label="커뮤니티">
-          <section class="card">
-            <div class="section-title">커뮤니티</div>
-            <div class="sub">자유 게시판, 동아리</div>
-            <div style="margin-top:10px; border:1px dashed var(--hairline); border-radius:12px; padding:16px; text-align:center;">
-              <p style="color:var(--muted)">다양한 소식을 공유해보세요!</p>
-              <button class="chip" style="margin-top:12px; background:var(--brand); color:white; border-color:var(--brand);">글쓰기</button>
-            </div>
-          </section>
-        </main>
-
-        <!-- 페이지: 더보기 -->
-        <main class="page" id="page-more" role="region" aria-label="더보기">
-          <section class="card">
-            <div class="section-title">더보기</div>
-            <div class="sub">설정, 정보, 고객센터</div>
-            <div style="margin-top:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:10px">
-              <button class="quick-item"><div class="quick-ico">설</div><div>설정</div></button>
-              <button class="quick-item"><div class="quick-ico">공</div><div>공지사항</div></button>
-              <button class="quick-item"><div class="quick-ico">도</div><div>도움말</div></button>
-            </div>
-          </section>
-        </main>
-      </div>
-
-      <!-- 하단 탭바 -->
-      <nav class="tabbar" role="tablist" aria-label="하단 내비게이션">
-        <div class="tabs">
-          <button class="tab active" data-target="home" role="tab" aria-selected="true">홈<span class="dot" aria-hidden="true"></span></button>
-          <button class="tab" data-target="school" role="tab" aria-selected="false">학교생활<span class="dot" aria-hidden="true"></span></button>
-          <button class="tab" data-target="community" role="tab" aria-selected="false">커뮤니티<span class="dot" aria-hidden="true"></span></button>
-          <button class="tab" data-target="more" role="tab" aria-selected="false">더보기<span class="dot" aria-hidden="true"></span></button>
-        </div>
-      </nav>
-
-      <!-- FAB -->
-      <button class="fab" aria-label="새 글쓰기">＋</button>
     </div>
-  </div>
 
-  <!-- 달력 모달 -->
-  <div class="modal-overlay" id="calendarModal">
-    <div class="modal-content">
-        <div class="modal-close-handle" id="modalCloseHandle"></div>
-        <div class="calendar-header">
-            <button class="icon-btn prev-month">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7z"/></svg>
-            </button>
-            <span class="month-year">2025년 9월</span>
-            <button class="icon-btn next-month">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M10 6l-6 6 6 6z" transform="rotate(180 12 12)"/></svg>
-            </button>
-        </div>
-        <div class="calendar-grid">
-            <span class="weekday" style="color:#DC2626">일</span>
-            <span class="weekday">월</span>
-            <span class="weekday">화</span>
-            <span class="weekday">수</span>
-            <span class="weekday">목</span>
-            <span class="weekday">금</span>
-            <span class="weekday" style="color:#4A90E2">토</span>
-            <span class="day muted">31</span>
-            <span class="day">1</span>
-            <span class="day">2</span>
-            <span class="day">3</span>
-            <span class="day">4</span>
-            <span class="day">5</span>
-            <span class="day">6</span>
-            <span class="day">7</span>
-            <span class="day">8</span>
-            <span class="day">9</span>
-            <span class="day">10</span>
-            <span class="day">11</span>
-            <span class="day">12</span>
-            <span class="day">13</span>
-            <span class="day">14</span>
-            <span class="day">15</span>
-            <span class="day">16</span>
-            <span class="day">17</span>
-            <span class="day">18</span>
-            <span class="day">19</span>
-            <span class="day">20</span>
-            <span class="day">21</span>
-            <span class="day">22</span>
-            <span class="day">23</span>
-            <span class="day">24</span>
-            <span class="day">25</span>
-            <span class="day">26</span>
-            <span class="day">27</span>
-            <span class="day">28</span>
-            <span class="day">29</span>
-            <span class="day">30</span>
-        </div>
-    </div>
-  </div>
+    <!-- Firebase SDK 로드 및 스크립트 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-<script type="module">
-  // Firebase SDK imports
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-  import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Firebase 설정 및 앱 ID를 전역 변수에서 가져옵니다.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-  // Global variables provided by the Canvas environment
-  const __app_id = "n-mate";
-  const __firebase_config = { 
-    apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo", 
-    authDomain: "n-mate.firebaseapp.com", 
-    projectId: "n-mate", 
-    storageBucket: "n-mate.firebasestorage.app", 
-    messagingSenderId: "691313471077", 
-    appId: "1:691313471077:web:3066aaeca0a1d9e448e08c", 
-    measurementId: "G-0LCGVBKXLQ" 
-  };
-  
-  // Set up Firebase and Firestore
-  const firebaseConfig = __firebase_config;
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  setLogLevel('debug'); // Enable Firestore debug logs
+        // Firebase 서비스 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-  // Nice API key
-  const NICE_API_KEY = "cbb4da48e87445f68c2732368454ebc3";
+        // 버튼 요소 가져오기
+        const mobileButton = document.getElementById('login-button-mobile');
+        const pcButton = document.getElementById('login-button-pc');
 
-  // UI elements
-  const loginBtn = document.getElementById('loginBtn');
-  const userDropdownContainer = document.getElementById('userDropdownContainer');
-  const userDropdownBtn = document.getElementById('userDropdownBtn');
-  const userDropdownMenu = document.getElementById('userDropdownMenu');
-  const userNameEl = document.getElementById('userName');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const editProfileBtn = document.getElementById('editProfileBtn');
-  const mealMenuEl = document.getElementById('mealMenu');
-  const schoolMealMenuEl = document.getElementById('schoolMealMenu');
-  const timetableInfoEl = document.getElementById('timetableInfo');
-  const schoolTimetableEl = document.getElementById('schoolTimetable');
-
-  // Utility function for displaying messages
-  const showMessagePopup = (message) => {
-    const messagePopup = document.createElement('div');
-    messagePopup.textContent = message;
-    messagePopup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        padding: 16px 24px;
-        background-color: rgba(0, 0, 0, 0.8);
-        color: white;
-        border-radius: 12px;
-        z-index: 1000;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-    `;
-    document.body.appendChild(messagePopup);
-    setTimeout(() => messagePopup.style.opacity = '1', 10);
-    setTimeout(() => {
-        messagePopup.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(messagePopup), 300);
-    }, 1500);
-  };
-
-  // Function to fetch and display user data
-  async function fetchUserData(user) {
-    if (!user) return;
-    try {
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/user_data`);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        console.log("Firebase user data retrieved:", userData);
-
-        // Update UI with user's name
-        userNameEl.textContent = userData.name || "사용자";
-
-        // Call Nice API with fetched data (simulated)
-        fetchNiceAPIData(userData.atptOfcdcScCode, userData.sdSchulCode, userData.grade, userData.classNum);
-      } else {
-        console.log("No user data found in Firestore.");
-        // If no data, show message to set up profile.
-        showMessagePopup("프로필을 설정해주세요.");
-        // Set a default name
-        userNameEl.textContent = "새 사용자";
-      }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      showMessagePopup("사용자 정보를 불러오는 데 실패했습니다.");
-    }
-  }
-
-  // Function to fetch Nice API data (simulated)
-  const fetchNiceAPIData = (atptOfcdcScCode, sdSchulCode, grade, classNum) => {
-    console.log(`Nice API key: ${NICE_API_KEY}`);
-    console.log(`Simulating call to Nice API with parameters: 
-        atptOfcdcScCode: ${atptOfcdcScCode}, 
-        sdSchulCode: ${sdSchulCode},
-        grade: ${grade},
-        classNum: ${classNum}`);
-
-    // Mock data based on the Nice API format
-    const mockMealData = {
-      mealServiceDietInfo: [
-        {
-          head: [{
-            list_total_count: 1
-          }, {
-            RESULT: {
-              CODE: "INFO-000",
-              MESSAGE: "정상 처리되었습니다."
+        /**
+         * 로그인 버튼의 텍스트를 업데이트하는 함수
+         * @param {string} text - 버튼에 표시할 텍스트
+         */
+        function updateLoginButtons(text) {
+            if (mobileButton) {
+                mobileButton.innerText = text;
             }
-          }],
-          row: [{
-            DDISH_NM: "혼합잡곡밥, 돼지고기김치찌개, 닭볶음탕, 오징어채볶음, 배추김치, 찐빵"
-          }]
-        }
-      ]
-    };
-
-    const mockTimetableData = {
-      elsTimetable: [
-        {
-          head: [{
-            list_total_count: 6
-          }, {
-            RESULT: {
-              CODE: "INFO-000",
-              MESSAGE: "정상 처리되었습니다."
+            if (pcButton) {
+                pcButton.innerText = text;
             }
-          }],
-          row: [{
-            PERIO: 1,
-            ITRT_CHTNM: "국어"
-          }, {
-            PERIO: 2,
-            ITRT_CHTNM: "수학"
-          }, {
-            PERIO: 3,
-            ITRT_CHTNM: "영어"
-          }, {
-            PERIO: 4,
-            ITRT_CHTNM: "과학"
-          }, {
-            PERIO: 5,
-            ITRT_CHTNM: "미술"
-          }, {
-            PERIO: 6,
-            ITRT_CHTNM: "체육"
-          }]
         }
-      ]
-    };
-    
-    // Process mock meal data
-    const meal = mockMealData.mealServiceDietInfo[0].row[0].DDISH_NM;
-    const formattedMeal = meal.replace(/ /g, ', ').replace(/,/g, ', '); // Simple formatting
-    
-    // Update UI with mock data
-    mealMenuEl.textContent = formattedMeal;
-    schoolMealMenuEl.textContent = formattedMeal;
-    
-    // Process mock timetable data
-    const timetable = mockTimetableData.elsTimetable[0].row;
-    let timetableHtml = '';
-    let periods = 0;
-    timetable.forEach(item => {
-      timetableHtml += `
-        <div class="cell">
-          <div class="meta">
-            <div class="title">${item.PERIO}교시</div>
-            <div class="sub">${item.ITRT_CHTNM} (1학년 3반 교실)</div>
-          </div>
-        </div>`;
-      periods++;
-    });
 
-    timetableInfoEl.textContent = `총 ${periods}교시`;
-    schoolTimetableEl.innerHTML = timetableHtml;
-  };
+        /**
+         * 사용자의 프로필 데이터를 실시간으로 가져와 버튼을 업데이트합니다.
+         * @param {string} userId - 현재 로그인된 사용자 ID
+         */
+        function setupProfileListener(userId) {
+            // Firestore 문서 경로 설정
+            const profilePath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+            const profileRef = doc(db, profilePath);
 
-  // Auth state change listener
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      // User is signed in
-      loginBtn.style.display = 'none';
-      userDropdownContainer.style.display = 'block';
-      await fetchUserData(user);
-    } else {
-      // User is signed out
-      loginBtn.style.display = 'block';
-      userDropdownContainer.style.display = 'none';
-      userNameEl.textContent = "사용자";
-    }
-  });
+            onSnapshot(profileRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const name = data.name;
+                    if (name) {
+                        updateLoginButtons(`안녕하세요, ${name}님`);
+                    } else {
+                        updateLoginButtons('로그인');
+                    }
+                } else {
+                    updateLoginButtons('로그인');
+                }
+            }, (error) => {
+                console.error("Error getting user profile:", error);
+                updateLoginButtons('로그인');
+            });
+        }
 
-  // Initial sign-in with custom token
-  if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token !== null) {
-      signInWithCustomToken(auth, __initial_auth_token).catch((error) => {
-          console.error("Custom token sign-in failed:", error);
-      });
-  } else {
-      // No custom token provided. User cannot be authenticated.
-      console.warn("사용자 정의 토큰이 제공되지 않아 로그인이 불가능합니다.");
-  }
+        // 인증 상태 변경 감지
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // 사용자가 로그인되어 있을 때
+                setupProfileListener(user.uid);
+            } else {
+                // 사용자가 로그아웃되어 있을 때
+                updateLoginButtons('로그인');
+            }
+        });
 
-  // Event Listeners for the new UI elements
-  userDropdownBtn.addEventListener('click', () => {
-      userDropdownMenu.classList.toggle('active');
-  });
+        // 초기 인증 처리
+        async function handleInitialAuth() {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+            }
+        }
+        
+        handleInitialAuth();
 
-  logoutBtn.addEventListener('click', () => {
-      signOut(auth).then(() => {
-          console.log("User signed out.");
-          showMessagePopup("로그아웃 되었습니다.");
-      }).catch((error) => {
-          console.error("Sign out error:", error);
-          showMessagePopup("로그아웃 중 오류가 발생했습니다.");
-      });
-  });
-
-  editProfileBtn.addEventListener('click', () => {
-      showMessagePopup("프로필 편집 페이지로 이동합니다!");
-      // window.location.href = "/edit-profile"; // In a real app, you would navigate here
-      userDropdownMenu.classList.remove('active');
-  });
-
-  // Close dropdown when clicking outside
-  window.addEventListener('click', (event) => {
-      if (!userDropdownContainer.contains(event.target)) {
-          userDropdownMenu.classList.remove('active');
-      }
-  });
-
-  // --- 기존 코드 유지 ---
-
-  // 탭 라우팅
-  const tabs = document.querySelectorAll('.tab');
-  const pages = document.querySelectorAll('.page');
-  const appTitle = document.getElementById('appTitle');
-
-  const updatePage = (targetId) => {
-    // 탭 활성화 상태 변경
-    tabs.forEach(t => {
-      t.classList.remove('active');
-      t.setAttribute('aria-selected', 'false');
-      if (t.dataset.target === targetId) {
-        t.classList.add('active');
-        t.setAttribute('aria-selected', 'true');
-      }
-    });
-
-    // 페이지 가시성 변경
-    pages.forEach(page => {
-      if (page.id === `page-${targetId}`) {
-        page.classList.add('active');
-      } else {
-        page.classList.remove('active');
-      }
-    });
-
-    // 앱바 타이틀 변경
-    const titles = {home:'홈', school:'학교생활', community:'커뮤니티', more:'더보기'};
-    appTitle.textContent = titles[targetId] || '앱';
-  };
-
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      updatePage(tab.dataset.target);
-    });
-  });
-
-  // 학교생활 페이지 서브 탭 라우팅
-  const schoolTabs = document.querySelectorAll('.school-tabs .chip');
-  const schoolContents = {
-      meal: document.getElementById('content-meal'),
-      timetable: document.getElementById('content-timetable'),
-      schedule: document.getElementById('content-schedule')
-  };
-
-  const updateSchoolContent = (target) => {
-      schoolTabs.forEach(t => t.classList.remove('active'));
-      const activeTab = document.querySelector(`.school-tabs .chip[data-target="${target}"]`);
-      if (activeTab) activeTab.classList.add('active');
-      Object.entries(schoolContents).forEach(([k, el]) => el.classList.toggle('hidden', k !== target));
-  };
-
-  schoolTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-          updateSchoolContent(tab.dataset.target);
-      });
-  });
-
-  // 홈 화면 시간표 카드 클릭 시 상세 시간표로 이동
-  const timetableQuickCard = document.querySelector('.timetable-quick-card');
-  if (timetableQuickCard) {
-      timetableQuickCard.addEventListener('click', () => {
-          updatePage('school');
-          updateSchoolContent('timetable');
-      });
-  }
-
-  // 모드 토글
-  const modeToggleBtn = document.getElementById('modeToggleBtn');
-  modeToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('light-mode');
-    const isLightMode = document.body.classList.contains('light-mode');
-    modeToggleBtn.setAttribute('aria-label', isLightMode ? '다크모드로 전환' : '라이트모드로 전환');
-  });
-
-  // FAB 클릭 시 메시지 표시
-  document.querySelector('.fab').addEventListener('click', ()=>{
-    showMessagePopup('새 글쓰기 페이지로 이동합니다!');
-  });
-
-  // 달력 모달 로직
-  const calendarModal = document.getElementById('calendarModal');
-  const modalContent = document.querySelector('.modal-content');
-  const todayInfoBtn = document.getElementById('today-info-btn');
-  const modalCloseHandle = document.getElementById('modalCloseHandle');
-
-  todayInfoBtn.addEventListener('click', () => {
-      calendarModal.classList.add('open');
-      setTimeout(() => {
-          modalContent.classList.add('is-open');
-      }, 10);
-  });
-
-  function closeModal() {
-      modalContent.classList.remove('is-open');
-      modalContent.addEventListener('transitionend', () => {
-          calendarModal.classList.remove('open');
-      }, { once: true });
-  }
-
-  modalCloseHandle.addEventListener('click', closeModal);
-  calendarModal.addEventListener('click', (e) => {
-      if (e.target.id === 'calendarModal') {
-          closeModal();
-      }
-  });
-
-</script>
+    </script>
 </body>
-  </html>
+</html>
