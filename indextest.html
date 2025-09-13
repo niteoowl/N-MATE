@@ -12,16 +12,23 @@
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background-color: #ffffff; /* 더 밝고 부드러운 배경색 */
+            background-color: #ffffff;
         }
         .scrollable-content {
-            /* 모바일에서도 하단 내비게이션 바가 콘텐츠를 가리지 않도록 하단 패딩을 추가합니다. */
             padding-bottom: 96px;
         }
         @media (min-width: 768px) {
             .scrollable-content {
                 padding-bottom: 0;
             }
+        }
+        .dropdown-menu {
+            display: none;
+            right: 0;
+            top: 100%;
+        }
+        .dropdown-menu.active {
+            display: block;
         }
     </style>
 </head>
@@ -32,22 +39,28 @@
         <!-- 상단 헤더 -->
         <header class="bg-white p-4 flex items-center justify-between">
             <div class="flex items-center space-x-2">
-                <!-- N-MATE 로고 이미지로 변경 -->
                 <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
             </div>
-            <!-- 로그인 버튼 추가 (아이콘 삭제 및 디자인 변경) -->
-            <button class="
-                px-4 py-2
-                font-semibold text-sm
-                rounded-full
-                border-2 border-blue-500
-                bg-transparent text-blue-500
-                transition-colors duration-300
-                hover:bg-blue-500 hover:text-white
-                login-button
-            ">
-                로그인
-            </button>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-mobile" class="relative">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-mobile" class="px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-mobile" class="hidden">
+                    <button id="profile-btn-mobile" class="px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                        <span id="user-name-mobile">이름</span>
+                    </button>
+                    <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </header>
 
         <!-- 메인 콘텐츠 영역 -->
@@ -57,7 +70,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 메뉴
-
                 </h2>
                 <div class="flex space-x-2">
                     <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
@@ -78,7 +90,6 @@
                 <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
                     <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
                         중식
-
                     </h3>
                     <ul class="mt-2 space-y-1 text-sm text-gray-700">
                         <li>친환경검정콩밥 (5)</li>
@@ -292,7 +303,6 @@
         <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
             <div>
                 <div class="mb-4">
-                    <!-- N-MATE 로고 이미지로 변경 -->
                     <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
                 </div>
                 <nav class="space-y-1">
@@ -322,21 +332,25 @@
                     </a>
                 </nav>
             </div>
-            <!-- 로그인 버튼 추가 (아이콘 삭제 및 디자인 변경) -->
-            <div class="mt-4">
-                <button class="
-                    w-full
-                    px-6 py-3
-                    font-semibold
-                    rounded-lg
-                    border-2 border-blue-500
-                    bg-transparent text-blue-500
-                    transition-colors duration-300
-                    hover:bg-blue-500 hover:text-white
-                    login-button
-                ">
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-desktop" class="relative mt-4">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
                     로그인
                 </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-desktop" class="hidden">
+                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                        <span id="user-name-desktop">이름</span>
+                    </button>
+                    <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -348,7 +362,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 메뉴
-
                 </h2>
                 <div class="flex space-x-2">
                     <button class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
@@ -369,7 +382,6 @@
                 <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
                     <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
                         중식
-
                     </h3>
                     <ul class="mt-2 space-y-1 text-sm text-gray-700">
                         <li>친환경검정콩밥 (5)</li>
@@ -549,10 +561,10 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 파이어베이스 설정 및 초기화
+        // Firebase configuration and initialization (Hardcoded from previous logs)
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
             authDomain: "n-mate.firebaseapp.com",
@@ -566,59 +578,137 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // 디버그 모드 활성화 (콘솔에서 로그 확인 가능)
         setLogLevel('debug');
 
-        // 로그인 버튼 요소 가져오기
-        const loginButtons = document.querySelectorAll('.login-button');
+        // UI elements
+        const loginBtnMobile = document.getElementById('login-btn-mobile');
+        const profileContainerMobile = document.getElementById('profile-dropdown-container-mobile');
+        const profileBtnMobile = document.getElementById('profile-btn-mobile');
+        const userNameMobile = document.getElementById('user-name-mobile');
+        const dropdownMenuMobile = document.getElementById('dropdown-menu-mobile');
+        const logoutBtnMobile = document.getElementById('logout-btn-mobile');
 
-        // 인증 상태 변경 감지
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // 로그인 상태일 때
-                const userId = user.uid;
-                const appId = "default-app-id"; // 하드코딩된 경로 사용
-                const profileDocPath = `/artifacts/${appId}/users/${userId}/profile/user_data`;
+        const loginBtnDesktop = document.getElementById('login-btn-desktop');
+        const profileContainerDesktop = document.getElementById('profile-dropdown-container-desktop');
+        const profileBtnDesktop = document.getElementById('profile-btn-desktop');
+        const userNameDesktop = document.getElementById('user-name-desktop');
+        const dropdownMenuDesktop = document.getElementById('dropdown-menu-desktop');
+        const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
 
-                // 사용자 프로필 문서 실시간 감지
-                onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
-                    if (docSnapshot.exists()) {
-                        const data = docSnapshot.data();
-                        if (data && data.name) {
-                            // Firestore에서 이름을 가져와 버튼 텍스트 업데이트
-                            loginButtons.forEach(button => {
-                                button.textContent = data.name;
-                            });
-                        }
-                    } else {
-                        // 문서가 없을 경우 기본 텍스트로 되돌리기
-                        loginButtons.forEach(button => {
-                            button.textContent = '로그인';
-                        });
-                        console.error("No such document!");
-                    }
-                }, (error) => {
-                    console.error("Error getting document:", error);
-                    loginButtons.forEach(button => {
-                        button.textContent = '로그인';
-                    });
-                });
-            } else {
-                // 로그아웃 상태일 때
-                loginButtons.forEach(button => {
-                    button.textContent = '로그인';
-                });
+        // Logout function
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+                console.log("User signed out successfully.");
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        };
+
+        // Toggle dropdown menu
+        const toggleDropdown = (menu) => {
+            menu.classList.toggle('active');
+        };
+
+        // Event listeners for profile buttons
+        if (profileBtnMobile) {
+            profileBtnMobile.addEventListener('click', () => toggleDropdown(dropdownMenuMobile));
+        }
+        if (profileBtnDesktop) {
+            profileBtnDesktop.addEventListener('click', () => toggleDropdown(dropdownMenuDesktop));
+        }
+        if (logoutBtnMobile) {
+            logoutBtnMobile.addEventListener('click', handleLogout);
+        }
+        if (logoutBtnDesktop) {
+            logoutBtnDesktop.addEventListener('click', handleLogout);
+        }
+
+        // Handle clicks outside the dropdown to close it
+        window.addEventListener('click', (event) => {
+            if (!profileContainerMobile.contains(event.target) && dropdownMenuMobile.classList.contains('active')) {
+                dropdownMenuMobile.classList.remove('active');
+            }
+            if (!profileContainerDesktop.contains(event.target) && dropdownMenuDesktop.classList.contains('active')) {
+                dropdownMenuDesktop.classList.remove('active');
             }
         });
 
-        // 초기 인증 토큰으로 로그인
-        if (typeof __initial_auth_token !== 'undefined') {
-            try {
-                await signInWithCustomToken(auth, __initial_auth_token);
-                console.log("Signed in with custom token.");
-            } catch (error) {
-                console.error("Error signing in with custom token:", error);
+        onAuthStateChanged(auth, async (user) => {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+            if (user) {
+                // User is authenticated
+                console.log("User is authenticated:", user.uid);
+                
+                // Hide login buttons
+                if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.add('hidden');
+                
+                // Show profile containers
+                if (profileContainerMobile) profileContainerMobile.classList.remove('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.remove('hidden');
+
+                const profileDocPath = `artifacts/${appId}/users/${user.uid}/profile/user_data`;
+                onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const data = docSnapshot.data();
+                        const userName = data.name || "사용자";
+                        if (userNameMobile) userNameMobile.textContent = userName;
+                        if (userNameDesktop) userNameDesktop.textContent = userName;
+                        console.log("User profile loaded:", userName);
+                    } else {
+                        console.error("No user profile document found.");
+                        if (userNameMobile) userNameMobile.textContent = "사용자";
+                        if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                    }
+                }, (error) => {
+                    console.error("Error getting user profile:", error);
+                    if (userNameMobile) userNameMobile.textContent = "사용자";
+                    if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                });
+            } else {
+                // User is not authenticated
+                console.log("User is not authenticated. Showing login buttons.");
+                
+                // Hide profile containers
+                if (profileContainerMobile) profileContainerMobile.classList.add('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.add('hidden');
+                
+                // Show login buttons
+                if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.remove('hidden');
             }
+        });
+
+        // Initial sign-in logic on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (initialAuthToken) {
+                try {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
+                } catch (error) {
+                    console.error("Error signing in with custom token, falling back to anonymous sign-in:", error);
+                    await signInAnonymously(auth);
+                }
+            } else {
+                await signInAnonymously(auth);
+                console.log("Signed in anonymously.");
+            }
+        });
+
+        // Event listeners for the login buttons
+        if (loginBtnMobile) {
+            loginBtnMobile.addEventListener('click', async () => {
+                await signInAnonymously(auth);
+            });
+        }
+        if (loginBtnDesktop) {
+            loginBtnDesktop.addEventListener('click', async () => {
+                await signInAnonymously(auth);
+            });
         }
     </script>
 </body>
