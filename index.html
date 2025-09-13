@@ -157,7 +157,6 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     시험 디데이
-                    <span class="ml-2 text-xl">⏰</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -188,32 +187,20 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 뉴스
-                    <span class="ml-2 text-xl">📰</span>
+                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
                 </h2>
-                <a href="https://www.jayuilbo.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
             </div>
 
             <div>
-                <ul class="text-sm text-gray-700">
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "AI 기술, 교육 현장에 혁신을 가져오다"</h3>
-                            <p class="text-xs text-gray-500 mt-1">미래 교육을 위한 AI 활용 방안에 대한 기사입니다.</p>
-                        </a>
-                    </li>
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "친환경 급식, 학생들의 건강을 책임진다"</h3>
-                            <p class="text-xs text-gray-500 mt-1">유기농 식자재를 활용한 급식 개선 소식입니다.</p>
-                        </a>
-                    </li>
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "수능 D-61, 막판 스퍼트 전략은?"</h3>
-                            <p class="text-xs text-gray-500 mt-1">수험생들을 위한 효과적인 마무리 학습법을 다룹니다.</p>
-                        </a>
-                    </li>
+                <ul id="news-list-mobile" class="text-sm text-gray-700">
+                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
                 </ul>
+                <div class="flex justify-center mt-4">
+                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors">
+                        더보기
+                    </button>
+                </div>
             </div>
         </main>
 
@@ -374,7 +361,6 @@
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     시험 디데이
-                    <span class="ml-2 text-xl">⏰</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -405,32 +391,20 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 뉴스
-                    <span class="ml-2 text-xl">📰</span>
+                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
                 </h2>
-                <a href="https://www.jayuilbo.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
             </div>
 
             <div>
-                <ul class="text-sm text-gray-700">
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "AI 기술, 교육 현장에 혁신을 가져오다"</h3>
-                            <p class="text-xs text-gray-500 mt-1">미래 교육을 위한 AI 활용 방안에 대한 기사입니다.</p>
-                        </a>
-                    </li>
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "친환경 급식, 학생들의 건강을 책임진다"</h3>
-                            <p class="text-xs text-gray-500 mt-1">유기농 식자재를 활용한 급식 개선 소식입니다.</p>
-                        </a>
-                    </li>
-                    <li class="py-2 border-b border-gray-200 last:border-b-0">
-                        <a href="#" class="block">
-                            <h3 class="font-semibold text-[#111418] leading-tight">자유일보: "수능 D-61, 막판 스퍼트 전략은?"</h3>
-                            <p class="text-xs text-gray-500 mt-1">수험생들을 위한 효과적인 마무리 학습법을 다룹니다.</p>
-                        </a>
-                    </li>
+                <ul id="news-list-desktop" class="text-sm text-gray-700">
+                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
                 </ul>
+                 <div class="flex justify-center mt-4">
+                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors">
+                        더보기
+                    </button>
+                </div>
             </div>
         </main>
     </div>
@@ -528,10 +502,16 @@
         const timetableListDesktop = document.getElementById('timetable-list-desktop');
         const scheduleListMobile = document.getElementById('schedule-list-mobile');
         const scheduleListDesktop = document.getElementById('schedule-list-desktop');
+        const newsListMobile = document.getElementById('news-list-mobile');
+        const newsListDesktop = document.getElementById('news-list-desktop');
+        const loadMoreNewsMobileBtn = document.getElementById('load-more-news-mobile');
+        const loadMoreNewsDesktopBtn = document.getElementById('load-more-news-desktop');
 
         let userSchoolData = null;
         let selectedDate = new Date();
         let isAuthenticated = false;
+        let newsData = [];
+        let newsItemsToShow = 3;
 
         // 로그인 상태에 따른 UI 업데이트
         const updateUIBasedOnAuth = () => {
@@ -844,7 +824,7 @@
                     return;
                 }
                 // '토요휴업일' 제외
-                const filteredData = data.filter(item => item.EVENT_NM !== '토요휴업일');
+                const filteredData = data.filter(item => item.EVENT_NM !== '[토요휴업일]');
                 
                 if (filteredData.length === 0) {
                      listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
@@ -883,6 +863,100 @@
             }
         };
 
+        // 뉴스 정보를 RSS 피드에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderNews = async () => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
+            newsListMobile.innerHTML = '';
+            newsListDesktop.innerHTML = '';
+            newsListMobile.appendChild(createSkeletonUI(3));
+            newsListDesktop.appendChild(createSkeletonUI(3));
+            
+            const RSS_URL = 'https://www.jayupress.com/rss/clickTop.xml';
+            // CORS 문제를 해결하기 위해 프록시 서비스 사용
+            const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+
+            try {
+                const response = await fetch(`${PROXY_URL}${encodeURIComponent(RSS_URL)}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const xmlText = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                
+                const items = xmlDoc.querySelectorAll('item');
+                
+                newsData = [];
+                items.forEach(item => {
+                    const title = item.querySelector('title')?.textContent;
+                    const link = item.querySelector('link')?.textContent;
+                    const description = item.querySelector('description')?.textContent;
+                    if (title && link) {
+                        newsData.push({ title, link, description });
+                    }
+                });
+
+                // 초기 뉴스 렌더링
+                renderNews();
+
+            } catch (error) {
+                console.error("뉴스 정보 로드 실패:", error);
+                const errorMessage = '<li class="py-2">뉴스 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                newsListMobile.innerHTML = errorMessage;
+                newsListDesktop.innerHTML = errorMessage;
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+            }
+        };
+
+        // 뉴스 데이터를 렌더링하는 함수
+        const renderNews = () => {
+            const listElementMobile = newsListMobile;
+            const listElementDesktop = newsListDesktop;
+
+            if (newsData.length === 0) {
+                const noNewsMessage = '<li class="py-2">오늘의 뉴스 정보가 없습니다.</li>';
+                listElementMobile.innerHTML = noNewsMessage;
+                listElementDesktop.innerHTML = noNewsMessage;
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+                return;
+            }
+
+            listElementMobile.innerHTML = '';
+            listElementDesktop.innerHTML = '';
+
+            const itemsToDisplay = newsData.slice(0, newsItemsToShow);
+
+            itemsToDisplay.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'py-2 border-b border-gray-200 last:border-b-0';
+                li.innerHTML = `
+                    <a href="${item.link}" target="_blank" class="block">
+                        <h3 class="font-semibold text-[#111418] leading-tight">${item.title}</h3>
+                        <p class="text-xs text-gray-500 mt-1">${item.description.replace(/<[^>]*>/g, '').trim()}</p>
+                    </a>
+                `;
+                listElementMobile.appendChild(li.cloneNode(true));
+                listElementDesktop.appendChild(li);
+            });
+
+            // '더보기' 버튼 표시 여부 결정
+            if (newsItemsToShow >= newsData.length) {
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+            } else {
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'block';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'block';
+            }
+        };
+
+        // '더보기' 버튼 클릭 이벤트 핸들러
+        const handleLoadMoreNews = () => {
+            newsItemsToShow += 5;
+            renderNews();
+        };
+
+        if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.addEventListener('click', handleLoadMoreNews);
+        if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.addEventListener('click', handleLoadMoreNews);
 
         onAuthStateChanged(auth, async (user) => {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -972,6 +1046,7 @@
                 console.log("No custom auth token provided. Awaiting user login action.");
                 updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
             }
+            fetchAndRenderNews();
         });
     </script>
 </body>
