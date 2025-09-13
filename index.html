@@ -833,18 +833,25 @@
 
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
-            
-            const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_YMD_FROM=${year}${month}01&AA_YMD_TO=${year}${month}31`;
+            const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${year}${month}01&AA_TO_YMD=${year}${month}31`;
             
             // UI에 학사일정 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
-                // 데이터가 없으면 메시지 표시
+                // 데이터가 없거나 필터링 후 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
                     return;
                 }
-                data.forEach(item => {
+                // '토요휴업일' 제외
+                const filteredData = data.filter(item => item.EVENT_NM !== '[토요휴업일]');
+                
+                if (filteredData.length === 0) {
+                     listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
+                    return;
+                }
+
+                filteredData.forEach(item => {
                     const schedule = item.EVENT_NM;
                     const dateString = item.AA_YMD;
                     const li = document.createElement('li');
