@@ -756,7 +756,20 @@
             timetableListMobile.appendChild(createSkeletonUI(3));
             timetableListDesktop.appendChild(createSkeletonUI(3));
 
-            let endpoint = 'misTimetable'; // 사용자 요청에 따라 중학교(misTimetable)로 고정
+            let endpoint = '';
+            // schoolType에 따라 적절한 API 엔드포인트 설정
+            if (schoolType === '초등학교') {
+                endpoint = 'elsTimetable';
+            } else if (schoolType === '중학교') {
+                endpoint = 'misTimetable';
+            } else if (schoolType === '고등학교') {
+                endpoint = 'hisTimetable';
+            } else {
+                console.error("알 수 없는 학교 유형입니다:", schoolType);
+                timetableListMobile.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
+                timetableListDesktop.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
+                return;
+            }
             
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -881,6 +894,18 @@
                 onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
                     if (docSnapshot.exists()) {
                         const data = docSnapshot.data();
+                        
+                        // 학교 유형 정보가 누락된 경우 학교 이름에서 유추
+                        if (!data.schoolType && data.schoolName) {
+                            if (data.schoolName.includes('초등학교')) {
+                                data.schoolType = '초등학교';
+                            } else if (data.schoolName.includes('중학교')) {
+                                data.schoolType = '중학교';
+                            } else if (data.schoolName.includes('고등학교')) {
+                                data.schoolType = '고등학교';
+                            }
+                        }
+
                         userSchoolData = data;
                         const userName = data.name || "사용자";
                         if (userNameMobile) userNameMobile.textContent = userName;
