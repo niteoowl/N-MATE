@@ -580,22 +580,27 @@
         function setupProfileListener(userId) {
             // Firestore 문서 경로 설정
             const profilePath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+            console.log("조회할 Firestore 경로:", profilePath); // 디버깅용 로그 추가
+
             const profileRef = doc(db, profilePath);
 
             onSnapshot(profileRef, (docSnap) => {
                 if (docSnap.exists()) {
+                    console.log("문서가 존재합니다. 데이터:", docSnap.data()); // 디버깅용 로그 추가
                     const data = docSnap.data();
                     const name = data.name;
                     if (name) {
                         updateLoginButtons(`안녕하세요, ${name}님`);
                     } else {
                         updateLoginButtons('로그인');
+                        console.log("문서에는 'name' 필드가 없습니다."); // 디버깅용 로그 추가
                     }
                 } else {
                     updateLoginButtons('로그인');
+                    console.log("문서가 존재하지 않습니다."); // 디버깅용 로그 추가
                 }
             }, (error) => {
-                console.error("Error getting user profile:", error);
+                console.error("사용자 프로필을 가져오는 중 오류 발생:", error);
                 updateLoginButtons('로그인');
             });
         }
@@ -604,10 +609,12 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 // 사용자가 로그인되어 있을 때
+                console.log("로그인 상태입니다. UID:", user.uid); // 디버깅용 로그 추가
                 setupProfileListener(user.uid);
             } else {
                 // 사용자가 로그아웃되어 있을 때
                 updateLoginButtons('로그인');
+                console.log("로그아웃 상태입니다."); // 디버깅용 로그 추가
             }
         });
 
@@ -620,12 +627,11 @@
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Authentication failed:", error);
+                console.error("인증 실패:", error);
             }
         }
         
         handleInitialAuth();
-
     </script>
 </body>
 </html>
