@@ -1051,3 +1051,193 @@
     </script>
 </body>
 </html>
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>앱 스타일 이미지 팝업</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .slides-container {
+            display: flex;
+            overflow-x: hidden; /* Prevent horizontal scrollbar */
+            scroll-behavior: smooth;
+        }
+        .slide {
+            flex-shrink: 0;
+            width: 100%;
+            touch-action: pan-y; /* Allow vertical scrolling, prevent horizontal */
+        }
+        .dot {
+            transition: background-color 0.3s ease;
+        }
+        .dot.active {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <!-- 팝업 모달 -->
+    <div id="popupModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+        <!-- 팝업 컨테이너 (배경과 그림자 제거) -->
+        <div class="flex flex-col items-center max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300">
+            <!-- 팝업 이미지 슬라이더 -->
+            <div class="w-full relative rounded-xl overflow-hidden">
+                <div id="slides" class="slides-container">
+                    <!-- 첫 번째 이미지 -->
+                    <div class="slide">
+                        <a href="/app">
+                            <img src="https://i.postimg.cc/nz8njKbS/5.png" alt="앱 다운로드 특별 할인 이벤트 팝업" class="w-full h-auto object-cover">
+                        </a>
+                    </div>
+                    <!-- 두 번째 이미지 -->
+                    <div class="slide">
+                        <a href="/event/01">
+                            <img src="https://i.postimg.cc/y8qjGkK4/6.png" alt="앱 다운로드 두 번째 이벤트 팝업" class="w-full h-auto object-cover">
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 이미지 네비게이션 점 -->
+                <div id="dots" class="absolute top-4 left-1/2 transform -translate-x-1/2 flex items-center justify-center space-x-2">
+                    <button class="dot w-2 h-2 rounded-full bg-gray-400 active" data-index="0"></button>
+                    <button class="dot w-2 h-2 rounded-full bg-gray-400" data-index="1"></button>
+                </div>
+            </div>
+            
+            <!-- 팝업 하단 컨트롤 (투명 배경) -->
+            <div class="flex items-center justify-center w-full text-lg mt-4">
+                <div class="flex-1 flex justify-center">
+                    <a href="#" id="hideForTodayLink" class="text-white hover:text-gray-200 transition-colors duration-200 font-bold">
+                        다시 보지 않기
+                    </a>
+                </div>
+                <span class="text-white font-bold">|</span>
+                <div class="flex-1 flex justify-center">
+                    <a href="#" id="closeTextLink" class="text-white hover:text-gray-200 transition-colors duration-200 font-bold">
+                        닫기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to the elements
+        const hideForTodayLink = document.getElementById('hideForTodayLink');
+        const closeTextLink = document.getElementById('closeTextLink');
+        const popupModal = document.getElementById('popupModal');
+        const slidesContainer = document.getElementById('slides');
+        const dotsContainer = document.getElementById('dots');
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+        
+        let currentSlideIndex = 0;
+        let isDragging = false;
+        let startX = 0;
+        let startScrollLeft = 0;
+
+        // Function to show a specific slide and update the active dot
+        const showSlide = (index) => {
+            if (index < 0) {
+                index = slides.length - 1;
+            } else if (index >= slides.length) {
+                index = 0;
+            }
+
+            slidesContainer.scrollTo({
+                left: slides[index].offsetLeft,
+                behavior: 'smooth'
+            });
+
+            dots.forEach(dot => dot.classList.remove('active'));
+            dots[index].classList.add('active');
+            currentSlideIndex = index;
+        };
+
+        // --- Drag/Swipe Functionality (Mobile Only) ---
+        const dragStart = (e) => {
+            isDragging = true;
+            startX = e.touches[0].pageX;
+            startScrollLeft = slidesContainer.scrollLeft;
+        };
+
+        const dragging = (e) => {
+            if (!isDragging) return;
+            const x = e.touches[0].pageX;
+            const walk = (x - startX); // The distance the finger has moved
+            slidesContainer.scrollLeft = startScrollLeft - walk;
+        };
+
+        const dragEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const endX = e.changedTouches[0].pageX;
+            const dragDistance = endX - startX;
+            const threshold = 50; // Minimum drag distance to trigger a slide change
+
+            if (dragDistance > threshold) {
+                showSlide(currentSlideIndex - 1);
+            } else if (dragDistance < -threshold) {
+                showSlide(currentSlideIndex + 1);
+            } else {
+                // Return to the current slide if the drag was too short
+                showSlide(currentSlideIndex);
+            }
+        };
+
+        slidesContainer.addEventListener('touchstart', dragStart);
+        slidesContainer.addEventListener('touchmove', dragging);
+        slidesContainer.addEventListener('touchend', dragEnd);
+
+        // --- Existing Functionality ---
+
+        // Event listener for dot clicks
+        dotsContainer.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('dot')) {
+                const index = parseInt(target.dataset.index, 10);
+                showSlide(index);
+            }
+        });
+
+        // '다시 보지 않기' 링크를 클릭하면 팝업을 숨기고 로컬 스토리지에 저장합니다.
+        hideForTodayLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            localStorage.setItem('hidePopup', 'true');
+            popupModal.classList.add('hidden');
+        });
+
+        // 닫기 텍스트 링크를 클릭하면 팝업을 숨깁니다.
+        closeTextLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            popupModal.classList.add('hidden');
+        });
+
+        // 팝업 컨테이너 외부를 클릭하면 팝업을 숨깁니다.
+        popupModal.addEventListener('click', (event) => {
+            if (event.target === popupModal) {
+                popupModal.classList.add('hidden');
+            }
+        });
+
+        // 페이지가 로드되면 팝업을 표시합니다.
+        document.addEventListener('DOMContentLoaded', () => {
+            const shouldHidePopup = localStorage.getItem('hidePopup');
+            if (!shouldHidePopup) {
+                popupModal.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
+
