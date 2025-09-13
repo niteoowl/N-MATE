@@ -553,7 +553,15 @@
         import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // 파이어베이스 설정 및 초기화
-        const firebaseConfig = JSON.parse(__firebase_config);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -563,15 +571,15 @@
 
         // 로그인 버튼 요소 가져오기
         const loginButtons = document.querySelectorAll('.login-button');
-        
+
         // 인증 상태 변경 감지
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 // 로그인 상태일 때
                 const userId = user.uid;
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                const appId = "default-app-id"; // 하드코딩된 경로 사용
                 const profileDocPath = `/artifacts/${appId}/users/${userId}/profile/user_data`;
-                
+
                 // 사용자 프로필 문서 실시간 감지
                 onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
                     if (docSnapshot.exists()) {
@@ -602,7 +610,7 @@
                 });
             }
         });
-        
+
         // 초기 인증 토큰으로 로그인
         if (typeof __initial_auth_token !== 'undefined') {
             try {
