@@ -56,35 +56,6 @@
                 opacity: .5;
             }
         }
-        .timetable-grid {
-            display: grid;
-            grid-template-columns: minmax(50px, 1fr) repeat(5, minmax(100px, 2fr));
-        }
-        .grid-cell-day, .grid-cell-hour, .grid-cell {
-            padding: 1rem 0.5rem;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .grid-cell-day {
-            background-color: #f8f9fb;
-            font-weight: 600;
-        }
-        .grid-cell-hour {
-            background-color: #f8f9fb;
-            font-weight: 600;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none; /* IE and Edge */
-            scrollbar-width: none; /* Firefox */
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera*/
-        }
     </style>
 </head>
 <body>
@@ -153,8 +124,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
                 </h2>
-                <!-- 주간 시간표 섹션으로 스크롤 이동 -->
-                <a href="#weekly-timetable-section" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
 
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -164,35 +134,6 @@
                 </ul>
             </div>
 
-            <div class="h-4"></div>
-            
-            <!-- 주간 시간표 섹션 -->
-            <div id="weekly-timetable-section" class="mt-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                        주간 시간표
-                    </h2>
-                </div>
-                <!-- 주간 시간표 네비게이션 -->
-                <div class="flex items-center justify-between mb-4 text-[#111418] border border-gray-200 rounded-full p-2">
-                    <button id="prev-week-btn-mobile" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
-                        </svg>
-                    </button>
-                    <span id="current-week-display-mobile" class="font-semibold text-sm"></span>
-                    <button id="next-week-btn-mobile" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <!-- 주간 시간표 내용 -->
-                <div id="timetable-content-mobile" class="bg-[#f8f9fb] rounded-2xl p-4 overflow-x-auto no-scrollbar shadow">
-                    <!-- 주간 시간표가 여기에 렌더링됩니다 -->
-                </div>
-            </div>
-            
             <div class="h-4"></div>
 
             <!-- 이번 달 학사일정 섹션 -->
@@ -400,7 +341,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
                 </h2>
-                <a href="#weekly-timetable-section" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
 
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -408,35 +349,6 @@
                 <ul id="timetable-list-desktop" class="text-sm text-gray-700">
                     <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                 </ul>
-            </div>
-            
-            <div class="h-6"></div>
-
-            <!-- 주간 시간표 섹션 -->
-            <div id="weekly-timetable-section" class="mt-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                        주간 시간표
-                    </h2>
-                </div>
-                <!-- 주간 시간표 네비게이션 -->
-                <div class="flex items-center justify-between mb-4 text-[#111418] border border-gray-200 rounded-full p-2">
-                    <button id="prev-week-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
-                        </svg>
-                    </button>
-                    <span id="current-week-display-desktop" class="font-semibold text-sm"></span>
-                    <button id="next-week-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
-                        </svg>
-                    </button>
-                </div>
-                <!-- 주간 시간표 내용 -->
-                <div id="timetable-content-desktop" class="bg-[#f8f9fb] rounded-2xl p-4 overflow-x-auto no-scrollbar shadow">
-                    <!-- 주간 시간표가 여기에 렌더링됩니다 -->
-                </div>
             </div>
 
             <div class="h-6"></div>
@@ -582,7 +494,7 @@
         const db = getFirestore(app);
 
         // NEIS Open API 설정
-        const NEIS_API_KEY = "0c3b4def034a4eb5b75e830500a30898";
+        const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc3";
         const NEIS_BASE_URL = "https://open.neis.go.kr/hub/";
 
         // UI 요소
@@ -617,55 +529,27 @@
         const scheduleListMobile = document.getElementById('schedule-list-mobile');
         const scheduleListDesktop = document.getElementById('schedule-list-desktop');
 
-        const timetableContentMobile = document.getElementById('timetable-content-mobile');
-        const timetableContentDesktop = document.getElementById('timetable-content-desktop');
-        const currentWeekDisplayMobile = document.getElementById('current-week-display-mobile');
-        const currentWeekDisplayDesktop = document.getElementById('current-week-display-desktop');
-        const prevWeekBtnMobile = document.getElementById('prev-week-btn-mobile');
-        const nextWeekBtnMobile = document.getElementById('next-week-btn-mobile');
-        const prevWeekBtnDesktop = document.getElementById('prev-week-btn-desktop');
-        const nextWeekBtnDesktop = document.getElementById('next-week-btn-desktop');
-
         let userSchoolData = null;
         let selectedDate = new Date();
-        let currentMonday = getMonday(new Date());
         let isAuthenticated = false;
-
-        // 유틸리티 함수
-        const getMonday = (d) => {
-            const date = new Date(d);
-            const day = date.getDay();
-            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-            return new Date(date.setDate(diff));
-        };
-
-        const formatDate = (date) => {
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}${month}${day}`;
-        };
 
         // 로그인 상태에 따른 UI 업데이트
         const updateUIBasedOnAuth = () => {
             const loginMessage = '<li class="text-center text-sm text-gray-500 py-4">로그인하면<br>학교 정보를 불러올 수 있어요.</li>';
-            const weeklyTimetableLoginMessage = '<div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[25rem] p-4"><p class="font-medium text-lg text-white">로그인하면<br>주간 시간표를 확인할 수 있어요.</p></div>';
 
             if (isAuthenticated) {
+                // 로그인 상태 - 데이터 로딩을 시작하고 스켈레톤을 표시
                 if (userSchoolData) {
                     fetchAndRenderAllData(selectedDate);
                 }
             } else {
+                // 로그아웃 상태 - 모든 목록에 알림 메시지 표시
                 lunchListMobile.innerHTML = loginMessage;
                 lunchListDesktop.innerHTML = loginMessage;
                 timetableListMobile.innerHTML = loginMessage;
                 timetableListDesktop.innerHTML = loginMessage;
                 scheduleListMobile.innerHTML = loginMessage;
                 scheduleListDesktop.innerHTML = loginMessage;
-                if (timetableContentMobile) timetableContentMobile.innerHTML = weeklyTimetableLoginMessage;
-                if (timetableContentDesktop) timetableContentDesktop.innerHTML = weeklyTimetableLoginMessage;
-                if (currentWeekDisplayMobile) currentWeekDisplayMobile.textContent = '로그인 필요';
-                if (currentWeekDisplayDesktop) currentWeekDisplayDesktop.textContent = '로그인 필요';
             }
         };
 
@@ -739,12 +623,14 @@
             const startingDay = firstDayOfMonth.getDay();
             const daysInMonth = lastDayOfMonth.getDate();
 
+            // 공백 채우기
             for (let i = 0; i < startingDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'w-8 h-8 md:w-10 md:h-10';
                 calendarGrid.appendChild(emptyCell);
             }
 
+            // 날짜 채우기
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayCell = document.createElement('div');
                 dayCell.className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer';
@@ -777,11 +663,13 @@
             }
         };
 
+        // 이전 달 버튼 클릭 핸들러
         const handlePrevMonth = () => {
             selectedDate.setMonth(selectedDate.getMonth() - 1);
             renderCalendar(selectedDate);
         };
 
+        // 다음 달 버튼 클릭 핸들러
         const handleNextMonth = () => {
             selectedDate.setMonth(selectedDate.getMonth() + 1);
             renderCalendar(selectedDate);
@@ -793,7 +681,7 @@
         if (calendarGrid) calendarGrid.addEventListener('click', handleDateClick);
         if (prevMonthBtn) prevMonthBtn.addEventListener('click', handlePrevMonth);
         if (nextMonthBtn) nextMonthBtn.addEventListener('click', handleNextMonth);
-
+        
         // 스켈레톤 UI 생성 함수
         const createSkeletonUI = (count) => {
             const skeletonList = document.createElement('div');
@@ -814,21 +702,27 @@
             fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, date);
             fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date);
             fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, date);
-            fetchAndRenderWeeklyTimetable(currentMonday, sdSchulCode, grade, classNum, atptOfcdcScCode);
         };
 
         // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             lunchListMobile.innerHTML = '';
             lunchListDesktop.innerHTML = '';
             lunchListMobile.appendChild(createSkeletonUI(3));
             lunchListDesktop.appendChild(createSkeletonUI(3));
 
-            const dateString = formatDate(date);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+
             const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
             
+            // UI에 급식 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li>오늘의 급식 정보가 없습니다.</li>';
                     return;
@@ -840,9 +734,13 @@
             try {
                 const response = await fetch(url);
                 const result = await response.json();
+                
+                // API 응답에서 급식 데이터가 있는 row를 안전하게 찾기
                 const lunchData = result.mealServiceDietInfo?.[1]?.row;
+
                 render(lunchListMobile, lunchData);
                 render(lunchListDesktop, lunchData);
+
             } catch (error) {
                 console.error("급식 정보 로드 실패:", error);
                 lunchListMobile.innerHTML = '<li>급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
@@ -852,19 +750,26 @@
 
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             timetableListMobile.innerHTML = '';
             timetableListDesktop.innerHTML = '';
             timetableListMobile.appendChild(createSkeletonUI(3));
             timetableListDesktop.appendChild(createSkeletonUI(3));
 
-            let endpoint = 'misTimetable';
+            let endpoint = 'misTimetable'; // 사용자 요청에 따라 중학교(misTimetable)로 고정
             
-            const dateString = formatDate(date);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
 
+            // API 명세서에 맞춰 ALL_TI_YMD 파라미터 추가
             const url = `${NEIS_BASE_URL}${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
             
+            // UI에 시간표 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li class="py-2">오늘의 시간표가 없습니다.</li>';
                     return;
@@ -884,6 +789,7 @@
                 const response = await fetch(url);
                 const result = await response.json();
                 
+                // API 응답에서 RESULT 코드가 있는지 확인 (데이터 없음 오류)
                 if (result.RESULT && result.RESULT.CODE === 'INFO-200') {
                      const noTimetableMessage = '<li class="py-2 text-center text-gray-500">오늘의 시간표 정보가 없습니다.<br>학사일정 또는 주말인지 확인해 보세요.</li>';
                     timetableListMobile.innerHTML = noTimetableMessage;
@@ -891,143 +797,22 @@
                     return;
                 }
                 
+                // API 응답에서 시간표 데이터가 있는 row를 안전하게 찾기
                 const timetableData = result[endpoint]?.[1]?.row;
+
                 render(timetableListMobile, timetableData);
                 render(timetableListDesktop, timetableData);
+
             } catch (error) {
                 console.error("시간표 정보 로드 실패:", error);
                 timetableListMobile.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
                 timetableListDesktop.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
             }
         };
-        
-        // 주간 시간표 렌더링 함수 (사용자 코드 + 로직 추가)
-        const renderWeeklyTimetable = (timetableData) => {
-            const timetableContent = window.innerWidth < 768 ? timetableContentMobile : timetableContentDesktop;
-            
-            const daysOfWeek = ['월', '화', '수', '목', '금'];
-            const sortedData = timetableData.sort((a, b) => {
-                if (a.ALL_TI_YMD !== b.ALL_TI_YMD) {
-                    return a.ALL_TI_YMD.localeCompare(b.ALL_TI_YMD);
-                }
-                return parseInt(a.PERIO) - parseInt(b.PERIO);
-            });
-            
-            const groupedByDate = new Map();
-            sortedData.forEach(item => {
-                const date = item.ALL_TI_YMD;
-                if (!groupedByDate.has(date)) {
-                    groupedByDate.set(date, []);
-                }
-                groupedByDate.get(date).push(item);
-            });
-
-            let htmlContent = `
-                <div class="timetable-grid text-center text-sm font-medium">
-                    <div class="grid-cell-day rounded-tl-xl min-w-[50px] md:min-w-0">교시</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">월</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">화</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">수</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">목</div>
-                    <div class="grid-cell-day rounded-tr-xl min-w-[100px] md:min-w-0">금</div>
-            `;
-            
-            const maxPeriod = Math.max(...sortedData.map(item => parseInt(item.PERIO)));
-            const firstDay = getMonday(currentMonday);
-
-            for (let i = 1; i <= maxPeriod; i++) {
-                htmlContent += `<div class="grid-cell-hour min-w-[50px] md:min-w-0">${i}</div>`;
-                for (let j = 0; j < 5; j++) {
-                    const day = new Date(firstDay);
-                    day.setDate(firstDay.getDate() + j);
-                    const dateString = formatDate(day);
-                    
-                    const dailyTimetable = groupedByDate.get(dateString);
-                    let subject = '';
-                    if (dailyTimetable) {
-                        const periodData = dailyTimetable.find(item => parseInt(item.PERIO) === i);
-                        subject = periodData ? periodData.ITRT_CNTNT : '';
-                    }
-
-                    const today = new Date();
-                    const isToday = day.toDateString() === today.toDateString();
-                    const cellClass = isToday ? 'font-bold' : '';
-
-                    htmlContent += `<div class="grid-cell min-w-[100px] md:min-w-0 ${cellClass}">${subject}</div>`;
-                }
-            }
-            htmlContent += `</div>`;
-            timetableContent.innerHTML = htmlContent;
-        };
-
-        // 주간 시간표 데이터 불러오기 (사용자 코드)
-        async function fetchAndRenderWeeklyTimetable(mondayDate, schoolCode, grade, classNm, officeCode) {
-            const timetableContent = window.innerWidth < 768 ? timetableContentMobile : timetableContentDesktop;
-            const currentWeekDisplay = window.innerWidth < 768 ? currentWeekDisplayMobile : currentWeekDisplayDesktop;
-
-            timetableContent.innerHTML = `
-                <!-- 스켈레톤 로딩 UI -->
-                <div class="animate-pulse grid grid-cols-6 text-center text-sm font-medium timetable-grid overflow-x-auto no-scrollbar">
-                    <div class="grid-cell-day rounded-tl-xl min-w-[50px] md:min-w-0">교시</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">월</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">화</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">수</div>
-                    <div class="grid-cell-day min-w-[100px] md:min-w-0">목</div>
-                    <div class="grid-cell-day rounded-tr-xl min-w-[100px] md:min-w-0">금</div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">1</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">2</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">3</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">4</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">5</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">6</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                    <div class="grid-cell-hour min-w-[50px] md:min-w-0">7</div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div><div class="grid-cell min-w-[100px] md:min-w-0"><div class="h-4 bg-gray-400 rounded w-4/5"></div></div>
-                </div>
-            `;
-
-            const tiFromYmd = formatDate(mondayDate);
-            const fridayDate = new Date(mondayDate);
-            fridayDate.setDate(mondayDate.getDate() + 4);
-            const tiToYmd = formatDate(fridayDate);
-
-            const fromYear = mondayDate.getFullYear();
-            const fromMonth = mondayDate.getMonth() + 1;
-            const fromDay = mondayDate.getDate();
-            const toYear = fridayDate.getFullYear();
-            const toMonth = fridayDate.getMonth() + 1;
-            const toDay = fridayDate.getDate();
-            currentWeekDisplay.textContent = `${fromYear}.${fromMonth}.${fromDay} ~ ${toYear}.${toMonth}.${toDay}`;
-
-            const url = `${NEIS_BASE_URL}misTimetable?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=100&ATPT_OFCDC_SC_CODE=${officeCode}&SD_SCHUL_CODE=${schoolCode}&GRADE=${grade}&CLASS_NM=${classNm}&TI_FROM_YMD=${tiFromYmd}&TI_TO_YMD=${tiToYmd}`;
-            
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    timetableContent.innerHTML = `
-                        <div class="text-center text-gray-400 flex flex-col items-center justify-center min-h-[25rem] p-4">
-                            <p class="font-medium text-lg text-white">시간표 정보가 없어요</p>
-                            <p class="text-sm text-gray-400 mt-1">학사 일정 또는 주말/방학 기간인지 확인해주세요!</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                if (data.misTimetable && data.misTimetable.length > 1 && data.misTimetable[1].row) {
-                    const timetableData = data.misTimetable[1].row;
-                    renderWeeklyTimetable(timetableData);
-                } else {
-                    timetableContent.innerHTML = `<div class="text-center p-4"><p class="text-red-500">시간표 정보를 가져올 수 없습니다. API 응답 구조를 확인하세요.</p></div>`;
-                }
-
-            } catch (error) {
-            console.error('Failed to fetch weekly timetable data:', error);
-            timetableContent.innerHTML = `<div class="text-center p-4"><p class="text-red-500">네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.</p></div>`;
-            }
-        }
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             scheduleListMobile.innerHTML = '';
             scheduleListDesktop.innerHTML = '';
             scheduleListMobile.appendChild(createSkeletonUI(3));
@@ -1038,8 +823,10 @@
             
             const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_YMD_FROM=${year}${month}01&AA_YMD_TO=${year}${month}31`;
             
+            // UI에 학사일정 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
                     return;
@@ -1063,7 +850,10 @@
             try {
                 const response = await fetch(url);
                 const result = await response.json();
+                
+                // API 응답에서 학사일정 데이터가 있는 row를 안전하게 찾기
                 const scheduleData = result.SchoolSchedule?.[1]?.row;
+                
                 render(scheduleListMobile, scheduleData);
                 render(scheduleListDesktop, scheduleData);
             } catch (error) {
@@ -1073,27 +863,6 @@
             }
         };
 
-        // 주간 시간표 네비게이션
-        const handlePrevWeek = () => {
-            currentMonday.setDate(currentMonday.getDate() - 7);
-            if (userSchoolData) {
-                const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
-                fetchAndRenderWeeklyTimetable(currentMonday, sdSchulCode, grade, classNum, atptOfcdcScCode);
-            }
-        };
-
-        const handleNextWeek = () => {
-            currentMonday.setDate(currentMonday.getDate() + 7);
-            if (userSchoolData) {
-                const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
-                fetchAndRenderWeeklyTimetable(currentMonday, sdSchulCode, grade, classNum, atptOfcdcScCode);
-            }
-        };
-
-        if (prevWeekBtnMobile) prevWeekBtnMobile.addEventListener('click', handlePrevWeek);
-        if (nextWeekBtnMobile) nextWeekBtnMobile.addEventListener('click', handleNextWeek);
-        if (prevWeekBtnDesktop) prevWeekBtnDesktop.addEventListener('click', handlePrevWeek);
-        if (nextWeekBtnDesktop) nextWeekBtnDesktop.addEventListener('click', handleNextWeek);
 
         onAuthStateChanged(auth, async (user) => {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -1119,6 +888,7 @@
 
                         const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
 
+                        // 모든 필수 정보가 있는지 확인
                         if (atptOfcdcScCode && sdSchulCode && schoolType && grade && classNum) {
                             fetchAndRenderAllData(selectedDate);
                         } else {
@@ -1155,6 +925,7 @@
             }
         });
 
+        // Initial sign-in logic on page load
         document.addEventListener('DOMContentLoaded', async () => {
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             if (initialAuthToken) {
@@ -1163,11 +934,11 @@
                     console.log("Signed in with custom token.");
                 } catch (error) {
                     console.error("Error signing in with custom token:", error);
-                    updateUIBasedOnAuth();
+                    updateUIBasedOnAuth(); // 로그인 실패 시 알림 메시지 표시
                 }
             } else {
                 console.log("No custom auth token provided. Awaiting user login action.");
-                updateUIBasedOnAuth();
+                updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
             }
         });
     </script>
