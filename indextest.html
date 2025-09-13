@@ -554,12 +554,12 @@
         async function main() {
             // Firebase 설정 및 앱 ID를 전역 변수에서 가져옵니다.
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
             // Firebase 구성 유효성 검사
-            if (Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
-                console.error("오류: Firebase 구성이 유효하지 않습니다. firebaseConfig에 apiKey가 포함되어 있는지 확인하세요.");
+            if (!firebaseConfig) {
+                console.error("오류: Firebase 구성이 유효하지 않습니다. firebaseConfig가 정의되어 있는지 확인하세요.");
                 // 초기화 로직을 여기서 중단합니다.
                 document.body.innerHTML = `
                     <div class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -626,6 +626,19 @@
                 });
             }
 
+            // 초기 인증 처리 (익명 로그인 기능 삭제)
+            // 사용자 정의 인증 토큰이 있을 때만 로그인 시도
+            if (initialAuthToken) {
+                try {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("사용자 정의 토큰으로 로그인 성공!");
+                } catch (error) {
+                    console.error("인증 실패:", error);
+                }
+            } else {
+                console.log("사용자 정의 인증 토큰이 없어 자동으로 로그인하지 않습니다.");
+            }
+            
             // 인증 상태 변경 감지
             onAuthStateChanged(auth, (user) => {
                 if (user) {
@@ -638,17 +651,6 @@
                     console.log("로그아웃 상태입니다."); // 디버깅용 로그 추가
                 }
             });
-
-            // 초기 인증 처리 (익명 로그인 기능 삭제)
-            try {
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    console.log("사용자 정의 인증 토큰이 없어 자동으로 로그인하지 않습니다.");
-                }
-            } catch (error) {
-                console.error("인증 실패:", error);
-            }
         }
         
         main();
