@@ -477,9 +477,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase configuration and initialization (Hardcoded from previous logs)
+        // Firebase configuration and initialization
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
             authDomain: "n-mate.firebaseapp.com",
@@ -492,8 +492,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        setLogLevel('debug');
 
         // NEIS Open API 설정
         const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc3";
@@ -708,6 +706,7 @@
 
         // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             lunchListMobile.innerHTML = '';
             lunchListDesktop.innerHTML = '';
             lunchListMobile.appendChild(createSkeletonUI(3));
@@ -719,10 +718,12 @@
             const dateString = `${year}${month}${day}`;
 
             const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
-
+            
+            // UI에 급식 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
-                if (!data) {
+                // 데이터가 없으면 메시지 표시
+                if (!data || data.length === 0) {
                     listElement.innerHTML = '<li>오늘의 급식 정보가 없습니다.</li>';
                     return;
                 }
@@ -734,10 +735,8 @@
                 const response = await fetch(url);
                 const result = await response.json();
                 
-                let lunchData = null;
-                if (result.mealServiceDietInfo && Array.isArray(result.mealServiceDietInfo) && result.mealServiceDietInfo.length > 1) {
-                    lunchData = result.mealServiceDietInfo[1].row;
-                }
+                // API 응답에서 급식 데이터가 있는 row를 안전하게 찾기
+                const lunchData = result.mealServiceDietInfo?.[1]?.row;
 
                 render(lunchListMobile, lunchData);
                 render(lunchListDesktop, lunchData);
@@ -751,6 +750,7 @@
 
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, grade, classNum, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             timetableListMobile.innerHTML = '';
             timetableListDesktop.innerHTML = '';
             timetableListMobile.appendChild(createSkeletonUI(3));
@@ -763,8 +763,10 @@
 
             const url = `${NEIS_BASE_URL}elsTimetable?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
             
+            // UI에 시간표 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li class="py-2">오늘의 시간표가 없습니다.</li>';
                     return;
@@ -784,13 +786,8 @@
                 const response = await fetch(url);
                 const result = await response.json();
                 
-                console.log("Timetable API response:", result); // 디버깅을 위해 응답 로그 추가
-
-                let timetableData = null;
-                // API 응답이 성공적인지 확인
-                if (result.elsTimetable && Array.isArray(result.elsTimetable) && result.elsTimetable.length > 1) {
-                    timetableData = result.elsTimetable[1].row;
-                }
+                // API 응답에서 시간표 데이터가 있는 row를 안전하게 찾기
+                const timetableData = result.elsTimetable?.[1]?.row;
 
                 render(timetableListMobile, timetableData);
                 render(timetableListDesktop, timetableData);
@@ -804,6 +801,7 @@
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             scheduleListMobile.innerHTML = '';
             scheduleListDesktop.innerHTML = '';
             scheduleListMobile.appendChild(createSkeletonUI(3));
@@ -814,8 +812,10 @@
             
             const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_YMD_FROM=${year}${month}01&AA_YMD_TO=${year}${month}31`;
             
+            // UI에 학사일정 데이터를 렌더링하는 내부 함수
             const render = (listElement, data) => {
                 listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
                 if (!data || data.length === 0) {
                     listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
                     return;
@@ -840,10 +840,8 @@
                 const response = await fetch(url);
                 const result = await response.json();
                 
-                let scheduleData = null;
-                if (result.SchoolSchedule && Array.isArray(result.SchoolSchedule) && result.SchoolSchedule.length > 1) {
-                    scheduleData = result.SchoolSchedule[1].row;
-                }
+                // API 응답에서 학사일정 데이터가 있는 row를 안전하게 찾기
+                const scheduleData = result.SchoolSchedule?.[1]?.row;
                 
                 render(scheduleListMobile, scheduleData);
                 render(scheduleListDesktop, scheduleData);
@@ -931,7 +929,6 @@
                 updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
             }
         });
-
     </script>
 </body>
 </html>
