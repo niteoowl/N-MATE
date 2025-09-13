@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/themes/prism-vs.min.css" rel="stylesheet" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f3f4f6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .editor-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background-color: #1f2937; /* Dark background for editor */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem;
+        }
+        /* Editor wrapper for highlighting overlay */
+        .editor-wrapper {
+            position: relative;
+            flex-grow: 1;
+        }
+        .editor-textarea, .editor-highlighter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 1rem;
+            white-space: pre-wrap;
+            tab-size: 4;
+            line-height: 1.5;
+        }
+        /* Textarea is now visible with light text color */
+        .editor-textarea {
+            resize: none;
+            color: #d1d5db; /* Light text color for visibility */
+            background-color: transparent;
+            caret-color: white; /* Show caret in white */
+            z-index: 1;
+            border: none;
+            outline: none;
+        }
+        /* Highlighter is the background with syntax colors */
+        .editor-highlighter {
+            z-index: 0;
+            pointer-events: none;
+            overflow-y: scroll;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            background-color: #111827;
+        }
+        .editor-highlighter code {
+            display: block;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .run-button {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: none;
+        }
+        .run-button:hover {
+            background-color: #2563eb;
+        }
+        .clear-button {
+            background-color: #ef4444;
+            color: #ffffff;
+            border: none;
+        }
+        .clear-button:hover {
+            background-color: #dc2626;
+        }
+        /* Full-screen preview container */
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+        .fullscreen-container.show {
+            display: flex;
+        }
+        .fullscreen-iframe {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+        }
+        /* Minimal close button overlay */
+        .close-button-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            padding: 0.5rem 1rem;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.2s;
+        }
+        .close-button-overlay:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center p-4">
+    <div class="container max-w-4xl w-full">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">HTML 테스트기</h1>
+        <div class="editor-container">
+            <h2 class="text-lg font-semibold text-gray-200 mb-2">HTML 코드 입력</h2>
+            <div class="editor-wrapper">
+                <textarea id="codeEditor" class="editor-textarea" spellcheck="false" placeholder="여기에 HTML 코드를 입력하세요.&#10;&#10;예시:&#10;<h1>Hello, World!</h1>&#10;<p>이것은 HTML 테스트기입니다.</p>"></textarea>
+                <div id="highlighter" class="editor-highlighter">
+                    <pre><code id="codeBlock" class="language-html"></code></pre>
+                </div>
+            </div>
+            <div class="button-container">
+                <button class="button run-button" onclick="runCode()">실행</button>
+                <button class="button clear-button" onclick="clearCode()">지우기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-screen preview container -->
+    <div id="fullscreenPreview" class="fullscreen-container">
+        <div class="close-button-overlay" onclick="closeFullscreen()">닫기</div>
+        <iframe id="previewIframe" class="fullscreen-iframe"></iframe>
+    </div>
+
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.25.0/components/prism-markup.min.js"></script>
+    <script>
+        const codeEditor = document.getElementById('codeEditor');
+        const codeBlock = document.getElementById('codeBlock');
+        const highlighter = document.getElementById('highlighter');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedCode = localStorage.getItem('htmlCode');
+            if (storedCode) {
+                codeEditor.value = storedCode;
+                updateHighlighter();
+            }
+        });
+
+        // Sync textarea with the highlighter
+        function updateHighlighter() {
+            codeBlock.textContent = codeEditor.value;
+            Prism.highlightElement(codeBlock);
+        }
+
+        // Sync editor content, and scroll highlighter to match
+        codeEditor.addEventListener('input', (e) => {
+            localStorage.setItem('htmlCode', e.target.value);
+            updateHighlighter();
+        });
+
+        codeEditor.addEventListener('scroll', () => {
+            highlighter.scrollTop = codeEditor.scrollTop;
+        });
+
+        function runCode() {
+            const code = codeEditor.value;
+            const iframe = document.getElementById('previewIframe');
+            
+            // Create a full HTML document from the user's code
+            const fullHtml = `
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>미리보기</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+                    </style>
+                </head>
+                <body>
+                    ${code}
+                </body>
+                </html>
+            `;
+
+            const blob = new Blob([fullHtml], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            iframe.src = url;
+
+            document.getElementById('fullscreenPreview').classList.add('show');
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenPreview').classList.remove('show');
+            const iframe = document.getElementById('previewIframe');
+            iframe.src = 'about:blank'; // Reset the iframe
+        }
+
+        function clearCode() {
+            codeEditor.value = '';
+            localStorage.removeItem('htmlCode');
+            updateHighlighter();
+        }
+    </script>
+</body>
+</html>
