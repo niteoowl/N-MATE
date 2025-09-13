@@ -733,14 +733,15 @@
             try {
                 const response = await fetch(url);
                 const result = await response.json();
-                if (result.mealServiceDietInfo) {
-                    const lunchData = result.mealServiceDietInfo[1].row;
-                    render(lunchListMobile, lunchData);
-                    render(lunchListDesktop, lunchData);
-                } else {
-                    render(lunchListMobile, null);
-                    render(lunchListDesktop, null);
+                
+                let lunchData = null;
+                if (result.mealServiceDietInfo && Array.isArray(result.mealServiceDietInfo) && result.mealServiceDietInfo.length > 1) {
+                    lunchData = result.mealServiceDietInfo[1].row;
                 }
+
+                render(lunchListMobile, lunchData);
+                render(lunchListDesktop, lunchData);
+
             } catch (error) {
                 console.error("급식 정보 로드 실패:", error);
                 lunchListMobile.innerHTML = '<li>급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
@@ -782,14 +783,18 @@
             try {
                 const response = await fetch(url);
                 const result = await response.json();
-                if (result.elsTimetable) {
-                    const timetableData = result.elsTimetable[1].row;
-                    render(timetableListMobile, timetableData);
-                    render(timetableListDesktop, timetableData);
-                } else {
-                    render(timetableListMobile, null);
-                    render(timetableListDesktop, null);
+                
+                console.log("Timetable API response:", result); // 디버깅을 위해 응답 로그 추가
+
+                let timetableData = null;
+                // API 응답이 성공적인지 확인
+                if (result.elsTimetable && Array.isArray(result.elsTimetable) && result.elsTimetable.length > 1) {
+                    timetableData = result.elsTimetable[1].row;
                 }
+
+                render(timetableListMobile, timetableData);
+                render(timetableListDesktop, timetableData);
+
             } catch (error) {
                 console.error("시간표 정보 로드 실패:", error);
                 timetableListMobile.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
@@ -834,14 +839,14 @@
             try {
                 const response = await fetch(url);
                 const result = await response.json();
-                if (result.SchoolSchedule) {
-                    const scheduleData = result.SchoolSchedule[1].row;
-                    render(scheduleListMobile, scheduleData);
-                    render(scheduleListDesktop, scheduleData);
-                } else {
-                    render(scheduleListMobile, null);
-                    render(scheduleListDesktop, null);
+                
+                let scheduleData = null;
+                if (result.SchoolSchedule && Array.isArray(result.SchoolSchedule) && result.SchoolSchedule.length > 1) {
+                    scheduleData = result.SchoolSchedule[1].row;
                 }
+                
+                render(scheduleListMobile, scheduleData);
+                render(scheduleListDesktop, scheduleData);
             } catch (error) {
                 console.error("학사일정 정보 로드 실패:", error);
                 scheduleListMobile.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
