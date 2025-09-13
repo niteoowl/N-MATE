@@ -45,11 +45,22 @@
         .calendar-container.active {
             transform: translateY(0);
         }
+        .skeleton {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 모바일 UI (768px 미만에서만 보임) -->
+    <!-- Mobile UI (768px 미만에서만 보임) -->
     <div class="h-screen flex flex-col md:hidden">
         <!-- 상단 헤더 -->
         <header class="bg-white p-4 flex items-center justify-between">
@@ -101,8 +112,7 @@
                         중식
                     </h3>
                     <ul id="lunch-list-mobile" class="mt-2 space-y-1 text-sm text-gray-700">
-                        <!-- 급식 정보가 여기에 동적으로 로드됩니다 -->
-                        <li>데이터를 로딩 중...</li>
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                     </ul>
                 </div>
             </div>
@@ -113,7 +123,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
-                    <span class="ml-2 text-xl">🗓️</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -121,8 +130,7 @@
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
             <div>
                 <ul id="timetable-list-mobile" class="text-sm text-gray-700">
-                    <!-- 시간표 정보가 여기에 동적으로 로드됩니다 -->
-                    <li class="py-2">데이터를 로딩 중...</li>
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                 </ul>
             </div>
 
@@ -132,7 +140,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     이번 달 학사일정
-                    <span class="ml-2 text-xl">🗓️</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -140,8 +147,7 @@
             <!-- 학사일정 리스트 -->
             <div>
                 <ul id="schedule-list-mobile" class="text-sm text-gray-700">
-                    <!-- 학사일정 정보가 여기에 동적으로 로드됩니다 -->
-                    <li class="py-2">데이터를 로딩 중...</li>
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                 </ul>
             </div>
 
@@ -323,8 +329,7 @@
                         중식
                     </h3>
                     <ul id="lunch-list-desktop" class="mt-2 space-y-1 text-sm text-gray-700">
-                        <!-- 급식 정보가 여기에 동적으로 로드됩니다 -->
-                        <li>데이터를 로딩 중...</li>
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                     </ul>
                 </div>
             </div>
@@ -335,7 +340,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
-                    <span class="ml-2 text-xl">🗓️</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -343,8 +347,7 @@
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
             <div>
                 <ul id="timetable-list-desktop" class="text-sm text-gray-700">
-                    <!-- 시간표 정보가 여기에 동적으로 로드됩니다 -->
-                    <li class="py-2">데이터를 로딩 중...</li>
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                 </ul>
             </div>
 
@@ -354,7 +357,6 @@
             <div class="flex items-center justify-between">
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     이번 달 학사일정
-                    <span class="ml-2 text-xl">🗓️</span>
                 </h2>
                 <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
             </div>
@@ -362,8 +364,7 @@
             <!-- 학사일정 리스트 -->
             <div>
                 <ul id="schedule-list-desktop" class="text-sm text-gray-700">
-                    <!-- 학사일정 정보가 여기에 동적으로 로드됩니다 -->
-                    <li class="py-2">데이터를 로딩 중...</li>
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                 </ul>
             </div>
 
@@ -447,7 +448,7 @@
                 <span id="calendar-header" class="text-xl font-bold"></span>
                 <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
                     </svg>
                 </button>
                 <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
@@ -532,6 +533,27 @@
 
         let userSchoolData = null;
         let selectedDate = new Date();
+        let isAuthenticated = false;
+
+        // 로그인 상태에 따른 UI 업데이트
+        const updateUIBasedOnAuth = () => {
+            const loginMessage = '<li class="text-center text-sm text-gray-500 py-4">로그인하면<br>학교 정보를 불러올 수 있어요.</li>';
+
+            if (isAuthenticated) {
+                // 로그인 상태 - 데이터 로딩을 시작하고 스켈레톤을 표시
+                if (userSchoolData) {
+                    fetchAndRenderAllData(selectedDate);
+                }
+            } else {
+                // 로그아웃 상태 - 모든 목록에 알림 메시지 표시
+                lunchListMobile.innerHTML = loginMessage;
+                lunchListDesktop.innerHTML = loginMessage;
+                timetableListMobile.innerHTML = loginMessage;
+                timetableListDesktop.innerHTML = loginMessage;
+                scheduleListMobile.innerHTML = loginMessage;
+                scheduleListDesktop.innerHTML = loginMessage;
+            }
+        };
 
         // 로그아웃 함수
         const handleLogout = async () => {
@@ -564,10 +586,10 @@
 
         // 드롭다운 메뉴 외 클릭 시 닫기
         window.addEventListener('click', (event) => {
-            if (!profileContainerMobile.contains(event.target) && dropdownMenuMobile.classList.contains('active')) {
+            if (profileContainerMobile && !profileContainerMobile.contains(event.target) && dropdownMenuMobile.classList.contains('active')) {
                 dropdownMenuMobile.classList.remove('active');
             }
-            if (!profileContainerDesktop.contains(event.target) && dropdownMenuDesktop.classList.contains('active')) {
+            if (profileContainerDesktop && !profileContainerDesktop.contains(event.target) && dropdownMenuDesktop.classList.contains('active')) {
                 dropdownMenuDesktop.classList.remove('active');
             }
         });
@@ -638,10 +660,7 @@
                 selectedDate = newDate;
                 hideCalendar();
                 if (userSchoolData) {
-                    const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
-                    fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, selectedDate);
-                    fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum, selectedDate);
-                    fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, selectedDate);
+                    fetchAndRenderAllData(selectedDate);
                 }
             }
         };
@@ -664,10 +683,36 @@
         if (calendarGrid) calendarGrid.addEventListener('click', handleDateClick);
         if (prevMonthBtn) prevMonthBtn.addEventListener('click', handlePrevMonth);
         if (nextMonthBtn) nextMonthBtn.addEventListener('click', handleNextMonth);
+        
+        // 스켈레톤 UI 생성 함수
+        const createSkeletonUI = (count) => {
+            const skeletonList = document.createElement('div');
+            skeletonList.className = 'space-y-2 py-1';
+            for (let i = 0; i < count; i++) {
+                const skeletonDiv = document.createElement('div');
+                skeletonDiv.className = 'h-4 bg-gray-200 rounded skeleton';
+                if (i === 1) skeletonDiv.classList.add('w-5/6');
+                if (i === 2) skeletonDiv.classList.add('w-4/6');
+                skeletonList.appendChild(skeletonDiv);
+            }
+            return skeletonList;
+        };
 
+        // 모든 데이터를 가져와서 렌더링하는 함수
+        const fetchAndRenderAllData = (date) => {
+            const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
+            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, date);
+            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum, date);
+            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, date);
+        };
 
         // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+            lunchListMobile.innerHTML = '';
+            lunchListDesktop.innerHTML = '';
+            lunchListMobile.appendChild(createSkeletonUI(3));
+            lunchListDesktop.appendChild(createSkeletonUI(3));
+
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -705,6 +750,11 @@
 
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, grade, classNum, date) => {
+            timetableListMobile.innerHTML = '';
+            timetableListDesktop.innerHTML = '';
+            timetableListMobile.appendChild(createSkeletonUI(3));
+            timetableListDesktop.appendChild(createSkeletonUI(3));
+
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -749,6 +799,11 @@
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+            scheduleListMobile.innerHTML = '';
+            scheduleListDesktop.innerHTML = '';
+            scheduleListMobile.appendChild(createSkeletonUI(3));
+            scheduleListDesktop.appendChild(createSkeletonUI(3));
+
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             
@@ -800,6 +855,7 @@
 
             if (user) {
                 console.log("User is authenticated:", user.uid);
+                isAuthenticated = true;
                 
                 if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
                 if (loginBtnDesktop) loginBtnDesktop.classList.add('hidden');
@@ -811,7 +867,7 @@
                 onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
                     if (docSnapshot.exists()) {
                         const data = docSnapshot.data();
-                        userSchoolData = data; // 전역 변수에 학교 정보 저장
+                        userSchoolData = data;
                         const userName = data.name || "사용자";
                         if (userNameMobile) userNameMobile.textContent = userName;
                         if (userNameDesktop) userNameDesktop.textContent = userName;
@@ -819,17 +875,16 @@
                         const { atptOfcdcScCode, sdSchulCode, grade, classNum } = userSchoolData;
 
                         if (atptOfcdcScCode && sdSchulCode) {
-                            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, selectedDate);
-                            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, grade, classNum, selectedDate);
-                            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, selectedDate);
+                            fetchAndRenderAllData(selectedDate);
                         } else {
                             console.error("학교 정보가 프로필에 없습니다.");
-                            lunchListMobile.innerHTML = '<li>학교 정보가 없어 급식 데이터를 불러올 수 없습니다.</li>';
-                            timetableListMobile.innerHTML = '<li class="py-2">학교 정보가 없어 시간표를 불러올 수 없습니다.</li>';
-                            scheduleListMobile.innerHTML = '<li class="py-2">학교 정보가 없어 학사일정을 불러올 수 없습니다.</li>';
-                            lunchListDesktop.innerHTML = '<li>학교 정보가 없어 급식 데이터를 불러올 수 없습니다.</li>';
-                            timetableListDesktop.innerHTML = '<li class="py-2">학교 정보가 없어 시간표를 불러올 수 없습니다.</li>';
-                            scheduleListDesktop.innerHTML = '<li class="py-2">학교 정보가 없어 학사일정을 불러올 수 없습니다.</li>';
+                            const noSchoolMessage = '<li class="text-center text-sm text-gray-500 py-4">학교 정보가 없어<br>데이터를 불러올 수 없습니다.</li>';
+                            lunchListMobile.innerHTML = noSchoolMessage;
+                            timetableListMobile.innerHTML = noSchoolMessage;
+                            scheduleListMobile.innerHTML = noSchoolMessage;
+                            lunchListDesktop.innerHTML = noSchoolMessage;
+                            timetableListDesktop.innerHTML = noSchoolMessage;
+                            scheduleListDesktop.innerHTML = noSchoolMessage;
                         }
                     } else {
                         console.error("No user profile document found.");
@@ -843,12 +898,15 @@
                 });
             } else {
                 console.log("User is not authenticated. Showing login buttons.");
+                isAuthenticated = false;
                 
                 if (profileContainerMobile) profileContainerMobile.classList.add('hidden');
                 if (profileContainerDesktop) profileContainerDesktop.classList.add('hidden');
                 
                 if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
                 if (loginBtnDesktop) loginBtnDesktop.classList.remove('hidden');
+
+                updateUIBasedOnAuth();
             }
         });
 
@@ -861,9 +919,11 @@
                     console.log("Signed in with custom token.");
                 } catch (error) {
                     console.error("Error signing in with custom token:", error);
+                    updateUIBasedOnAuth(); // 로그인 실패 시 알림 메시지 표시
                 }
             } else {
                 console.log("No custom auth token provided. Awaiting user login action.");
+                updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
             }
         });
 
