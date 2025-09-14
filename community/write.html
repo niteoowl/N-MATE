@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글쓰기 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Remove all rounded corners */
+        .rounded-md, .rounded-lg, .rounded-full {
+            border-radius: 0 !important;
+        }
+        /* Remove all box shadows */
+        .shadow-sm, .shadow-md, .shadow-lg {
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold">
+                <a href="/community/chan" class="hover:text-gray-300">
+                    <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
+                </a>
+            </div>
+            <div class="flex flex-col items-start md:items-center">
+                <h1 class="text-xl md:text-2xl font-bold">새 게시글 작성</h1>
+                <p id="channel-info" class="text-sm text-gray-200 mt-1"></p>
+            </div>
+            <div class="w-8"></div> <!-- Spacer -->
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto my-8 p-4 bg-white border border-gray-300">
+        <form id="post-form" class="space-y-6">
+            <!-- Post Title -->
+            <div>
+                <label for="post-title" class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+                <input type="text" id="post-title" name="postTitle" required class="block w-full p-3 border border-gray-300 focus:border-blue-500">
+            </div>
+
+            <!-- Post Content (Rich Text Editor) -->
+            <div>
+                <label for="post-content" class="block text-sm font-medium text-gray-700 mb-1">본문</label>
+                <textarea id="post-content" name="postContent"></textarea>
+            </div>
+
+            <!-- Action Buttons & Status -->
+            <div class="flex justify-between items-center">
+                <button type="submit" id="submit-btn" class="bg-blue-600 text-white p-3 border border-blue-600 hover:bg-blue-700 transition duration-300 ease-in-out">
+                    게시하기
+                </button>
+                <div id="status-message" class="text-sm font-semibold"></div>
+                <button type="button" id="back-btn" class="bg-gray-200 text-gray-800 p-3 border border-gray-300 hover:bg-gray-300 transition duration-300 ease-in-out">
+                    취소하고 돌아가기
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, addDoc, collection, doc, updateDoc, increment, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Define Firebase configuration based on user input (as a placeholder)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        
+        // Use global variables provided by the canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Get elements
+        const postForm = document.getElementById('post-form');
+        const postTitleInput = document.getElementById('post-title');
+        const submitBtn = document.getElementById('submit-btn');
+        const statusMessage = document.getElementById('status-message');
+        const backBtn = document.getElementById('back-btn');
+        const channelInfo = document.getElementById('channel-info');
+
+        // Extract channel ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const channelId = urlParams.get('channelId');
+
+        // Fetch channel name and display it
+        const fetchChannelName = async () => {
+            if (channelId) {
+                const channelDocRef = doc(db, `artifacts/${appId}/public/data/channels/${channelId}`);
+                const channelSnap = await getDoc(channelDocRef);
+                if (channelSnap.exists()) {
+                    const channelName = channelSnap.data().name;
+                    channelInfo.textContent = `현재 작성 중인 채널: ${channelName}`;
+                } else {
+                    channelInfo.textContent = '채널 정보를 찾을 수 없습니다.';
+                }
+            } else {
+                channelInfo.textContent = '채널 ID가 누락되었습니다.';
+            }
+        };
+
+        // TinyMCE initialization
+        tinymce.init({
+            selector: '#post-content',
+            language: 'ko_KR',
+            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table powerpaste help wordcount emoticons',
+            toolbar: 'undo redo | formatselect | fontfamily fontsize | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help | link image media | code | preview | emoticons',
+            font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt 48pt',
+            height: 500,
+            menubar: true,
+            statusbar: true,
+            forced_root_block: 'p',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+
+        // Function to handle form submission
+        const handlePostCreation = async (e) => {
+            e.preventDefault();
+
+            // Check for authentication
+            if (!auth.currentUser) {
+                statusMessage.textContent = '로그인이 필요합니다.';
+                statusMessage.className = 'text-sm font-semibold text-red-500';
+                return;
+            }
+
+            // Get content from TinyMCE and form
+            const postTitle = postTitleInput.value.trim();
+            const postContent = tinymce.get('post-content').getContent();
+            const userId = auth.currentUser.uid;
+
+            if (!postTitle || !postContent) {
+                statusMessage.textContent = '제목과 본문을 모두 입력해주세요.';
+                statusMessage.className = 'text-sm font-semibold text-red-500';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '게시 중...';
+            statusMessage.textContent = '';
+
+            try {
+                // Add new post to Firestore
+                const postsColRef = collection(db, `artifacts/${appId}/public/data/posts`);
+                await addDoc(postsColRef, {
+                    title: postTitle,
+                    content: postContent,
+                    channelId: channelId,
+                    creatorId: userId,
+                    createdAt: serverTimestamp()
+                });
+
+                // Increment the post count for the channel
+                const channelDocRef = doc(db, `artifacts/${appId}/public/data/channels/${channelId}`);
+                await updateDoc(channelDocRef, {
+                    postCount: increment(1)
+                });
+                
+                statusMessage.textContent = '게시글이 성공적으로 작성되었습니다!';
+                statusMessage.className = 'text-sm font-semibold text-green-500';
+
+                // Redirect after a short delay
+                setTimeout(() => {
+                    window.location.href = `community/chan?id=${channelId}`;
+                }, 2000);
+
+            } catch (error) {
+                console.error("Error creating post:", error);
+                statusMessage.textContent = '게시글 작성 중 오류가 발생했습니다.';
+                statusMessage.className = 'text-sm font-semibold text-red-500';
+                submitBtn.disabled = false;
+                submitBtn.textContent = '게시하기';
+            }
+        };
+        
+        // Listen for authentication state changes and initialize app
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                statusMessage.textContent = '글을 작성하려면 로그인이 필요합니다.';
+                statusMessage.className = 'text-sm font-semibold text-red-500';
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        });
+
+        if (initialAuthToken) {
+            try {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } catch (error) {
+                console.error("Error signing in with custom token:", error);
+            }
+        }
+
+        // Attach event listeners
+        postForm.addEventListener('submit', handlePostCreation);
+        backBtn.addEventListener('click', () => {
+            if (channelId) {
+                window.location.href = `community/chan?id=${channelId}`;
+            } else {
+                window.history.back();
+            }
+        });
+
+        // Initial fetch of channel name
+        fetchChannelName();
+    </script>
+</body>
+</html>
