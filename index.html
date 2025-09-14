@@ -352,11 +352,15 @@
         const userIdDisplayEl = document.getElementById('user-id-display');
 
         window.signOutUser = () => {
-            signOut(auth).then(() => {
-                console.log("로그아웃 성공");
-            }).catch((error) => {
-                console.error("로그아웃 실패", error);
-            });
+            if (auth) {
+                signOut(auth).then(() => {
+                    console.log("로그아웃 성공");
+                }).catch((error) => {
+                    console.error("로그아웃 실패", error);
+                });
+            } else {
+                console.error("인증 객체가 유효하지 않습니다.");
+            }
         };
         
         // Firebase 관련 모든 로직을 Firebase 객체가 유효한지 확인하는 조건문으로 감쌉니다.
