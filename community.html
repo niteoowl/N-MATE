@@ -1,4 +1,4 @@
-<!DOCTYPE: HTML>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -403,7 +403,7 @@
                                 try {
                                     await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
                                         userId: currentUser.uid,
-                                        userName: `사용자_${currentUser.uid.substring(0, 8)}`,
+                                        userName: `사용자_${currentUser.uid}`,
                                         content: content,
                                         timestamp: serverTimestamp()
                                     });
