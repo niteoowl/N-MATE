@@ -330,175 +330,192 @@
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         setLogLevel('debug'); // Firestore 디버그 로깅 활성화
 
-        // 전역 변수
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // DOM과 모든 리소스가 로드된 후 스크립트 실행
+        window.onload = function() {
+            // 전역 변수
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Firebase 초기화
-        const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
-        const db = app ? getFirestore(app) : null;
-        const auth = app ? getAuth(app) : null;
+            // Firebase 초기화
+            const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
+            const db = app ? getFirestore(app) : null;
+            const auth = app ? getAuth(app) : null;
 
-        let currentUser = null;
+            let currentUser = null;
 
-        // HTML 요소 선택
-        const authStatusEl = document.getElementById('auth-status');
-        const postFormEl = document.getElementById('post-form');
-        const postContentEl = document.getElementById('post-content');
-        const postsContainerEl = document.getElementById('posts-container');
-        const loginContainerEl = document.getElementById('login-container');
-        const userProfileEl = document.getElementById('user-profile');
-        const userIdDisplayEl = document.getElementById('user-id-display');
+            // HTML 요소 선택
+            const authStatusEl = document.getElementById('auth-status');
+            const postFormEl = document.getElementById('post-form');
+            const postContentEl = document.getElementById('post-content');
+            const postsContainerEl = document.getElementById('posts-container');
+            const loginContainerEl = document.getElementById('login-container');
+            const userProfileEl = document.getElementById('user-profile');
+            const userIdDisplayEl = document.getElementById('user-id-display');
 
-        window.signOutUser = () => {
-            signOut(auth).then(() => {
-                console.log("로그아웃 성공");
-            }).catch((error) => {
-                console.error("로그아웃 실패", error);
-            });
-        };
-
-        // 인증 상태 변경 리스너
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                authStatusEl.textContent = `로그인됨 (ID: ${user.uid.substring(0, 8)}...)`;
-                userIdDisplayEl.textContent = `UID: ${user.uid}`;
-                loginContainerEl.classList.add('hidden');
-                userProfileEl.classList.remove('hidden');
-                postFormEl.classList.remove('hidden');
-                console.log("로그인 성공: ", user.uid);
-            } else {
-                currentUser = null;
-                authStatusEl.textContent = '로그아웃됨';
-                userIdDisplayEl.textContent = '';
-                loginContainerEl.classList.remove('hidden');
-                userProfileEl.classList.add('hidden');
-                postFormEl.classList.add('hidden');
-                console.log("로그아웃 상태");
-                // 토큰이 있는 경우 자동 로그인 시도
-                if (initialAuthToken) {
-                    try {
-                        await signInWithCustomToken(auth, initialAuthToken);
-                        console.log("자동 로그인 성공");
-                    } catch (error) {
-                        console.error("자동 로그인 실패", error);
-                    }
-                }
-            }
-        });
-
-        // 커뮤니티 데이터베이스 리스너
-        if (db) {
-            const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
-            const q = query(communityRef, orderBy('timestamp', 'desc'));
-
-            onSnapshot(q, (snapshot) => {
-                postsContainerEl.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const post = doc.data();
-                    renderPost(post);
-                });
-            }, (error) => {
-                console.error("게시글 불러오기 실패:", error);
-                postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
-            });
-        }
-
-        // 새 게시글 작성
-        postFormEl.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = postContentEl.value.trim();
-
-            if (content.length > 0 && currentUser) {
-                try {
-                    await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
-                        userId: currentUser.uid,
-                        userName: `사용자_${currentUser.uid.substring(0, 8)}`,
-                        content: content,
-                        timestamp: serverTimestamp()
+            window.signOutUser = () => {
+                if (auth) {
+                    signOut(auth).then(() => {
+                        console.log("로그아웃 성공");
+                    }).catch((error) => {
+                        console.error("로그아웃 실패", error);
                     });
-                    postContentEl.value = '';
-                } catch (error) {
-                    console.error("게시글 작성 실패:", error);
-                    alert("게시글 작성에 실패했습니다.");
+                } else {
+                    console.error("인증 객체가 유효하지 않습니다.");
                 }
+            };
+            
+            // Firebase 관련 모든 로직을 Firebase 객체가 유효한지 확인하는 조건문으로 감쌉니다.
+            if (app && db && auth) {
+                // 인증 상태 변경 리스너
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        currentUser = user;
+                        authStatusEl.textContent = `로그인됨 (ID: ${user.uid.substring(0, 8)}...)`;
+                        userIdDisplayEl.textContent = `UID: ${user.uid}`;
+                        loginContainerEl.classList.add('hidden');
+                        userProfileEl.classList.remove('hidden');
+                        postFormEl.classList.remove('hidden');
+                        console.log("로그인 성공: ", user.uid);
+
+                        // 커뮤니티 데이터베이스 리스너
+                        const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
+                        const q = query(communityRef, orderBy('timestamp', 'desc'));
+
+                        onSnapshot(q, (snapshot) => {
+                            postsContainerEl.innerHTML = '';
+                            snapshot.forEach((doc) => {
+                                const post = doc.data();
+                                renderPost(post);
+                            });
+                        }, (error) => {
+                            console.error("게시글 불러오기 실패:", error);
+                            postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
+                        });
+                        
+                        // 새 게시글 작성
+                        postFormEl.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const content = postContentEl.value.trim();
+
+                            if (content.length > 0 && currentUser) {
+                                try {
+                                    await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
+                                        userId: currentUser.uid,
+                                        userName: `사용자_${currentUser.uid.substring(0, 8)}`,
+                                        content: content,
+                                        timestamp: serverTimestamp()
+                                    });
+                                    postContentEl.value = '';
+                                } catch (error) {
+                                    console.error("게시글 작성 실패:", error);
+                                    // 사용자에게 알림 대신 콘솔에 오류를 로깅합니다.
+                                    console.log("게시글 작성에 실패했습니다.");
+                                }
+                            } else {
+                                console.log("로그인이 필요하거나 내용이 비어있습니다.");
+                            }
+                        });
+
+                    } else {
+                        currentUser = null;
+                        authStatusEl.textContent = '로그아웃됨';
+                        userIdDisplayEl.textContent = '';
+                        loginContainerEl.classList.remove('hidden');
+                        userProfileEl.classList.add('hidden');
+                        postFormEl.classList.add('hidden');
+                        console.log("로그아웃 상태");
+                        // 토큰이 있는 경우 자동 로그인 시도
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log("자동 로그인 성공");
+                            } catch (error) {
+                                console.error("자동 로그인 실패", error);
+                            }
+                        }
+                    }
+                });
+
             } else {
-                alert("로그인이 필요하거나 내용이 비어있습니다.");
+                // Firebase 초기화 실패 시 사용자에게 알림
+                authStatusEl.textContent = '로그인 서비스 사용 불가';
+                console.error("Firebase를 초기화할 수 없습니다. 구성 변수가 누락되었습니다.");
+                postsContainerEl.innerHTML = `<p class="text-center text-red-500">로그인 서비스를 이용할 수 없습니다.</p>`;
             }
-        });
 
-        // 게시글 렌더링 함수
-        function renderPost(post) {
-            const postCard = document.createElement('div');
-            postCard.className = 'bg-white rounded border border-gray-200 p-4 mb-4';
-            postCard.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-gray-800">${post.userName}</span>
-                    <span class="text-xs text-gray-500">${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : '방금 전'}</span>
-                </div>
-                <p class="dc-post-content">${post.content}</p>
-            `;
-            postsContainerEl.appendChild(postCard);
-        }
 
-        // JavaScript를 사용하여 동적으로 컨텐츠를 추가
-        const realtimePostsData = [
-            { title: 'BEST 게시글 1입니다.', author: 'BEST-1', date: '10:00', comments: 15, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 2입니다.', author: 'BEST-2', date: '09:50', comments: 3, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 3입니다.', author: 'BEST-3', date: '09:40', comments: 20, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 4입니다.', author: 'BEST-4', date: '09:30', comments: 7, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 5입니다.', author: 'BEST-5', date: '09:20', comments: 10, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-        ];
-        
-        const channelListData = {
-            "주제별 채널": ['게임', '음악', '방송', '스포츠'],
-            "지역별 채널": ['서울', '경기', '부산', '대구']
-        };
-
-        const popularChannelsData = [
-            '야구', '주식', '롤', 'IT', '음악', '연예인', '요리', '여행'
-        ];
-
-        const realtimePostsContainer = document.getElementById('realtime-best-posts');
-        realtimePostsData.forEach(post => {
-            const postItem = document.createElement('div');
-            postItem.className = 'dc-post-item';
-            postItem.innerHTML = `
-                <img src="${post.thumbnail}" alt="thumbnail">
-                <div class="dc-post-info">
-                    <div class="dc-post-title">${post.title}</div>
-                    <div class="dc-post-meta">
-                        <span>${post.author}</span> | <span>${post.date}</span> | <span class="text-blue-500">댓글 ${post.comments}</span>
+            // 게시글 렌더링 함수
+            function renderPost(post) {
+                const postCard = document.createElement('div');
+                postCard.className = 'bg-white rounded border border-gray-200 p-4 mb-4';
+                postCard.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-gray-800">${post.userName}</span>
+                        <span class="text-xs text-gray-500">${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : '방금 전'}</span>
                     </div>
-                </div>
-            `;
-            realtimePostsContainer.appendChild(postItem);
-        });
+                    <p class="dc-post-content">${post.content}</p>
+                `;
+                postsContainerEl.appendChild(postCard);
+            }
 
-        const allChannelsContainer = document.getElementById('all-channels');
-        for (const group in channelListData) {
-            const groupTitle = document.createElement('div');
-            groupTitle.className = 'dc-channel-group-title';
-            groupTitle.textContent = group;
-            allChannelsContainer.appendChild(groupTitle);
+            // JavaScript를 사용하여 동적으로 컨텐츠를 추가
+            const realtimePostsData = [
+                { title: 'BEST 게시글 1입니다.', author: 'BEST-1', date: '10:00', comments: 15, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
+                { title: 'BEST 게시글 2입니다.', author: 'BEST-2', date: '09:50', comments: 3, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
+                { title: 'BEST 게시글 3입니다.', author: 'BEST-3', date: '09:40', comments: 20, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
+                { title: 'BEST 게시글 4입니다.', author: 'BEST-4', date: '09:30', comments: 7, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
+                { title: 'BEST 게시글 5입니다.', author: 'BEST-5', date: '09:20', comments: 10, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
+            ];
+            
+            const channelListData = {
+                "주제별 채널": ['게임', '음악', '방송', '스포츠'],
+                "지역별 채널": ['서울', '경기', '부산', '대구']
+            };
 
-            channelListData[group].forEach(channel => {
-                const channelItem = document.createElement('div');
-                channelItem.className = 'dc-channel-item-text';
-                channelItem.innerHTML = `<a href="#">${channel} 채널</a>`;
-                allChannelsContainer.appendChild(channelItem);
+            const popularChannelsData = [
+                '야구', '주식', '롤', 'IT', '음악', '연예인', '요리', '여행'
+            ];
+
+            const realtimePostsContainer = document.getElementById('realtime-best-posts');
+            realtimePostsData.forEach(post => {
+                const postItem = document.createElement('div');
+                postItem.className = 'dc-post-item';
+                postItem.innerHTML = `
+                    <img src="${post.thumbnail}" alt="thumbnail">
+                    <div class="dc-post-info">
+                        <div class="dc-post-title">${post.title}</div>
+                        <div class="dc-post-meta">
+                            <span>${post.author}</span> | <span>${post.date}</span> | <span class="text-blue-500">댓글 ${post.comments}</span>
+                        </div>
+                    </div>
+                `;
+                realtimePostsContainer.appendChild(postItem);
             });
-        }
 
-        const popularChannelsContainer = document.getElementById('popular-channels');
-        popularChannelsData.forEach(channel => {
-            const listItem = document.createElement('li');
-            listItem.className = 'border-b border-gray-200';
-            listItem.innerHTML = `<a href="#">${channel}</a>`;
-            popularChannelsContainer.appendChild(listItem);
-        });
+            const allChannelsContainer = document.getElementById('all-channels');
+            for (const group in channelListData) {
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'dc-channel-group-title';
+                groupTitle.textContent = group;
+                allChannelsContainer.appendChild(groupTitle);
+
+                channelListData[group].forEach(channel => {
+                    const channelItem = document.createElement('div');
+                    channelItem.className = 'dc-channel-item-text';
+                    channelItem.innerHTML = `<a href="#">${channel} 채널</a>`;
+                    allChannelsContainer.appendChild(channelItem);
+                });
+            }
+
+            const popularChannelsContainer = document.getElementById('popular-channels');
+            popularChannelsData.forEach(channel => {
+                const listItem = document.createElement('li');
+                listItem.className = 'border-b border-gray-200';
+                listItem.innerHTML = `<a href="#">${channel}</a>`;
+                popularChannelsContainer.appendChild(listItem);
+            });
+        };
     </script>
 </body>
 </html>
