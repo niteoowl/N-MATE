@@ -57,6 +57,27 @@
                 opacity: .5;
             }
         }
+        /* Ripple effect styles */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            will-change: transform, opacity;
+            opacity: 0.36;
+            background-color: rgba(0,0,0,0.12);
+
+        }
+        .ripple.animate {
+            transition: transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms linear;
+            transform: translate(-50%,-50%) scale(1);
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -72,18 +93,18 @@
             <!-- 로그인 버튼 및 프로필 드롭다운 -->
             <div id="auth-ui-mobile" class="relative">
                 <!-- 로그인 전 버튼 -->
-                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
                     로그인
                 </button>
                 <!-- 로그인 후 프로필 드롭다운 -->
                 <div id="profile-dropdown-container-mobile" class="hidden">
-                    <button id="profile-btn-mobile" class="px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                    <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
                         <span id="user-name-mobile">이름</span>
                     </button>
                     <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">내 프로필</a>
-                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">로그아웃</button>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
                         </div>
                     </div>
                 </div>
@@ -99,7 +120,7 @@
                     오늘의 메뉴
                 </h2>
                 <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-mobile" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
                     </svg>
@@ -125,7 +146,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
                 </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -142,7 +163,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     이번 달 학사일정
                 </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <!-- 학사일정 리스트 -->
@@ -159,7 +180,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     시험 디데이
                 </h2>
-                <a href="#" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <div class="flex justify-around items-center text-center">
@@ -190,7 +211,7 @@
                     오늘의 뉴스
                     <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
                 </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
             </div>
 
             <div>
@@ -198,7 +219,7 @@
                     <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
                 </ul>
                 <div class="flex justify-center mt-4">
-                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors">
+                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
                         더보기
                     </button>
                 </div>
@@ -208,25 +229,25 @@
         <!-- 하단 내비게이션 바 -->
         <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
             <div class="flex justify-around items-center px-4 py-3">
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link" data-target="home" href="/">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="home" href="/">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
                     </svg>
                     <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
                 </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="calendar" href="/sclife">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
                     </svg>
                     <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
                 </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="community" href="/community">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="community" href="/community">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
                         </svg>
                     <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
                 </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link" data-target="more" href="/more">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
                     </svg>
@@ -245,25 +266,25 @@
                     <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
                 </div>
                 <nav class="space-y-1">
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold" href="/">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
                         </svg>
                         <span>홈</span>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="/sclife">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
                         </svg>
                         <span>학교생활</span>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="/community">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/community">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
                         </svg>
                         <span>커뮤니티</span>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors" href="/more">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
                         </svg>
@@ -275,18 +296,18 @@
             <!-- 로그인 버튼 및 프로필 드롭다운 -->
             <div id="auth-ui-desktop" class="relative mt-4">
                 <!-- 로그인 전 버튼 -->
-                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
                     로그인
                 </button>
                 <!-- 로그인 후 프로필 드롭다운 -->
                 <div id="profile-dropdown-container-desktop" class="hidden">
-                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
                         <span id="user-name-desktop">이름</span>
                     </button>
                     <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
                         <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">내 프로필</a>
-                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">로그아웃</button>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
                         </div>
                     </div>
                 </div>
@@ -303,7 +324,7 @@
                     오늘의 메뉴
                 </h2>
                 <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
                     </svg>
@@ -329,7 +350,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     오늘의 시간표
                 </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -346,7 +367,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     이번 달 학사일정
                 </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <!-- 학사일정 리스트 -->
@@ -363,7 +384,7 @@
                 <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                     시험 디데이
                 </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500">더보기</a>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
             </div>
 
             <div class="flex justify-around items-center text-center">
@@ -394,7 +415,7 @@
                     오늘의 뉴스
                     <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
                 </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500">자유일보 더보기</a>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
             </div>
 
             <div>
@@ -402,7 +423,7 @@
                     <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
                 </ul>
                  <div class="flex justify-center mt-4">
-                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors">
+                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
                         더보기
                     </button>
                 </div>
@@ -415,18 +436,18 @@
         <div id="calendar-container" class="w-full max-w-sm mx-auto bg-white rounded-t-3xl shadow-xl p-6 calendar-container">
             <!-- Calendar Header with month navigation -->
             <div class="flex justify-between items-center mb-4">
-                <button id="prev-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                <button id="prev-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
                     </svg>
                 </button>
                 <span id="calendar-header" class="text-xl font-bold"></span>
-                <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
                     </svg>
                 </button>
-                <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors">
+                <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
                     </svg>
@@ -1049,6 +1070,47 @@
             }
             fetchAndRenderNews();
         });
+
+        // Ripple effect logic
+        function attachRipple(btn){
+            function createRipple(ev){
+                const rect = btn.getBoundingClientRect();
+                let x, y;
+                if(ev.type === 'keydown'){
+                    x = rect.width/2 + rect.left;
+                    y = rect.height/2 + rect.top;
+                } else {
+                    const e = ev.touches ? ev.touches[0] : ev;
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                const left = x - rect.left;
+                const top = y - rect.top;
+                const distX = Math.max(left, rect.width - left);
+                const distY = Math.max(top, rect.height - top);
+                const radius = Math.sqrt(distX*distX + distY*distY);
+                const size = radius * 2;
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.width = size + 'px';
+                ripple.style.height = size + 'px';
+                ripple.style.left = left + 'px';
+                ripple.style.top = top + 'px';
+                btn.appendChild(ripple);
+                requestAnimationFrame(()=>{
+                    ripple.classList.add('animate');
+                });
+                setTimeout(()=>{ ripple.remove(); }, 600);
+            }
+            btn.addEventListener('mousedown', createRipple);
+            btn.addEventListener('touchstart', e=>createRipple(e), {passive:true});
+            btn.addEventListener('keydown', e=>{
+                if(e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter'){
+                    createRipple({type:'keydown'});
+                }
+            });
+        }
+        document.querySelectorAll('.ripple-btn').forEach(attachRipple);
     </script>
 </body>
 </html>
