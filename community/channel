@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채널 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Hide the main content initially to prevent unauthenticated UI from showing */
+        #main-content {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold">
+                <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
+            </div>
+            <div class="flex items-center space-x-4">
+                <input type="text" placeholder="채널 & 통합검색" class="p-2 w-64 bg-white text-gray-800 border-2 border-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                <button class="bg-blue-500 p-2 border-2 border-white hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white border-b border-gray-300 py-2">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <ul class="flex space-x-6 text-sm font-semibold">
+                <li><a href="#" class="hover:text-blue-600">채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">히스토리</a></li>
+                <li><a href="#" class="hover:text-blue-600">BEST</a></li>
+                <li><a href="#" class="hover:text-blue-600">N-MATE 바로가기</a></li>
+                <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
+            </ul>
+            <div class="text-xs text-gray-500">
+                <p>지금 1,072,392개 게시글 등록</p>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 max-w-7xl">
+        
+        <!-- Left Column (Main Channel Content) -->
+        <div class="lg:w-3/4 space-y-4">
+            <!-- Channel Ranking Section -->
+            <div class="bg-white p-4 border border-gray-300">
+                <h2 class="text-lg font-bold mb-4">채널 순위</h2>
+                <ul class="space-y-2">
+                    <li class="flex items-center space-x-4">
+                        <span class="font-bold text-lg text-blue-600 w-6">1</span>
+                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
+                            <span class="text-sm font-semibold">게임 채널</span>
+                            <span class="text-xs text-gray-500">게시글 12,456</span>
+                        </a>
+                    </li>
+                    <li class="flex items-center space-x-4">
+                        <span class="font-bold text-lg text-blue-600 w-6">2</span>
+                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
+                            <span class="text-sm font-semibold">영화 채널</span>
+                            <span class="text-xs text-gray-500">게시글 10,230</span>
+                        </a>
+                    </li>
+                    <li class="flex items-center space-x-4">
+                        <span class="font-bold text-lg text-blue-600 w-6">3</span>
+                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
+                            <span class="text-sm font-semibold">야구 채널</span>
+                            <span class="text-xs text-gray-500">게시글 8,900</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Create Channel Section -->
+            <div id="create-channel-section" class="bg-white p-4 border border-gray-300 hidden">
+                <h2 class="text-lg font-bold mb-4">채널 만들기</h2>
+                <div class="flex items-center space-x-4">
+                    <input type="text" placeholder="새로운 채널 이름" class="p-2 border border-gray-300 flex-grow">
+                    <button class="bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">만들기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Login/User Section & Channel List) -->
+        <div class="lg:w-1/4 space-y-4">
+            <!-- Login/User Section -->
+            <div id="user-profile-section" class="bg-white p-4 border border-gray-300">
+                <!-- User profile content will be loaded here -->
+                <div id="login-form-container">
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="keep-login" class="mr-2">
+                        <label for="keep-login" class="text-sm">로그인 유지</label>
+                    </div>
+                    <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
+                    <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
+                        <a href="#" class="hover:underline">회원가입</a>
+                        <a href="#" class="hover:underline">비밀번호 찾기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Channels List -->
+            <div class="bg-white p-4 border border-gray-300">
+                <h3 class="font-bold text-sm mb-2">모든 채널</h3>
+                <ul class="space-y-1 text-sm">
+                    <li><a href="#" class="block py-1 hover:text-blue-600">야구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">축구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">게임 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">영화 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">음악 채널</a></li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Define Firebase configuration based on user input
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        
+        // Use global variables provided by the canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Function to update the UI based on user's login state
+        const updateUI = async (user) => {
+            console.log("updateUI called. User:", user ? user.uid : "null");
+            const loginSection = document.getElementById('user-profile-section');
+            const navLoginLink = document.getElementById('nav-login-link');
+            const mainContent = document.getElementById('main-content');
+            const createChannelSection = document.getElementById('create-channel-section');
+            
+            // Show the main content once the auth state is confirmed
+            mainContent.style.display = 'flex';
+
+            if (user) {
+                // User is logged in, hide login form and display profile
+                const userId = user.uid;
+                const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+                
+                try {
+                    const docRef = doc(db, docPath);
+                    const docSnap = await getDoc(docRef);
+                    const userName = docSnap.exists() ? docSnap.data().name || '방문자' : '방문자';
+
+                    loginSection.innerHTML = `
+                        <div class="p-4 flex flex-col items-center">
+                            <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
+                            <p class="text-xs text-gray-500 mt-2">환영합니다.</p>
+                            <div class="mt-4 text-xs">
+                                <p><strong>내 ID:</strong> ${userId}</p>
+                                <p><strong>경로 예시:</strong> ${docPath}</p>
+                            </div>
+                            <div class="flex flex-col space-y-2 mt-4 w-full">
+                                <button id="logout-button" class="bg-blue-600 text-white p-2 hover:bg-blue-700">로그아웃</button>
+                            </div>
+                        </div>
+                    `;
+
+                    // Show the create channel section for logged-in users
+                    createChannelSection.classList.remove('hidden');
+
+                    // Add event listeners to the new button
+                    document.getElementById('logout-button').addEventListener('click', async () => {
+                        await signOut(auth);
+                        console.log("User signed out.");
+                    });
+                    
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    loginSection.innerHTML = `
+                        <div class="p-4">
+                            <p class="text-sm font-bold">데이터 로딩 오류</p>
+                            <p class="text-xs text-gray-500 mt-2">다시 시도해주세요.</p>
+                        </div>
+                    `;
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                }
+            } else {
+                // User is logged out, show login form
+                loginSection.innerHTML = `
+                    <div id="login-form-container">
+                        <div class="flex items-center mb-4">
+                            <input type="checkbox" id="keep-login" class="mr-2">
+                            <label for="keep-login" class="text-sm">로그인 유지</label>
+                        </div>
+                        <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
+                        <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
+                            <a href="#" class="hover:underline">회원가입</a>
+                            <a href="#" class="hover:underline">비밀번호 찾기</a>
+                        </div>
+                    </div>
+                `;
+                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
+
+                // Hide the create channel section for logged-out users
+                createChannelSection.classList.add('hidden');
+            }
+        };
+
+        // Listen for authentication state changes. This is the main function that handles login status.
+        onAuthStateChanged(auth, async (user) => {
+            console.log("Auth state changed. User:", user ? user.uid : "null");
+            await updateUI(user);
+        });
+
+        // Use the custom token if available. This will trigger the onAuthStateChanged listener.
+        if (initialAuthToken) {
+            try {
+                await signInWithCustomToken(auth, initialAuthToken);
+                console.log("Signed in with custom token.");
+            } catch (error) {
+                console.error("Error signing in with custom token:", error);
+            }
+        }
+    </script>
+</body>
+</html>
