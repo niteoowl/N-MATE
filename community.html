@@ -303,8 +303,18 @@
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Firebase configuration provided by the user
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
 
         let auth, db;
         let isFirebaseReady = false;
@@ -318,10 +328,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
                 isFirebaseReady = true;
-
-                // Log values to help with debugging
-                console.log('App ID:', appId);
-                console.log('Firebase Config:', firebaseConfig);
                 
                 // Listen for authentication state changes only if Firebase is ready
                 onAuthStateChanged(auth, (user) => {
