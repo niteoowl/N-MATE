@@ -15,6 +15,18 @@
         #main-content {
             display: none;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -57,6 +69,21 @@
         
         <!-- Left Column (Main Channel Content) -->
         <div class="lg:w-3/4 space-y-4">
+             <!-- All Channels List -->
+            <div class="bg-white p-4 border border-gray-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">모든 채널</h3>
+                    <button id="create-channel-btn" class="bg-blue-600 text-white text-sm p-2 border border-blue-600 hover:bg-blue-700">채널 만들기</button>
+                </div>
+                <ul id="all-channels-list" class="space-y-1 text-sm">
+                    <li><a href="#" class="block py-1 hover:text-blue-600">야구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">축구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">게임 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">영화 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">음악 채널</a></li>
+                </ul>
+            </div>
+
             <!-- Channel Ranking Section -->
             <div class="bg-white p-4 border border-gray-300">
                 <h2 class="text-lg font-bold mb-4">채널 순위</h2>
@@ -84,48 +111,59 @@
                     </li>
                 </ul>
             </div>
-
-            <!-- Create Channel Section -->
-            <div id="create-channel-section" class="bg-white p-4 border border-gray-300 hidden">
-                <h2 class="text-lg font-bold mb-4">채널 만들기</h2>
-                <div class="flex items-center space-x-4">
-                    <input type="text" placeholder="새로운 채널 이름" class="p-2 border border-gray-300 flex-grow">
-                    <button class="bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">만들기</button>
-                </div>
-            </div>
         </div>
 
-        <!-- Right Column (Login/User Section & Channel List) -->
+        <!-- Right Column (Login/User Section) -->
         <div class="lg:w-1/4 space-y-4">
             <!-- Login/User Section -->
             <div id="user-profile-section" class="bg-white p-4 border border-gray-300">
                 <!-- User profile content will be loaded here -->
-                <div id="login-form-container">
-                    <div class="flex items-center mb-4">
-                        <input type="checkbox" id="keep-login" class="mr-2">
-                        <label for="keep-login" class="text-sm">로그인 유지</label>
-                    </div>
-                    <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
-                    <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
-                        <a href="#" class="hover:underline">회원가입</a>
-                        <a href="#" class="hover:underline">비밀번호 찾기</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- All Channels List -->
-            <div class="bg-white p-4 border border-gray-300">
-                <h3 class="font-bold text-sm mb-2">모든 채널</h3>
-                <ul class="space-y-1 text-sm">
-                    <li><a href="#" class="block py-1 hover:text-blue-600">야구 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">축구 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">게임 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">영화 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">음악 채널</a></li>
-                </ul>
             </div>
         </div>
     </main>
+
+    <!-- Channel Creation Modal -->
+    <div id="create-channel-modal" class="modal">
+        <div class="bg-white p-6 border border-gray-300 w-full max-w-lg">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+                <h3 class="text-lg font-bold">새 채널 만들기</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="create-channel-form" class="space-y-4">
+                <div>
+                    <label for="channel-name" class="block text-sm font-medium text-gray-700">채널 이름</label>
+                    <input type="text" id="channel-name" name="channelName" class="mt-1 block w-full p-2 border border-gray-300" placeholder="예: '게임 채널' or '일상 공유'">
+                </div>
+                <div>
+                    <label for="channel-desc" class="block text-sm font-medium text-gray-700">채널 설명</label>
+                    <textarea id="channel-desc" name="channelDesc" rows="3" class="mt-1 block w-full p-2 border border-gray-300" placeholder="채널의 목적이나 주제를 간략히 설명해주세요."></textarea>
+                </div>
+                <div>
+                    <label for="channel-tags" class="block text-sm font-medium text-gray-700">태그 (선택)</label>
+                    <input type="text" id="channel-tags" name="channelTags" class="mt-1 block w-full p-2 border border-gray-300" placeholder="#게임 #일상 #정보">
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">생성하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Required Modal -->
+    <div id="login-required-modal" class="modal">
+        <div class="bg-white p-6 border border-gray-300 w-full max-w-sm text-center">
+            <h3 class="text-lg font-bold mb-4">로그인이 필요합니다</h3>
+            <p class="text-sm text-gray-600 mb-6">채널을 만들기 위해 로그인이 필요합니다.<br>지금 로그인하시겠습니까?</p>
+            <div class="flex justify-center space-x-4">
+                <a href="#" id="go-to-login-btn" class="bg-blue-600 text-white p-2 w-24 border border-blue-600 hover:bg-blue-700">로그인</a>
+                <button id="cancel-login-btn" class="bg-gray-200 text-gray-800 p-2 w-24 border border-gray-300 hover:bg-gray-300">취소</button>
+            </div>
+        </div>
+    </div>
     
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -150,6 +188,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        
+        // Get modal elements
+        const createChannelModal = document.getElementById('create-channel-modal');
+        const loginRequiredModal = document.getElementById('login-required-modal');
+        const createChannelBtn = document.getElementById('create-channel-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const cancelLoginBtn = document.getElementById('cancel-login-btn');
 
         // Function to update the UI based on user's login state
         const updateUI = async (user) => {
@@ -157,13 +202,11 @@
             const loginSection = document.getElementById('user-profile-section');
             const navLoginLink = document.getElementById('nav-login-link');
             const mainContent = document.getElementById('main-content');
-            const createChannelSection = document.getElementById('create-channel-section');
             
             // Show the main content once the auth state is confirmed
             mainContent.style.display = 'flex';
 
             if (user) {
-                // User is logged in, hide login form and display profile
                 const userId = user.uid;
                 const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
                 
@@ -175,21 +218,13 @@
                     loginSection.innerHTML = `
                         <div class="p-4 flex flex-col items-center">
                             <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
-                            <p class="text-xs text-gray-500 mt-2">환영합니다.</p>
-                            <div class="mt-4 text-xs">
-                                <p><strong>내 ID:</strong> ${userId}</p>
-                                <p><strong>경로 예시:</strong> ${docPath}</p>
+                            <div class="mt-2 text-xs text-gray-500 text-center">
+                                <p>내 ID: ${userId}</p>
                             </div>
-                            <div class="flex flex-col space-y-2 mt-4 w-full">
-                                <button id="logout-button" class="bg-blue-600 text-white p-2 hover:bg-blue-700">로그아웃</button>
-                            </div>
+                            <button id="logout-button" class="mt-4 bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700 w-full">로그아웃</button>
                         </div>
                     `;
 
-                    // Show the create channel section for logged-in users
-                    createChannelSection.classList.remove('hidden');
-
-                    // Add event listeners to the new button
                     document.getElementById('logout-button').addEventListener('click', async () => {
                         await signOut(auth);
                         console.log("User signed out.");
@@ -207,26 +242,35 @@
                     navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                 }
             } else {
-                // User is logged out, show login form
+                // User is logged out, show simple login link
                 loginSection.innerHTML = `
-                    <div id="login-form-container">
-                        <div class="flex items-center mb-4">
-                            <input type="checkbox" id="keep-login" class="mr-2">
-                            <label for="keep-login" class="text-sm">로그인 유지</label>
-                        </div>
+                    <div class="p-4 flex flex-col items-center">
                         <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
-                        <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
-                            <a href="#" class="hover:underline">회원가입</a>
-                            <a href="#" class="hover:underline">비밀번호 찾기</a>
-                        </div>
                     </div>
                 `;
                 navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
-
-                // Hide the create channel section for logged-out users
-                createChannelSection.classList.add('hidden');
             }
         };
+
+        // Event listener for the "채널 만들기" button
+        createChannelBtn.addEventListener('click', () => {
+            if (auth.currentUser) {
+                // Logged in, show the creation modal
+                createChannelModal.style.display = 'flex';
+            } else {
+                // Not logged in, show the login required modal
+                loginRequiredModal.style.display = 'flex';
+            }
+        });
+
+        // Event listeners for modals
+        closeModalBtn.addEventListener('click', () => {
+            createChannelModal.style.display = 'none';
+        });
+
+        cancelLoginBtn.addEventListener('click', () => {
+            loginRequiredModal.style.display = 'none';
+        });
 
         // Listen for authentication state changes. This is the main function that handles login status.
         onAuthStateChanged(auth, async (user) => {
