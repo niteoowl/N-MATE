@@ -174,7 +174,7 @@
                 snapshot.forEach(doc => {
                     const channel = doc.data();
                     const li = document.createElement('li');
-                    li.innerHTML = `<a href="community/chan.html?id=${doc.id}" class="block py-1 hover:text-blue-600">${channel.name}</a>`;
+                    li.innerHTML = `<a href="chan.html?id=${doc.id}" class="block py-1 hover:text-blue-600">${channel.name}</a>`;
                     allChannelsList.appendChild(li);
                 });
             });
@@ -194,7 +194,7 @@
                     li.className = 'flex items-center space-x-4';
                     li.innerHTML = `
                         <span class="font-bold text-lg text-blue-600 w-6">${rank}</span>
-                        <a href="community/chan.html?id=${doc.id}" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
+                        <a href="chan.html?id=${doc.id}" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
                             <span class="text-sm font-semibold">${channel.name}</span>
                             <span class="text-xs text-gray-500">게시글 ${channel.postCount}</span>
                         </a>
@@ -235,7 +235,7 @@
                 console.log("새 채널이 성공적으로 생성되었습니다. ID:", newChannelRef.id);
                 
                 // Redirect to the new channel's page
-                window.location.href = `community/chan.html?id=${newChannelRef.id}`;
+                window.location.href = `/chan.html?id=${newChannelRef.id}`;
 
             } catch (error) {
                 console.error("채널 생성 중 오류 발생:", error);
