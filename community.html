@@ -11,6 +11,10 @@
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #f0f2f5;
         }
+        /* Hide the main content initially to prevent unauthenticated UI from showing */
+        #main-content {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -50,7 +54,7 @@
     </nav>
 
     <!-- Main Content Area -->
-    <main class="container mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+    <main id="main-content" class="container mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
         
         <!-- Left Column -->
         <div class="lg:w-3/4 space-y-4">
@@ -201,9 +205,14 @@
 
         // Function to update the UI based on user's login state
         const updateUI = async (user) => {
+            console.log("updateUI called. User:", user ? user.uid : "null");
             const loginSection = document.getElementById('user-profile-section');
             const loginFormContainer = document.getElementById('login-form-container');
             const navLoginLink = document.getElementById('nav-login-link');
+            const mainContent = document.getElementById('main-content');
+            
+            // Show the main content once the auth state is confirmed
+            mainContent.style.display = 'flex';
 
             if (user) {
                 // User is logged in, hide login form and display profile
@@ -271,12 +280,13 @@
             }
         };
 
-        // Listen for authentication state changes
+        // Listen for authentication state changes. This is the main function that handles login status.
         onAuthStateChanged(auth, async (user) => {
+            console.log("Auth state changed. User:", user ? user.uid : "null");
             await updateUI(user);
         });
 
-        // Use the custom token if available
+        // Use the custom token if available. This will trigger the onAuthStateChanged listener.
         if (initialAuthToken) {
             try {
                 await signInWithCustomToken(auth, initialAuthToken);
