@@ -3,519 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커뮤니티</title>
+    <title>Connecting Hearts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
         body {
-            font-family: 'Nanum Gothic', sans-serif;
-            background-color: #fff;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        .dc-top-bar {
-            background-color: #2e64b3;
-            height: 5px;
-        }
-
-        .dc-header {
-            background-color: #f7f7f7;
-            border-bottom: 1px solid #c7c7c7;
-            padding: 10px 0;
-        }
-
-        .dc-header-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .dc-logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #2e64b3;
-        }
-
-        .dc-logo-container img {
-            height: 30px;
-        }
-
-        .dc-search-form {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dc-search-input {
-            border: 1px solid #ccc;
-            padding: 5px 10px;
-            border-radius: 0;
-            width: 300px;
-            font-size: 0.875rem;
-        }
-
-        .dc-search-btn {
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 0;
-            cursor: pointer;
-        }
-
-        .dc-nav {
-            background-color: #3f7ac2;
-        }
-
-        .dc-nav-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 5px 0;
-            font-size: 0.875rem;
-        }
-
-        .dc-nav-links {
-            display: flex;
-            gap: 1rem;
-            color: #fff;
-        }
-
-        .dc-nav-links a {
-            color: #fff;
-            text-decoration: none;
-        }
-
-        .dc-nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        .dc-container {
-            max-width: 1000px;
-            margin: 1rem auto;
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .dc-container {
-                grid-template-columns: 1fr;
-            }
-            .dc-right-sidebar {
-                display: none;
-            }
-            .dc-header-inner {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            .dc-search-form {
-                width: 100%;
-            }
-            .dc-search-input {
-                width: 100%;
-            }
-            .dc-nav-inner {
-                flex-direction: row;
-                justify-content: center;
-                gap: 1rem;
-                padding: 10px;
-            }
-            .dc-main-content {
-                border: none;
-            }
-        }
-
-        .dc-main-content {
-            background-color: #fff;
-            padding: 1rem;
-            border: 1px solid #ccc;
-        }
-
-        .dc-sidebar {
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 1rem;
-        }
-
-        .dc-section-title {
-            font-weight: 700;
-            color: #333;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 1rem;
-        }
-
-        .dc-post-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .dc-post-item img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 0;
-        }
-
-        .dc-post-info {
-            flex-grow: 1;
-        }
-
-        .dc-post-title {
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-        
-        .dc-post-meta {
-            font-size: 0.8rem;
-            color: #888;
-        }
-        
-        .dc-post-content {
-            font-size: 0.9rem;
-            color: #555;
-            word-break: break-all;
-            margin-top: 5px;
-        }
-
-        .dc-right-sidebar {
-            background-color: #fff;
-            padding: 1rem;
-        }
-
-        .dc-login-box {
-            border: 1px solid #ccc;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .dc-login-box input {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin-bottom: 5px;
-        }
-
-        .dc-login-btn {
-            background-color: #2e64b3;
-            color: #fff;
-            width: 100%;
-            padding: 8px;
-            font-weight: 700;
-            border-radius: 0;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        
-        .dc-sub-list li {
-            padding: 5px 0;
-            font-size: 0.875rem;
-        }
-        .dc-channel-list {
-            display: grid;
-            gap: 1rem;
-        }
-        .dc-channel-group-title {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #333;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        .dc-channel-group-title:first-of-type {
-            margin-top: 0;
-        }
-        .dc-channel-item-text {
-            padding: 5px 0;
-            font-size: 0.875rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f2f5;
         }
     </style>
 </head>
-<body>
-    <div class="dc-top-bar"></div>
-    <header class="dc-header">
-        <div class="dc-header-inner">
-            <div class="dc-logo-container">
-                <img src="https://i.postimg.cc/rscRF3ky/simbol.webp" alt="커뮤니티 로고">
-                <span>커뮤니티</span>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold">
+                <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
             </div>
-            <div class="dc-search-form">
-                <input type="text" placeholder="채널 & 통합검색" class="dc-search-input">
-                <button class="dc-search-btn">Q</button>
+            <div class="flex items-center space-x-4">
+                <input type="text" placeholder="채널 & 통합검색" class="p-2 w-64 bg-white text-gray-800 border-2 border-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                <button class="bg-blue-500 p-2 border-2 border-white hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
-    <nav class="dc-nav">
-        <div class="dc-nav-inner">
-            <div class="dc-nav-links">
-                <a href="#">채널</a>
-                <a href="#">채널 히스토리</a>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white border-b border-gray-300 py-2">
+        <div class="container mx-auto flex items-center justify-between">
+            <ul class="flex space-x-6 text-sm font-semibold">
+                <li><a href="#" class="hover:text-blue-600">채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">마이너채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">미니채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">신설채널</a></li>
+                <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
+                <li><a href="#" class="hover:text-blue-600">디시인사이드</a></li>
+            </ul>
+            <div class="text-xs text-gray-500">
+                <p>지금 1,072,392개 게시글 등록</p>
             </div>
         </div>
     </nav>
 
-    <div class="dc-container">
-        <!-- 메인 콘텐츠 영역 -->
-        <main class="dc-main-content">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="font-bold text-lg">BEST</h2>
-                <span class="text-sm">1 / 10</span>
-            </div>
-            <div id="realtime-best-posts" class="mb-4"></div>
-            
-            <div class="dc-section-title">
-                <h2>전체 채널</h2>
-            </div>
-            <div id="all-channels" class="dc-channel-list"></div>
-
-            <!-- 게시글 작성 폼 -->
-            <form id="post-form" class="mt-6 hidden">
-                <textarea id="post-content" rows="4" class="w-full rounded border-2 border-gray-300 p-3 mb-2 focus:outline-none focus:border-blue-500 transition-all" placeholder="여기에 글을 작성하세요..."></textarea>
-                <div class="flex justify-between items-center">
-                    <span id="auth-status" class="text-sm text-gray-500">인증 상태 확인 중...</span>
-                    <button type="submit" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-300">게시하기</button>
+    <!-- Main Content Area -->
+    <main class="container mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+        
+        <!-- Left Column -->
+        <div class="lg:w-3/4 space-y-4">
+            <!-- Top Section -->
+            <div class="bg-white p-4 border border-gray-300">
+                <div class="flex items-center space-x-4 mb-4">
+                    <img src="https://i.postimg.cc/qMgCwzr4/003.png" alt="실시간 베스트" class="h-6 w-auto inline-block border-b-2 border-blue-500 pb-1">
+                    <img src="https://i.postimg.cc/J7Fh1KwC/004.png" alt="실시간 라이트" class="h-6 w-auto inline-block pb-1 text-gray-500">
                 </div>
-            </form>
-
-            <div class="dc-section-title mt-6">
-                <h2>실시간 게시글</h2>
-            </div>
-            <div id="posts-container" class="space-y-4">
-                <p class="text-center text-gray-500">게시글을 불러오는 중...</p>
-            </div>
-        </main>
-
-        <!-- 오른쪽 사이드바 -->
-        <aside class="dc-right-sidebar">
-            <!-- 로그인 박스 -->
-            <div class="dc-login-box">
-                <div id="login-container">
-                    <input type="text" placeholder="아이디">
-                    <input type="password" placeholder="비밀번호">
-                    <button class="dc-login-btn">로그인</button>
-                </div>
-                <div id="user-profile" class="hidden">
-                    <p id="user-id-display" class="mb-2 text-sm text-gray-700 break-all"></p>
-                    <button class="dc-login-btn" onclick="signOutUser()">로그아웃</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Example Post Card -->
+                    <div class="flex items-start border border-gray-200 p-2">
+                        <img src="https://placehold.co/100x80/e5e7eb/e5e7eb" alt="Placeholder" class="w-20 h-16 object-cover border-2 border-gray-300">
+                        <div class="ml-2">
+                            <h3 class="font-bold text-sm leading-tight">제목입니다.</h3>
+                            <p class="text-xs text-gray-500 mt-1">글 내용의 일부입니다. 글 내용이 여기에 표시됩니다.</p>
+                        </div>
+                    </div>
+                    <!-- Repeat for more posts -->
+                    <div class="flex items-start border border-gray-200 p-2">
+                        <img src="https://placehold.co/100x80/e5e7eb/e5e7eb" alt="Placeholder" class="w-20 h-16 object-cover border-2 border-300">
+                        <div class="ml-2">
+                            <h3 class="font-bold text-sm leading-tight">또 다른 제목입니다.</h3>
+                            <p class="text-xs text-gray-500 mt-1">이것은 또 다른 게시글의 내용입니다.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start border border-gray-200 p-2">
+                        <img src="https://placehold.co/100x80/e5e7eb/e5e7eb" alt="Placeholder" class="w-20 h-16 object-cover border-2 border-300">
+                        <div class="ml-2">
+                            <h3 class="font-bold text-sm leading-tight">세 번째 게시물입니다.</h3>
+                            <p class="text-xs text-gray-500 mt-1">세 번째 게시물 내용의 일부입니다.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- 인기 채널 리스트 -->
-            <div class="dc-section-title">
-                <h2>인기 채널</h2>
+
+            <!-- Best Posts Section -->
+            <div class="bg-white p-4 border border-gray-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">실베추</h2>
+                    <a href="#" class="text-sm text-blue-600">전체보기</a>
+                </div>
+                <ul class="space-y-2">
+                    <!-- Example list item -->
+                    <li class="flex justify-between items-start border-b border-gray-200 py-2">
+                        <div class="flex items-center space-x-2 w-3/4">
+                            <span class="text-blue-600 text-sm font-bold">PC</span>
+                            <a href="#" class="hover:underline text-gray-800 text-sm">PC주인소자 손뼉을 벌리면 피와 땀을 흘리지 않는다.</a>
+                            <span class="text-sm text-gray-500">[79]</span>
+                        </div>
+                        <div class="flex-grow flex justify-end text-xs text-gray-500 space-x-4">
+                            <span>주식</span>
+                            <span>16:20</span>
+                        </div>
+                    </li>
+                    <li class="flex justify-between items-start border-b border-gray-200 py-2">
+                        <div class="flex items-center space-x-2 w-3/4">
+                            <span class="text-blue-600 text-sm font-bold">PC</span>
+                            <a href="#" class="hover:underline text-gray-800 text-sm">베이글 오버도르 해부 (스압)</a>
+                            <span class="text-sm text-gray-500">[77]</span>
+                        </div>
+                        <div class="flex-grow flex justify-end text-xs text-gray-500 space-x-4">
+                            <span>보이루니시</span>
+                            <span>16:10</span>
+                        </div>
+                    </li>
+                    <li class="flex justify-between items-start border-b border-gray-200 py-2">
+                        <div class="flex items-center space-x-2 w-3/4">
+                            <span class="text-blue-600 text-sm font-bold">ㅇㅎ</span>
+                            <a href="#" class="hover:underline text-gray-800 text-sm">이재명 대통령이 무서운 이유</a>
+                            <span class="text-sm text-gray-500">[268]</span>
+                        </div>
+                        <div class="flex-grow flex justify-end text-xs text-gray-500 space-x-4">
+                            <span>상분분수</span>
+                            <span>16:00</span>
+                        </div>
+                    </li>
+                    <li class="flex justify-between items-start border-b border-gray-200 py-2">
+                        <div class="flex items-center space-x-2 w-3/4">
+                            <span class="text-blue-600 text-sm font-bold">PC</span>
+                            <a href="#" class="hover:underline text-gray-800 text-sm">백종원 만들다보면 불쌍한 닭꼬치 이야기</a>
+                            <span class="text-sm text-gray-500">[133]</span>
+                        </div>
+                        <div class="flex-grow flex justify-end text-xs text-gray-500 space-x-4">
+                            <span>이름</span>
+                            <span>15:50</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
-            <ul id="popular-channels" class="dc-sub-list"></ul>
-        </aside>
-    </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="lg:w-1/4 space-y-4">
+            <!-- Login/User Section -->
+            <div id="user-profile-section" class="bg-white p-4 border border-gray-300">
+                <!-- User profile content will be loaded here -->
+                <div id="login-form-container">
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="keep-login" class="mr-2">
+                        <label for="keep-login" class="text-sm">로그인 유지</label>
+                    </div>
+                    <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
+                    <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
+                        <a href="#" class="hover:underline">회원가입</a>
+                        <a href="#" class="hover:underline">비밀번호 찾기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community List -->
+            <div class="bg-white p-4 border border-gray-300">
+                <h3 class="font-bold text-sm mb-2">채널</h3>
+                <ul class="space-y-1 text-sm">
+                    <li><a href="#" class="block py-1 hover:text-blue-600">야구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">축구 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">게임 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">영화 채널</a></li>
+                    <li><a href="#" class="block py-1 hover:text-blue-600">음악 채널</a></li>
+                </ul>
+            </div>
+        </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        setLogLevel('debug'); // Firestore 디버그 로깅 활성화
+        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Define Firebase configuration based on user input
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        
+        // Use global variables provided by the canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // DOM과 모든 리소스가 로드된 후 스크립트 실행
-        window.onload = function() {
-            // 전역 변수
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            // Firebase 초기화
-            const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
-            const db = app ? getFirestore(app) : null;
-            const auth = app ? getAuth(app) : null;
+        // Function to update the UI based on user's login state
+        const updateUI = async (user) => {
+            const loginSection = document.getElementById('user-profile-section');
+            const loginFormContainer = document.getElementById('login-form-container');
+            const navLoginLink = document.getElementById('nav-login-link');
 
-            let currentUser = null;
+            if (user) {
+                // User is logged in, hide login form and display profile
+                loginFormContainer.style.display = 'none';
 
-            // HTML 요소 선택
-            const authStatusEl = document.getElementById('auth-status');
-            const postFormEl = document.getElementById('post-form');
-            const postContentEl = document.getElementById('post-content');
-            const postsContainerEl = document.getElementById('posts-container');
-            const loginContainerEl = document.getElementById('login-container');
-            const userProfileEl = document.getElementById('user-profile');
-            const userIdDisplayEl = document.getElementById('user-id-display');
+                // Fetch user data from Firestore
+                const userId = user.uid;
+                const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+                
+                try {
+                    const docRef = doc(db, docPath);
+                    const docSnap = await getDoc(docRef);
 
-            window.signOutUser = () => {
-                if (auth) {
-                    signOut(auth).then(() => {
-                        console.log("로그아웃 성공");
-                    }).catch((error) => {
-                        console.error("로그아웃 실패", error);
-                    });
-                } else {
-                    console.error("인증 객체가 유효하지 않습니다.");
-                }
-            };
-            
-            // Firebase 관련 모든 로직을 Firebase 객체가 유효한지 확인하는 조건문으로 감쌉니다.
-            // 구성 변수가 유효하지 않으면 이 블록은 건너뛰고 오류 메시지를 표시합니다.
-            if (app && db && auth) {
-                // 인증 상태 변경 리스너
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUser = user;
-                        authStatusEl.textContent = `로그인됨 (ID: ${user.uid})`;
-                        userIdDisplayEl.textContent = `UID: ${user.uid}`;
-                        loginContainerEl.classList.add('hidden');
-                        userProfileEl.classList.remove('hidden');
-                        postFormEl.classList.remove('hidden');
-                        console.log("로그인 성공: ", user.uid);
-
-                        // 커뮤니티 데이터베이스 리스너
-                        const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
-                        const q = query(communityRef, orderBy('timestamp', 'desc'));
-
-                        onSnapshot(q, (snapshot) => {
-                            postsContainerEl.innerHTML = '';
-                            snapshot.forEach((doc) => {
-                                const post = doc.data();
-                                renderPost(post);
-                            });
-                        }, (error) => {
-                            console.error("게시글 불러오기 실패:", error);
-                            postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
-                        });
-                        
-                        // 새 게시글 작성
-                        postFormEl.addEventListener('submit', async (e) => {
-                            e.preventDefault();
-                            const content = postContentEl.value.trim();
-
-                            if (content.length > 0 && currentUser) {
-                                try {
-                                    await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
-                                        userId: currentUser.uid,
-                                        userName: `사용자_${currentUser.uid}`,
-                                        content: content,
-                                        timestamp: serverTimestamp()
-                                    });
-                                    postContentEl.value = '';
-                                } catch (error) {
-                                    console.error("게시글 작성 실패:", error);
-                                    console.log("게시글 작성에 실패했습니다.");
-                                }
-                            } else {
-                                console.log("로그인이 필요하거나 내용이 비어있습니다.");
-                            }
-                        });
-
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        const userName = userData.name || '방문자';
+                        loginSection.innerHTML = `
+                            <div class="p-4">
+                                <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
+                                <p class="text-xs text-gray-500 mt-2">환영합니다.</p>
+                                <div class="mt-4 text-xs">
+                                    <p><strong>내 ID:</strong> ${userId}</p>
+                                    <p><strong>경로 예시:</strong> ${docPath}</p>
+                                </div>
+                            </div>
+                        `;
+                        navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                     } else {
-                        currentUser = null;
-                        authStatusEl.textContent = '로그아웃됨';
-                        userIdDisplayEl.textContent = '';
-                        loginContainerEl.classList.remove('hidden');
-                        userProfileEl.classList.add('hidden');
-                        postFormEl.classList.add('hidden');
-                        console.log("로그아웃 상태");
-                        // 토큰이 있는 경우 자동 로그인 시도
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log("자동 로그인 성공");
-                            } catch (error) {
-                                console.error("자동 로그인 실패", error);
-                            }
-                        }
+                        console.log("No user data found at the specified path.");
+                        loginSection.innerHTML = `
+                            <div class="p-4">
+                                <p class="text-sm font-bold">로그인됨</p>
+                                <p class="text-xs text-gray-500 mt-2">프로필 데이터가 없습니다.</p>
+                            </div>
+                        `;
+                        navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                     }
-                });
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    loginSection.innerHTML = `
+                        <div class="p-4">
+                            <p class="text-sm font-bold">데이터 로딩 오류</p>
+                            <p class="text-xs text-gray-500 mt-2">다시 시도해주세요.</p>
+                        </div>
+                    `;
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                }
 
             } else {
-                // Firebase 초기화 실패 시 사용자에게 알림
-                authStatusEl.textContent = '로그인 서비스 사용 불가';
-                console.error("Firebase를 초기화할 수 없습니다. 구성 변수가 누락되었습니다.");
-                postsContainerEl.innerHTML = `<p class="text-center text-red-500">로그인 서비스를 이용할 수 없습니다.</p>`;
-            }
-
-
-            // 게시글 렌더링 함수
-            function renderPost(post) {
-                const postCard = document.createElement('div');
-                postCard.className = 'bg-white rounded border border-gray-200 p-4 mb-4';
-                postCard.innerHTML = `
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-bold text-gray-800">${post.userName}</span>
-                        <span class="text-xs text-gray-500">${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : '방금 전'}</span>
+                // User is logged out, show login form
+                loginFormContainer.style.display = 'block';
+                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
+                // Remove the dynamic profile content to show the original form
+                loginSection.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="keep-login" class="mr-2">
+                        <label for="keep-login" class="text-sm">로그인 유지</label>
                     </div>
-                    <p class="dc-post-content">${post.content}</p>
-                `;
-                postsContainerEl.appendChild(postCard);
-            }
-
-            // JavaScript를 사용하여 동적으로 컨텐츠를 추가
-            const realtimePostsData = [
-                { title: 'BEST 게시글 1입니다.', author: 'BEST-1', date: '10:00', comments: 15, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-                { title: 'BEST 게시글 2입니다.', author: 'BEST-2', date: '09:50', comments: 3, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-                { title: 'BEST 게시글 3입니다.', author: 'BEST-3', date: '09:40', comments: 20, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-                { title: 'BEST 게시글 4입니다.', author: 'BEST-4', date: '09:30', comments: 7, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-                { title: 'BEST 게시글 5입니다.', author: 'BEST-5', date: '09:20', comments: 10, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            ];
-            
-            const channelListData = {
-                "주제별 채널": ['게임', '음악', '방송', '스포츠'],
-                "지역별 채널": ['서울', '경기', '부산', '대구']
-            };
-
-            const popularChannelsData = [
-                '야구', '주식', '롤', 'IT', '음악', '연예인', '요리', '여행'
-            ];
-
-            const realtimePostsContainer = document.getElementById('realtime-best-posts');
-            realtimePostsData.forEach(post => {
-                const postItem = document.createElement('div');
-                postItem.className = 'dc-post-item';
-                postItem.innerHTML = `
-                    <img src="${post.thumbnail}" alt="thumbnail">
-                    <div class="dc-post-info">
-                        <div class="dc-post-title">${post.title}</div>
-                        <div class="dc-post-meta">
-                            <span>${post.author}</span> | <span>${post.date}</span> | <span class="text-blue-500">댓글 ${post.comments}</span>
-                        </div>
+                    <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
+                    <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
+                        <a href="#" class="hover:underline">회원가입</a>
+                        <a href="#" class="hover:underline">비밀번호 찾기</a>
                     </div>
                 `;
-                realtimePostsContainer.appendChild(postItem);
-            });
-
-            const allChannelsContainer = document.getElementById('all-channels');
-            for (const group in channelListData) {
-                const groupTitle = document.createElement('div');
-                groupTitle.className = 'dc-channel-group-title';
-                groupTitle.textContent = group;
-                allChannelsContainer.appendChild(groupTitle);
-
-                channelListData[group].forEach(channel => {
-                    const channelItem = document.createElement('div');
-                    channelItem.className = 'dc-channel-item-text';
-                    channelItem.innerHTML = `<a href="#">${channel} 채널</a>`;
-                    allChannelsContainer.appendChild(channelItem);
-                });
             }
-
-            const popularChannelsContainer = document.getElementById('popular-channels');
-            popularChannelsData.forEach(channel => {
-                const listItem = document.createElement('li');
-                listItem.className = 'border-b border-gray-200';
-                listItem.innerHTML = `<a href="#">${channel}</a>`;
-                popularChannelsContainer.appendChild(listItem);
-            });
         };
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, async (user) => {
+            await updateUI(user);
+        });
+
+        // Use the custom token if available
+        if (initialAuthToken) {
+            try {
+                await signInWithCustomToken(auth, initialAuthToken);
+                console.log("Signed in with custom token.");
+            } catch (error) {
+                console.error("Error signing in with custom token:", error);
+            }
+        }
     </script>
 </body>
 </html>
