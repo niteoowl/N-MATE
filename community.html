@@ -306,9 +306,19 @@
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let auth, db;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Log values to help with debugging
+            console.log('App ID:', appId);
+            console.log('Firebase Config:', firebaseConfig);
+        } catch (error) {
+            console.error("Firebase 초기화 중 오류가 발생했습니다:", error);
+        }
 
         // Function to render UI based on authentication state
         async function renderAuthUI(user) {
@@ -362,9 +372,11 @@
         }
 
         // Listen for authentication state changes
-        onAuthStateChanged(auth, (user) => {
-            renderAuthUI(user);
-        });
+        if (auth) {
+            onAuthStateChanged(auth, (user) => {
+                renderAuthUI(user);
+            });
+        }
 
         // 나머지 기존 코드
         const realtimePostsData = [
