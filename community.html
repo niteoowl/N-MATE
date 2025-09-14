@@ -21,7 +21,7 @@
 
     <!-- Header -->
     <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="text-2xl font-bold">
                 <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
             </div>
@@ -38,14 +38,13 @@
 
     <!-- Navigation Bar -->
     <nav class="bg-white border-b border-gray-300 py-2">
-        <div class="container mx-auto flex items-center justify-between">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
             <ul class="flex space-x-6 text-sm font-semibold">
                 <li><a href="#" class="hover:text-blue-600">채널</a></li>
-                <li><a href="#" class="hover:text-blue-600">마이너채널</a></li>
-                <li><a href="#" class="hover:text-blue-600">미니채널</a></li>
-                <li><a href="#" class="hover:text-blue-600">신설채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">히스토리</a></li>
+                <li><a href="#" class="hover:text-blue-600">BEST</a></li>
+                <li><a href="#" class="hover:text-blue-600">N-MATE 바로가기</a></li>
                 <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
-                <li><a href="#" class="hover:text-blue-600">디시인사이드</a></li>
             </ul>
             <div class="text-xs text-gray-500">
                 <p>지금 1,072,392개 게시글 등록</p>
@@ -54,7 +53,7 @@
     </nav>
 
     <!-- Main Content Area -->
-    <main id="main-content" class="container mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+    <main id="main-content" class="mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 max-w-7xl">
         
         <!-- Left Column -->
         <div class="lg:w-3/4 space-y-4">
@@ -178,10 +177,10 @@
             </div>
         </div>
     </main>
-
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Define Firebase configuration based on user input
@@ -207,7 +206,6 @@
         const updateUI = async (user) => {
             console.log("updateUI called. User:", user ? user.uid : "null");
             const loginSection = document.getElementById('user-profile-section');
-            const loginFormContainer = document.getElementById('login-form-container');
             const navLoginLink = document.getElementById('nav-login-link');
             const mainContent = document.getElementById('main-content');
             
@@ -216,40 +214,35 @@
 
             if (user) {
                 // User is logged in, hide login form and display profile
-                loginFormContainer.style.display = 'none';
-
-                // Fetch user data from Firestore
                 const userId = user.uid;
                 const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
                 
                 try {
                     const docRef = doc(db, docPath);
                     const docSnap = await getDoc(docRef);
+                    const userName = docSnap.exists() ? docSnap.data().name || '방문자' : '방문자';
 
-                    if (docSnap.exists()) {
-                        const userData = docSnap.data();
-                        const userName = userData.name || '방문자';
-                        loginSection.innerHTML = `
-                            <div class="p-4">
-                                <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
-                                <p class="text-xs text-gray-500 mt-2">환영합니다.</p>
-                                <div class="mt-4 text-xs">
-                                    <p><strong>내 ID:</strong> ${userId}</p>
-                                    <p><strong>경로 예시:</strong> ${docPath}</p>
-                                </div>
+                    loginSection.innerHTML = `
+                        <div class="p-4 flex flex-col items-center">
+                            <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
+                            <p class="text-xs text-gray-500 mt-2">환영합니다.</p>
+                            <div class="mt-4 text-xs">
+                                <p><strong>내 ID:</strong> ${userId}</p>
+                                <p><strong>경로 예시:</strong> ${docPath}</p>
                             </div>
-                        `;
-                        navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
-                    } else {
-                        console.log("No user data found at the specified path.");
-                        loginSection.innerHTML = `
-                            <div class="p-4">
-                                <p class="text-sm font-bold">로그인됨</p>
-                                <p class="text-xs text-gray-500 mt-2">프로필 데이터가 없습니다.</p>
+                            <div class="flex flex-col space-y-2 mt-4 w-full">
+                                <button id="logout-button" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">로그아웃</button>
                             </div>
-                        `;
-                        navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
-                    }
+                        </div>
+                    `;
+
+                    // Add event listeners to the new button
+                    document.getElementById('logout-button').addEventListener('click', async () => {
+                        await signOut(auth);
+                        console.log("User signed out.");
+                    });
+                    
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                 } catch (error) {
                     console.error("Error fetching user data:", error);
                     loginSection.innerHTML = `
@@ -260,23 +253,22 @@
                     `;
                     navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                 }
-
             } else {
                 // User is logged out, show login form
-                loginFormContainer.style.display = 'block';
-                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
-                // Remove the dynamic profile content to show the original form
                 loginSection.innerHTML = `
-                    <div class="flex items-center mb-4">
-                        <input type="checkbox" id="keep-login" class="mr-2">
-                        <label for="keep-login" class="text-sm">로그인 유지</label>
-                    </div>
-                    <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
-                    <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
-                        <a href="#" class="hover:underline">회원가입</a>
-                        <a href="#" class="hover:underline">비밀번호 찾기</a>
+                    <div id="login-form-container">
+                        <div class="flex items-center mb-4">
+                            <input type="checkbox" id="keep-login" class="mr-2">
+                            <label for="keep-login" class="text-sm">로그인 유지</label>
+                        </div>
+                        <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
+                        <div class="flex justify-between items-center text-xs mt-2 text-gray-500">
+                            <a href="#" class="hover:underline">회원가입</a>
+                            <a href="#" class="hover:underline">비밀번호 찾기</a>
+                        </div>
                     </div>
                 `;
+                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
             }
         };
 
