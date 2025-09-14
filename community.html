@@ -307,25 +307,40 @@
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let auth, db;
+        let isFirebaseReady = false;
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
+        const authUIContainer = document.getElementById('auth-ui-container');
 
-            // Log values to help with debugging
-            console.log('App ID:', appId);
-            console.log('Firebase Config:', firebaseConfig);
-        } catch (error) {
-            console.error("Firebase 초기화 중 오류가 발생했습니다:", error);
+        // Check for valid Firebase configuration before initialization
+        if (firebaseConfig && firebaseConfig.apiKey) {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isFirebaseReady = true;
+
+                // Log values to help with debugging
+                console.log('App ID:', appId);
+                console.log('Firebase Config:', firebaseConfig);
+                
+                // Listen for authentication state changes only if Firebase is ready
+                onAuthStateChanged(auth, (user) => {
+                    renderAuthUI(user);
+                });
+            } catch (error) {
+                console.error("Firebase 초기화 중 오류가 발생했습니다:", error);
+                authUIContainer.innerHTML = `<div class="dc-login-box text-red-500 font-bold">Firebase 초기화 실패.<br>설정을 확인하세요.</div>`;
+            }
+        } else {
+            console.error("Firebase 설정이 유효하지 않습니다.");
+            authUIContainer.innerHTML = `<div class="dc-login-box text-red-500 font-bold">Firebase 설정이 누락되었습니다.<br>일부 기능이 동작하지 않습니다.</div>`;
         }
 
         // Function to render UI based on authentication state
         async function renderAuthUI(user) {
-            const authUIContainer = document.getElementById('auth-ui-container');
             authUIContainer.innerHTML = '';
             
-            if (user) {
+            if (user && db) {
                 // User is signed in, show profile and logout button
                 const userId = user.uid;
                 const profileDocRef = doc(db, 'artifacts/' + appId + '/users/' + userId + '/user_data/profile');
@@ -356,27 +371,25 @@
                     <div class="dc-login-box">
                         <input type="text" placeholder="아이디" id="username-input">
                         <input type="password" placeholder="비밀번호" id="password-input">
-                        <button id="login-btn" class="dc-login-btn">로그인</button>
+                        <button id="login-btn" class="dc-login-btn" ${isFirebaseReady ? '' : 'disabled'}>로그인</button>
                     </div>
                 `;
-                document.getElementById('login-btn').addEventListener('click', async () => {
-                    try {
-                        if (initialAuthToken) {
-                            await signInWithCustomToken(auth, initialAuthToken);
+                if (isFirebaseReady) {
+                    document.getElementById('login-btn').addEventListener('click', async () => {
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            }
+                        } catch (error) {
+                            console.error("Error signing in: ", error);
                         }
-                    } catch (error) {
-                        console.error("Error signing in: ", error);
-                    }
-                });
+                    });
+                }
             }
         }
 
-        // Listen for authentication state changes
-        if (auth) {
-            onAuthStateChanged(auth, (user) => {
-                renderAuthUI(user);
-            });
-        }
+        // Call renderAuthUI for initial render
+        renderAuthUI(null);
 
         // 나머지 기존 코드
         const realtimePostsData = [
