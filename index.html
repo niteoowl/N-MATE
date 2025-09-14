@@ -375,6 +375,45 @@
                     userProfileEl.classList.remove('hidden');
                     postFormEl.classList.remove('hidden');
                     console.log("로그인 성공: ", user.uid);
+
+                    // 커뮤니티 데이터베이스 리스너
+                    const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
+                    const q = query(communityRef, orderBy('timestamp', 'desc'));
+
+                    onSnapshot(q, (snapshot) => {
+                        postsContainerEl.innerHTML = '';
+                        snapshot.forEach((doc) => {
+                            const post = doc.data();
+                            renderPost(post);
+                        });
+                    }, (error) => {
+                        console.error("게시글 불러오기 실패:", error);
+                        postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
+                    });
+                    
+                    // 새 게시글 작성
+                    postFormEl.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const content = postContentEl.value.trim();
+
+                        if (content.length > 0 && currentUser) {
+                            try {
+                                await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
+                                    userId: currentUser.uid,
+                                    userName: `사용자_${currentUser.uid.substring(0, 8)}`,
+                                    content: content,
+                                    timestamp: serverTimestamp()
+                                });
+                                postContentEl.value = '';
+                            } catch (error) {
+                                console.error("게시글 작성 실패:", error);
+                                alert("게시글 작성에 실패했습니다.");
+                            }
+                        } else {
+                            alert("로그인이 필요하거나 내용이 비어있습니다.");
+                        }
+                    });
+
                 } else {
                     currentUser = null;
                     authStatusEl.textContent = '로그아웃됨';
@@ -392,44 +431,6 @@
                             console.error("자동 로그인 실패", error);
                         }
                     }
-                }
-            });
-
-            // 커뮤니티 데이터베이스 리스너
-            const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
-            const q = query(communityRef, orderBy('timestamp', 'desc'));
-
-            onSnapshot(q, (snapshot) => {
-                postsContainerEl.innerHTML = '';
-                snapshot.forEach((doc) => {
-                    const post = doc.data();
-                    renderPost(post);
-                });
-            }, (error) => {
-                console.error("게시글 불러오기 실패:", error);
-                postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
-            });
-            
-            // 새 게시글 작성
-            postFormEl.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const content = postContentEl.value.trim();
-
-                if (content.length > 0 && currentUser) {
-                    try {
-                        await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
-                            userId: currentUser.uid,
-                            userName: `사용자_${currentUser.uid.substring(0, 8)}`,
-                            content: content,
-                            timestamp: serverTimestamp()
-                        });
-                        postContentEl.value = '';
-                    } catch (error) {
-                        console.error("게시글 작성 실패:", error);
-                        alert("게시글 작성에 실패했습니다.");
-                    }
-                } else {
-                    alert("로그인이 필요하거나 내용이 비어있습니다.");
                 }
             });
 
