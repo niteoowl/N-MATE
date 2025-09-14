@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채널 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f0f2f5;
+        }
+        /* Hide the main content initially to prevent unauthenticated UI from showing */
+        #main-content {
+            display: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-2xl font-bold">
+                <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
+            </div>
+            <div class="flex items-center space-x-4">
+                <input type="text" placeholder="채널 & 통합검색" class="p-2 w-64 bg-white text-gray-800 border-2 border-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
+                <button class="bg-blue-500 p-2 border-2 border-white hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white border-b border-gray-300 py-2">
+        <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto">
+            <ul class="flex space-x-6 text-sm font-semibold flex-nowrap">
+                <li><a href="#" class="hover:text-blue-600">채널</a></li>
+                <li><a href="#" class="hover:text-blue-600">히스토리</a></li>
+                <li><a href="#" class="hover:text-blue-600">BEST</a></li>
+                <li><a href="#" class="hover:text-blue-600">N-MATE 바로가기</a></li>
+                <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="mx-auto my-4 p-4 max-w-7xl">
+        <div class="lg:w-full space-y-4">
+            <!-- Channel Info and Post Creation Button -->
+            <div class="bg-white p-4 border border-gray-300 flex justify-between items-center">
+                <div>
+                    <h1 id="channel-name" class="text-2xl font-bold"></h1>
+                    <p id="channel-desc" class="text-gray-600 mt-2"></p>
+                </div>
+                <button id="create-post-btn" class="bg-blue-600 text-white text-sm p-2 border border-blue-600 hover:bg-blue-700">새 글 작성</button>
+            </div>
+
+            <!-- Post List -->
+            <div class="bg-white p-4 border border-gray-300">
+                <h2 class="font-bold text-lg mb-4">최신 글</h2>
+                <ul id="posts-list" class="space-y-4">
+                    <!-- Posts will be loaded here from Firebase -->
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Post Creation Modal -->
+    <div id="create-post-modal" class="modal">
+        <div class="bg-white p-6 border border-gray-300 w-full max-w-lg">
+            <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
+                <h3 class="text-lg font-bold">새 글 작성하기</h3>
+                <button id="close-post-modal-btn" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="create-post-form" class="space-y-4">
+                <div>
+                    <label for="post-title" class="block text-sm font-medium text-gray-700">제목</label>
+                    <input type="text" id="post-title" name="postTitle" class="mt-1 block w-full p-2 border border-gray-300" placeholder="제목을 입력하세요">
+                </div>
+                <div>
+                    <label for="post-content" class="block text-sm font-medium text-gray-700">내용</label>
+                    <textarea id="post-content" name="postContent" rows="8" class="mt-1 block w-full p-2 border border-gray-300" placeholder="내용을 입력하세요."></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">작성하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Required Modal -->
+    <div id="login-required-modal" class="modal">
+        <div class="bg-white p-6 border border-gray-300 w-full max-w-sm text-center">
+            <h3 class="text-lg font-bold mb-4">로그인이 필요합니다</h3>
+            <p class="text-sm text-gray-600 mb-6">글을 작성하기 위해 로그인이 필요합니다.<br>지금 로그인하시겠습니까?</p>
+            <div class="flex justify-center space-x-4">
+                <a href="#" id="go-to-login-btn" class="bg-blue-600 text-white p-2 w-24 border border-blue-600 hover:bg-blue-700">로그인</a>
+                <button id="cancel-login-btn" class="bg-gray-200 text-gray-800 p-2 w-24 border border-gray-300 hover:bg-gray-300">취소</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Define Firebase configuration based on user input
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        
+        // Use global variables provided by the canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Get elements from the DOM
+        const channelNameEl = document.getElementById('channel-name');
+        const channelDescEl = document.getElementById('channel-desc');
+        const postsListEl = document.getElementById('posts-list');
+        const createPostBtn = document.getElementById('create-post-btn');
+        const createPostModal = document.getElementById('create-post-modal');
+        const closePostModalBtn = document.getElementById('close-post-modal-btn');
+        const createPostForm = document.getElementById('create-post-form');
+        const loginRequiredModal = document.getElementById('login-required-modal');
+        const cancelLoginBtn = document.getElementById('cancel-login-btn');
+        const navLoginLink = document.getElementById('nav-login-link');
+        const mainContent = document.getElementById('main-content');
+
+        // Get the channel ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const channelId = urlParams.get('id');
+
+        // Function to load the channel info and posts in real-time
+        const loadChannelData = () => {
+            if (!channelId) {
+                console.error("채널 ID가 URL에 없습니다.");
+                return;
+            }
+
+            const channelDocRef = doc(db, `artifacts/${appId}/public/data/channels`, channelId);
+            const postsColRef = collection(db, `artifacts/${appId}/public/data/channels/${channelId}/posts`);
+
+            // Listen for channel info changes
+            onSnapshot(channelDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const channelData = docSnap.data();
+                    channelNameEl.textContent = channelData.name;
+                    channelDescEl.textContent = channelData.description;
+                } else {
+                    console.error("채널을 찾을 수 없습니다.");
+                    channelNameEl.textContent = "채널을 찾을 수 없습니다.";
+                    channelDescEl.textContent = "";
+                }
+            });
+
+            // Listen for posts in the channel
+            const q = query(postsColRef, orderBy('createdAt', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                postsListEl.innerHTML = '';
+                snapshot.forEach(postDoc => {
+                    const post = postDoc.data();
+                    const li = document.createElement('li');
+                    li.className = 'bg-gray-50 p-4 border border-gray-200';
+                    li.innerHTML = `
+                        <h4 class="font-semibold">${post.title}</h4>
+                        <p class="text-sm text-gray-700 mt-2">${post.content.substring(0, 100)}...</p>
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-2">
+                            <span>작성자: ${post.authorId}</span>
+                            <span>작성일: ${post.createdAt?.toDate().toLocaleDateString() || 'N/A'}</span>
+                        </div>
+                    `;
+                    postsListEl.appendChild(li);
+                });
+            });
+        };
+
+        // Handle post creation
+        const handlePostCreation = async (e) => {
+            e.preventDefault();
+            const postTitle = document.getElementById('post-title').value;
+            const postContent = document.getElementById('post-content').value;
+            
+            if (!postTitle || !postContent) {
+                console.error("제목과 내용을 모두 입력해주세요.");
+                return;
+            }
+
+            try {
+                const postsColRef = collection(db, `artifacts/${appId}/public/data/channels/${channelId}/posts`);
+                await addDoc(postsColRef, {
+                    title: postTitle,
+                    content: postContent,
+                    authorId: auth.currentUser.uid,
+                    createdAt: serverTimestamp(),
+                    likes: 0,
+                });
+
+                // Update the post count on the parent channel document
+                const channelDocRef = doc(db, `artifacts/${appId}/public/data/channels`, channelId);
+                await updateDoc(channelDocRef, {
+                    postCount: increment(1)
+                });
+
+                // Clear form and close modal
+                createPostForm.reset();
+                createPostModal.style.display = 'none';
+
+                console.log("새 글이 성공적으로 생성되었습니다.");
+
+            } catch (error) {
+                console.error("글 작성 중 오류 발생:", error);
+            }
+        };
+
+        // Function to update the UI based on user's login state
+        const updateUI = async (user) => {
+            const navLoginLink = document.getElementById('nav-login-link');
+            
+            // Show the main content once the auth state is confirmed
+            mainContent.style.display = 'block';
+
+            if (user) {
+                const userId = user.uid;
+                const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+                
+                try {
+                    const docRef = doc(db, docPath);
+                    const docSnap = await getDoc(docRef);
+                    const userName = docSnap.exists() ? docSnap.data().name || '방문자' : '방문자';
+                    
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                }
+            } else {
+                // User is logged out, show simple login link
+                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
+            }
+        };
+
+        // Event listener for the "새 글 작성" button
+        createPostBtn.addEventListener('click', () => {
+            if (auth.currentUser) {
+                // Logged in, show the post creation modal
+                createPostModal.style.display = 'flex';
+            } else {
+                // Not logged in, show the login required modal
+                loginRequiredModal.style.display = 'flex';
+            }
+        });
+
+        // Event listeners for modals
+        closePostModalBtn.addEventListener('click', () => {
+            createPostModal.style.display = 'none';
+        });
+
+        cancelLoginBtn.addEventListener('click', () => {
+            loginRequiredModal.style.display = 'none';
+        });
+        
+        // Event listener for the post creation form
+        createPostForm.addEventListener('submit', handlePostCreation);
+
+        // Listen for authentication state changes. This is the main function that handles login status.
+        onAuthStateChanged(auth, async (user) => {
+            await updateUI(user);
+        });
+
+        // Use the custom token if available. This will trigger the onAuthStateChanged listener.
+        if (initialAuthToken) {
+            try {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } catch (error) {
+                console.error("Error signing in with custom token:", error);
+            }
+        }
+        
+        // Load data on page load
+        loadChannelData();
+    </script>
+</body>
+</html>
