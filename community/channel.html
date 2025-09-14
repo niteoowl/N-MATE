@@ -73,39 +73,15 @@
                     <button id="create-channel-btn" class="bg-blue-600 text-white text-sm p-2 border border-blue-600 hover:bg-blue-700">채널 만들기</button>
                 </div>
                 <ul id="all-channels-list" class="space-y-1 text-sm">
-                    <li><a href="#" class="block py-1 hover:text-blue-600">야구 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">축구 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">게임 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">영화 채널</a></li>
-                    <li><a href="#" class="block py-1 hover:text-blue-600">음악 채널</a></li>
+                    <!-- Channels will be loaded here from Firebase -->
                 </ul>
             </div>
 
             <!-- Channel Ranking Section -->
             <div class="bg-white p-4 border border-gray-300">
                 <h2 class="text-lg font-bold mb-4">채널 순위</h2>
-                <ul class="space-y-2">
-                    <li class="flex items-center space-x-4">
-                        <span class="font-bold text-lg text-blue-600 w-6">1</span>
-                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
-                            <span class="text-sm font-semibold">게임 채널</span>
-                            <span class="text-xs text-gray-500">게시글 12,456</span>
-                        </a>
-                    </li>
-                    <li class="flex items-center space-x-4">
-                        <span class="font-bold text-lg text-blue-600 w-6">2</span>
-                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
-                            <span class="text-sm font-semibold">영화 채널</span>
-                            <span class="text-xs text-gray-500">게시글 10,230</span>
-                        </a>
-                    </li>
-                    <li class="flex items-center space-x-4">
-                        <span class="font-bold text-lg text-blue-600 w-6">3</span>
-                        <a href="#" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
-                            <span class="text-sm font-semibold">야구 채널</span>
-                            <span class="text-xs text-gray-500">게시글 8,900</span>
-                        </a>
-                    </li>
+                <ul id="channel-ranking-list" class="space-y-2">
+                    <!-- Channel rankings will be loaded here from Firebase -->
                 </ul>
             </div>
         </div>
@@ -157,7 +133,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Define Firebase configuration based on user input
         const firebaseConfig = {
@@ -184,6 +160,87 @@
         const createChannelBtn = document.getElementById('create-channel-btn');
         const closeModalBtn = document.getElementById('close-modal-btn');
         const cancelLoginBtn = document.getElementById('cancel-login-btn');
+        const createChannelForm = document.getElementById('create-channel-form');
+        const allChannelsList = document.getElementById('all-channels-list');
+        const channelRankingList = document.getElementById('channel-ranking-list');
+
+        // Function to load all channels in real-time
+        const loadChannels = () => {
+            const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
+            const q = query(channelsColRef, orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                allChannelsList.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const channel = doc.data();
+                    const li = document.createElement('li');
+                    li.innerHTML = `<a href="chan.html?id=${doc.id}" class="block py-1 hover:text-blue-600">${channel.name}</a>`;
+                    allChannelsList.appendChild(li);
+                });
+            });
+        };
+
+        // Function to load channel rankings in real-time
+        const loadRankings = () => {
+            const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
+            const q = query(channelsColRef, orderBy('postCount', 'desc'), orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                channelRankingList.innerHTML = '';
+                let rank = 1;
+                snapshot.forEach(doc => {
+                    const channel = doc.data();
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center space-x-4';
+                    li.innerHTML = `
+                        <span class="font-bold text-lg text-blue-600 w-6">${rank}</span>
+                        <a href="chan.html?id=${doc.id}" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
+                            <span class="text-sm font-semibold">${channel.name}</span>
+                            <span class="text-xs text-gray-500">게시글 ${channel.postCount}</span>
+                        </a>
+                    `;
+                    channelRankingList.appendChild(li);
+                    rank++;
+                });
+            });
+        };
+
+        // Function to handle channel creation form submission
+        const handleChannelCreation = async (e) => {
+            e.preventDefault();
+            const channelName = document.getElementById('channel-name').value;
+            const channelDesc = document.getElementById('channel-desc').value;
+            const channelTags = document.getElementById('channel-tags').value;
+
+            if (!channelName) {
+                console.error("채널 이름은 필수입니다.");
+                return;
+            }
+            
+            try {
+                const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
+                const newChannelRef = await addDoc(channelsColRef, {
+                    name: channelName,
+                    description: channelDesc,
+                    tags: channelTags.split(',').map(tag => tag.trim()),
+                    postCount: 0,
+                    createdAt: serverTimestamp(),
+                    creatorId: auth.currentUser.uid,
+                });
+
+                // Clear form and close modal
+                createChannelForm.reset();
+                createChannelModal.style.display = 'none';
+
+                console.log("새 채널이 성공적으로 생성되었습니다. ID:", newChannelRef.id);
+                
+                // Redirect to the new channel's page
+                window.location.href = `chan.html?id=${newChannelRef.id}`;
+
+            } catch (error) {
+                console.error("채널 생성 중 오류 발생:", error);
+            }
+        };
 
         // Function to update the UI based on user's login state
         const updateUI = async (user) => {
@@ -212,6 +269,10 @@
                 // User is logged out, show simple login link
                 navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
             }
+
+            // Start loading data after auth state is confirmed
+            loadChannels();
+            loadRankings();
         };
 
         // Event listener for the "채널 만들기" button
@@ -233,6 +294,9 @@
         cancelLoginBtn.addEventListener('click', () => {
             loginRequiredModal.style.display = 'none';
         });
+
+        // Event listener for the channel creation form
+        createChannelForm.addEventListener('submit', handleChannelCreation);
 
         // Listen for authentication state changes. This is the main function that handles login status.
         onAuthStateChanged(auth, async (user) => {
