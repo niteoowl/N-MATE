@@ -3,922 +3,934 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>N-MATE | 계정</title>
+    <title>N-MATE 로그인</title>
     <!-- Tailwind CSS CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- Google Fonts - Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK CDN -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script> <!-- Firestore 추가 -->
-    <style>
-        /* Pretendard 웹폰트 적용 */
-        @font-face {
-            font-family: 'Pretendard-Regular';
-            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
-        }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // 전역 변수로 Firebase 서비스 인스턴스를 저장합니다.
+        window.firebase = {};
+        window.firebase.getAuth = getAuth;
+        window.firebase.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.firebase.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.firebase.getFirestore = getFirestore;
+        window.firebase.doc = doc;
+        window.firebase.setDoc = setDoc;
 
-        /* Pretendard 폰트를 기본으로 사용하고, Inter 및 sans-serif를 폴백으로 설정합니다. */
-        body {
-            font-family: 'Pretendard-Regular', 'Inter', sans-serif;
-            background-color: #ffffff; /* 배경색을 이미지와 동일하게 설정 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* 뷰포트 높이 전체를 차지하도록 설정 */
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* 스크롤바가 생기지 않도록 숨김 */
-        }
-
-        /* 컨테이너의 최대 너비를 설정하여 좌우 여백을 시뮬레이션합니다. */
-        .container {
-            width: 100%;
-            max-width: 1920px; /* 콘텐츠 영역의 최대 너비를 1920px로 더욱 증가 */
-            padding: 0; /* 좌우 패딩 제거 */
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh; /* 컨테이너가 뷰포트 높이의 100%를 차지하도록 설정 */
-            position: relative; /* 자식 요소의 절대 위치를 위한 기준 */
-        }
-
-        /* 로고 및 텍스트 블록의 위치 조정 - 완벽한 중앙 정렬 */
-        .logo-text-block {
-            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            top: 25%; /* 대략적인 상단 위치 조정 */
-            left: 50%; /* 왼쪽에서 50% 이동 */
-            transform: translate(-50%, -50%); /* 자신의 너비/높이의 50%만큼 이동하여 정확히 중앙 정렬 */
-            text-align: center; /* 텍스트 중앙 정렬 */
-            line-height: 1.4; /* 줄 간격 조정 */
-        }
-
-        /* 로그인 버튼 블록의 위치 조정 및 버튼 정렬 */
-        .button-section {
-            position: absolute; /* 컨테이너 내에서 절대 위치 지정 */
-            bottom: 10%; /* 이미지에서 보이는 대략적인 하단 위치 조정 */
-            left: 50%; /* 가운데 정렬을 위해 왼쪽에서 50% 이동 */
-            transform: translate(-50%, 0); /* 자신의 너비의 50%만큼 이동하여 정확히 중앙 정렬 */
-            width: calc(100% - 40px); /* 좌우 20px 패딩을 고려하여 너비 조정 */
-            max-width: 400px; /* 버튼의 최대 너비를 400px로 유지 */
-            padding: 0 20px; /* 모바일에서 좌우 여백 추가 */
-            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
-            display: flex; /* 버튼을 세로로 나열하기 위해 flexbox 사용 */
-            flex-direction: column; /* 세로 방향 정렬 */
-            gap: 12px; /* 버튼 사이 간격 추가 */
-        }
-
-        /* 이미지 아이콘 스타일 */
-        .logo-image {
-            width: 48px; /* 이미지 아이콘 너비 */
-            height: 48px; /* 이미지 아이콘 높이 */
-            margin-bottom: 12px; /* 로고와 텍스트 사이 간격 */
-        }
-
-        /* 기본 액션 버튼 스타일 (회원가입 버튼에 적용) */
-        .action-button {
-            background-color: #3B82F6; /* 버튼 배경색 */
-            color: white;
-            font-weight: 500; /* Medium */
-            padding: 10px 28px; /* 패딩 조정 */
-            border-radius: 14px; /* 모서리 둥글기 조정 */
-            width: 100%;
-            transition: background-color 0.3s ease; /* 호버 효과를 위한 트랜지션 */
-        }
-
-        .action-button:hover {
-            background-color: #2563EB; /* 호버 시 버튼 색상 변경 */
-        }
-
-        /* 로그인 버튼의 새로운 스타일 (투명 배경, 파란색 글자/테두리) */
-        .login-button-alt {
-            background-color: transparent; /* 투명한 배경 */
-            color: #3B82F6; /* 파란색 글자 */
-            border: 1px solid #3B82F6; /* 파란색 테두리 */
-            font-weight: 500; /* Medium */
-            padding: 10px 28px; /* 패딩 조정 */
-            border-radius: 14px; /* 모서리 둥글기 조정 */
-            width: 100%;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        /* 로그인 버튼 호버 효과 삭제 */
-        .login-button-alt:hover {
-            background-color: transparent; /* 호버 시에도 투명 배경 유지 */
-            color: #3B82F6; /* 호버 시에도 파란색 글자 유지 */
-            border-color: #3B82F6; /* 호버 시에도 파란색 테두리 유지 */
-        }
-
-        /* 텍스트 크기 및 색상 조정 */
-        .main-title {
-            font-size: 1.5rem; /* 24px */
-            font-weight: 600; /* SemiBold */
-            color: #333333; /* 짙은 회색 */
-            margin-bottom: 0.5rem; /* 8px */
-            white-space: nowrap; /* 글자 줄 바꿈 방지 */
-            overflow: hidden; /* 넘치는 내용 숨기기 */
-            text-overflow: ellipsis; /* 넘치는 내용 말줄임표 처리 */
-        }
-
-        .subtitle {
-            font-size: 0.875rem; /* 14px */
-            color: #666666; /* 중간 회색 */
-            white-space: nowrap; /* 글자 줄 바꿈 방지 */
-            overflow: hidden; /* 넘치는 내용 숨기기 */
-            text-overflow: ellipsis; /* 넘치는 내용 말줄임표 처리 */
-        }
-
-        /* 입력 필드 스타일 */
-        .input-field {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #D1D5DB; /* Light gray border */
-            border-radius: 14px;
-            font-size: 1rem;
-            box-sizing: border-box; /* padding and border included in element's total width and height */
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #3B82F6; /* Blue border on focus */
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Light blue shadow on focus */
-        }
-
-        /* 숨김 클래스 */
-        .hidden {
-            display: none;
-        }
-
-        /* 모달 버튼 컨테이너 스타일 - 가로 정렬 및 간격 */
-        .modal-buttons-container {
-            display: flex;
-            justify-content: space-evenly; /* 버튼을 균등하게 분배 */
-            gap: 1rem; /* 버튼 사이 간격 */
-            width: 100%; /* 너비 100% */
-        }
-
-        /* 모달 내 버튼 너비 조정 */
-        .modal-buttons-container .action-button,
-        .modal-buttons-container .login-button-alt {
-            width: auto; /* 고정 너비 대신 내용에 따라 자동 조정 */
-            flex-grow: 1; /* 남은 공간을 채우도록 성장 */
-            max-width: 150px; /* 각 버튼의 최대 너비 제한 (조정 가능) */
-        }
-
-        /* 모달 애니메이션을 위한 초기 상태 (숨겨진 상태) */
-        .modal-hidden-state {
-            opacity: 0;
-            transform: scale(0.95); /* 중앙에서 약간 축소된 상태 (translate 제거) */
-        }
-
-        /* 모달 애니메이션을 위한 최종 상태 (보여지는 상태) */
-        .modal-visible-state {
-            opacity: 1;
-            transform: scale(1); /* 중앙에서 원래 크기로 확장된 상태 (translate 제거) */
-        }
-
-        /* 모달 트랜지션 */
-        .modal-transition {
-            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-        }
-
-        /* 학교 검색 결과 드롭다운 스타일 */
-        #schoolSearchResults {
-            position: absolute;
-            background-color: white;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            width: 100%;
-            z-index: 10;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            top: calc(100% + 5px); /* search input 바로 아래에 위치 */
-            left: 0;
-        }
-
-        #schoolSearchResults div {
-            padding: 10px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid #E5E7EB;
-        }
-
-        #schoolSearchResults div:last-child {
-            border-bottom: none;
-        }
-
-        #schoolSearchResults div:hover {
-            background-color: #F3F4F6;
-        }
-
-        .school-search-container {
-            position: relative; /* 자식 요소인 검색 결과 목록의 absolute 위치를 위한 기준 */
-            width: 100%;
-            margin-bottom: 12px; /* 아래 요소와의 간격 */
-        }
-
-        .search-input-group {
-            display: flex;
-            gap: 8px; /* 입력 필드와 버튼 사이 간격 */
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 로고 및 텍스트 블록 -->
-        <div class="logo-text-block">
-            <!-- 부산남중학교 로고 이미지 (실제 이미지 경로로 대체 필요) -->
-            <img src="/image/simbol.png" alt="부산남중학교 로고" class="logo-image mx-auto">
-            <h1 class="main-title">N-MATE</h1>
-            <p class="subtitle" id="subtitleText">로그인 방식을 선택하세요.</p>
-        </div>
-
-        <!-- 초기 버튼 섹션 -->
-        <div id="initialButtons" class="button-section">
-            <!-- 회원가입 버튼 (기존 스타일 유지) -->
-            <button class="action-button">구글로 계속할게요</button>
-            <!-- 로그인 버튼 (새로운 스타일 적용, 호버 효과 제거) -->
-            <button id="emailLoginButton" class="login-button-alt">이메일로 계속할게요</button>
-        </div>
-
-        <!-- 이메일 입력 섹션 (초기에는 숨김) -->
-        <div id="emailInputSection" class="button-section hidden">
-            <input type="email" id="emailInput" placeholder="이메일 주소를 입력하세요" class="input-field">
-            <button id="emailNextButton" class="action-button">다음</button>
-        </div>
-
-        <!-- 비밀번호 입력 섹션 (초기에는 숨김) -->
-        <div id="passwordInputSection" class="button-section hidden">
-            <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" class="input-field">
-            <button id="loginFinalButton" class="action-button">로그인</button>
-        </div>
-
-        <!-- 회원가입 섹션 (초기에는 숨김) -->
-        <div id="signUpSection" class="button-section hidden">
-            <input type="email" id="signUpEmailInput" placeholder="이메일 주소를 입력하세요" class="input-field mb-3">
-            <input type="password" id="signUpPasswordInput" placeholder="비밀번호를 입력하세요 (6자 이상)" class="input-field mb-3">
-            <input type="password" id="signUpConfirmPasswordInput" placeholder="비밀번호를 다시 입력하세요" class="input-field">
-            <button id="signUpButton" class="action-button mt-4">회원가입</button>
-            <button id="backToLoginButton" class="login-button-alt mt-2">로그인 화면으로 돌아가기</button>
-        </div>
-
-        <!-- 사용자 정보 설정 섹션 (초기에는 숨김) -->
-        <div id="userInfoSetupSection" class="button-section hidden">
-            <!-- "학생 정보 설정" 텍스트 제거됨 -->
-
-            <!-- 학교 검색 관련 UI -->
-            <div class="school-search-container mb-3">
-                <label for="selectedSchoolDisplay" class="block text-gray-700 text-sm font-bold mb-2">선택된 학교:</label>
-                <div id="selectedSchoolDisplay" class="input-field mb-3 flex items-center justify-between min-h-[48px] rounded-md">
-                    <span id="selectedSchoolName" class="text-gray-700">학교를 검색하여 선택해주세요.</span>
-                    <button id="resetSchoolSelection" class="text-red-500 hover:text-red-700 text-sm font-semibold p-2 rounded-full hidden" title="선택된 학교 초기화">
-                        &times;
-                    </button>
-                </div>
-                <div class="search-input-group mb-2">
-                    <input type="text" id="schoolSearchInput" placeholder="학교 이름을 입력하고 검색" class="input-field flex-grow">
-                    <button id="searchSchoolButton" class="action-button w-auto px-4 py-2">검색</button>
-                </div>
-                <div id="schoolSearchResults" class="hidden">
-                    <!-- 검색 결과가 여기에 표시됩니다 -->
-                </div>
-                <!-- 선택된 학교의 교육청코드와 행정표준코드를 저장할 hidden 필드 -->
-                <input type="hidden" id="atptOfcdcScCodeInput">
-                <input type="hidden" id="sdSchulCodeInput">
-            </div>
-
-            <select id="gradeSelect" class="input-field mb-3">
-                <option value="">학년 선택</option>
-                <option value="1">1학년</option>
-                <option value="2">2학년</option>
-                <option value="3">3학년</option>
-            </select>
-            <input type="number" id="classInput" placeholder="반 (예: 1)" class="input-field mb-3">
-            <input type="number" id="studentNumInput" placeholder="번 (예: 10)" class="input-field mb-3">
-            <button id="saveUserInfoButton" class="action-button mt-4">저장</button>
-        </div>
-
-
-        <!-- 메시지 표시 영역 -->
-        <div id="messageBox" class="hidden text-center mt-4"></div>
-
-        <!-- 계정 확인 모달 (초기에는 숨김) -->
-        <div id="accountCheckModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center hidden z-50">
-            <!-- 모달 콘텐츠 박스 -->
-            <div id="modalContentBox" class="bg-white p-8 rounded-xl shadow-lg w-11/12 max-w-sm text-center modal-transition modal-hidden-state">
-                <!-- 경고 아이콘 -->
-                <img src="/image/warning.png" alt="경고 아이콘" class="mx-auto mb-4 w-16 h-16">
-                <h2 class="text-xl font-semibold text-gray-800 mb-6">계정이 있으신가요?</h2>
-                <!-- 버튼을 가로로 정렬하기 위한 새로운 컨테이너 -->
-                <div class="modal-buttons-container">
-                    <button id="modalYesButton" class="action-button">네</button>
-                    <button id="modalNoButton" class="login-button-alt">아니요</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // 전역 변수로 Firebase 설정 주입 (Canvas 환경에서 제공)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = {
+        // 제공된 Firebase 설정을 사용하거나 전역 변수에서 가져옵니다.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
             authDomain: "n-mate.firebaseapp.com",
             projectId: "n-mate",
             storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
             appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            measurementId: "G-0LCGVBKXLQ",
-            messagingSenderId: "691313471077"
+            measurementId: "G-0LCGVBKXLQ"
         };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // NEIS API 설정 (사용자 제공)
-        const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc3"; // 이 인증키를 유효한 키로 교체해야 합니다.
-        const NEIS_API_ENDPOINT = "https://open.neis.go.kr/hub/schoolInfo";
+        // Firebase 앱 초기화
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // Firebase app 및 auth, firestore 인스턴스
-        let app;
-        let auth;
-        let db; // Firestore 인스턴스 추가
+        // 전역 변수에 인스턴스를 저장하여 다른 스크립트에서 접근할 수 있게 합니다.
+        window.firebase.app = app;
+        window.firebase.auth = auth;
+        window.firebase.db = db;
+        window.firebase.appId = appId;
+        window.firebase.initialAuthToken = initialAuthToken;
 
-        // DOM 요소 가져오기
-        const emailLoginButton = document.getElementById('emailLoginButton');
-        const initialButtons = document.getElementById('initialButtons');
-        const emailInputSection = document.getElementById('emailInputSection');
-        const emailNextButton = document.getElementById('emailNextButton');
-        const passwordInputSection = document.getElementById('passwordInputSection');
-        const loginFinalButton = document.getElementById('loginFinalButton');
-        const subtitleText = document.getElementById('subtitleText');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const messageBox = document.getElementById('messageBox'); // 메시지 박스 요소
-
-        // 새 모달 요소들
-        const accountCheckModal = document.getElementById('accountCheckModal');
-        const modalYesButton = document.getElementById('modalYesButton');
-        const modalNoButton = document.getElementById('modalNoButton');
-        const modalContentBox = document.getElementById('modalContentBox'); // 모달 콘텐츠 박스
-
-        // 회원가입 관련 DOM 요소
-        const signUpSection = document.getElementById('signUpSection');
-        const signUpEmailInput = document.getElementById('signUpEmailInput');
-        const signUpPasswordInput = document.getElementById('signUpPasswordInput');
-        const signUpConfirmPasswordInput = document.getElementById('signUpConfirmPasswordInput');
-        const signUpButton = document.getElementById('signUpButton');
-        const backToLoginButton = document.getElementById('backToLoginButton');
-
-        // 사용자 정보 설정 관련 DOM 요소
-        const userInfoSetupSection = document.getElementById('userInfoSetupSection');
-        const schoolSearchInput = document.getElementById('schoolSearchInput'); // 학교 검색 입력 필드
-        const searchSchoolButton = document.getElementById('searchSchoolButton'); // 학교 검색 버튼
-        const schoolSearchResults = document.getElementById('schoolSearchResults'); // 학교 검색 결과 표시 영역
-        const selectedSchoolDisplay = document.getElementById('selectedSchoolDisplay'); // 선택된 학교 표시 영역
-        const selectedSchoolName = document.getElementById('selectedSchoolName'); // 선택된 학교 이름 텍스트
-        const resetSchoolSelection = document.getElementById('resetSchoolSelection'); // 학교 선택 초기화 버튼
-        const atptOfcdcScCodeInput = document.getElementById('atptOfcdcScCodeInput'); // 교육청 코드 hidden 필드
-        const sdSchulCodeInput = document.getElementById('sdSchulCodeInput'); // 행정표준코드 hidden 필드
-        const gradeSelect = document.getElementById('gradeSelect');
-        const classInput = document.getElementById('classInput');
-        const studentNumInput = document.getElementById('studentNumInput');
-        const saveUserInfoButton = document.getElementById('saveUserInfoButton');
-
-
-        // 메시지를 표시하는 유틸리티 함수
-        function showMessage(message, isError = false) {
-            if (messageBox) {
-                messageBox.textContent = message;
-                // Tailwind CSS 클래스를 사용하여 스타일 적용
-                messageBox.className = isError ? 'text-red-500 font-medium mt-4 text-center' : 'text-green-500 font-medium mt-4 text-center';
-                messageBox.classList.remove('hidden');
-                console.log(`UI 메시지: ${message} (에러: ${isError})`); // UI 메시지 로깅
-            }
-        }
-
-        // 메시지 박스를 숨기는 유틸리티 함수
-        function hideMessageBox() {
-            if (messageBox) {
-                messageBox.classList.add('hidden');
-                messageBox.textContent = ''; // 내용 지우기
-                console.log('메시지 박스 숨김');
-            }
-        }
-
-        // 모달을 표시하는 함수 (애니메이션 포함)
-        function showModal() {
-            accountCheckModal.classList.remove('hidden');
-            // DOM이 업데이트된 후 애니메이션 클래스를 추가하기 위해 setTimeout 사용
-            // 이렇게 하면 브라우저가 hidden 클래스 제거를 처리한 후 애니메이션을 적용할 준비가 됩니다.
-            setTimeout(() => {
-                modalContentBox.classList.remove('modal-hidden-state');
-                modalContentBox.classList.add('modal-visible-state');
-            }, 10); // 작은 지연 시간
-        }
-
-        // 모달을 숨기는 함수 (애니메이션 포함)
-        function hideModal() {
-            modalContentBox.classList.remove('modal-visible-state');
-            modalContentBox.classList.add('modal-hidden-state');
-            // 애니메이션이 끝난 후 hidden 클래스 추가
-            // transitionend 이벤트를 사용하여 애니메이션이 완전히 끝난 후에만 모달을 숨깁니다.
-            modalContentBox.addEventListener('transitionend', function handler() {
-                accountCheckModal.classList.add('hidden');
-                modalContentBox.removeEventListener('transitionend', handler);
-            }, { once: true }); // 이 리스너는 한 번만 실행되도록 설정
-        }
-
-        // 모든 로그인/회원가입 섹션을 숨기는 함수
-        function hideAllAuthSections() {
-            initialButtons.classList.add('hidden');
-            emailInputSection.classList.add('hidden');
-            passwordInputSection.classList.add('hidden');
-            signUpSection.classList.add('hidden');
-            userInfoSetupSection.classList.add('hidden');
-            hideMessageBox();
-        }
-
-        // 사용자 정보를 Firestore에서 가져오는 함수
-        async function getUserProfile(userId) {
-            if (!db) {
-                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
-                return null;
-            }
-            // Firestore 보안 규칙에 따라 artifacts/{appId}/users/{userId}/profile/user_data 경로 사용
-            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
-            try {
-                const doc = await userProfileRef.get();
-                if (doc.exists) {
-                    console.log('사용자 프로필 데이터:', doc.data());
-                    return doc.data();
-                } else {
-                    console.log('사용자 프로필 데이터가 없습니다.');
-                    return null;
-                }
-            } catch (error) {
-                console.error('사용자 프로필 가져오기 오류:', error);
-                return null;
-            }
-        }
-
-        // 사용자 정보를 Firestore에 저장하는 함수
-        async function saveUserProfile(userId, schoolName, atptOfcdcScCode, sdSchulCode, grade, classNum, studentNum) {
-            if (!db) {
-                console.error('Firestore 인스턴스가 초기화되지 않았습니다.');
-                return false;
-            }
-            // Firestore 보안 규칙에 따라 artifacts/{appId}/users/{userId}/profile/user_data 경로 사용
-            const userProfileRef = db.collection(`artifacts/${appId}/users/${userId}/profile`).doc('user_data');
-            try {
-                await userProfileRef.set({
-                    schoolName: schoolName,
-                    atptOfcdcScCode: atptOfcdcScCode, // 교육청 코드 저장
-                    sdSchulCode: sdSchulCode,         // 행정표준코드 저장
-                    grade: parseInt(grade),
-                    classNum: parseInt(classNum),
-                    studentNum: parseInt(studentNum),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() // 서버 타임스탬프 추가
-                }, { merge: true }); // 기존 데이터가 있다면 병합
-                console.log('사용자 프로필 저장 성공:', { userId, schoolName, atptOfcdcScCode, sdSchulCode, grade, classNum, studentNum });
-                return true;
-            } catch (error) {
-                console.error('사용자 프로필 저장 오류:', error);
-                showMessage('정보 저장에 실패했습니다. 다시 시도해주세요.', true);
-                return false;
-            }
-        }
-
-        // NEIS API를 호출하여 학교 정보를 검색하는 함수
-        async function searchSchool(schoolNameQuery) {
-            schoolSearchResults.classList.add('hidden'); // 이전 결과 숨기기
-            schoolSearchResults.innerHTML = ''; // 이전 결과 지우기
-            showMessage('학교를 검색 중입니다...', false); // 로딩 메시지
-            resetSchoolSelection.classList.add('hidden'); // 검색 시작 시 초기화 버튼 숨김
-
-            if (!schoolNameQuery) {
-                showMessage('학교 이름을 입력해주세요.', true);
-                return;
-            }
-
-            try {
-                // SCHUL_KND_SC_NM=중학교 파라미터를 추가하여 중학교만 검색하도록 수정
-                const url = `${NEIS_API_ENDPOINT}?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=5&SCHUL_NM=${encodeURIComponent(schoolNameQuery)}&SCHUL_KND_SC_NM=${encodeURIComponent('중학교')}`;
-                console.log('NEIS API 요청 URL:', url);
-
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                console.log('NEIS API 응답 데이터:', data);
-
-                hideMessageBox(); // 로딩 메시지 숨기기
-
-                if (data && data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
-                    const schools = data.schoolInfo[1].row;
-                    displaySearchResults(schools);
-                } else if (data && data.RESULT && data.RESULT.CODE === 'INFO-200') {
-                    // INFO-200: 해당 자료는 존재하지 않습니다.
-                    showMessage('검색 결과가 없습니다. 정확한 중학교 이름을 입력해주세요.', true); // 중학교 검색 메시지로 수정
-                } else {
-                    showMessage('학교 정보를 가져오는 데 실패했습니다. 잠시 후 다시 시도해주세요.', true);
-                    console.error('예상치 못한 NEIS API 응답 구조:', data);
-                }
-            } catch (error) {
-                console.error('NEIS API 호출 오류:', error);
-                showMessage('학교 검색 중 오류가 발생했습니다. 네트워크 연결을 확인하거나 다시 시도해주세요.', true);
-            }
-        }
-
-        // 검색 결과를 UI에 표시하는 함수
-        function displaySearchResults(schools) {
-            schoolSearchResults.innerHTML = ''; // 기존 결과 지우기
-            if (schools.length === 0) {
-                showMessage('검색 결과가 없습니다. 다시 시도해주세요.', true);
-                schoolSearchResults.classList.add('hidden');
-                return;
-            }
-
-            schools.forEach(school => {
-                const schoolDiv = document.createElement('div');
-                schoolDiv.textContent = `${school.SCHUL_NM} (${school.LCTN_SC_NM || ''})`; // 학교명 (시도명)
-                schoolDiv.classList.add('px-4', 'py-2', 'cursor-pointer', 'hover:bg-gray-100', 'border-b', 'border-gray-200', 'rounded-md');
-                schoolDiv.dataset.atptOfcdcScCode = school.ATPT_OFCDC_SC_CODE;
-                schoolDiv.dataset.sdSchulCode = school.SD_SCHUL_CODE;
-                schoolDiv.dataset.schoolName = school.SCHUL_NM; // 선택 시 학교 이름도 저장
-                schoolDiv.tabIndex = 0; // 키보드 접근성 위해 추가
-
-                schoolDiv.addEventListener('click', () => {
-                    selectSchool(schoolDiv);
-                });
-
-                // Enter 키로 선택 가능하게 하기
-                schoolDiv.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter') {
-                        selectSchool(schoolDiv);
-                    }
-                });
-
-                schoolSearchResults.appendChild(schoolDiv);
+        // 커스텀 토큰이 제공되면 로그인 시도
+        if (initialAuthToken) {
+            signInWithCustomToken(auth, initialAuthToken).catch((error) => {
+                console.error("Custom token login failed", error);
             });
-            schoolSearchResults.classList.remove('hidden'); // 결과 표시
+        }
+    </script>
+    <style>
+        /* CSS 변수를 사용하여 색상을 정의합니다. (화이트 모드) */
+        :root {
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F0F2F5;
+            --text-primary: #121212;
+            --text-secondary: #6B7280;
+            --color-blue: #007BFF;
+            --border-color: #D1D5DB;
+            --checkbox-border: #9CA3AF;
+            --overlay-bg: rgba(255, 255, 255, 0.7);
         }
 
-        // 학교를 선택하고 hidden 필드를 업데이트하는 함수
-        function selectSchool(selectedSchoolDiv) {
-            const schoolName = selectedSchoolDiv.dataset.schoolName;
-            const atptOfcdcScCode = selectedSchoolDiv.dataset.atptOfcdcScCode;
-            const sdSchulCode = selectedSchoolDiv.dataset.sdSchulCode;
-
-            selectedSchoolName.textContent = schoolName; // 선택된 학교 이름 표시
-            atptOfcdcScCodeInput.value = atptOfcdcScCode; // hidden 필드에 값 저장
-            sdSchulCodeInput.value = sdSchulCode;         // hidden 필드에 값 저장
-
-            schoolSearchInput.value = ''; // 검색창 초기화
-            schoolSearchResults.classList.add('hidden'); // 검색 결과 숨기기
-            // showMessage(`${schoolName}이(가) 선택되었습니다.`, false); // 이 라인 삭제
-            resetSchoolSelection.classList.remove('hidden'); // 초기화 버튼 표시
-            schoolSearchInput.classList.add('hidden'); // 검색 입력 필드 숨김
-            searchSchoolButton.classList.add('hidden'); // 검색 버튼 숨김
-            selectedSchoolDisplay.classList.remove('hidden'); // 선택된 학교 표시 보이게
-
-            console.log('학교 선택됨:', { schoolName, atptOfcdcScCode, sdSchulCode });
+        /* wanted-sans 폰트를 로드합니다. */
+        @import url('https://fastly.jsdelivr.dev/gh/wanteddev/wanted-sans@v1.0.1/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css');
+        
+        body {
+            font-family: 'WantedSansVariable', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
 
-        // 학교 선택 초기화 함수
-        function resetSelectedSchool() {
-            selectedSchoolName.textContent = '학교를 검색하여 선택해주세요.';
-            atptOfcdcScCodeInput.value = '';
-            sdSchulCodeInput.value = '';
-            resetSchoolSelection.classList.add('hidden');
-            schoolSearchInput.value = '';
-            schoolSearchInput.classList.remove('hidden');
-            searchSchoolButton.classList.remove('hidden');
-            schoolSearchResults.classList.add('hidden');
-            hideMessageBox();
-            console.log('학교 선택 초기화됨.');
+        /* 입력 필드에 포커스 시 테두리 색상 변경 */
+        input:focus {
+            outline: none;
+            border-color: var(--color-blue);
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--color-blue);
         }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOMContentLoaded 이벤트 발생. 앱 초기화 시작.');
+        /* 단계별 컨테이너를 상대 위치로 설정하고, 넘치는 내용을 숨깁니다. */
+        .steps-container {
+            position: relative;
+            flex-grow: 1;
+        }
 
-            // Firebase 초기화
-            if (firebaseConfig && firebaseConfig.apiKey && firebase.apps.length === 0) {
+        /* 각 단계에 대한 기본 스타일. 애니메이션 효과를 모두 제거했습니다. */
+        .step-content {
+            display: none;
+            flex-direction: column;
+            padding: 1rem;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 현재 활성화된 단계 */
+        .step-content.is-active {
+            display: flex;
+        }
+        
+        /* 커스텀 체크박스 스타일 */
+        .custom-checkbox {
+            position: relative;
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--checkbox-border);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .custom-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+        .custom-checkbox svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.2s;
+            color: white;
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: var(--color-blue);
+            border-color: var(--color-blue);
+        }
+        .custom-checkbox input:checked ~ svg {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        /* 로딩 오버레이 스타일 */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--overlay-bg);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--color-blue);
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 메시지 박스 스타일 */
+        #message-box {
+            position: fixed;
+            bottom: -200px; /* 초기 위치를 화면 밖 아래로 설정 */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            color: var(--text-primary);
+            padding: 2rem;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            z-index: 101;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            max-width: 90%;
+            width: 100%;
+            transition: bottom 0.5s ease-in-out; /* 애니메이션 효과 추가 */
+            justify-content: center;
+        }
+        
+        #message-box.active {
+            bottom: 0; /* 활성화 시 화면 안으로 이동 */
+        }
+        
+        @media (min-width: 640px) {
+            #message-box {
+                max-width: 550px;
+            }
+        }
+        
+        #message-box-close {
+            background-color: var(--color-blue);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            margin-top: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-[--bg-primary] text-[--text-primary] flex flex-col min-h-screen">
+
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- 하단 메시지 박스 -->
+    <div id="message-box">
+        <p id="message-box-text" class="text-lg font-bold"></p>
+        <button id="message-box-close">확인</button>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="container mx-auto p-2 md:p-4 max-w-screen-sm flex-grow">
+        
+        <!-- 헤더: 뒤로 가기 및 닫기 버튼만 남겼습니다. -->
+        <header class="flex items-center justify-between py-4">
+            <button id="back-button" class="text-[--text-secondary] hover:text-[--text-primary] hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="flex-grow"></div> <!-- 버튼을 양 끝에 배치하기 위한 빈 공간 -->
+            <button class="text-[--text-secondary] hover:text-[--text-primary]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+        </header>
+
+        <!-- 단계별 컨테이너 -->
+        <main class="flex flex-col justify-center flex-grow p-2">
+            <div class="steps-container">
+
+                <!-- Step 0: 환영 화면 -->
+                <div id="step-0" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">N-MATE에 오신 것을<br>환영해요!</h1>
+                    </div>
+                </div>
+
+                <!-- Step 1: 로그인/회원가입 선택 -->
+                <div id="step-1" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">계정이 있으신가요?</h1>
+                        <p class="text-[--text-secondary]">아래에서 선택해주세요.</p>
+                    </div>
+                    <div class="mt-8 flex flex-col space-y-4">
+                         <!-- 로그인 버튼 -->
+                         <button id="to-login-button" class="bg-[--color-blue] text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors duration-200">
+                             네, 계속할게요
+                         </button>
+                         <!-- 회원가입 버튼 -->
+                         <button id="to-signup-button" class="bg-transparent border-2 border-[--color-blue] text-[--color-blue] font-bold py-4 rounded-xl hover:bg-blue-100 transition-colors duration-200">
+                             아니요, 생성할게요
+                         </button>
+                    </div>
+                </div>
+                
+                <!-- Step 2: 로그인 - 이메일 또는 전화번호 입력 -->
+                <div id="step-2" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">로그인</h1>
+                        <p class="text-[--text-secondary]">이메일 또는 전화번호를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8">
+                        <input type="text" id="login-email-input" placeholder="이메일 또는 전화번호" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                        <p id="login-email-input-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                    </div>
+                </div>
+
+                <!-- Step 3: 로그인 - 비밀번호 입력 -->
+                <div id="step-3" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">비밀번호를 입력해주세요</h1>
+                        <p class="text-[--text-secondary]"><span id="login-user-identifier" class="text-[--text-primary] font-medium"></span>에 대한</p>
+                    </div>
+                    <div class="mt-8">
+                        <input type="password" id="login-password-input" placeholder="비밀번호" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                    </div>
+                </div>
+
+                <!-- Step 4: 회원가입 - 이름, 이메일, 전화번호 입력 -->
+                <div id="step-4" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">회원가입</h1>
+                        <p class="text-[--text-secondary]">기본 정보를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <div class="flex flex-col">
+                            <input type="text" id="signup-name-input" placeholder="이름" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                            <p id="signup-name-input-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                        </div>
+                        <div class="flex flex-col">
+                            <input type="text" id="signup-email-input" placeholder="이메일 (예: user@example.com)" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                            <p id="signup-email-input-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: 회원가입 - 비밀번호 설정 -->
+                <div id="step-5" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">비밀번호 설정</h1>
+                        <p class="text-[--text-secondary]">사용하실 비밀번호를 입력해주세요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <div class="flex flex-col">
+                            <input type="password" id="signup-password-input" placeholder="비밀번호 (8자 이상)" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                            <p id="signup-password-input-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                        </div>
+                        <div class="flex flex-col">
+                            <input type="password" id="signup-password-confirm-input" placeholder="비밀번호 확인" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                            <p id="signup-password-confirm-input-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 6: 이용약관 및 개인정보 동의 -->
+                <div id="step-6" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">약관에 동의해주세요</h1>
+                        <p class="text-[--text-secondary]">N-MATE 서비스 이용을 위해 동의가 필요해요.</p>
+                    </div>
+                    <div class="mt-8 space-y-4">
+                        <!-- 전체 동의 -->
+                        <div class="flex items-center justify-between p-4 bg-[--bg-secondary] rounded-xl">
+                            <label for="all-agree-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                <span class="custom-checkbox flex-shrink-0">
+                                    <input type="checkbox" id="all-agree-checkbox">
+                                    <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <span class="text-lg font-bold text-[--text-primary]">전체 동의</span>
+                            </label>
+                        </div>
+                        
+                        <!-- 구분선 -->
+                        <div class="border-t border-[--border-color] my-4"></div>
+
+                        <!-- 개별 약관 동의 목록 -->
+                        <div class="space-y-4">
+                            <!-- 이용약관 동의 (필수) -->
+                            <div class="flex items-center justify-between">
+                                <label for="tos-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="tos-checkbox" class="required">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(필수) N-MATE 이용약관</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+
+                            <!-- 개인정보처리방침 동의 (필수) -->
+                            <div class="flex items-center justify-between">
+                                <label for="privacy-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="privacy-checkbox" class="required">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(필수) 개인정보처리방침</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+
+                            <!-- 마케팅 수신 동의 (선택) -->
+                            <div class="flex items-center justify-between">
+                                <label for="marketing-checkbox" class="flex items-center space-x-4 flex-grow cursor-pointer">
+                                    <span class="custom-checkbox flex-shrink-0">
+                                        <input type="checkbox" id="marketing-checkbox">
+                                        <svg class="checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M5 13L9 17L19 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </span>
+                                    <span class="text-sm text-[--text-secondary]">(선택) 마케팅 정보 수신 동의</span>
+                                </label>
+                                <a href="#" class="text-[--text-secondary] text-xs hover:underline">자세히 보기</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 7: 학교 정보 등록 -->
+                <div id="step-7" class="step-content">
+                    <div class="text-left">
+                        <h1 class="text-3xl font-bold mb-2">학교를 등록해주세요</h1>
+                        <p class="text-[--text-secondary]">학교 정보를 등록해야 서비스 이용이 가능해요.</p>
+                    </div>
+                    <div class="mt-8 space-y-6">
+                        <!-- 학교 검색 입력창 -->
+                        <div class="relative">
+                            <input type="text" id="school-search-input" placeholder="학교 검색" class="w-full bg-[--bg-secondary] border-b-2 border-transparent rounded-lg text-lg py-3 px-4 focus:border-[--color-blue] transition-colors duration-200">
+                            <ul id="school-suggestions" class="absolute z-10 w-full bg-[--bg-secondary] mt-2 rounded-xl shadow-lg max-h-60 overflow-y-auto hidden"></ul>
+                        </div>
+                        <p id="school-search-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                        
+                        <!-- 선택된 학교 표시 -->
+                        <div id="selected-school-display" class="hidden p-4 bg-[--bg-secondary] rounded-xl flex justify-between items-center">
+                            <span id="selected-school-name" class="text-lg"></span>
+                            <button id="change-school-button" class="text-sm text-[--color-blue] hover:underline">변경</button>
+                        </div>
+                        
+                        <!-- 학년, 반 드롭다운 -->
+                        <div class="flex space-x-4">
+                            <div class="w-1/2">
+                                <label for="grade-select" class="block text-sm text-[--text-secondary] mb-2">학년</label>
+                                <select id="grade-select" class="w-full bg-[--bg-secondary] text-lg py-3 px-4 rounded-xl border-2 border-transparent focus:border-[--color-blue] transition-colors duration-200" disabled>
+                                    <option value="" selected disabled>학년 선택</option>
+                                </select>
+                                <p id="grade-select-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                            </div>
+                            <div class="w-1/2">
+                                <label for="class-select" class="block text-sm text-[--text-secondary] mb-2">반</label>
+                                <select id="class-select" class="w-full bg-[--bg-secondary] text-lg py-3 px-4 rounded-xl border-2 border-transparent focus:border-[--color-blue] transition-colors duration-200" disabled>
+                                    <option value="" selected disabled>반 선택</option>
+                                </select>
+                                <p id="class-select-error" class="text-red-500 text-sm mt-1 hidden"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+    </div>
+
+    <!-- 하단 고정 버튼 -->
+    <footer class="fixed bottom-0 left-0 right-0 z-50 bg-[--bg-primary] p-2">
+        <div class="container mx-auto max-w-screen-sm">
+            <!-- nextButton은 step-1에서 숨김 처리됨. -->
+            <button id="next-button" class="block mx-auto bg-[--color-blue] text-white font-bold py-4 rounded-xl hover:bg-blue-600 transition-colors duration-200 w-full sm:w-[550px] disabled:bg-gray-300 disabled:text-gray-500" disabled>
+                다음
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Firebase 전역 객체 가져오기
+            const { auth, db, appId, signInWithEmailAndPassword, createUserWithEmailAndPassword, doc, setDoc } = window.firebase;
+
+            // NEIS API 설정
+            const NEIS_API_KEY = "0c3b4def034a4eb5b75e830500a30898";
+            const NEIS_API_URL = "https://open.neis.go.kr/hub/schoolInfo";
+
+            const step0 = document.getElementById('step-0');
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            const step3 = document.getElementById('step-3');
+            const step4 = document.getElementById('step-4');
+            const step5 = document.getElementById('step-5');
+            const step6 = document.getElementById('step-6');
+            const step7 = document.getElementById('step-7'); // 학교 정보 단계
+
+            const nextButton = document.getElementById('next-button');
+            const backButton = document.getElementById('back-button');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const messageBox = document.getElementById('message-box');
+            const messageBoxText = document.getElementById('message-box-text');
+            const messageBoxClose = document.getElementById('message-box-close');
+
+            const toLoginButton = document.getElementById('to-login-button');
+            const toSignupButton = document.getElementById('to-signup-button');
+
+            const loginEmailInput = document.getElementById('login-email-input');
+            const loginPasswordInput = document.getElementById('login-password-input');
+            const loginUserIdentifier = document.getElementById('login-user-identifier');
+            
+            const signupNameInput = document.getElementById('signup-name-input');
+            const signupEmailInput = document.getElementById('signup-email-input');
+            const signupPasswordInput = document.getElementById('signup-password-input');
+            const signupPasswordConfirmInput = document.getElementById('signup-password-confirm-input');
+
+            // 약관 동의 관련 요소들
+            const allAgreeCheckbox = document.getElementById('all-agree-checkbox');
+            const tosCheckbox = document.getElementById('tos-checkbox');
+            const privacyCheckbox = document.getElementById('privacy-checkbox');
+            const marketingCheckbox = document.getElementById('marketing-checkbox');
+
+            // 학교 정보 관련 요소들
+            const schoolSearchInput = document.getElementById('school-search-input');
+            const schoolSuggestions = document.getElementById('school-suggestions');
+            const selectedSchoolDisplay = document.getElementById('selected-school-display');
+            const selectedSchoolName = document.getElementById('selected-school-name');
+            const changeSchoolButton = document.getElementById('change-school-button');
+            const gradeSelect = document.getElementById('grade-select');
+            const classSelect = document.getElementById('class-select');
+            
+            const steps = [step0, step1, step2, step3, step4, step5, step6, step7];
+            let currentStep = 0;
+
+            // 로딩 상태를 보여주는 함수
+            const showLoading = (show) => {
+                loadingOverlay.style.display = show ? 'flex' : 'none';
+            };
+
+            // 메시지 박스를 보여주는 함수
+            const showMessage = (text) => {
+                messageBoxText.textContent = text;
+                messageBox.classList.add('active');
+            };
+
+            messageBoxClose.addEventListener('click', () => {
+                messageBox.classList.remove('active');
+            });
+            
+            // 입력 필드와 에러 메시지 업데이트를 위한 헬퍼 함수
+            const updateValidationMessage = (inputElement, message) => {
+                const errorElement = document.getElementById(`${inputElement.id}-error`);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.classList.toggle('hidden', !message);
+                    inputElement.classList.toggle('border-red-500', !!message);
+                    inputElement.classList.toggle('border-transparent', !message);
+                }
+            };
+
+            // 다음 버튼 활성화/비활성화를 위한 상태 검사 함수
+            const checkStepValidityAndToggleNextButton = () => {
+                let isValid = true;
+                if (currentStep === 4) { // 회원가입 - 기본 정보
+                    const isNameValid = signupNameInput.value.trim() !== '';
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const isEmailValid = emailRegex.test(signupEmailInput.value.trim());
+
+                    updateValidationMessage(signupNameInput, isNameValid ? '' : '이름을 입력해주세요.');
+                    updateValidationMessage(signupEmailInput, isEmailValid ? '' : '올바른 이메일 형식을 입력해주세요.');
+
+                    isValid = isNameValid && isEmailValid;
+                } else if (currentStep === 5) { // 회원가입 - 비밀번호
+                    const isPasswordValid = signupPasswordInput.value.length >= 8;
+                    const isPasswordMatch = signupPasswordInput.value === signupPasswordConfirmInput.value && signupPasswordConfirmInput.value.length > 0;
+
+                    updateValidationMessage(signupPasswordInput, isPasswordValid ? '' : '비밀번호는 8자 이상이어야 합니다.');
+                    updateValidationMessage(signupPasswordConfirmInput, isPasswordMatch ? '' : '비밀번호가 일치하지 않습니다.');
+
+                    isValid = isPasswordValid && isPasswordMatch;
+                } else if (currentStep === 6) { // 약관 동의
+                    const requiredChecked = tosCheckbox.checked && privacyCheckbox.checked;
+                    isValid = requiredChecked;
+                } else if (currentStep === 7) { // 학교 정보
+                    const isSchoolSelected = selectedSchoolName.textContent.trim() !== '';
+                    const isGradeSelected = gradeSelect.value !== '';
+                    const isClassSelected = classSelect.value !== '';
+                    isValid = isSchoolSelected && isGradeSelected && isClassSelected;
+                } else if (currentStep === 2) { // 로그인
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const isEmailValid = emailRegex.test(loginEmailInput.value.trim());
+                    updateValidationMessage(loginEmailInput, isEmailValid ? '' : '올바른 이메일 형식을 입력해주세요.');
+                    isValid = isEmailValid;
+                } else {
+                    isValid = true;
+                }
+                nextButton.disabled = !isValid;
+            };
+            
+            // 실시간 유효성 검사를 위한 이벤트 리스너들
+            loginEmailInput.addEventListener('input', checkStepValidityAndToggleNextButton);
+            signupNameInput.addEventListener('input', checkStepValidityAndToggleNextButton);
+            signupEmailInput.addEventListener('input', checkStepValidityAndToggleNextButton);
+            signupPasswordInput.addEventListener('input', checkStepValidityAndToggleNextButton);
+            signupPasswordConfirmInput.addEventListener('input', checkStepValidityAndToggleNextButton);
+            
+            [tosCheckbox, privacyCheckbox, marketingCheckbox].forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    allAgreeCheckbox.checked = tosCheckbox.checked && privacyCheckbox.checked && marketingCheckbox.checked;
+                    checkStepValidityAndToggleNextButton();
+                });
+            });
+
+            allAgreeCheckbox.addEventListener('change', () => {
+                const isChecked = allAgreeCheckbox.checked;
+                tosCheckbox.checked = isChecked;
+                privacyCheckbox.checked = isChecked;
+                marketingCheckbox.checked = isChecked;
+                checkStepValidityAndToggleNextButton();
+            });
+
+            // 학교 검색 로직 (NEIS API 연동)
+            const searchSchools = async (query) => {
+                if (query.length < 2) {
+                    schoolSuggestions.innerHTML = '';
+                    schoolSuggestions.classList.add('hidden');
+                    return;
+                }
+
+                const url = `${NEIS_API_URL}?KEY=${NEIS_API_KEY}&Type=json&pIndex=1&pSize=10&SCHUL_NM=${encodeURIComponent(query)}`;
+                
                 try {
-                    app = firebase.initializeApp(firebaseConfig);
-                    auth = firebase.auth(); // Firebase Auth 서비스 가져오기
-                    db = firebase.firestore(); // Firebase Firestore 서비스 가져오기
-                    console.log('Firebase 앱 및 Firestore 초기화 성공.');
+                    showLoading(true);
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    
+                    schoolSuggestions.innerHTML = '';
 
-                    // onAuthStateChanged는 로그인 상태 변화를 감지하므로 여기서 초기 UI 결정을 함.
-                    auth.onAuthStateChanged(async (user) => {
-                        if (user) {
-                            console.log('onAuthStateChanged: 사용자 로그인됨 (UID):', user.uid);
-                            const profile = await getUserProfile(user.uid);
-                            if (profile && profile.schoolName && profile.atptOfcdcScCode && profile.sdSchulCode && profile.grade && profile.classNum && profile.studentNum) {
-                                // 프로필이 있으면 메인으로 이동 (로그인 완료)
-                                window.location.href = '/';
-                            } else {
-                                // 프로필이 없으면 정보 설정 화면으로 이동 (최초 로그인/회원가입 후)
-                                hideAllAuthSections();
-                                userInfoSetupSection.classList.remove('hidden');
-                                subtitleText.textContent = '학교, 학년, 반, 번호를 설정해주세요.';
-                                // 기존 정보가 있다면 입력 필드에 채우기
-                                if (profile) {
-                                    if (profile.schoolName && profile.atptOfcdcScCode && profile.sdSchulCode) {
-                                        selectedSchoolName.textContent = profile.schoolName;
-                                        atptOfcdcScCodeInput.value = profile.atptOfcdcScCode;
-                                        sdSchulCodeInput.value = profile.sdSchulCode;
-                                        resetSchoolSelection.classList.remove('hidden');
-                                        schoolSearchInput.classList.add('hidden');
-                                        searchSchoolButton.classList.add('hidden');
-                                        selectedSchoolDisplay.classList.remove('hidden');
-                                    } else {
-                                        selectedSchoolName.textContent = '학교를 검색하여 선택해주세요.';
-                                        selectedSchoolDisplay.classList.remove('hidden'); // 선택된 학교 표시 보이게
-                                        schoolSearchInput.classList.remove('hidden');
-                                        searchSchoolButton.classList.remove('hidden');
-                                        resetSchoolSelection.classList.add('hidden');
-                                    }
-                                    gradeSelect.value = profile.grade || '';
-                                    classInput.value = profile.classNum || '';
-                                    studentNumInput.value = profile.studentNum || '';
-                                } else {
-                                    // 프로필이 전혀 없으면 초기 상태로 설정
-                                    selectedSchoolName.textContent = '학교를 검색하여 선택해주세요.';
-                                    selectedSchoolDisplay.classList.remove('hidden'); // 선택된 학교 표시 보이게
-                                    schoolSearchInput.classList.remove('hidden');
-                                    searchSchoolButton.classList.remove('hidden');
-                                    resetSchoolSelection.classList.add('hidden');
-                                }
-                            }
-                        } else {
-                            console.log('onAuthStateChanged: 사용자 로그아웃됨.');
-                            // 사용자 로그아웃 상태이므로 초기 로그인 UI 표시
-                            hideAllAuthSections();
-                            initialButtons.classList.remove('hidden');
-                            subtitleText.textContent = '로그인 방식을 선택하세요.';
-                        }
+                    // 응답 데이터 구조 확인
+                    if (data && data.schoolInfo && data.schoolInfo[1] && data.schoolInfo[1].row) {
+                        const schools = data.schoolInfo[1].row;
+                        schools.forEach(school => {
+                            const li = document.createElement('li');
+                            // 학교 이름과 지역명을 함께 표시
+                            li.textContent = `${school.SCHUL_NM} (${school.LCTN_SC_NM})`;
+                            li.dataset.schoolName = school.SCHUL_NM; // 실제 학교 이름 저장
+                            li.dataset.schoolCode = school.SD_SCHUL_CODE; // 학교 코드 저장
+                            li.dataset.schoolKind = school.SCHUL_KND_SC_NM; // 학교 종류 저장 (학년 수 결정을 위함)
+                            li.dataset.officeCode = school.ATPT_OFCDC_SC_CODE; // 교육청 코드 저장
+                            li.classList.add('p-4', 'hover:bg-gray-200', 'cursor-pointer', 'rounded-lg');
+                            li.addEventListener('click', () => {
+                                // 학교 종류(li.dataset.schoolKind)도 함께 전달
+                                selectSchool(li.dataset.schoolName, li.textContent, li.dataset.schoolCode, li.dataset.schoolKind, li.dataset.officeCode);
+                            });
+                            schoolSuggestions.appendChild(li);
+                        });
+                        schoolSuggestions.classList.remove('hidden');
+                        updateValidationMessage(schoolSearchInput, '');
+                    } else {
+                        const li = document.createElement('li');
+                        li.textContent = '검색 결과가 없습니다.';
+                        li.classList.add('p-4', 'text-[--text-secondary]');
+                        schoolSuggestions.appendChild(li);
+                        schoolSuggestions.classList.remove('hidden');
+                        updateValidationMessage(schoolSearchInput, '검색 결과가 없습니다.');
+                    }
+                } catch (error) {
+                    console.error("학교 검색 실패:", error);
+                    showMessage("학교 검색 중 오류가 발생했습니다. 다시 시도해주세요.");
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            // debounce 함수로 API 호출 빈도 제어
+            let debounceTimer;
+            schoolSearchInput.addEventListener('input', (e) => {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    searchSchools(e.target.value);
+                }, 500);
+            });
+
+            // 학교 선택 함수
+            const selectSchool = (schoolName, fullSchoolName, schoolCode, schoolKind, schoolOfficeCode) => {
+                schoolSearchInput.value = '';
+                schoolSearchInput.classList.add('hidden');
+                schoolSuggestions.classList.add('hidden');
+                
+                selectedSchoolName.textContent = fullSchoolName; // UI에는 전체 이름을 표시
+                selectedSchoolName.dataset.schoolName = schoolName; // 실제 학교 이름 저장
+                selectedSchoolName.dataset.schoolCode = schoolCode; // 학교 코드 저장
+                selectedSchoolName.dataset.schoolKind = schoolKind; // 학교 종류 저장
+                selectedSchoolName.dataset.schoolOfficeCode = schoolOfficeCode; // 교육청 코드 저장
+                selectedSchoolDisplay.classList.remove('hidden');
+
+                // 학년 드롭다운 동적 생성
+                populateGradeSelect(schoolKind);
+
+                gradeSelect.disabled = false;
+                classSelect.disabled = false;
+                checkStepValidityAndToggleNextButton();
+            };
+
+            // 학교 종류에 따라 학년 드롭다운을 채우는 함수
+            const populateGradeSelect = (schoolKind) => {
+                gradeSelect.innerHTML = '<option value="" selected disabled>학년 선택</option>';
+                let maxGrade = 3;
+
+                // 학교 종류에 따라 최대 학년 설정
+                if (schoolKind.includes('초등학교')) {
+                    maxGrade = 6;
+                } else if (schoolKind.includes('중학교') || schoolKind.includes('고등학교')) {
+                    maxGrade = 3;
+                }
+                
+                for (let i = 1; i <= maxGrade; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${i}학년`;
+                    gradeSelect.appendChild(option);
+                }
+
+                // 학년이 변경되면 반 드롭다운을 초기화
+                gradeSelect.addEventListener('change', () => {
+                    populateClassSelect();
+                    checkStepValidityAndToggleNextButton();
+                });
+                classSelect.addEventListener('change', checkStepValidityAndToggleNextButton);
+                
+                // 반 드롭다운 초기화
+                populateClassSelect();
+            };
+            
+            // 반 드롭다운을 채우는 함수
+            const populateClassSelect = () => {
+                classSelect.innerHTML = '<option value="" selected disabled>반 선택</option>';
+                // NEIS API에서 반 정보를 제공하지 않으므로, 임시로 10반까지 표시
+                for (let i = 1; i <= 10; i++) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `${i}반`;
+                    classSelect.appendChild(option);
+                }
+            };
+
+
+            // 학교 변경 버튼 클릭 이벤트
+            changeSchoolButton.addEventListener('click', () => {
+                schoolSearchInput.classList.remove('hidden');
+                selectedSchoolDisplay.classList.add('hidden');
+                selectedSchoolName.textContent = '';
+                selectedSchoolName.dataset.schoolName = '';
+                selectedSchoolName.dataset.schoolCode = '';
+                selectedSchoolName.dataset.schoolKind = '';
+                selectedSchoolName.dataset.schoolOfficeCode = '';
+                gradeSelect.disabled = true;
+                classSelect.disabled = true;
+                gradeSelect.innerHTML = '<option value="" selected disabled>학년 선택</option>';
+                classSelect.innerHTML = '<option value="" selected disabled>반 선택</option>';
+                checkStepValidityAndToggleNextButton();
+            });
+            
+            [gradeSelect, classSelect].forEach(select => {
+                select.addEventListener('change', checkStepValidityAndToggleNextButton);
+            });
+
+            // 로그인 처리 함수
+            const handleLogin = async () => {
+                const email = loginEmailInput.value.trim();
+                const password = loginPasswordInput.value;
+
+                if (nextButton.disabled) {
+                    showMessage("입력 정보를 확인해주세요.");
+                    return;
+                }
+
+                showLoading(true);
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    // 로그인 성공 시 바로 메인 페이지로 리디렉션합니다.
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error("로그인 실패:", error);
+                    let errorMessage = "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.";
+                    if (error.code === 'auth/wrong-password') {
+                        errorMessage = "비밀번호가 올바르지 않습니다.";
+                    } else if (error.code === 'auth/user-not-found') {
+                        errorMessage = "해당 이메일의 사용자를 찾을 수 없습니다.";
+                    }
+                    showMessage(errorMessage);
+                } finally {
+                    showLoading(false);
+                }
+            };
+
+            // 회원가입 처리 함수
+            const handleSignup = async () => {
+                const name = signupNameInput.value.trim();
+                const email = signupEmailInput.value.trim();
+                const password = signupPasswordInput.value;
+                const schoolName = selectedSchoolName.dataset.schoolName; 
+                const schoolCode = selectedSchoolName.dataset.schoolCode;
+                const schoolOfficeCode = selectedSchoolName.dataset.schoolOfficeCode;
+                const grade = gradeSelect.value;
+                const classNum = classSelect.value;
+                
+                if (nextButton.disabled) {
+                    showMessage("입력 정보를 모두 올바르게 입력해주세요.");
+                    return;
+                }
+
+                showLoading(true);
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Firestore에 사용자 추가 정보 저장
+                    const userRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/user_data`);
+                    await setDoc(userRef, {
+                        // 요청하신 대로 name 필드를 추가했습니다.
+                        name: name,
+                        atptOfcdcScCode: schoolOfficeCode,
+                        classNum: parseInt(classNum, 10),
+                        grade: parseInt(grade, 10),
+                        schoolName: schoolName,
+                        sdSchulCode: schoolCode,
+                        updatedAt: new Date()
                     });
 
+                    // 회원가입 성공 시 바로 메인 페이지로 리디렉션합니다.
+                    window.location.href = '/';
+
                 } catch (error) {
-                    console.error('Firebase 앱 초기화 실패:', error);
+                    console.error("회원가입 실패:", error);
+                    let errorMessage = "회원가입에 실패했습니다. 다시 시도해주세요.";
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = "이미 사용 중인 이메일 주소입니다.";
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = "비밀번호는 최소 6자 이상이어야 합니다.";
+                    }
+                    showMessage(errorMessage);
+                } finally {
+                    showLoading(false);
                 }
-            } else if (firebase.apps.length > 0) {
-                app = firebase.app();
-                auth = firebase.auth();
-                db = firebase.firestore(); // 기존 앱 인스턴스에서 Firestore 가져오기
-                console.log('Firebase 앱이 이미 초기화되어 있습니다. 기존 인스턴스 사용.');
-
-                // 페이지 로드 시 이미 로그인된 사용자인지 onAuthStateChanged로 확인
-                // (DOMContentLoaded에서 직접 리다이렉트하지 않고 onAuthStateChanged에게 위임)
-            } else {
-                console.warn('Firebase 설정이 올바르게 제공되지 않았습니다. 로그인 기능이 작동하지 않을 수 있습니다. firebaseConfig 변수를 확인하세요.');
-            }
+            };
 
 
-            // "이메일로 계속할게요" 버튼 클릭 이벤트
-            if (emailLoginButton) {
-                emailLoginButton.addEventListener('click', () => {
-                    console.log('이메일 로그인 버튼 클릭됨.');
-                    hideAllAuthSections();
-                    showModal(); // 애니메이션 포함된 모달 표시 함수 호출
-                    subtitleText.textContent = '계정이 있으신가요?';
-                });
-            }
+            // 단계 업데이트 함수
+            const updateStep = (newStep) => {
+                if (steps[currentStep]) {
+                    steps[currentStep].classList.remove('is-active');
+                }
+                
+                if (steps[newStep]) {
+                    steps[newStep].classList.add('is-active');
+                }
+                
+                currentStep = newStep;
 
-            // 모달의 "네" 버튼 클릭 이벤트 (계정이 있는 경우)
-            if (modalYesButton) {
-                modalYesButton.addEventListener('click', () => {
-                    console.log('모달 "네" 버튼 클릭됨.');
-                    hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
-                    emailInputSection.classList.remove('hidden');
-                    subtitleText.textContent = '이메일 주소를 입력하세요.';
-                    emailInput.focus();
-                });
-            }
-
-            // 모달의 "아니요" 버튼 클릭 이벤트 (계정이 없는 경우)
-            if (modalNoButton) {
-                modalNoButton.addEventListener('click', () => {
-                    console.log('모달 "아니요" 버튼 클릭됨. 회원가입 섹션으로 이동.');
-                    hideModal(); // 애니메이션 포함된 모달 숨기기 함수 호출
-                    hideAllAuthSections();
-                    signUpSection.classList.remove('hidden');
-                    subtitleText.textContent = '회원가입 정보를 입력하세요.';
-                    signUpEmailInput.focus();
-                });
-            }
-
-            // 이메일 입력 섹션의 "다음" 버튼 클릭 이벤트
-            if (emailNextButton) {
-                emailNextButton.addEventListener('click', () => {
-                    console.log('이메일 입력 섹션 "다음" 버튼 클릭됨.');
-                    const email = emailInput.value.trim();
-                    if (!email) {
-                        showMessage('이메일 주소를 입력해주세요.', true);
-                        return;
-                    }
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                        showMessage('유효한 이메일 주소를 입력해주세요.', true);
-                        return;
-                    }
-
-                    hideAllAuthSections();
-                    passwordInputSection.classList.remove('hidden');
-                    subtitleText.textContent = '비밀번호를 입력하세요.';
-                    passwordInput.focus();
-                });
-            }
-
-            // 최종 "로그인" 버튼 클릭 이벤트
-            if (loginFinalButton) {
-                loginFinalButton.addEventListener('click', async () => {
-                    console.log('최종 "로그인" 버튼 클릭됨.');
-                    const email = emailInput.value.trim();
-                    const password = passwordInput.value.trim();
-
-                    if (!email || !password) {
-                        showMessage('이메일과 비밀번호를 모두 입력해주세요.', true);
-                        return;
-                    }
-
-                    if (!auth) {
-                        console.error('Firebase Auth 인스턴스를 사용할 수 없습니다. 초기화 실패.');
-                        showMessage('로그인 서비스를 이용할 수 없습니다. 관리자에게 문의하세요.', true);
-                        return;
-                    }
-
-                    try {
-                        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        showMessage('로그인 성공!', false);
-                        console.log('이메일 로그인 성공:', email);
-
-                        // onAuthStateChanged에서 프로필 확인 및 리다이렉트 처리
-
-                    } catch (error) {
-                        console.error('로그인 오류:', error);
-                        let errorMessage = '로그인 실패. 다시 시도해주세요.';
-                        switch (error.code) {
-                            case 'auth/user-not-found':
-                            case 'auth/wrong-password':
-                                errorMessage = '잘못된 이메일 또는 비밀번호입니다.';
-                                break;
-                            case 'auth/invalid-email':
-                                errorMessage = '유효하지 않은 이메일 주소입니다.';
-                                break;
-                            case 'auth/user-disabled':
-                                errorMessage = '사용이 정지된 계정입니다.';
-                                break;
-                            case 'auth/too-many-requests':
-                                errorMessage = '로그인 시도 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.';
-                                break;
-                            default:
-                                errorMessage = `로그인 오류: ${error.message}`;
+                switch(currentStep) {
+                    case 0:
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.add('hidden');
+                        break;
+                    case 1:
+                        nextButton.classList.add('hidden');
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 2: // 로그인
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 3: // 로그인 - 비밀번호
+                        nextButton.classList.remove('hidden');
+                        const loginIdentifier = loginEmailInput.value;
+                        if (loginIdentifier === '') {
+                             updateStep(2);
+                             return;
                         }
-                        showMessage(errorMessage, true);
-                    }
-                });
-            }
+                        loginUserIdentifier.textContent = loginIdentifier;
+                        nextButton.textContent = '로그인';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 4: // 회원가입 - 기본 정보
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 5: // 회원가입 - 비밀번호
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 6: // 이용약관 및 개인정보 동의
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '다음';
+                        backButton.classList.remove('hidden');
+                        break;
+                    case 7: // 학교 정보
+                        nextButton.classList.remove('hidden');
+                        nextButton.textContent = '가입 완료';
+                        backButton.classList.remove('hidden');
+                        break;
+                    default:
+                        break;
+                }
+                checkStepValidityAndToggleNextButton();
+            };
 
-            // 회원가입 버튼 클릭 이벤트
-            if (signUpButton) {
-                signUpButton.addEventListener('click', async () => {
-                    console.log('회원가입 버튼 클릭됨.');
-                    const email = signUpEmailInput.value.trim();
-                    const password = signUpPasswordInput.value.trim();
-                    const confirmPassword = signUpConfirmPasswordInput.value.trim();
+            nextButton.addEventListener('click', () => {
+                if (nextButton.disabled) return;
+                
+                if (currentStep === 0) {
+                    updateStep(1);
+                } else if (currentStep === 2) {
+                    updateStep(3);
+                } else if (currentStep === 3) {
+                    handleLogin();
+                } else if (currentStep === 4) {
+                    updateStep(5);
+                } else if (currentStep === 5) {
+                    updateStep(6);
+                } else if (currentStep === 6) {
+                    updateStep(7);
+                } else if (currentStep === 7) {
+                    handleSignup();
+                }
+            });
 
-                    if (!email || !password || !confirmPassword) {
-                        showMessage('모든 필드를 입력해주세요.', true);
-                        return;
-                    }
+            backButton.addEventListener('click', () => {
+                if (currentStep === 1) {
+                    updateStep(0);
+                } else if (currentStep === 2) {
+                    updateStep(1);
+                } else if (currentStep === 3) {
+                    updateStep(2);
+                } else if (currentStep === 4) {
+                    updateStep(1);
+                } else if (currentStep === 5) {
+                    updateStep(4);
+                } else if (currentStep === 6) {
+                    updateStep(5);
+                } else if (currentStep === 7) {
+                    updateStep(6);
+                }
+            });
 
-                    if (password.length < 6) {
-                        showMessage('비밀번호는 6자 이상이어야 합니다.', true);
-                        return;
-                    }
+            toLoginButton.addEventListener('click', () => updateStep(2));
+            toSignupButton.addEventListener('click', () => updateStep(4));
 
-                    if (password !== confirmPassword) {
-                        showMessage('비밀번호가 일치하지 않습니다.', true);
-                        return;
-                    }
-
-                    if (!auth) {
-                        console.error('Firebase Auth 인스턴스를 사용할 수 없습니다. 초기화 실패.');
-                        showMessage('회원가입 서비스를 이용할 수 없습니다. 관리자에게 문의하세요.', true);
-                        return;
-                    }
-
-                    try {
-                        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                        const user = userCredential.user;
-                        showMessage('회원가입 성공!', false);
-                        console.log('회원가입 성공:', email);
-
-                        // 회원가입 성공 후 항상 사용자 정보 설정 화면으로 이동 (최초 1회)
-                        hideAllAuthSections();
-                        userInfoSetupSection.classList.remove('hidden');
-                        subtitleText.textContent = '학교, 학년, 반, 번호를 설정해주세요.';
-                        schoolSearchInput.focus(); // 학교 이름 입력 필드에 포커스
-
-                    } catch (error) {
-                        console.error('회원가입 오류:', error);
-                        let errorMessage = '회원가입 실패. 다시 시도해주세요.';
-                        switch (error.code) {
-                            case 'auth/email-already-in-use':
-                                errorMessage = '이미 사용 중인 이메일 주소입니다.';
-                                break;
-                            case 'auth/invalid-email':
-                                errorMessage = '유효하지 않은 이메일 주소입니다.';
-                                break;
-                            case 'auth/weak-password':
-                                errorMessage = '비밀번호가 너무 취약합니다. 더 강력한 비밀번호를 사용해주세요.';
-                                break;
-                            default:
-                                errorMessage = `회원가입 오류: ${error.message}`;
-                        }
-                        showMessage(errorMessage, true);
-                    }
-                });
-            }
-
-            // "로그인 화면으로 돌아가기" 버튼 클릭 이벤트
-            if (backToLoginButton) {
-                backToLoginButton.addEventListener('click', () => {
-                    console.log('"로그인 화면으로 돌아가기" 버튼 클릭됨.');
-                    hideAllAuthSections();
-                    initialButtons.classList.remove('hidden');
-                    subtitleText.textContent = '로그인 방식을 선택하세요.';
-                });
-            }
-
-            // 학교 검색 버튼 클릭 이벤트
-            if (searchSchoolButton) {
-                searchSchoolButton.addEventListener('click', () => {
-                    searchSchool(schoolSearchInput.value.trim());
-                });
-            }
-
-            // 학교 검색 입력 필드에서 Enter 키 눌렀을 때
-            if (schoolSearchInput) {
-                schoolSearchInput.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter') {
-                        searchSchool(schoolSearchInput.value.trim());
-                    }
-                });
-            }
-
-            // 학교 선택 초기화 버튼 클릭 이벤트
-            if (resetSchoolSelection) {
-                resetSchoolSelection.addEventListener('click', resetSelectedSchool);
-            }
-
-            // 사용자 정보 저장 버튼 클릭 이벤트
-            if (saveUserInfoButton) {
-                saveUserInfoButton.addEventListener('click', async () => {
-                    console.log('사용자 정보 저장 버튼 클릭됨.');
-                    const schoolName = selectedSchoolName.textContent.trim(); // 표시된 학교 이름 사용
-                    const atptOfcdcScCode = atptOfcdcScCodeInput.value.trim(); // hidden 필드에서 교육청 코드 가져오기
-                    const sdSchulCode = sdSchulCodeInput.value.trim();         // hidden 필드에서 행정표준코드 가져오기
-                    const grade = gradeSelect.value;
-                    const classNum = classInput.value;
-                    const studentNum = studentNumInput.value;
-
-                    if (!schoolName || schoolName === '학교를 검색하여 선택해주세요.' || !atptOfcdcScCode || !sdSchulCode || !grade || !classNum || !studentNum) {
-                        showMessage('학교 검색 후 선택하고, 학년, 반, 번호를 모두 입력해주세요.', true);
-                        return;
-                    }
-
-                    if (!auth.currentUser) {
-                        showMessage('로그인된 사용자 정보가 없습니다. 다시 로그인해주세요.', true);
-                        console.error('현재 로그인된 사용자가 없습니다.');
-                        return;
-                    }
-
-                    const userId = auth.currentUser.uid;
-                    const success = await saveUserProfile(userId, schoolName, atptOfcdcScCode, sdSchulCode, grade, classNum, studentNum); // 새로운 필드 전달
-
-                    if (success) {
-                        showMessage('학생 정보가 성공적으로 저장되었습니다!', false);
-                        console.log('학생 정보 저장 완료. 로그인 탭으로 이동.');
-                        // 저장 성공 시 메인 페이지 대신 초기 로그인 화면으로 돌아감
-                        hideAllAuthSections();
-                        initialButtons.classList.remove('hidden');
-                        subtitleText.textContent = '로그인 방식을 선택하세요.';
-                        // 입력 필드 초기화 (선택된 학교 정보 포함)
-                        resetSelectedSchool(); // 학교 선택 초기화 함수 호출
-                        gradeSelect.value = '';
-                        classInput.value = '';
-                        studentNumInput.value = '';
-                    }
-                    // 실패 메시지는 saveUserProfile 함수 내에서 처리
-                });
-            }
+            // 초기 단계 설정
+            step0.classList.add('is-active');
+            nextButton.textContent = '다음';
+            checkStepValidityAndToggleNextButton();
         });
     </script>
 </body>
