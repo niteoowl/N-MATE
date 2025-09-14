@@ -183,6 +183,13 @@
             font-size: 0.8rem;
             color: #888;
         }
+        
+        .dc-post-content {
+            font-size: 0.9rem;
+            color: #555;
+            word-break: break-all;
+            margin-top: 5px;
+        }
 
         .dc-right-sidebar {
             background-color: #fff;
@@ -266,11 +273,6 @@
     <div class="dc-container">
         <!-- 메인 콘텐츠 영역 -->
         <main class="dc-main-content">
-            <div class="dc-section-title">
-                <h2>전체 최신 글</h2>
-            </div>
-            <div id="latest-posts" class="mb-4"></div>
-            
             <div class="flex items-center justify-between mb-2">
                 <h2 class="font-bold text-lg">BEST</h2>
                 <span class="text-sm">1 / 10</span>
@@ -281,12 +283,37 @@
                 <h2>전체 채널</h2>
             </div>
             <div id="all-channels" class="dc-channel-list"></div>
+
+            <!-- 게시글 작성 폼 -->
+            <form id="post-form" class="mt-6 hidden">
+                <textarea id="post-content" rows="4" class="w-full rounded border-2 border-gray-300 p-3 mb-2 focus:outline-none focus:border-blue-500 transition-all" placeholder="여기에 글을 작성하세요..."></textarea>
+                <div class="flex justify-between items-center">
+                    <span id="auth-status" class="text-sm text-gray-500">인증 상태 확인 중...</span>
+                    <button type="submit" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-300">게시하기</button>
+                </div>
+            </form>
+
+            <div class="dc-section-title mt-6">
+                <h2>실시간 게시글</h2>
+            </div>
+            <div id="posts-container" class="space-y-4">
+                <p class="text-center text-gray-500">게시글을 불러오는 중...</p>
+            </div>
         </main>
 
         <!-- 오른쪽 사이드바 -->
         <aside class="dc-right-sidebar">
-            <div id="auth-ui-container">
-                <!-- 로그인 UI가 여기에 동적으로 삽입됩니다. -->
+            <!-- 로그인 박스 -->
+            <div class="dc-login-box">
+                <div id="login-container">
+                    <input type="text" placeholder="아이디">
+                    <input type="password" placeholder="비밀번호">
+                    <button class="dc-login-btn">로그인</button>
+                </div>
+                <div id="user-profile" class="hidden">
+                    <p id="user-id-display" class="mb-2 text-sm text-gray-700 break-all"></p>
+                    <button class="dc-login-btn" onclick="signOutUser()">로그아웃</button>
+                </div>
             </div>
             <!-- 인기 채널 리스트 -->
             <div class="dc-section-title">
@@ -298,106 +325,125 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        setLogLevel('debug'); // Firestore 디버그 로깅 활성화
 
-        // Global variables provided by the Canvas environment
+        // 전역 변수
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        // Firebase configuration provided by the user
-        const firebaseConfig = {
-            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
-            authDomain: "n-mate.firebaseapp.com",
-            projectId: "n-mate",
-            storageBucket: "n-mate.firebasestorage.app",
-            messagingSenderId: "691313471077",
-            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
-            measurementId: "G-0LCGVBKXLQ"
+        // Firebase 초기화
+        const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
+        const db = app ? getFirestore(app) : null;
+        const auth = app ? getAuth(app) : null;
+
+        let currentUser = null;
+
+        // HTML 요소 선택
+        const authStatusEl = document.getElementById('auth-status');
+        const postFormEl = document.getElementById('post-form');
+        const postContentEl = document.getElementById('post-content');
+        const postsContainerEl = document.getElementById('posts-container');
+        const loginContainerEl = document.getElementById('login-container');
+        const userProfileEl = document.getElementById('user-profile');
+        const userIdDisplayEl = document.getElementById('user-id-display');
+
+        window.signOutUser = () => {
+            signOut(auth).then(() => {
+                console.log("로그아웃 성공");
+            }).catch((error) => {
+                console.error("로그아웃 실패", error);
+            });
         };
 
-        let auth, db;
-        let isFirebaseReady = false;
-
-        const authUIContainer = document.getElementById('auth-ui-container');
-
-        // Check for valid Firebase configuration before initialization
-        if (firebaseConfig && firebaseConfig.apiKey) {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                isFirebaseReady = true;
-                
-                // Listen for authentication state changes only if Firebase is ready
-                onAuthStateChanged(auth, (user) => {
-                    renderAuthUI(user);
-                });
-            } catch (error) {
-                console.error("Firebase 초기화 중 오류가 발생했습니다:", error);
-                authUIContainer.innerHTML = `<div class="dc-login-box text-red-500 font-bold">Firebase 초기화 실패.<br>설정을 확인하세요.</div>`;
-            }
-        } else {
-            console.error("Firebase 설정이 유효하지 않습니다.");
-            authUIContainer.innerHTML = `<div class="dc-login-box text-red-500 font-bold">Firebase 설정이 누락되었습니다.<br>일부 기능이 동작하지 않습니다.</div>`;
-        }
-
-        // Function to render UI based on authentication state
-        async function renderAuthUI(user) {
-            authUIContainer.innerHTML = '';
-            
-            if (user && db) {
-                // User is signed in, show profile and logout button
-                const userId = user.uid;
-                const profileDocRef = doc(db, 'artifacts/' + appId + '/users/' + userId + '/user_data/profile');
-                const profileDocSnap = await getDoc(profileDocRef);
-                
-                let userName = '손님';
-                if (profileDocSnap.exists()) {
-                    userName = profileDocSnap.data().name;
-                } else {
-                    // For demonstration, save a sample name
-                    await setDoc(profileDocRef, { name: '테스트유저' });
-                    userName = '테스트유저';
-                }
-
-                authUIContainer.innerHTML = `
-                    <div class="dc-login-box">
-                        <div class="text-lg font-bold mb-2">${userName}님</div>
-                        <button id="logout-btn" class="dc-login-btn">로그아웃</button>
-                    </div>
-                `;
-                document.getElementById('logout-btn').addEventListener('click', () => {
-                    signOut(auth);
-                });
-
+        // 인증 상태 변경 리스너
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                authStatusEl.textContent = `로그인됨 (ID: ${user.uid.substring(0, 8)}...)`;
+                userIdDisplayEl.textContent = `UID: ${user.uid}`;
+                loginContainerEl.classList.add('hidden');
+                userProfileEl.classList.remove('hidden');
+                postFormEl.classList.remove('hidden');
+                console.log("로그인 성공: ", user.uid);
             } else {
-                // User is signed out, show login form
-                authUIContainer.innerHTML = `
-                    <div class="dc-login-box">
-                        <input type="text" placeholder="아이디" id="username-input">
-                        <input type="password" placeholder="비밀번호" id="password-input">
-                        <button id="login-btn" class="dc-login-btn" ${isFirebaseReady ? '' : 'disabled'}>로그인</button>
-                    </div>
-                `;
-                if (isFirebaseReady) {
-                    document.getElementById('login-btn').addEventListener('click', async () => {
-                        try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            }
-                        } catch (error) {
-                            console.error("Error signing in: ", error);
-                        }
-                    });
+                currentUser = null;
+                authStatusEl.textContent = '로그아웃됨';
+                userIdDisplayEl.textContent = '';
+                loginContainerEl.classList.remove('hidden');
+                userProfileEl.classList.add('hidden');
+                postFormEl.classList.add('hidden');
+                console.log("로그아웃 상태");
+                // 토큰이 있는 경우 자동 로그인 시도
+                if (initialAuthToken) {
+                    try {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("자동 로그인 성공");
+                    } catch (error) {
+                        console.error("자동 로그인 실패", error);
+                    }
                 }
             }
+        });
+
+        // 커뮤니티 데이터베이스 리스너
+        if (db) {
+            const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
+            const q = query(communityRef, orderBy('timestamp', 'desc'));
+
+            onSnapshot(q, (snapshot) => {
+                postsContainerEl.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const post = doc.data();
+                    renderPost(post);
+                });
+            }, (error) => {
+                console.error("게시글 불러오기 실패:", error);
+                postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
+            });
         }
 
-        // Call renderAuthUI for initial render
-        renderAuthUI(null);
+        // 새 게시글 작성
+        postFormEl.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = postContentEl.value.trim();
 
-        // 나머지 기존 코드
+            if (content.length > 0 && currentUser) {
+                try {
+                    await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
+                        userId: currentUser.uid,
+                        userName: `사용자_${currentUser.uid.substring(0, 8)}`,
+                        content: content,
+                        timestamp: serverTimestamp()
+                    });
+                    postContentEl.value = '';
+                } catch (error) {
+                    console.error("게시글 작성 실패:", error);
+                    alert("게시글 작성에 실패했습니다.");
+                }
+            } else {
+                alert("로그인이 필요하거나 내용이 비어있습니다.");
+            }
+        });
+
+        // 게시글 렌더링 함수
+        function renderPost(post) {
+            const postCard = document.createElement('div');
+            postCard.className = 'bg-white rounded border border-gray-200 p-4 mb-4';
+            postCard.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-bold text-gray-800">${post.userName}</span>
+                    <span class="text-xs text-gray-500">${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : '방금 전'}</span>
+                </div>
+                <p class="dc-post-content">${post.content}</p>
+            `;
+            postsContainerEl.appendChild(postCard);
+        }
+
+        // JavaScript를 사용하여 동적으로 컨텐츠를 추가
         const realtimePostsData = [
             { title: 'BEST 게시글 1입니다.', author: 'BEST-1', date: '10:00', comments: 15, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
             { title: 'BEST 게시글 2입니다.', author: 'BEST-2', date: '09:50', comments: 3, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
@@ -406,14 +452,6 @@
             { title: 'BEST 게시글 5입니다.', author: 'BEST-5', date: '09:20', comments: 10, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
         ];
         
-        const latestPostsData = [
-            { title: '최신 게시글 1', author: '작성자1', channel: '애니메이션', date: '10:10', comments: 2 },
-            { title: '최신 게시글 2', author: '작성자2', channel: '방송', date: '10:09', comments: 5 },
-            { title: '최신 게시글 3', author: '작성자3', channel: '스포츠', date: '10:08', comments: 1 },
-            { title: '최신 게시글 4', author: '작성자4', channel: '게임', date: '10:07', comments: 9 },
-            { title: '최신 게시글 5', author: '작성자5', channel: '음악', date: '10:06', comments: 0 },
-        ];
-
         const channelListData = {
             "주제별 채널": ['게임', '음악', '방송', '스포츠'],
             "지역별 채널": ['서울', '경기', '부산', '대구']
@@ -437,19 +475,6 @@
                 </div>
             `;
             realtimePostsContainer.appendChild(postItem);
-        });
-
-        const latestPostsContainer = document.getElementById('latest-posts');
-        latestPostsData.forEach(post => {
-            const postItem = document.createElement('div');
-            postItem.className = 'flex items-center py-1 border-b border-gray-200';
-            postItem.innerHTML = `
-                <span class="text-blue-500 font-bold w-1/4 md:w-auto">[${post.channel}]</span>
-                <a href="#" class="hover:underline flex-grow overflow-hidden whitespace-nowrap overflow-ellipsis mr-2">${post.title}</a>
-                <span class="text-gray-400 mr-2">(${post.comments})</span>
-                <div class="text-xs text-gray-500">${post.date}</div>
-            `;
-            latestPostsContainer.appendChild(postItem);
         });
 
         const allChannelsContainer = document.getElementById('all-channels');
