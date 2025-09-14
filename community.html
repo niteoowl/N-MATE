@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE: HTML>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -366,12 +366,13 @@
             };
             
             // Firebase 관련 모든 로직을 Firebase 객체가 유효한지 확인하는 조건문으로 감쌉니다.
+            // 구성 변수가 유효하지 않으면 이 블록은 건너뛰고 오류 메시지를 표시합니다.
             if (app && db && auth) {
                 // 인증 상태 변경 리스너
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUser = user;
-                        authStatusEl.textContent = `로그인됨 (ID: ${user.uid.substring(0, 8)}...)`;
+                        authStatusEl.textContent = `로그인됨 (ID: ${user.uid})`;
                         userIdDisplayEl.textContent = `UID: ${user.uid}`;
                         loginContainerEl.classList.add('hidden');
                         userProfileEl.classList.remove('hidden');
@@ -409,7 +410,6 @@
                                     postContentEl.value = '';
                                 } catch (error) {
                                     console.error("게시글 작성 실패:", error);
-                                    // 사용자에게 알림 대신 콘솔에 오류를 로깅합니다.
                                     console.log("게시글 작성에 실패했습니다.");
                                 }
                             } else {
