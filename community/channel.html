@@ -58,17 +58,14 @@
                 <li><a href="#" class="hover:text-blue-600">N-MATE 바로가기</a></li>
                 <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
             </ul>
-            <div class="text-xs text-gray-500 flex-shrink-0 ml-4">
-                <p>지금 1,072,392개 게시글 등록</p>
-            </div>
         </div>
     </nav>
 
     <!-- Main Content Area -->
     <main id="main-content" class="mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 max-w-7xl">
         
-        <!-- Left Column (Main Channel Content) -->
-        <div class="lg:w-3/4 space-y-4">
+        <!-- Main Channel Content (full width) -->
+        <div class="lg:w-full space-y-4">
              <!-- All Channels List -->
             <div class="bg-white p-4 border border-gray-300">
                 <div class="flex justify-between items-center mb-4">
@@ -110,14 +107,6 @@
                         </a>
                     </li>
                 </ul>
-            </div>
-        </div>
-
-        <!-- Right Column (Login/User Section) -->
-        <div class="lg:w-1/4 space-y-4">
-            <!-- Login/User Section -->
-            <div id="user-profile-section" class="bg-white p-4 border border-gray-300">
-                <!-- User profile content will be loaded here -->
             </div>
         </div>
     </main>
@@ -199,7 +188,6 @@
         // Function to update the UI based on user's login state
         const updateUI = async (user) => {
             console.log("updateUI called. User:", user ? user.uid : "null");
-            const loginSection = document.getElementById('user-profile-section');
             const navLoginLink = document.getElementById('nav-login-link');
             const mainContent = document.getElementById('main-content');
             
@@ -214,40 +202,14 @@
                     const docRef = doc(db, docPath);
                     const docSnap = await getDoc(docRef);
                     const userName = docSnap.exists() ? docSnap.data().name || '방문자' : '방문자';
-
-                    loginSection.innerHTML = `
-                        <div class="p-4 flex flex-col items-center">
-                            <p class="text-sm font-bold">안녕하세요, ${userName}님!</p>
-                            <div class="mt-2 text-xs text-gray-500 text-center">
-                                <p>내 ID: ${userId}</p>
-                            </div>
-                            <button id="logout-button" class="mt-4 bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700 w-full">로그아웃</button>
-                        </div>
-                    `;
-
-                    document.getElementById('logout-button').addEventListener('click', async () => {
-                        await signOut(auth);
-                        console.log("User signed out.");
-                    });
                     
                     navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                 } catch (error) {
                     console.error("Error fetching user data:", error);
-                    loginSection.innerHTML = `
-                        <div class="p-4">
-                            <p class="text-sm font-bold">데이터 로딩 오류</p>
-                            <p class="text-xs text-gray-500 mt-2">다시 시도해주세요.</p>
-                        </div>
-                    `;
                     navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
                 }
             } else {
                 // User is logged out, show simple login link
-                loginSection.innerHTML = `
-                    <div class="p-4 flex flex-col items-center">
-                        <a href="#" class="block w-full text-center bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">로그인</a>
-                    </div>
-                `;
                 navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
             }
         };
