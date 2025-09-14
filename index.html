@@ -3,515 +3,1146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커뮤니티</title>
+    <link rel="icon" type="image/png" href="/image/n-mate_favicon.png
+">
+    <title>N-MATE | 중학생을 위한 시간표, 급식표, 학사일정</title>
+    <meta name=”description” content=”중학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.”>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: 'Nanum Gothic', sans-serif;
-            background-color: #fff;
-            margin: 0;
-            padding: 0;
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #ffffff;
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;     /* Firefox */
+            -ms-user-select: none;      /* IE10+ */
+            user-select: none;          /* Standard syntax */
         }
-
-        .dc-top-bar {
-            background-color: #2e64b3;
-            height: 5px;
+        .scrollable-content {
+            padding-bottom: 96px;
         }
-
-        .dc-header {
-            background-color: #f7f7f7;
-            border-bottom: 1px solid #c7c7c7;
-            padding: 10px 0;
-        }
-
-        .dc-header-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .dc-logo-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #2e64b3;
-        }
-
-        .dc-logo-container img {
-            height: 30px;
-        }
-
-        .dc-search-form {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dc-search-input {
-            border: 1px solid #ccc;
-            padding: 5px 10px;
-            border-radius: 0;
-            width: 300px;
-            font-size: 0.875rem;
-        }
-
-        .dc-search-btn {
-            background-color: #333;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 0;
-            cursor: pointer;
-        }
-
-        .dc-nav {
-            background-color: #3f7ac2;
-        }
-
-        .dc-nav-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 5px 0;
-            font-size: 0.875rem;
-        }
-
-        .dc-nav-links {
-            display: flex;
-            gap: 1rem;
-            color: #fff;
-        }
-
-        .dc-nav-links a {
-            color: #fff;
-            text-decoration: none;
-        }
-
-        .dc-nav-links a:hover {
-            text-decoration: underline;
-        }
-
-        .dc-container {
-            max-width: 1000px;
-            margin: 1rem auto;
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
-        }
-        
-        @media (max-width: 768px) {
-            .dc-container {
-                grid-template-columns: 1fr;
-            }
-            .dc-right-sidebar {
-                display: none;
-            }
-            .dc-header-inner {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            .dc-search-form {
-                width: 100%;
-            }
-            .dc-search-input {
-                width: 100%;
-            }
-            .dc-nav-inner {
-                flex-direction: row;
-                justify-content: center;
-                gap: 1rem;
-                padding: 10px;
-            }
-            .dc-main-content {
-                border: none;
+        @media (min-width: 768px) {
+            .scrollable-content {
+                padding-bottom: 0;
             }
         }
-
-        .dc-main-content {
-            background-color: #fff;
-            padding: 1rem;
-            border: 1px solid #ccc;
+        .dropdown-menu {
+            display: none;
+            right: 0;
+            top: 100%;
         }
-
-        .dc-sidebar {
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 1rem;
+        .dropdown-menu.active {
+            display: block;
         }
-
-        .dc-section-title {
-            font-weight: 700;
-            color: #333;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 1rem;
+        .calendar-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
         }
-
-        .dc-post-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+        .calendar-container {
+            transition: transform 0.3s ease-in-out;
+            transform: translateY(100%);
         }
-
-        .dc-post-item img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 0;
+        .calendar-overlay.active {
+            opacity: 1;
         }
-
-        .dc-post-info {
-            flex-grow: 1;
+        .calendar-container.active {
+            transform: translateY(0);
         }
-
-        .dc-post-title {
-            font-weight: 700;
-            font-size: 0.9rem;
+        .skeleton {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
-        
-        .dc-post-meta {
-            font-size: 0.8rem;
-            color: #888;
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
         }
-        
-        .dc-post-content {
-            font-size: 0.9rem;
-            color: #555;
-            word-break: break-all;
-            margin-top: 5px;
+        /* Ripple effect styles */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
-
-        .dc-right-sidebar {
-            background-color: #fff;
-            padding: 1rem;
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            will-change: transform, opacity;
+            opacity: 0.36;
+            background-color: rgba(0,0,0,0.12);
         }
-
-        .dc-login-box {
-            border: 1px solid #ccc;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .dc-login-box input {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin-bottom: 5px;
-        }
-
-        .dc-login-btn {
-            background-color: #2e64b3;
-            color: #fff;
-            width: 100%;
-            padding: 8px;
-            font-weight: 700;
-            border-radius: 0;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        
-        .dc-sub-list li {
-            padding: 5px 0;
-            font-size: 0.875rem;
-        }
-        .dc-channel-list {
-            display: grid;
-            gap: 1rem;
-        }
-        .dc-channel-group-title {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #333;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #ccc;
-            margin-top: 10px;
-            margin-bottom: 5px;
-        }
-        .dc-channel-group-title:first-of-type {
-            margin-top: 0;
-        }
-        .dc-channel-item-text {
-            padding: 5px 0;
-            font-size: 0.875rem;
+        .ripple.animate {
+            transition: transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms linear;
+            transform: translate(-50%,-50%) scale(1);
+            opacity: 0;
         }
     </style>
 </head>
-<body>
-    <div class="dc-top-bar"></div>
-    <header class="dc-header">
-        <div class="dc-header-inner">
-            <div class="dc-logo-container">
-                <img src="https://i.postimg.cc/rscRF3ky/simbol.webp" alt="커뮤니티 로고">
-                <span>커뮤니티</span>
-            </div>
-            <div class="dc-search-form">
-                <input type="text" placeholder="채널 & 통합검색" class="dc-search-input">
-                <button class="dc-search-btn">Q</button>
-            </div>
-        </div>
-    </header>
-    <nav class="dc-nav">
-        <div class="dc-nav-inner">
-            <div class="dc-nav-links">
-                <a href="#">채널</a>
-                <a href="#">채널 히스토리</a>
-            </div>
-        </div>
-    </nav>
+<body onselectstart="return false">
 
-    <div class="dc-container">
-        <!-- 메인 콘텐츠 영역 -->
-        <main class="dc-main-content">
-            <div class="flex items-center justify-between mb-2">
-                <h2 class="font-bold text-lg">BEST</h2>
-                <span class="text-sm">1 / 10</span>
+    <!-- Mobile UI (768px 미만에서만 보임) -->
+    <div class="h-screen flex flex-col md:hidden">
+        <!-- 상단 헤더 -->
+        <header class="bg-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
             </div>
-            <div id="realtime-best-posts" class="mb-4"></div>
-            
-            <div class="dc-section-title">
-                <h2>전체 채널</h2>
-            </div>
-            <div id="all-channels" class="dc-channel-list"></div>
 
-            <!-- 게시글 작성 폼 -->
-            <form id="post-form" class="mt-6 hidden">
-                <textarea id="post-content" rows="4" class="w-full rounded border-2 border-gray-300 p-3 mb-2 focus:outline-none focus:border-blue-500 transition-all" placeholder="여기에 글을 작성하세요..."></textarea>
-                <div class="flex justify-between items-center">
-                    <span id="auth-status" class="text-sm text-gray-500">인증 상태 확인 중...</span>
-                    <button type="submit" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-300">게시하기</button>
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-mobile" class="relative">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-mobile" class="hidden">
+                    <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                        <span id="user-name-mobile">이름</span>
+                    </button>
+                    <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
                 </div>
-            </form>
-
-            <div class="dc-section-title mt-6">
-                <h2>실시간 게시글</h2>
             </div>
-            <div id="posts-container" class="space-y-4">
-                <p class="text-center text-gray-500">게시글을 불러오는 중...</p>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
+
+            <!-- 오늘의 메뉴 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 메뉴
+                </h2>
+                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 급식 카드들 (중식만 남김) -->
+            <div class="grid grid-cols-1 gap-4">
+                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                        중식
+                    </h3>
+                    <ul id="lunch-list-mobile" class="mt-2 space-y-1 text-sm text-gray-700">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 오늘의 시간표 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 시간표
+                </h2>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+            <div>
+                <ul id="timetable-list-mobile" class="text-sm text-gray-700">
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                </ul>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 이번 달 학사일정 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    이번 달 학사일정
+                </h2>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <!-- 학사일정 리스트 -->
+            <div>
+                <ul id="schedule-list-mobile" class="text-sm text-gray-700">
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                </ul>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 시험 디데이 섹션 -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    시험 디데이
+                </h2>
+                <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <div class="flex justify-around items-center text-center">
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">3모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">6모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">9모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">수능</span>
+                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                </div>
+            </div>
+
+            <div class="h-4"></div>
+
+            <!-- 오늘의 뉴스 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 뉴스
+                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
+                </h2>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
+            </div>
+
+            <div>
+                <ul id="news-list-mobile" class="text-sm text-gray-700">
+                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
+                </ul>
+                <div class="flex justify-center mt-4">
+                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
+                        더보기
+                    </button>
+                </div>
             </div>
         </main>
 
-        <!-- 오른쪽 사이드바 -->
-        <aside class="dc-right-sidebar">
-            <!-- 로그인 박스 -->
-            <div class="dc-login-box">
-                <div id="login-container">
-                    <input type="text" placeholder="아이디">
-                    <input type="password" placeholder="비밀번호">
-                    <button class="dc-login-btn">로그인</button>
+        <!-- 하단 내비게이션 바 -->
+        <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
+            <div class="flex justify-around items-center px-4 py-3">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="home" href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="community" href="/community">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- PC UI (768px 이상에서만 보임) -->
+    <div class="hidden h-screen md:flex md:flex-row">
+        <!-- 좌측 사이드바 -->
+        <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
+            <div>
+                <div class="mb-4">
+                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
                 </div>
-                <div id="user-profile" class="hidden">
-                    <p id="user-id-display" class="mb-2 text-sm text-gray-700 break-all"></p>
-                    <button class="dc-login-btn" onclick="signOutUser()">로그아웃</button>
+                <nav class="space-y-1">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                        </svg>
+                        <span>홈</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                        </svg>
+                        <span>학교생활</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/community">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                        <span>커뮤니티</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                        <span>더보기</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-desktop" class="relative mt-4">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-desktop" class="hidden">
+                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
+                        <span id="user-name-desktop">이름</span>
+                    </button>
+                    <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <!-- 인기 채널 리스트 -->
-            <div class="dc-section-title">
-                <h2>인기 채널</h2>
-            </div>
-            <ul id="popular-channels" class="dc-sub-list"></ul>
         </aside>
+
+        <!-- 우측 메인 콘텐츠 영역 -->
+        <main class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+            <!-- 상단 검색 및 알림 영역 -->
+
+            <!-- 오늘의 메뉴 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 메뉴
+                </h2>
+                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 급식 카드들 (중식만 남김) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                        중식
+                    </h3>
+                    <ul id="lunch-list-desktop" class="mt-2 space-y-1 text-sm text-gray-700">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 오늘의 시간표 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 시간표
+                </h2>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+            <div>
+                <ul id="timetable-list-desktop" class="text-sm text-gray-700">
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                </ul>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 이번 달 학사일정 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    이번 달 학사일정
+                </h2>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <!-- 학사일정 리스트 -->
+            <div>
+                <ul id="schedule-list-desktop" class="text-sm text-gray-700">
+                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                </ul>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 시험 디데이 섹션 -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    시험 디데이
+                </h2>
+                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+            </div>
+
+            <div class="flex justify-around items-center text-center">
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">3모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">6모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">9모</span>
+                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                </div>
+                <div class="flex flex-col items-center">
+                    <span class="text-sm text-gray-500">수능</span>
+                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                </div>
+            </div>
+
+            <div class="h-6"></div>
+
+            <!-- 오늘의 뉴스 섹션 -->
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                    오늘의 뉴스
+                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
+                </h2>
+                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
+            </div>
+
+            <div>
+                <ul id="news-list-desktop" class="text-sm text-gray-700">
+                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
+                </ul>
+                 <div class="flex justify-center mt-4">
+                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
+                        더보기
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Calendar Modal Overlay -->
+    <div id="calendar-overlay" class="fixed inset-0 z-50 flex items-end justify-center calendar-overlay hidden">
+        <div id="calendar-container" class="w-full max-w-sm mx-auto bg-white rounded-t-3xl shadow-xl p-6 calendar-container">
+            <!-- Calendar Header with month navigation -->
+            <div class="flex justify-between items-center mb-4">
+                <button id="prev-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                    </svg>
+                </button>
+                <span id="calendar-header" class="text-xl font-bold"></span>
+                <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                    </svg>
+                </button>
+                <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
+                    </svg>
+                </button>
+            </div>
+            <!-- Weekday Headers -->
+            <div class="grid grid-cols-7 text-center font-semibold text-sm text-gray-500 mb-2">
+                <div>일</div>
+                <div>월</div>
+                <div>화</div>
+                <div>수</div>
+                <div>목</div>
+                <div>금</div>
+                <div>토</div>
+            </div>
+            <!-- Calendar Grid -->
+            <div id="calendar-grid" class="grid grid-cols-7 text-center">
+                <!-- 날짜들이 여기에 동적으로 삽입됩니다 -->
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        setLogLevel('debug'); // Firestore 디버그 로깅 활성화
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 전역 변수
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Firebase configuration and initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // Firebase 초기화
-        const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
-        const db = app ? getFirestore(app) : null;
-        const auth = app ? getAuth(app) : null;
+        // NEIS Open API 설정
+        const NEIS_API_KEY = "cbb4da48e87445f68c2732368454ebc3";
+        const NEIS_BASE_URL = "https://open.neis.go.kr/hub/";
 
-        let currentUser = null;
+        // UI 요소
+        const loginBtnMobile = document.getElementById('login-btn-mobile');
+        const profileContainerMobile = document.getElementById('profile-dropdown-container-mobile');
+        const profileBtnMobile = document.getElementById('profile-btn-mobile');
+        const userNameMobile = document.getElementById('user-name-mobile');
+        const dropdownMenuMobile = document.getElementById('dropdown-menu-mobile');
+        const logoutBtnMobile = document.getElementById('logout-btn-mobile');
 
-        // HTML 요소 선택
-        const authStatusEl = document.getElementById('auth-status');
-        const postFormEl = document.getElementById('post-form');
-        const postContentEl = document.getElementById('post-content');
-        const postsContainerEl = document.getElementById('posts-container');
-        const loginContainerEl = document.getElementById('login-container');
-        const userProfileEl = document.getElementById('user-profile');
-        const userIdDisplayEl = document.getElementById('user-id-display');
+        const loginBtnDesktop = document.getElementById('login-btn-desktop');
+        const profileContainerDesktop = document.getElementById('profile-dropdown-container-desktop');
+        const profileBtnDesktop = document.getElementById('profile-btn-desktop');
+        const userNameDesktop = document.getElementById('user-name-desktop');
+        const dropdownMenuDesktop = document.getElementById('dropdown-menu-desktop');
+        const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
 
-        window.signOutUser = () => {
-            if (auth) {
-                signOut(auth).then(() => {
-                    console.log("로그아웃 성공");
-                }).catch((error) => {
-                    console.error("로그아웃 실패", error);
-                });
+        const showCalendarBtnMobile = document.getElementById('show-calendar-btn-mobile');
+        const showCalendarBtnDesktop = document.getElementById('show-calendar-btn-desktop');
+        const calendarOverlay = document.getElementById('calendar-overlay');
+        const calendarContainer = document.getElementById('calendar-container');
+        const calendarHeader = document.getElementById('calendar-header');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const closeCalendarBtn = document.getElementById('close-calendar-btn');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+
+        const lunchListMobile = document.getElementById('lunch-list-mobile');
+        const lunchListDesktop = document.getElementById('lunch-list-desktop');
+        const timetableListMobile = document.getElementById('timetable-list-mobile');
+        const timetableListDesktop = document.getElementById('timetable-list-desktop');
+        const scheduleListMobile = document.getElementById('schedule-list-mobile');
+        const scheduleListDesktop = document.getElementById('schedule-list-desktop');
+        const newsListMobile = document.getElementById('news-list-mobile');
+        const newsListDesktop = document.getElementById('news-list-desktop');
+        const loadMoreNewsMobileBtn = document.getElementById('load-more-news-mobile');
+        const loadMoreNewsDesktopBtn = document.getElementById('load-more-news-desktop');
+
+        let userSchoolData = null;
+        let selectedDate = new Date();
+        let isAuthenticated = false;
+        let newsData = [];
+        let newsItemsToShow = 3;
+
+        // 로그인 상태에 따른 UI 업데이트
+        const updateUIBasedOnAuth = () => {
+            const loginMessage = '<li class="text-center text-sm text-gray-500 py-4">로그인하면<br>학교 정보를 불러올 수 있어요.</li>';
+
+            if (isAuthenticated) {
+                // 로그인 상태 - 데이터 로딩을 시작하고 스켈레톤을 표시
+                if (userSchoolData) {
+                    fetchAndRenderAllData(selectedDate);
+                }
             } else {
-                console.error("인증 객체가 유효하지 않습니다.");
+                // 로그아웃 상태 - 모든 목록에 알림 메시지 표시
+                lunchListMobile.innerHTML = loginMessage;
+                lunchListDesktop.innerHTML = loginMessage;
+                timetableListMobile.innerHTML = loginMessage;
+                timetableListDesktop.innerHTML = loginMessage;
+                scheduleListMobile.innerHTML = loginMessage;
+                scheduleListDesktop.innerHTML = loginMessage;
             }
         };
-        
-        // Firebase 관련 모든 로직을 Firebase 객체가 유효한지 확인하는 조건문으로 감쌉니다.
-        if (app && db && auth) {
-            // 인증 상태 변경 리스너
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUser = user;
-                    authStatusEl.textContent = `로그인됨 (ID: ${user.uid.substring(0, 8)}...)`;
-                    userIdDisplayEl.textContent = `UID: ${user.uid}`;
-                    loginContainerEl.classList.add('hidden');
-                    userProfileEl.classList.remove('hidden');
-                    postFormEl.classList.remove('hidden');
-                    console.log("로그인 성공: ", user.uid);
 
-                    // 커뮤니티 데이터베이스 리스너
-                    const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
-                    const q = query(communityRef, orderBy('timestamp', 'desc'));
-
-                    onSnapshot(q, (snapshot) => {
-                        postsContainerEl.innerHTML = '';
-                        snapshot.forEach((doc) => {
-                            const post = doc.data();
-                            renderPost(post);
-                        });
-                    }, (error) => {
-                        console.error("게시글 불러오기 실패:", error);
-                        postsContainerEl.innerHTML = `<p class="text-red-500 text-center">게시글을 불러오는 데 실패했습니다.</p>`;
-                    });
-                    
-                    // 새 게시글 작성
-                    postFormEl.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const content = postContentEl.value.trim();
-
-                        if (content.length > 0 && currentUser) {
-                            try {
-                                await addDoc(collection(db, `artifacts/${appId}/public/data/community_posts`), {
-                                    userId: currentUser.uid,
-                                    userName: `사용자_${currentUser.uid.substring(0, 8)}`,
-                                    content: content,
-                                    timestamp: serverTimestamp()
-                                });
-                                postContentEl.value = '';
-                            } catch (error) {
-                                console.error("게시글 작성 실패:", error);
-                                alert("게시글 작성에 실패했습니다.");
-                            }
-                        } else {
-                            alert("로그인이 필요하거나 내용이 비어있습니다.");
-                        }
-                    });
-
-                } else {
-                    currentUser = null;
-                    authStatusEl.textContent = '로그아웃됨';
-                    userIdDisplayEl.textContent = '';
-                    loginContainerEl.classList.remove('hidden');
-                    userProfileEl.classList.add('hidden');
-                    postFormEl.classList.add('hidden');
-                    console.log("로그아웃 상태");
-                    // 토큰이 있는 경우 자동 로그인 시도
-                    if (initialAuthToken) {
-                        try {
-                            await signInWithCustomToken(auth, initialAuthToken);
-                            console.log("자동 로그인 성공");
-                        } catch (error) {
-                            console.error("자동 로그인 실패", error);
-                        }
-                    }
-                }
-            });
-
-        } else {
-            // Firebase 초기화 실패 시 사용자에게 알림
-            authStatusEl.textContent = '로그인 서비스 사용 불가';
-            console.error("Firebase를 초기화할 수 없습니다. 구성 변수가 누락되었습니다.");
-            postsContainerEl.innerHTML = `<p class="text-center text-red-500">로그인 서비스를 이용할 수 없습니다.</p>`;
-        }
-
-
-        // 게시글 렌더링 함수
-        function renderPost(post) {
-            const postCard = document.createElement('div');
-            postCard.className = 'bg-white rounded border border-gray-200 p-4 mb-4';
-            postCard.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-gray-800">${post.userName}</span>
-                    <span class="text-xs text-gray-500">${post.timestamp ? new Date(post.timestamp.toDate()).toLocaleString() : '방금 전'}</span>
-                </div>
-                <p class="dc-post-content">${post.content}</p>
-            `;
-            postsContainerEl.appendChild(postCard);
-        }
-
-        // JavaScript를 사용하여 동적으로 컨텐츠를 추가
-        const realtimePostsData = [
-            { title: 'BEST 게시글 1입니다.', author: 'BEST-1', date: '10:00', comments: 15, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 2입니다.', author: 'BEST-2', date: '09:50', comments: 3, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 3입니다.', author: 'BEST-3', date: '09:40', comments: 20, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 4입니다.', author: 'BEST-4', date: '09:30', comments: 7, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-            { title: 'BEST 게시글 5입니다.', author: 'BEST-5', date: '09:20', comments: 10, thumbnail: 'https://placehold.co/60x60/EFEFEF/999999?text=Image' },
-        ];
-        
-        const channelListData = {
-            "주제별 채널": ['게임', '음악', '방송', '스포츠'],
-            "지역별 채널": ['서울', '경기', '부산', '대구']
+        // 로그아웃 함수
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+                console.log("User signed out successfully.");
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
         };
 
-        const popularChannelsData = [
-            '야구', '주식', '롤', 'IT', '음악', '연예인', '요리', '여행'
-        ];
+        // 드롭다운 메뉴 토글
+        const toggleDropdown = (menu) => {
+            menu.classList.toggle('active');
+        };
 
-        const realtimePostsContainer = document.getElementById('realtime-best-posts');
-        realtimePostsData.forEach(post => {
-            const postItem = document.createElement('div');
-            postItem.className = 'dc-post-item';
-            postItem.innerHTML = `
-                <img src="${post.thumbnail}" alt="thumbnail">
-                <div class="dc-post-info">
-                    <div class="dc-post-title">${post.title}</div>
-                    <div class="dc-post-meta">
-                        <span>${post.author}</span> | <span>${post.date}</span> | <span class="text-blue-500">댓글 ${post.comments}</span>
-                    </div>
-                </div>
-            `;
-            realtimePostsContainer.appendChild(postItem);
-        });
-
-        const allChannelsContainer = document.getElementById('all-channels');
-        for (const group in channelListData) {
-            const groupTitle = document.createElement('div');
-            groupTitle.className = 'dc-channel-group-title';
-            groupTitle.textContent = group;
-            allChannelsContainer.appendChild(groupTitle);
-
-            channelListData[group].forEach(channel => {
-                const channelItem = document.createElement('div');
-                channelItem.className = 'dc-channel-item-text';
-                channelItem.innerHTML = `<a href="#">${channel} 채널</a>`;
-                allChannelsContainer.appendChild(channelItem);
-            });
+        // 프로필 버튼 이벤트 리스너
+        if (profileBtnMobile) {
+            profileBtnMobile.addEventListener('click', () => toggleDropdown(dropdownMenuMobile));
+        }
+        if (profileBtnDesktop) {
+            profileBtnDesktop.addEventListener('click', () => toggleDropdown(dropdownMenuDesktop));
+        }
+        if (logoutBtnMobile) {
+            logoutBtnMobile.addEventListener('click', handleLogout);
+        }
+        if (logoutBtnDesktop) {
+            logoutBtnDesktop.addEventListener('click', handleLogout);
         }
 
-        const popularChannelsContainer = document.getElementById('popular-channels');
-        popularChannelsData.forEach(channel => {
-            const listItem = document.createElement('li');
-            listItem.className = 'border-b border-gray-200';
-            listItem.innerHTML = `<a href="#">${channel}</a>`;
-            popularChannelsContainer.appendChild(listItem);
+        // 드롭다운 메뉴 외 클릭 시 닫기
+        window.addEventListener('click', (event) => {
+            if (profileContainerMobile && !profileContainerMobile.contains(event.target) && dropdownMenuMobile.classList.contains('active')) {
+                dropdownMenuMobile.classList.remove('active');
+            }
+            if (profileContainerDesktop && !profileContainerDesktop.contains(event.target) && dropdownMenuDesktop.classList.contains('active')) {
+                dropdownMenuDesktop.classList.remove('active');
+            }
         });
+
+        // 캘린더 관련 함수
+        const showCalendar = () => {
+            renderCalendar(selectedDate);
+            calendarOverlay.classList.remove('hidden');
+            setTimeout(() => {
+                calendarOverlay.classList.add('active');
+                calendarContainer.classList.add('active');
+            }, 10);
+        };
+
+        const hideCalendar = () => {
+            calendarOverlay.classList.remove('active');
+            calendarContainer.classList.remove('active');
+            setTimeout(() => {
+                calendarOverlay.classList.add('hidden');
+            }, 300);
+        };
+
+        const renderCalendar = (date) => {
+            calendarGrid.innerHTML = '';
+            const today = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+
+            calendarHeader.textContent = `${year}년 ${month + 1}월`;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const startingDay = firstDayOfMonth.getDay();
+            const daysInMonth = lastDayOfMonth.getDate();
+
+            // 공백 채우기
+            for (let i = 0; i < startingDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'w-8 h-8 md:w-10 md:h-10';
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            // 날짜 채우기
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer';
+                dayCell.textContent = i;
+                dayCell.dataset.date = i;
+                dayCell.dataset.month = month;
+                dayCell.dataset.year = year;
+
+                const cellDate = new Date(year, month, i);
+
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('bg-blue-500', 'text-white');
+                } else if (cellDate.toDateString() === selectedDate.toDateString()) {
+                    dayCell.classList.add('bg-gray-200', 'text-gray-900');
+                }
+
+                calendarGrid.appendChild(dayCell);
+            }
+        };
+
+        const handleDateClick = (event) => {
+            const day = event.target.dataset.date;
+            if (day) {
+                const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), parseInt(day));
+                selectedDate = newDate;
+                hideCalendar();
+                if (userSchoolData) {
+                    fetchAndRenderAllData(selectedDate);
+                }
+            }
+        };
+
+        // 이전 달 버튼 클릭 핸들러
+        const handlePrevMonth = () => {
+            selectedDate.setMonth(selectedDate.getMonth() - 1);
+            renderCalendar(selectedDate);
+        };
+
+        // 다음 달 버튼 클릭 핸들러
+        const handleNextMonth = () => {
+            selectedDate.setMonth(selectedDate.getMonth() + 1);
+            renderCalendar(selectedDate);
+        };
+        
+        if (showCalendarBtnMobile) showCalendarBtnMobile.addEventListener('click', showCalendar);
+        if (showCalendarBtnDesktop) showCalendarBtnDesktop.addEventListener('click', showCalendar);
+        if (closeCalendarBtn) closeCalendarBtn.addEventListener('click', hideCalendar);
+        if (calendarGrid) calendarGrid.addEventListener('click', handleDateClick);
+        if (prevMonthBtn) prevMonthBtn.addEventListener('click', handlePrevMonth);
+        if (nextMonthBtn) nextMonthBtn.addEventListener('click', handleNextMonth);
+        
+        // 스켈레톤 UI 생성 함수
+        const createSkeletonUI = (count) => {
+            const skeletonList = document.createElement('div');
+            skeletonList.className = 'space-y-2 py-1';
+            for (let i = 0; i < count; i++) {
+                const skeletonDiv = document.createElement('div');
+                skeletonDiv.className = 'h-4 bg-gray-200 rounded skeleton';
+                if (i === 1) skeletonDiv.classList.add('w-5/6');
+                if (i === 2) skeletonDiv.classList.add('w-4/6');
+                skeletonList.appendChild(skeletonDiv);
+            }
+            return skeletonList;
+        };
+
+        // 모든 데이터를 가져와서 렌더링하는 함수
+        const fetchAndRenderAllData = (date) => {
+            const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
+            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, date);
+            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date);
+            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, date);
+        };
+
+        // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
+            lunchListMobile.innerHTML = '';
+            lunchListDesktop.innerHTML = '';
+            lunchListMobile.appendChild(createSkeletonUI(3));
+            lunchListDesktop.appendChild(createSkeletonUI(3));
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+
+            const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
+            
+            // UI에 급식 데이터를 렌더링하는 내부 함수
+            const render = (listElement, data) => {
+                listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
+                if (!data || data.length === 0) {
+                    listElement.innerHTML = '<li>오늘의 급식 정보가 없습니다.</li>';
+                    return;
+                }
+                const lunch = data[0].DDISH_NM.split('<br/>').map(item => `<li>${item.trim()}</li>`).join('');
+                listElement.innerHTML = lunch;
+            };
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                // API 응답에서 급식 데이터가 있는 row를 안전하게 찾기
+                const lunchData = result.mealServiceDietInfo?.[1]?.row;
+
+                render(lunchListMobile, lunchData);
+                render(lunchListDesktop, lunchData);
+
+            } catch (error) {
+                console.error("급식 정보 로드 실패:", error);
+                lunchListMobile.innerHTML = '<li>급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                lunchListDesktop.innerHTML = '<li>급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
+            }
+        };
+
+        // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
+            timetableListMobile.innerHTML = '';
+            timetableListDesktop.innerHTML = '';
+            timetableListMobile.appendChild(createSkeletonUI(3));
+            timetableListDesktop.appendChild(createSkeletonUI(3));
+
+            let endpoint = '';
+            // schoolType에 따라 적절한 API 엔드포인트 설정
+            if (schoolType === '초등학교') {
+                endpoint = 'elsTimetable';
+            } else if (schoolType === '중학교') {
+                endpoint = 'misTimetable';
+            } else if (schoolType === '고등학교') {
+                endpoint = 'hisTimetable';
+            } else {
+                console.error("알 수 없는 학교 유형입니다:", schoolType);
+                timetableListMobile.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
+                timetableListDesktop.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
+                return;
+            }
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateString = `${year}${month}${day}`;
+
+            // API 명세서에 맞춰 ALL_TI_YMD 파라미터 추가
+            const url = `${NEIS_BASE_URL}${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
+            
+            // UI에 시간표 데이터를 렌더링하는 내부 함수
+            const render = (listElement, data) => {
+                listElement.innerHTML = '';
+                // 데이터가 없으면 메시지 표시
+                if (!data || data.length === 0) {
+                    listElement.innerHTML = '<li class="py-2">오늘의 시간표가 없습니다.</li>';
+                    return;
+                }
+                data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+                data.forEach(item => {
+                    const subject = item.ITRT_CNTNT;
+                    const period = item.PERIO;
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
+                    li.innerHTML = `<span class="font-semibold text-gray-900">${period}교시</span><span>${subject}</span>`;
+                    listElement.appendChild(li);
+                });
+            };
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                // API 응답에서 RESULT 코드가 있는지 확인 (데이터 없음 오류)
+                if (result.RESULT && result.RESULT.CODE === 'INFO-200') {
+                     const noTimetableMessage = '<li class="py-2 text-center text-gray-500">오늘의 시간표 정보가 없습니다.<br>학사일정 또는 주말인지 확인해 보세요.</li>';
+                    timetableListMobile.innerHTML = noTimetableMessage;
+                    timetableListDesktop.innerHTML = noTimetableMessage;
+                    return;
+                }
+                
+                // API 응답에서 시간표 데이터가 있는 row를 안전하게 찾기
+                const timetableData = result[endpoint]?.[1]?.row;
+
+                render(timetableListMobile, timetableData);
+                render(timetableListDesktop, timetableData);
+
+            } catch (error) {
+                console.error("시간표 정보 로드 실패:", error);
+                timetableListMobile.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                timetableListDesktop.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
+            }
+        };
+
+        // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
+            scheduleListMobile.innerHTML = '';
+            scheduleListDesktop.innerHTML = '';
+            scheduleListMobile.appendChild(createSkeletonUI(3));
+            scheduleListDesktop.appendChild(createSkeletonUI(3));
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${year}${month}01&AA_TO_YMD=${year}${month}31`;
+            
+            // UI에 학사일정 데이터를 렌더링하는 내부 함수
+            const render = (listElement, data) => {
+                listElement.innerHTML = '';
+                // 데이터가 없거나 필터링 후 데이터가 없으면 메시지 표시
+                if (!data || data.length === 0) {
+                    listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
+                    return;
+                }
+                // '토요휴업일' 제외
+                const filteredData = data.filter(item => item.EVENT_NM !== '[토요휴업일]');
+                
+                if (filteredData.length === 0) {
+                     listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
+                    return;
+                }
+
+                filteredData.forEach(item => {
+                    const schedule = item.EVENT_NM;
+                    const dateString = item.AA_YMD;
+                    const li = document.createElement('li');
+                    li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn'; // ripple-btn 클래스 추가
+                    li.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                                <span>${schedule}</span>
+                            </div>
+                            <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
+                        </div>
+                    `;
+                    listElement.appendChild(li);
+                });
+                document.querySelectorAll('.ripple-btn').forEach(attachRipple); // 새로 생성된 요소에 리플 효과 다시 적용
+            };
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                // API 응답에서 학사일정 데이터가 있는 row를 안전하게 찾기
+                const scheduleData = result.SchoolSchedule?.[1]?.row;
+                
+                render(scheduleListMobile, scheduleData);
+                render(scheduleListDesktop, scheduleData);
+            } catch (error) {
+                console.error("학사일정 정보 로드 실패:", error);
+                scheduleListMobile.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                scheduleListDesktop.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
+            }
+        };
+
+        // 뉴스 정보를 RSS 피드에서 가져와서 UI에 표시하는 함수
+        const fetchAndRenderNews = async () => {
+            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
+            newsListMobile.innerHTML = '';
+            newsListDesktop.innerHTML = '';
+            newsListMobile.appendChild(createSkeletonUI(3));
+            newsListDesktop.appendChild(createSkeletonUI(3));
+            
+            const RSS_URL = 'https://www.jayupress.com/rss/clickTop.xml';
+            // CORS 문제를 해결하기 위해 프록시 서비스 사용
+            const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+
+            try {
+                const response = await fetch(`${PROXY_URL}${encodeURIComponent(RSS_URL)}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const xmlText = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                
+                const items = xmlDoc.querySelectorAll('item');
+                
+                newsData = [];
+                items.forEach(item => {
+                    const title = item.querySelector('title')?.textContent;
+                    const link = item.querySelector('link')?.textContent;
+                    const description = item.querySelector('description')?.textContent;
+                    if (title && link) {
+                        newsData.push({ title, link, description });
+                    }
+                });
+
+                // 초기 뉴스 렌더링
+                renderNews();
+
+            } catch (error) {
+                console.error("뉴스 정보 로드 실패:", error);
+                const errorMessage = '<li class="py-2">뉴스 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                newsListMobile.innerHTML = errorMessage;
+                newsListDesktop.innerHTML = errorMessage;
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+            }
+        };
+
+        // 뉴스 데이터를 렌더링하는 함수
+        const renderNews = () => {
+            const listElementMobile = newsListMobile;
+            const listElementDesktop = newsListDesktop;
+
+            if (newsData.length === 0) {
+                const noNewsMessage = '<li class="py-2">오늘의 뉴스 정보가 없습니다.</li>';
+                listElementMobile.innerHTML = noNewsMessage;
+                listElementDesktop.innerHTML = noNewsMessage;
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+                return;
+            }
+
+            listElementMobile.innerHTML = '';
+            listElementDesktop.innerHTML = '';
+
+            const itemsToDisplay = newsData.slice(0, newsItemsToShow);
+
+            itemsToDisplay.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
+                li.innerHTML = `
+                    <a href="${item.link}" target="_blank" class="block">
+                        <h3 class="font-semibold text-[#111418] leading-tight">${item.title}</h3>
+                        <p class="text-xs text-gray-500 mt-1">${item.description.replace(/<[^>]*>/g, '').trim()}</p>
+                    </a>
+                `;
+                listElementMobile.appendChild(li.cloneNode(true));
+                listElementDesktop.appendChild(li);
+            });
+            document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+
+            // '더보기' 버튼 표시 여부 결정
+            if (newsItemsToShow >= newsData.length) {
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
+            } else {
+                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'block';
+                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'block';
+            }
+        };
+
+        // '더보기' 버튼 클릭 이벤트 핸들러
+        const handleLoadMoreNews = () => {
+            newsItemsToShow += 5;
+            renderNews();
+        };
+
+        if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.addEventListener('click', handleLoadMoreNews);
+        if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.addEventListener('click', handleLoadMoreNews);
+
+        onAuthStateChanged(auth, async (user) => {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            if (user) {
+                console.log("User is authenticated:", user.uid);
+                isAuthenticated = true;
+                
+                if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.add('hidden');
+                
+                if (profileContainerMobile) profileContainerMobile.classList.remove('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.remove('hidden');
+
+                const profileDocPath = `artifacts/${appId}/users/${user.uid}/profile/user_data`;
+                onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const data = docSnapshot.data();
+                        
+                        // 학교 유형 정보가 누락된 경우 학교 이름에서 유추
+                        if (!data.schoolType && data.schoolName) {
+                            if (data.schoolName.includes('초등학교')) {
+                                data.schoolType = '초등학교';
+                            } else if (data.schoolName.includes('중학교')) {
+                                data.schoolType = '중학교';
+                            } else if (data.schoolName.includes('고등학교')) {
+                                data.schoolType = '고등학교';
+                            }
+                        }
+
+                        userSchoolData = data;
+                        const userName = data.name || "사용자";
+                        if (userNameMobile) userNameMobile.textContent = userName;
+                        if (userNameDesktop) userNameDesktop.textContent = userName;
+
+                        const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
+
+                        // 모든 필수 정보가 있는지 확인
+                        if (atptOfcdcScCode && sdSchulCode && schoolType && grade && classNum) {
+                            fetchAndRenderAllData(selectedDate);
+                        } else {
+                            console.error("프로필 정보가 불완전합니다. 필요한 필드: schoolType, grade, classNum");
+                            const incompleteProfileMessage = '<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>';
+                            lunchListMobile.innerHTML = incompleteProfileMessage;
+                            timetableListMobile.innerHTML = incompleteProfileMessage;
+                            scheduleListMobile.innerHTML = incompleteProfileMessage;
+                            lunchListDesktop.innerHTML = incompleteProfileMessage;
+                            timetableListDesktop.innerHTML = incompleteProfileMessage;
+                            scheduleListDesktop.innerHTML = incompleteProfileMessage;
+                        }
+                    } else {
+                        console.error("No user profile document found.");
+                        if (userNameMobile) userNameMobile.textContent = "사용자";
+                        if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                    }
+                }, (error) => {
+                    console.error("Error getting user profile:", error);
+                    if (userNameMobile) userNameMobile.textContent = "사용자";
+                    if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                });
+            } else {
+                console.log("User is not authenticated. Showing login buttons.");
+                isAuthenticated = false;
+                
+                if (profileContainerMobile) profileContainerMobile.classList.add('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.add('hidden');
+                
+                if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.remove('hidden');
+
+                updateUIBasedOnAuth();
+            }
+        });
+
+        // Initial sign-in logic on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (initialAuthToken) {
+                try {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
+                } catch (error) {
+                    console.error("Error signing in with custom token:", error);
+                    updateUIBasedOnAuth(); // 로그인 실패 시 알림 메시지 표시
+                }
+            } else {
+                console.log("No custom auth token provided. Awaiting user login action.");
+                updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
+            }
+            fetchAndRenderNews();
+        });
+
+        // Ripple effect logic
+        function attachRipple(btn){
+            function createRipple(ev){
+                const rect = btn.getBoundingClientRect();
+                let x, y;
+                if(ev.type === 'keydown'){
+                    x = rect.width/2 + rect.left;
+                    y = rect.height/2 + rect.top;
+                } else {
+                    const e = ev.touches ? ev.touches[0] : ev;
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                const left = x - rect.left;
+                const top = y - rect.top;
+                const distX = Math.max(left, rect.width - left);
+                const distY = Math.max(top, rect.height - top);
+                const radius = Math.sqrt(distX*distX + distY*distY);
+                const size = radius * 2;
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.width = size + 'px';
+                ripple.style.height = size + 'px';
+                ripple.style.left = left + 'px';
+                ripple.style.top = top + 'px';
+                btn.appendChild(ripple);
+                requestAnimationFrame(()=>{
+                    ripple.classList.add('animate');
+                });
+                setTimeout(()=>{ ripple.remove(); }, 600);
+            }
+            btn.addEventListener('mousedown', createRipple);
+            btn.addEventListener('touchstart', e=>createRipple(e), {passive:true});
+            btn.addEventListener('keydown', e=>{
+                if(e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter'){
+                    createRipple({type:'keydown'});
+                }
+            });
+        }
+        document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+        
+        // --- 복사 방지 기능 추가 ---
+        const body = document.body;
+        
+        // 마우스 오른쪽 버튼 클릭 방지
+        body.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // 복사, 잘라내기 방지
+        body.addEventListener('copy', function(e) {
+            e.preventDefault();
+        });
+        
+        body.addEventListener('cut', function(e) {
+            e.preventDefault();
+        });
+        
+        // 텍스트 드래그 선택 방지
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+
     </script>
 </body>
 </html>
