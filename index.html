@@ -70,8 +70,7 @@
             pointer-events: none;
             will-change: transform, opacity;
             opacity: 0.36;
-            background-color: rgba(0,0,0,0.12);
-
+            background-color: rgba(255,255,255,0.9);
         }
         .ripple.animate {
             transition: transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms linear;
@@ -857,16 +856,19 @@
                     const schedule = item.EVENT_NM;
                     const dateString = item.AA_YMD;
                     const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
+                    li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn'; // ripple-btn 클래스 추가
                     li.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
-                            <span>${schedule}</span>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                                <span>${schedule}</span>
+                            </div>
+                            <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
                         </div>
-                        <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
                     `;
                     listElement.appendChild(li);
                 });
+                document.querySelectorAll('.ripple-btn').forEach(attachRipple); // 새로 생성된 요소에 리플 효과 다시 적용
             };
 
             try {
@@ -950,7 +952,7 @@
 
             itemsToDisplay.forEach(item => {
                 const li = document.createElement('li');
-                li.className = 'py-2 border-b border-gray-200 last:border-b-0';
+                li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
                 li.innerHTML = `
                     <a href="${item.link}" target="_blank" class="block">
                         <h3 class="font-semibold text-[#111418] leading-tight">${item.title}</h3>
@@ -960,6 +962,7 @@
                 listElementMobile.appendChild(li.cloneNode(true));
                 listElementDesktop.appendChild(li);
             });
+            document.querySelectorAll('.ripple-btn').forEach(attachRipple);
 
             // '더보기' 버튼 표시 여부 결정
             if (newsItemsToShow >= newsData.length) {
