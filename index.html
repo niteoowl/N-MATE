@@ -88,10 +88,15 @@
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            position: absolute; /* Added to layer pages */
+            width: 100%; /* Added to ensure full width */
+            top: 0;
+            left: 0;
         }
         .page-content.active {
             opacity: 1;
             transform: translateY(0);
+            position: relative; /* Set to relative when active to be in flow */
         }
     </style>
 </head>
@@ -127,10 +132,9 @@
         </header>
 
         <!-- 메인 콘텐츠 영역 -->
-        <main id="main-content-mobile" class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
-
+        <main id="main-content-mobile" class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content relative">
             <!-- 홈 페이지 콘텐츠 -->
-            <div id="home-page-mobile" class="page-content active">
+            <div id="home-page-mobile" class="page-content">
                 <!-- 오늘의 메뉴 섹션 -->
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
@@ -357,9 +361,9 @@
         </aside>
 
         <!-- 우측 메인 콘텐츠 영역 -->
-        <main id="main-content-desktop" class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+        <main id="main-content-desktop" class="flex-1 overflow-y-auto p-6 pt-10 space-y-6 relative">
             <!-- 홈 페이지 콘텐츠 -->
-            <div id="home-page-desktop" class="page-content active">
+            <div id="home-page-desktop" class="page-content">
                 <!-- 오늘의 메뉴 섹션 -->
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
@@ -1227,45 +1231,24 @@
 
         // 페이지 전환을 처리하는 함수
         const showPage = (pageName, pushState = true) => {
-            const mobilePages = document.querySelectorAll('.page-content');
-            const desktopPages = document.querySelectorAll('.page-content');
+            const allPages = document.querySelectorAll('.page-content');
             
-            // 현재 활성 페이지를 숨김
-            const currentActiveMobile = document.querySelector('.page-content.active');
-            if (currentActiveMobile) {
-                currentActiveMobile.classList.remove('active');
-            }
-            const currentActiveDesktop = document.querySelector('.page-content.active');
-            if (currentActiveDesktop) {
-                currentActiveDesktop.classList.remove('active');
-            }
+            allPages.forEach(page => {
+                page.classList.remove('active');
+                page.classList.add('hidden');
+            });
             
-            // 새로운 페이지를 찾아서 표시
             const newPageMobile = document.getElementById(`${pageName}-page-mobile`);
             const newPageDesktop = document.getElementById(`${pageName}-page-desktop`);
             
             if (newPageMobile) {
-                 newPageMobile.classList.remove('hidden');
-                 setTimeout(() => newPageMobile.classList.add('active'), 10);
+                newPageMobile.classList.remove('hidden');
+                setTimeout(() => newPageMobile.classList.add('active'), 10);
             }
             if (newPageDesktop) {
-                 newPageDesktop.classList.remove('hidden');
-                 setTimeout(() => newPageDesktop.classList.add('active'), 10);
+                newPageDesktop.classList.remove('hidden');
+                setTimeout(() => newPageDesktop.classList.add('active'), 10);
             }
-            
-            // 모든 페이지를 숨김 처리
-            mobilePages.forEach(page => {
-                if(page !== newPageMobile) {
-                    page.classList.remove('active');
-                    page.classList.add('hidden');
-                }
-            });
-             desktopPages.forEach(page => {
-                if(page !== newPageDesktop) {
-                    page.classList.remove('active');
-                    page.classList.add('hidden');
-                }
-            });
             
             // URL 업데이트
             if (pushState) {
@@ -1285,12 +1268,20 @@
                 if (target === pageName) {
                     link.classList.add('text-[#111418]');
                     link.classList.remove('text-[#617589]');
+                    const iconPath = link.querySelector('svg path');
+                    if (iconPath) {
+                        iconPath.setAttribute('fill', 'currentColor');
+                    }
                     if(link.closest('nav')) {
                          link.classList.add('bg-gray-100');
                     }
                 } else {
                     link.classList.remove('text-[#111418]');
                     link.classList.add('text-[#617589]');
+                    const iconPath = link.querySelector('svg path');
+                    if (iconPath) {
+                        iconPath.setAttribute('fill', 'currentColor');
+                    }
                     if(link.closest('nav')) {
                          link.classList.remove('bg-gray-100');
                     }
