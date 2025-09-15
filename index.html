@@ -88,15 +88,15 @@
             opacity: 0;
             transform: translateY(10px);
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-            position: absolute; /* Added to layer pages */
-            width: 100%; /* Added to ensure full width */
+            position: absolute;
+            width: 100%;
             top: 0;
             left: 0;
         }
         .page-content.active {
             opacity: 1;
             transform: translateY(0);
-            position: relative; /* Set to relative when active to be in flow */
+            position: relative;
         }
     </style>
 </head>
@@ -113,7 +113,7 @@
             <!-- 로그인 버튼 및 프로필 드롭다운 -->
             <div id="auth-ui-mobile" class="relative">
                 <!-- 로그인 전 버튼 -->
-                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                <button id="login-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
                     로그인
                 </button>
                 <!-- 로그인 후 프로필 드롭다운 -->
@@ -134,7 +134,7 @@
         <!-- 메인 콘텐츠 영역 -->
         <main id="main-content-mobile" class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content relative">
             <!-- 홈 페이지 콘텐츠 -->
-            <div id="home-page-mobile" class="page-content">
+            <div id="home-page-mobile" class="page-content active">
                 <!-- 오늘의 메뉴 섹션 -->
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
@@ -167,7 +167,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         오늘의 시간표
                     </h2>
-                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -184,7 +184,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         이번 달 학사일정
                     </h2>
-                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <!-- 학사일정 리스트 -->
@@ -201,7 +201,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         시험 디데이
                     </h2>
-                    <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <div class="flex justify-around items-center text-center">
@@ -342,7 +342,7 @@
             <!-- 로그인 버튼 및 프로필 드롭다운 -->
             <div id="auth-ui-desktop" class="relative mt-4">
                 <!-- 로그인 전 버튼 -->
-                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
+                <button id="login-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
                     로그인
                 </button>
                 <!-- 로그인 후 프로필 드롭다운 -->
@@ -363,7 +363,7 @@
         <!-- 우측 메인 콘텐츠 영역 -->
         <main id="main-content-desktop" class="flex-1 overflow-y-auto p-6 pt-10 space-y-6 relative">
             <!-- 홈 페이지 콘텐츠 -->
-            <div id="home-page-desktop" class="page-content">
+            <div id="home-page-desktop" class="page-content active">
                 <!-- 오늘의 메뉴 섹션 -->
                 <div class="flex items-center justify-between">
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
@@ -396,7 +396,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         오늘의 시간표
                     </h2>
-                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
@@ -413,7 +413,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         이번 달 학사일정
                     </h2>
-                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <!-- 학사일정 리스트 -->
@@ -430,7 +430,7 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         시험 디데이
                     </h2>
-                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn" data-target="sclife">더보기</a>
                 </div>
 
                 <div class="flex justify-around items-center text-center">
@@ -1215,20 +1215,12 @@
 
         // --- SPA Navigation Logic (새로운 추가) ---
         
-        // 페이지 전환을 위한 맵
-        const pageMap = {
-            '/': 'home-page',
-            '/sclife': 'sclife-page',
-            '/community': 'community-page',
-            '/more': 'more-page'
-        };
-        
         // 경로에 따라 페이지 ID를 가져오는 함수
         const getPageIdFromPath = (path) => {
             const pageName = path.split('/')[1] || '';
             return pageName === '' ? 'home' : pageName;
         };
-
+        
         // 페이지 전환을 처리하는 함수
         const showPage = (pageName, pushState = true) => {
             const allPages = document.querySelectorAll('.page-content');
@@ -1292,7 +1284,8 @@
         // 초기 페이지 로드 시 URL에 맞는 페이지를 보여주는 함수
         const showPageByPath = (path, pushState = true) => {
             const pageName = getPageIdFromPath(path);
-            if (Object.values(pageMap).includes(`${pageName}-page`)) {
+            const pageExists = document.getElementById(`${pageName}-page-mobile`) || document.getElementById(`${pageName}-page-desktop`);
+            if (pageExists) {
                 showPage(pageName, pushState);
             } else {
                 showPage('home', pushState); // 유효하지 않은 URL은 홈으로 리디렉션
@@ -1303,7 +1296,7 @@
         document.addEventListener('click', (event) => {
             const navLink = event.target.closest('.nav-link');
             if (navLink) {
-                event.preventDefault();
+                event.preventDefault(); // 기본 링크 이동 방지
                 const pageName = navLink.dataset.target;
                 showPage(pageName);
             }
