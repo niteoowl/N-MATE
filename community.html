@@ -365,9 +365,9 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         자유로운 이야기
                     </h2>
-                    <button id="write-post-btn-desktop" class="ripple-btn px-6 py-3 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                    <a href="/write" id="write-post-btn-desktop" class="ripple-btn px-6 py-3 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
                         글쓰기
-                    </button>
+                    </a>
                 </div>
                 
                 <!-- 검색창 -->
@@ -816,18 +816,6 @@
         if (profileBtnDesktop) { profileBtnDesktop.addEventListener('click', () => toggleDropdown(dropdownMenuDesktop)); }
         if (logoutBtnMobile) { logoutBtnMobile.addEventListener('click', handleLogout); }
         if (logoutBtnDesktop) { logoutBtnDesktop.addEventListener('click', handleLogout); }
-        if (writePostBtnMobile) {
-            writePostBtnMobile.addEventListener('click', () => {
-                showWritePostPage();
-                initEditor(editorMobileDiv);
-            });
-        }
-        if (writePostBtnDesktop) {
-            writePostBtnDesktop.addEventListener('click', () => {
-                showWritePostPage();
-                initEditor(editorDesktopDiv);
-            });
-        }
         if (backBtnMobile) { backBtnMobile.addEventListener('click', showCommunityListPage); }
         if (backBtnDesktop) { backBtnDesktop.addEventListener('click', showCommunityListPage); }
         if (postViewBackBtnMobile) { postViewBackBtnMobile.addEventListener('click', showCommunityListPage); }
@@ -845,6 +833,48 @@
             }
         });
 
+        // 라우팅 및 UI 상태 관리
+        const handleLocationChange = () => {
+            const path = window.location.pathname;
+            const isMobile = window.innerWidth < 768;
+
+            if (path === '/write') {
+                showWritePostPage();
+                if (isMobile) {
+                    initEditor(editorMobileDiv);
+                } else {
+                    initEditor(editorDesktopDiv);
+                }
+            } else if (path.startsWith('/posts/')) {
+                const postId = path.split('/')[2];
+                // TODO: Firestore에서 해당 ID의 게시물 불러와서 showPostViewPage 호출
+                // 현재는 로딩 UI만 표시
+                showLoader(); // 로딩 UI 표시
+            } else {
+                showCommunityListPage();
+            }
+        };
+
+        // 라우팅 이벤트 리스너
+        window.addEventListener('popstate', handleLocationChange);
+        document.addEventListener('click', (e) => {
+            if (e.target.matches('a[href^="/"]')) {
+                e.preventDefault();
+                history.pushState(null, '', e.target.href);
+                handleLocationChange();
+            }
+        });
+
+        const showLoader = () => {
+            loaderOverlay.classList.remove('hidden');
+        };
+        const hideAuthLoader = () => {
+             // 인증 로딩 완료 후 로더 숨기기
+             loaderOverlay.classList.add('hidden');
+             mobileUI.classList.remove('hidden');
+             desktopUI.classList.remove('hidden');
+        };
+
         onAuthStateChanged(auth, async (user) => {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -860,7 +890,7 @@
 
                 const profileDocPath = `artifacts/${appId}/users/${user.uid}/profile/user_data`;
                 onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
-                    hideLoader();
+                    hideAuthLoader();
                     if (docSnapshot.exists()) {
                         const data = docSnapshot.data();
                         userName = data.name || "사용자";
@@ -873,7 +903,7 @@
                         if (userNameDesktop) userNameDesktop.textContent = "사용자";
                     }
                 }, (error) => {
-                    hideLoader();
+                    hideAuthLoader();
                     console.error("Error getting user profile:", error);
                     userName = "사용자";
                     if (userNameMobile) userNameMobile.textContent = "사용자";
@@ -883,7 +913,7 @@
                 console.log("User is not authenticated. Showing login buttons.");
                 isAuthenticated = false;
                 userName = "익명";
-                hideLoader();
+                hideAuthLoader();
                 
                 if (profileContainerMobile) profileContainerMobile.classList.add('hidden');
                 if (profileContainerDesktop) profileContainerDesktop.classList.add('hidden');
@@ -892,10 +922,12 @@
                 if (loginBtnDesktop) loginBtnDesktop.classList.remove('hidden');
             }
             fetchPosts(appId);
+            handleLocationChange();
         });
 
         // Initial sign-in logic on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            showLoader();
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             if (initialAuthToken) {
                 try {
@@ -908,7 +940,6 @@
                 console.log("No custom auth token provided. Awaiting user login action.");
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 fetchPosts(appId);
-                hideLoader();
             }
         });
 
