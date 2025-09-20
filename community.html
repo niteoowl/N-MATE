@@ -3,139 +3,489 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>채널 페이지</title>
+    <link rel="icon" type="image/png" href="/image/n-mate_favicon.png">
+    
+    <title>N-MATE | 커뮤니티</title>
+    <meta name="google-adsense-account" content="ca-pub-4390848046914727">
+    <meta name=”description” content=”중학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.”>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4390848046914727"
+     crossorigin="anonymous"></script>
+
+    <!-- CKEditor 5 CDN -->
+    <script src="https://cdn.ckbox.io/CKBox/2.1.0/ckbox.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/42.0.0/classic/ckeditor.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/42.0.0/classic/translations/ko.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f0f2f5;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #ffffff;
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;     /* Firefox */
+            -ms-user-select: none;      /* IE10+ */
+            user-select: none;          /* Standard syntax */
         }
-        /* Hide the main content initially to prevent unauthenticated UI from showing */
-        #main-content {
-            display: none;
+        .scrollable-content {
+            padding-bottom: 96px;
         }
-        .modal {
+        @media (min-width: 768px) {
+            .scrollable-content {
+                padding-bottom: 0;
+            }
+        }
+        .dropdown-menu {
             display: none;
+            right: 0;
+            top: 100%;
+        }
+        .dropdown-menu.active {
+            display: block;
+        }
+        .skeleton {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        /* Ripple effect styles */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            will-change: transform, opacity;
+            opacity: 0.36;
+            background-color: rgba(0,0,0,0.12);
+        }
+        .ripple.animate {
+            transition: transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms linear;
+            transform: translate(-50%,-50%) scale(1);
+            opacity: 0;
+        }
+
+        /* 로딩 애니메이션 스타일 */
+        .loader-overlay {
             position: fixed;
-            z-index: 1000;
-            left: 0;
             top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
             justify-content: center;
             align-items: center;
+            background-color: #ffffff;
+            z-index: 1000;
+        }
+        .loader {
+            width: 60px;
+            aspect-ratio: 2;
+            --_g: no-repeat radial-gradient(circle closest-side, #3B82F6 90%, #0000);
+            background:
+                var(--_g) 0% 50%,
+                var(--_g) 50% 50%,
+                var(--_g) 100% 50%;
+            background-size: calc(100%/3) 50%;
+            animation: l3 1s infinite linear;
+        }
+        @keyframes l3 {
+            20%{background-position:0% 0%, 50% 50%, 100% 50%}
+            40%{background-position:0% 100%, 50% 0%, 100% 50%}
+            60%{background-position:0% 50%, 50% 100%, 100% 0%}
+            80%{background-position:0% 50%, 50% 50%, 100% 100%}
+        }
+        /* CKEditor 스타일 커스터마이징 */
+        .ck-editor__editable_inline {
+            min-height: 400px;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+        }
+        .ck-toolbar {
+            border-radius: 0.5rem 0.5rem 0 0;
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body onselectstart="return false">
 
-    <!-- Header -->
-    <header class="bg-[#1a4a9b] text-white p-4 border-b border-gray-300">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="text-2xl font-bold">
-                <img src="https://i.postimg.cc/QM7QbVpH/002-2.png" alt="Connecting Hearts Logo" class="h-8">
-            </div>
-            <div class="flex items-center space-x-4">
-                <input type="text" placeholder="채널 & 통합검색" class="p-2 w-64 bg-white text-gray-800 border-2 border-white focus:outline-none focus:border-blue-500 placeholder-gray-500">
-                <button class="bg-blue-500 p-2 border-2 border-white hover:bg-blue-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Navigation Bar -->
-    <nav class="bg-white border-b border-gray-300 py-2">
-        <div class="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto">
-            <ul class="flex space-x-6 text-sm font-semibold flex-nowrap">
-                <li><a href="#" class="hover:text-blue-600">채널</a></li>
-                <li><a href="#" class="hover:text-blue-600">히스토리</a></li>
-                <li><a href="#" class="hover:text-blue-600">BEST</a></li>
-                <li><a href="#" class="hover:text-blue-600">N-MATE 바로가기</a></li>
-                <li id="nav-login-link"><a href="#" class="hover:text-blue-600">로그인</a></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main id="main-content" class="mx-auto my-4 p-4 flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4 max-w-7xl">
-        
-        <!-- Main Channel Content (full width) -->
-        <div class="lg:w-full space-y-4">
-             <!-- All Channels List -->
-            <div class="bg-white p-4 border border-gray-300">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">모든 채널</h3>
-                    <button id="create-channel-btn" class="bg-blue-600 text-white text-sm p-2 border border-blue-600 hover:bg-blue-700">채널 만들기</button>
-                </div>
-                <ul id="all-channels-list" class="space-y-1 text-sm">
-                    <!-- Channels will be loaded here from Firebase -->
-                </ul>
-            </div>
-
-            <!-- Channel Ranking Section -->
-            <div class="bg-white p-4 border border-gray-300">
-                <h2 class="text-lg font-bold mb-4">채널 순위</h2>
-                <ul id="channel-ranking-list" class="space-y-2">
-                    <!-- Channel rankings will be loaded here from Firebase -->
-                </ul>
-            </div>
-        </div>
-    </main>
-
-    <!-- Channel Creation Modal -->
-    <div id="create-channel-modal" class="modal">
-        <div class="bg-white p-6 border border-gray-300 w-full max-w-lg">
-            <div class="flex justify-between items-center border-b border-gray-200 pb-2 mb-4">
-                <h3 class="text-lg font-bold">새 채널 만들기</h3>
-                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="create-channel-form" class="space-y-4">
-                <div>
-                    <label for="channel-name" class="block text-sm font-medium text-gray-700">채널 이름</label>
-                    <input type="text" id="channel-name" name="channelName" class="mt-1 block w-full p-2 border border-gray-300" placeholder="예: '게임 채널' or '일상 공유'">
-                </div>
-                <div>
-                    <label for="channel-desc" class="block text-sm font-medium text-gray-700">채널 설명</label>
-                    <textarea id="channel-desc" name="channelDesc" rows="3" class="mt-1 block w-full p-2 border border-gray-300" placeholder="채널의 목적이나 주제를 간략히 설명해주세요."></textarea>
-                </div>
-                <div>
-                    <label for="channel-tags" class="block text-sm font-medium text-gray-700">태그 (선택)</label>
-                    <input type="text" id="channel-tags" name="channelTags" class="mt-1 block w-full p-2 border border-gray-300" placeholder="#게임 #일상 #정보">
-                </div>
-                <div class="flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white p-2 border border-blue-600 hover:bg-blue-700">생성하기</button>
-                </div>
-            </form>
-        </div>
+    <!-- 로딩 화면 -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="loader"></div>
     </div>
 
-    <!-- Login Required Modal -->
-    <div id="login-required-modal" class="modal">
-        <div class="bg-white p-6 border border-gray-300 w-full max-w-sm text-center">
-            <h3 class="text-lg font-bold mb-4">로그인이 필요합니다</h3>
-            <p class="text-sm text-gray-600 mb-6">채널을 만들기 위해 로그인이 필요합니다.<br>지금 로그인하시겠습니까?</p>
-            <div class="flex justify-center space-x-4">
-                <a href="#" id="go-to-login-btn" class="bg-blue-600 text-white p-2 w-24 border border-blue-600 hover:bg-blue-700">로그인</a>
-                <button id="cancel-login-btn" class="bg-gray-200 text-gray-800 p-2 w-24 border border-gray-300 hover:bg-gray-300">취소</button>
+    <!-- Mobile UI (768px 미만에서만 보임) -->
+    <div id="mobile-ui" class="h-screen flex flex-col md:hidden hidden">
+        <!-- 상단 헤더 -->
+        <header class="bg-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
             </div>
-        </div>
-    </div>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-mobile" class="relative">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-mobile" class="hidden">
+                    <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                        <span id="user-name-mobile">이름</span>
+                    </button>
+                    <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main id="main-content-mobile" class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
+
+            <!-- 커뮤니티 헤더 -->
+            <div id="community-list-mobile" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        커뮤니티
+                    </h2>
+                    <button id="write-post-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                        글쓰기
+                    </button>
+                </div>
+                
+                <!-- 검색창 -->
+                <div class="relative rounded-full shadow-sm">
+                    <input type="text" placeholder="게시글 검색하기..." class="w-full pl-12 pr-4 py-3 rounded-full text-sm text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="w-5 h-5">
+                            <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM112,192a80,80,0,1,1,80-80A80.09,80.09,0,0,1,112,192Z"></path>
+                        </svg>
+                    </div>
+                </div>
     
+                <!-- 인기 게시글 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111418]">
+                        인기 게시글
+                    </h3>
+                    <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                </div>
+                <div id="hot-posts-list-mobile" class="space-y-3">
+                    <!-- 인기 게시글 항목 (스켈레톤) -->
+                    <div class="rounded-xl bg-gray-100 p-4 space-y-2 skeleton">
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-3 w-5/6 bg-gray-200 rounded"></div>
+                        <div class="h-3 w-3/4 bg-gray-200 rounded"></div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <div class="h-3 w-1/4 bg-gray-200 rounded"></div>
+                            <div class="h-3 w-1/6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="h-4"></div>
+    
+                <!-- 전체 게시글 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111418]">
+                        전체 게시글
+                    </h3>
+                </div>
+                <div id="all-posts-list-mobile" class="space-y-3">
+                    <!-- 게시글 목록 (스켈레톤) -->
+                    <div class="rounded-xl bg-gray-100 p-4 space-y-2 skeleton">
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-3 w-5/6 bg-gray-200 rounded"></div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <div class="h-3 w-1/4 bg-gray-200 rounded"></div>
+                            <div class="h-3 w-1/6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="rounded-xl bg-gray-100 p-4 space-y-2 skeleton">
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-3 w-5/6 bg-gray-200 rounded"></div>
+                        <div class="flex justify-between text-xs text-gray-500 mt-2">
+                            <div class="h-3 w-1/4 bg-gray-200 rounded"></div>
+                            <div class="h-3 w-1/6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 글쓰기 페이지 (모바일) -->
+            <div id="write-post-page-mobile" class="hidden h-full flex flex-col space-y-4">
+                <div class="flex items-center justify-start">
+                    <button id="back-btn-mobile" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">새 게시글 작성</h2>
+                </div>
+                <input id="post-title-mobile" type="text" placeholder="제목을 입력하세요..." class="w-full px-4 py-3 rounded-lg text-sm text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <div id="editor-mobile" class="flex-1 overflow-y-auto"></div>
+                <button id="submit-post-btn-mobile" class="w-full ripple-btn px-4 py-3 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                    게시글 등록
+                </button>
+            </div>
+
+            <!-- 게시글 상세 페이지 (모바일) -->
+            <div id="post-view-page-mobile" class="hidden h-full flex flex-col space-y-4">
+                <div class="flex items-center justify-start">
+                    <button id="post-view-back-btn-mobile" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-white rounded-lg p-4 space-y-4 shadow-sm">
+                    <h1 id="post-view-title-mobile" class="text-2xl font-bold text-gray-900"></h1>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500">
+                        <span id="post-view-author-mobile"></span>
+                        <span>•</span>
+                        <span id="post-view-date-mobile"></span>
+                    </div>
+                    <hr class="border-gray-200" />
+                    <div id="post-view-content-mobile" class="prose max-w-none"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 하단 내비게이션 바 -->
+        <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
+            <div class="flex justify-around items-center px-4 py-3">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="home" href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link bg-gray-100 rounded-xl ripple-btn" data-target="community" href="/community">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- PC UI (768px 이상에서만 보임) -->
+    <div id="desktop-ui" class="hidden h-screen md:flex md:flex-row hidden">
+        <!-- 좌측 사이드바 -->
+        <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
+            <div>
+                <div class="mb-4">
+                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                </div>
+                <nav class="space-y-1">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                        </svg>
+                        <span>홈</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                        </svg>
+                        <span>학교생활</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/community">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                        <span>커뮤니티</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                        <span>더보기</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-desktop" class="relative mt-4">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-desktop" class="hidden">
+                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
+                        <span id="user-name-desktop">이름</span>
+                    </button>
+                    <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 우측 메인 콘텐츠 영역 -->
+        <main id="main-content-desktop" class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+            <div id="community-list-desktop" class="space-y-6">
+                <!-- 커뮤니티 헤더 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        자유로운 이야기
+                    </h2>
+                    <button id="write-post-btn-desktop" class="ripple-btn px-6 py-3 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                        글쓰기
+                    </button>
+                </div>
+                
+                <!-- 검색창 -->
+                <div class="relative rounded-full shadow-sm">
+                    <input type="text" placeholder="게시글 검색하기..." class="w-full pl-12 pr-4 py-3 rounded-full text-sm text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" class="w-5 h-5">
+                            <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM112,192a80,80,0,1,1,80-80A80.09,80.09,0,0,1,112,192Z"></path>
+                        </svg>
+                    </div>
+                </div>
+    
+                <!-- 인기 게시글 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111418]">
+                        인기 게시글
+                    </h3>
+                    <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                </div>
+                <div id="hot-posts-list-desktop" class="grid grid-cols-2 gap-4">
+                    <!-- 인기 게시글 항목 (스켈레톤) -->
+                    <div class="rounded-2xl bg-gray-100 p-6 space-y-2 skeleton">
+                        <div class="h-5 bg-gray-200 rounded"></div>
+                        <div class="h-4 w-5/6 bg-gray-200 rounded"></div>
+                        <div class="h-4 w-3/4 bg-gray-200 rounded"></div>
+                        <div class="flex justify-between text-sm text-gray-500 pt-2">
+                            <div class="h-4 w-1/4 bg-gray-200 rounded"></div>
+                            <div class="h-4 w-1/6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="h-6"></div>
+    
+                <!-- 전체 게시글 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-[#111418]">
+                        전체 게시글
+                    </h3>
+                </div>
+                <div id="all-posts-list-desktop" class="space-y-4">
+                    <!-- 게시글 목록 (스켈레톤) -->
+                    <div class="flex items-start rounded-2xl bg-gray-100 p-6 space-x-4 skeleton">
+                        <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-3 w-5/6 bg-gray-200 rounded"></div>
+                            <div class="flex justify-between text-sm text-gray-500 pt-2">
+                                <div class="h-3 w-1/4 bg-gray-200 rounded"></div>
+                                <div class="h-3 w-1/6 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-start rounded-2xl bg-gray-100 p-6 space-x-4 skeleton">
+                        <div class="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full"></div>
+                        <div class="flex-1 space-y-2">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-3 w-5/6 bg-gray-200 rounded"></div>
+                            <div class="flex justify-between text-sm text-gray-500 pt-2">
+                                <div class="h-3 w-1/4 bg-gray-200 rounded"></div>
+                                <div class="h-3 w-1/6 bg-gray-200 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 글쓰기 페이지 (PC) -->
+            <div id="write-post-page-desktop" class="hidden h-full flex flex-col space-y-6">
+                <div class="flex items-center justify-start">
+                    <button id="back-btn-desktop" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">새 게시글 작성</h2>
+                </div>
+                <input id="post-title-desktop" type="text" placeholder="제목을 입력하세요..." class="w-full px-6 py-4 rounded-lg text-base text-gray-700 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <div id="editor-desktop" class="flex-1 overflow-y-auto"></div>
+                <button id="submit-post-btn-desktop" class="w-full ripple-btn px-6 py-4 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                    게시글 등록
+                </button>
+            </div>
+
+            <!-- 게시글 상세 페이지 (PC) -->
+            <div id="post-view-page-desktop" class="hidden h-full flex flex-col space-y-6">
+                <div class="flex items-center justify-start">
+                    <button id="post-view-back-btn-desktop" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
+                </div>
+                <div class="flex-1 overflow-y-auto bg-white rounded-lg p-6 space-y-4 shadow-sm">
+                    <h1 id="post-view-title-desktop" class="text-3xl font-bold text-gray-900"></h1>
+                    <div class="flex items-center space-x-2 text-sm text-gray-500">
+                        <span id="post-view-author-desktop"></span>
+                        <span>•</span>
+                        <span id="post-view-date-desktop"></span>
+                    </div>
+                    <hr class="border-gray-200" />
+                    <div id="post-view-content-desktop" class="prose max-w-none"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp, updateDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // Define Firebase configuration based on user input
+        // Firestore 디버그 로깅 활성화
+        setLogLevel('debug');
+
+        // Firebase configuration and initialization
         const firebaseConfig = {
             apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
             authDomain: "n-mate.firebaseapp.com",
@@ -145,174 +495,485 @@
             appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
             measurementId: "G-0LCGVBKXLQ"
         };
-        
-        // Use global variables provided by the canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // UI 요소
+        const mobileUI = document.getElementById('mobile-ui');
+        const desktopUI = document.getElementById('desktop-ui');
+        const loaderOverlay = document.getElementById('loader-overlay');
+
+        const loginBtnMobile = document.getElementById('login-btn-mobile');
+        const profileContainerMobile = document.getElementById('profile-dropdown-container-mobile');
+        const profileBtnMobile = document.getElementById('profile-btn-mobile');
+        const userNameMobile = document.getElementById('user-name-mobile');
+        const dropdownMenuMobile = document.getElementById('dropdown-menu-mobile');
+        const logoutBtnMobile = document.getElementById('logout-btn-mobile');
         
-        // Get modal elements
-        const createChannelModal = document.getElementById('create-channel-modal');
-        const loginRequiredModal = document.getElementById('login-required-modal');
-        const createChannelBtn = document.getElementById('create-channel-btn');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-        const cancelLoginBtn = document.getElementById('cancel-login-btn');
-        const createChannelForm = document.getElementById('create-channel-form');
-        const allChannelsList = document.getElementById('all-channels-list');
-        const channelRankingList = document.getElementById('channel-ranking-list');
+        const loginBtnDesktop = document.getElementById('login-btn-desktop');
+        const profileContainerDesktop = document.getElementById('profile-dropdown-container-desktop');
+        const profileBtnDesktop = document.getElementById('profile-btn-desktop');
+        const userNameDesktop = document.getElementById('user-name-desktop');
+        const dropdownMenuDesktop = document.getElementById('dropdown-menu-desktop');
+        const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
+        
+        const communityListMobile = document.getElementById('community-list-mobile');
+        const writePostPageMobile = document.getElementById('write-post-page-mobile');
+        const postViewPageMobile = document.getElementById('post-view-page-mobile');
+        const writePostBtnMobile = document.getElementById('write-post-btn-mobile');
+        const backBtnMobile = document.getElementById('back-btn-mobile');
+        const postViewBackBtnMobile = document.getElementById('post-view-back-btn-mobile');
+        const editorMobileDiv = document.getElementById('editor-mobile');
+        const postTitleMobileInput = document.getElementById('post-title-mobile');
+        const submitPostBtnMobile = document.getElementById('submit-post-btn-mobile');
+        const hotPostsListMobile = document.getElementById('hot-posts-list-mobile');
+        const allPostsListMobile = document.getElementById('all-posts-list-mobile');
+        
+        const communityListDesktop = document.getElementById('community-list-desktop');
+        const writePostPageDesktop = document.getElementById('write-post-page-desktop');
+        const postViewPageDesktop = document.getElementById('post-view-page-desktop');
+        const writePostBtnDesktop = document.getElementById('write-post-btn-desktop');
+        const backBtnDesktop = document.getElementById('back-btn-desktop');
+        const postViewBackBtnDesktop = document.getElementById('post-view-back-btn-desktop');
+        const editorDesktopDiv = document.getElementById('editor-desktop');
+        const postTitleDesktopInput = document.getElementById('post-title-desktop');
+        const submitPostBtnDesktop = document.getElementById('submit-post-btn-desktop');
+        const hotPostsListDesktop = document.getElementById('hot-posts-list-desktop');
+        const allPostsListDesktop = document.getElementById('all-posts-list-desktop');
 
-        // Function to load all channels in real-time
-        const loadChannels = () => {
-            const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
-            const q = query(channelsColRef, orderBy('createdAt', 'desc'));
+        const postViewTitleMobile = document.getElementById('post-view-title-mobile');
+        const postViewAuthorMobile = document.getElementById('post-view-author-mobile');
+        const postViewDateMobile = document.getElementById('post-view-date-mobile');
+        const postViewContentMobile = document.getElementById('post-view-content-mobile');
+        
+        const postViewTitleDesktop = document.getElementById('post-view-title-desktop');
+        const postViewAuthorDesktop = document.getElementById('post-view-author-desktop');
+        const postViewDateDesktop = document.getElementById('post-view-date-desktop');
+        const postViewContentDesktop = document.getElementById('post-view-content-desktop');
 
-            onSnapshot(q, (snapshot) => {
-                allChannelsList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const channel = doc.data();
-                    const li = document.createElement('li');
-                    li.innerHTML = `<a href="community/chan?id=${doc.id}" class="block py-1 hover:text-blue-600">${channel.name}</a>`;
-                    allChannelsList.appendChild(li);
+        let isFirstLoad = true;
+        let isAuthenticated = false;
+        let editor;
+        let userName = "익명";
+
+        // 로더 숨기고 UI 표시
+        const hideLoader = () => {
+            if (isFirstLoad) {
+                loaderOverlay.classList.add('hidden');
+                mobileUI.classList.remove('hidden');
+                desktopUI.classList.remove('hidden');
+                isFirstLoad = false;
+            }
+        };
+
+        // UI 전환 함수
+        const showCommunityListPage = () => {
+            if (window.innerWidth < 768) {
+                communityListMobile.classList.remove('hidden');
+                writePostPageMobile.classList.add('hidden');
+                postViewPageMobile.classList.add('hidden');
+            } else {
+                communityListDesktop.classList.remove('hidden');
+                writePostPageDesktop.classList.add('hidden');
+                postViewPageDesktop.classList.add('hidden');
+            }
+        };
+
+        const showWritePostPage = () => {
+            if (window.innerWidth < 768) {
+                communityListMobile.classList.add('hidden');
+                writePostPageMobile.classList.remove('hidden');
+                postViewPageMobile.classList.add('hidden');
+            } else {
+                communityListDesktop.classList.add('hidden');
+                writePostPageDesktop.classList.remove('hidden');
+                postViewPageDesktop.classList.add('hidden');
+            }
+        };
+
+        const showPostViewPage = (post) => {
+            if (window.innerWidth < 768) {
+                communityListMobile.classList.add('hidden');
+                writePostPageMobile.classList.add('hidden');
+                postViewPageMobile.classList.remove('hidden');
+
+                postViewTitleMobile.textContent = post.title;
+                postViewAuthorMobile.textContent = post.authorName || "익명";
+                postViewDateMobile.textContent = formatDate(post.createdAt);
+                postViewContentMobile.innerHTML = post.content;
+            } else {
+                communityListDesktop.classList.add('hidden');
+                writePostPageDesktop.classList.add('hidden');
+                postViewPageDesktop.classList.remove('hidden');
+
+                postViewTitleDesktop.textContent = post.title;
+                postViewAuthorDesktop.textContent = post.authorName || "익명";
+                postViewDateDesktop.textContent = formatDate(post.createdAt);
+                postViewContentDesktop.innerHTML = post.content;
+            }
+        };
+
+        // 날짜 포맷팅 함수
+        const formatDate = (timestamp) => {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        };
+
+        // 게시물 렌더링 함수
+        const renderPosts = (posts) => {
+            // 인기 게시글 및 전체 게시글 목록 초기화
+            hotPostsListMobile.innerHTML = '';
+            hotPostsListDesktop.innerHTML = '';
+            allPostsListMobile.innerHTML = '';
+            allPostsListDesktop.innerHTML = '';
+
+            // 인기 게시물 (예시: 첫 2개)
+            const hotPosts = posts.slice(0, 2);
+            hotPosts.forEach(post => {
+                const postHtml = `
+                    <div class="rounded-xl bg-white p-4 space-y-1 shadow-sm border border-gray-200 ripple-btn post-item" data-id="${post.id}">
+                        <h4 class="font-semibold text-gray-900 leading-tight">${post.title}</h4>
+                        <p class="text-xs text-gray-500 line-clamp-2">${post.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                        <div class="flex justify-between items-center text-xs text-gray-400 pt-2">
+                            <span>${post.authorName || '익명'}</span>
+                            <span>${formatDate(post.createdAt)}</span>
+                        </div>
+                    </div>
+                `;
+                hotPostsListMobile.insertAdjacentHTML('beforeend', postHtml);
+                const desktopPostHtml = `
+                    <div class="rounded-2xl bg-white p-6 space-y-2 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors ripple-btn post-item" data-id="${post.id}">
+                        <h4 class="font-semibold text-lg text-gray-900 leading-tight">${post.title}</h4>
+                        <p class="text-sm text-gray-500 line-clamp-2">${post.content.replace(/<[^>]*>/g, '').substring(0, 150)}...</p>
+                        <div class="flex justify-between items-center text-sm text-gray-400 pt-2">
+                            <span>${post.authorName || '익명'}</span>
+                            <span>${formatDate(post.createdAt)}</span>
+                        </div>
+                    </div>
+                `;
+                hotPostsListDesktop.insertAdjacentHTML('beforeend', desktopPostHtml);
+            });
+
+            // 전체 게시물
+            posts.forEach(post => {
+                const postHtml = `
+                    <div class="rounded-xl bg-white p-4 space-y-1 shadow-sm border border-gray-200 ripple-btn post-item" data-id="${post.id}">
+                        <h4 class="font-semibold text-gray-900 leading-tight">${post.title}</h4>
+                        <p class="text-xs text-gray-500 line-clamp-2">${post.content.replace(/<[^>]*>/g, '').substring(0, 100)}...</p>
+                        <div class="flex justify-between items-center text-xs text-gray-400 pt-2">
+                            <span>${post.authorName || '익명'}</span>
+                            <span>${formatDate(post.createdAt)}</span>
+                        </div>
+                    </div>
+                `;
+                allPostsListMobile.insertAdjacentHTML('beforeend', postHtml);
+                const desktopPostHtml = `
+                    <div class="flex items-start rounded-2xl bg-white p-6 space-x-4 shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors ripple-btn post-item" data-id="${post.id}">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xl font-bold">?</div>
+                        <div class="flex-1 space-y-2">
+                            <h4 class="font-semibold text-lg text-gray-900 leading-tight">${post.title}</h4>
+                            <p class="text-sm text-gray-500 line-clamp-2">${post.content.replace(/<[^>]*>/g, '').substring(0, 150)}...</p>
+                            <div class="flex justify-between text-sm text-gray-400 pt-2">
+                                <span>${post.authorName || '익명'}</span>
+                                <span>${formatDate(post.createdAt)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                allPostsListDesktop.insertAdjacentHTML('beforeend', desktopPostHtml);
+            });
+
+            // 게시물 클릭 이벤트 리스너 추가
+            document.querySelectorAll('.post-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const postId = item.dataset.id;
+                    const selectedPost = posts.find(p => p.id === postId);
+                    if (selectedPost) {
+                        showPostViewPage(selectedPost);
+                    }
                 });
+            });
+            document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+        };
+
+        // Firestore에서 게시물 실시간 가져오기
+        const fetchPosts = (appId) => {
+            const postsColRef = collection(db, `artifacts/${appId}/public/data/posts`);
+            const q = query(postsColRef, orderBy('createdAt', 'desc'));
+
+            onSnapshot(q, (querySnapshot) => {
+                const posts = [];
+                querySnapshot.forEach((doc) => {
+                    posts.push({ id: doc.id, ...doc.data() });
+                });
+                renderPosts(posts);
+            }, (error) => {
+                console.error("Error fetching posts:", error);
             });
         };
 
-        // Function to load channel rankings in real-time
-        const loadRankings = () => {
-            const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
-            const q = query(channelsColRef, orderBy('postCount', 'desc'), orderBy('createdAt', 'desc'));
-
-            onSnapshot(q, (snapshot) => {
-                channelRankingList.innerHTML = '';
-                let rank = 1;
-                snapshot.forEach(doc => {
-                    const channel = doc.data();
-                    const li = document.createElement('li');
-                    li.className = 'flex items-center space-x-4';
-                    li.innerHTML = `
-                        <span class="font-bold text-lg text-blue-600 w-6">${rank}</span>
-                        <a href="community/chan?id=${doc.id}" class="flex items-center space-x-2 flex-grow hover:text-blue-600">
-                            <span class="text-sm font-semibold">${channel.name}</span>
-                            <span class="text-xs text-gray-500">게시글 ${channel.postCount}</span>
-                        </a>
-                    `;
-                    channelRankingList.appendChild(li);
-                    rank++;
-                });
-            });
-        };
-
-        // Function to handle channel creation form submission
-        const handleChannelCreation = async (e) => {
-            e.preventDefault();
-            const channelName = document.getElementById('channel-name').value;
-            const channelDesc = document.getElementById('channel-desc').value;
-            const channelTags = document.getElementById('channel-tags').value;
-
-            if (!channelName) {
-                console.error("채널 이름은 필수입니다.");
+        // CKEditor 초기화 함수
+        const initEditor = async (editorElement) => {
+            if (editor) {
                 return;
             }
-            
             try {
-                const channelsColRef = collection(db, `artifacts/${appId}/public/data/channels`);
-                const newChannelRef = await addDoc(channelsColRef, {
-                    name: channelName,
-                    description: channelDesc,
-                    tags: channelTags.split(',').map(tag => tag.trim()),
-                    postCount: 0,
-                    createdAt: serverTimestamp(),
-                    creatorId: auth.currentUser.uid,
+                editor = await ClassicEditor.create(editorElement, {
+                    language: 'ko',
+                    ckbox: {
+                        tokenUrl: "https://72643.cke-cs.com/token/dev/gYdI3W6L4zTf21919nI88eE0qA7Hk9Jj4vO8JjO9z6s904l7bN6t0p891s4y1vE1?limit=10",
+                    },
+                    mediaEmbed: {
+                        previewsInData: true,
+                        removeProviders: ['dailymotion', 'spotify', 'vimeo', 'youtube', 'instagram', 'twitter', 'googleMaps', 'flickr', 'facebook']
+                    },
+                    placeholder: '여기에 내용을 입력하세요...',
+                    toolbar: {
+                        items: [
+                            'heading',
+                            '|',
+                            'bold',
+                            'italic',
+                            'link',
+                            'bulletedList',
+                            'numberedList',
+                            '|',
+                            'indent',
+                            'outdent',
+                            '|',
+                            'uploadImage',
+                            'blockQuote',
+                            'insertTable',
+                            'mediaEmbed',
+                            'undo',
+                            'redo'
+                        ],
+                        shouldNotGroupWhenFull: false
+                    }
                 });
-
-                // Clear form and close modal
-                createChannelForm.reset();
-                createChannelModal.style.display = 'none';
-
-                console.log("새 채널이 성공적으로 생성되었습니다. ID:", newChannelRef.id);
-                
-                // Redirect to the new channel's page
-                window.location.href = `community/chan?id=${newChannelRef.id}`;
-
+                console.log('CKEditor initialized successfully.');
             } catch (error) {
-                console.error("채널 생성 중 오류 발생:", error);
+                console.error('Error initializing CKEditor:', error);
             }
         };
 
-        // Function to update the UI based on user's login state
-        const updateUI = async (user) => {
-            console.log("updateUI called. User:", user ? user.uid : "null");
-            const navLoginLink = document.getElementById('nav-login-link');
-            const mainContent = document.getElementById('main-content');
-            
-            // Show the main content once the auth state is confirmed
-            mainContent.style.display = 'flex';
+        // 게시글 등록 함수 (버튼 클릭 시)
+        const handleSubmitPost = async () => {
+            const title = window.innerWidth < 768 ? postTitleMobileInput.value : postTitleDesktopInput.value;
+            const content = editor.getData();
+
+            if (!title || !content) {
+                console.error("제목과 내용을 모두 입력해주세요.");
+                return;
+            }
+
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                await addDoc(collection(db, `artifacts/${appId}/public/data/posts`), {
+                    title: title,
+                    content: content,
+                    authorId: auth.currentUser ? auth.currentUser.uid : null,
+                    authorName: userName,
+                    createdAt: serverTimestamp(),
+                    likes: 0,
+                    comments: 0
+                });
+                console.log("게시글이 성공적으로 등록되었습니다.");
+                // 글쓰기 폼 초기화
+                if (editor) {
+                    editor.setData('');
+                }
+                if (postTitleMobileInput) postTitleMobileInput.value = '';
+                if (postTitleDesktopInput) postTitleDesktopInput.value = '';
+                showCommunityListPage();
+            } catch (error) {
+                console.error("게시글 등록 중 오류 발생:", error);
+            }
+        };
+
+        // 로그아웃 함수
+        const handleLogout = async () => {
+            try {
+                await signOut(auth);
+                console.log("User signed out successfully.");
+            } catch (error) {
+                console.error("Error signing out:", error);
+            }
+        };
+
+        // 드롭다운 메뉴 토글
+        const toggleDropdown = (menu) => {
+            menu.classList.toggle('active');
+        };
+
+        // 이벤트 리스너 설정
+        if (profileBtnMobile) { profileBtnMobile.addEventListener('click', () => toggleDropdown(dropdownMenuMobile)); }
+        if (profileBtnDesktop) { profileBtnDesktop.addEventListener('click', () => toggleDropdown(dropdownMenuDesktop)); }
+        if (logoutBtnMobile) { logoutBtnMobile.addEventListener('click', handleLogout); }
+        if (logoutBtnDesktop) { logoutBtnDesktop.addEventListener('click', handleLogout); }
+        if (writePostBtnMobile) {
+            writePostBtnMobile.addEventListener('click', () => {
+                showWritePostPage();
+                initEditor(editorMobileDiv);
+            });
+        }
+        if (writePostBtnDesktop) {
+            writePostBtnDesktop.addEventListener('click', () => {
+                showWritePostPage();
+                initEditor(editorDesktopDiv);
+            });
+        }
+        if (backBtnMobile) { backBtnMobile.addEventListener('click', showCommunityListPage); }
+        if (backBtnDesktop) { backBtnDesktop.addEventListener('click', showCommunityListPage); }
+        if (postViewBackBtnMobile) { postViewBackBtnMobile.addEventListener('click', showCommunityListPage); }
+        if (postViewBackBtnDesktop) { postViewBackBtnDesktop.addEventListener('click', showCommunityListPage); }
+        if (submitPostBtnMobile) { submitPostBtnMobile.addEventListener('click', handleSubmitPost); }
+        if (submitPostBtnDesktop) { submitPostBtnDesktop.addEventListener('click', handleSubmitPost); }
+        
+        // 드롭다운 메뉴 외 클릭 시 닫기
+        window.addEventListener('click', (event) => {
+            if (profileContainerMobile && !profileContainerMobile.contains(event.target) && dropdownMenuMobile.classList.contains('active')) {
+                dropdownMenuMobile.classList.remove('active');
+            }
+            if (profileContainerDesktop && !profileContainerDesktop.contains(event.target) && dropdownMenuDesktop.classList.contains('active')) {
+                dropdownMenuDesktop.classList.remove('active');
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
             if (user) {
-                const userId = user.uid;
-                const docPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
+                console.log("User is authenticated:", user.uid);
+                isAuthenticated = true;
                 
+                if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.add('hidden');
+                
+                if (profileContainerMobile) profileContainerMobile.classList.remove('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.remove('hidden');
+
+                const profileDocPath = `artifacts/${appId}/users/${user.uid}/profile/user_data`;
+                onSnapshot(doc(db, profileDocPath), (docSnapshot) => {
+                    hideLoader();
+                    if (docSnapshot.exists()) {
+                        const data = docSnapshot.data();
+                        userName = data.name || "사용자";
+                        if (userNameMobile) userNameMobile.textContent = userName;
+                        if (userNameDesktop) userNameDesktop.textContent = userName;
+                    } else {
+                        console.error("No user profile document found.");
+                        userName = "사용자";
+                        if (userNameMobile) userNameMobile.textContent = "사용자";
+                        if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                    }
+                }, (error) => {
+                    hideLoader();
+                    console.error("Error getting user profile:", error);
+                    userName = "사용자";
+                    if (userNameMobile) userNameMobile.textContent = "사용자";
+                    if (userNameDesktop) userNameDesktop.textContent = "사용자";
+                });
+            } else {
+                console.log("User is not authenticated. Showing login buttons.");
+                isAuthenticated = false;
+                userName = "익명";
+                hideLoader();
+                
+                if (profileContainerMobile) profileContainerMobile.classList.add('hidden');
+                if (profileContainerDesktop) profileContainerDesktop.classList.add('hidden');
+                
+                if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+                if (loginBtnDesktop) loginBtnDesktop.classList.remove('hidden');
+            }
+            fetchPosts(appId);
+        });
+
+        // Initial sign-in logic on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            if (initialAuthToken) {
                 try {
-                    const docRef = doc(db, docPath);
-                    const docSnap = await getDoc(docRef);
-                    const userName = docSnap.exists() ? docSnap.data().name || '방문자' : '방문자';
-                    
-                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
                 } catch (error) {
-                    console.error("Error fetching user data:", error);
-                    navLoginLink.innerHTML = `<a href="#">마이페이지</a>`;
+                    console.error("Error signing in with custom token:", error);
                 }
             } else {
-                // User is logged out, show simple login link
-                navLoginLink.innerHTML = `<a href="#" class="hover:text-blue-600">로그인</a>`;
-            }
-
-            // Start loading data after auth state is confirmed
-            loadChannels();
-            loadRankings();
-        };
-
-        // Event listener for the "채널 만들기" button
-        createChannelBtn.addEventListener('click', () => {
-            if (auth.currentUser) {
-                // Logged in, show the creation modal
-                createChannelModal.style.display = 'flex';
-            } else {
-                // Not logged in, show the login required modal
-                loginRequiredModal.style.display = 'flex';
+                console.log("No custom auth token provided. Awaiting user login action.");
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                fetchPosts(appId);
+                hideLoader();
             }
         });
 
-        // Event listeners for modals
-        closeModalBtn.addEventListener('click', () => {
-            createChannelModal.style.display = 'none';
-        });
-
-        cancelLoginBtn.addEventListener('click', () => {
-            loginRequiredModal.style.display = 'none';
-        });
-
-        // Event listener for the channel creation form
-        createChannelForm.addEventListener('submit', handleChannelCreation);
-
-        // Listen for authentication state changes. This is the main function that handles login status.
-        onAuthStateChanged(auth, async (user) => {
-            console.log("Auth state changed. User:", user ? user.uid : "null");
-            await updateUI(user);
-        });
-
-        // Use the custom token if available. This will trigger the onAuthStateChanged listener.
-        if (initialAuthToken) {
-            try {
-                await signInWithCustomToken(auth, initialAuthToken);
-                console.log("Signed in with custom token.");
-            } catch (error) {
-                console.error("Error signing in with custom token:", error);
+        // Ripple effect logic
+        function attachRipple(btn){
+            function createRipple(ev){
+                const rect = btn.getBoundingClientRect();
+                let x, y;
+                if(ev.type === 'keydown'){
+                    x = rect.width/2 + rect.left;
+                    y = rect.height/2 + rect.top;
+                } else {
+                    const e = ev.touches ? ev.touches[0] : ev;
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                const left = x - rect.left;
+                const top = y - rect.top;
+                const distX = Math.max(left, rect.width - left);
+                const distY = Math.max(top, rect.height - top);
+                const radius = Math.sqrt(distX*distX + distY*distY);
+                const size = radius * 2;
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.width = size + 'px';
+                ripple.style.height = size + 'px';
+                ripple.style.left = left + 'px';
+                ripple.style.top = top + 'px';
+                btn.appendChild(ripple);
+                requestAnimationFrame(()=>{
+                    ripple.classList.add('animate');
+                });
+                setTimeout(()=>{ ripple.remove(); }, 600);
             }
+            btn.addEventListener('mousedown', createRipple);
+            btn.addEventListener('touchstart', e=>createRipple(e), {passive:true});
+            btn.addEventListener('keydown', e=>{
+                if(e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter'){
+                    createRipple({type:'keydown'});
+                }
+            });
         }
+        document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+        
+        // --- 복사 방지 기능 추가 ---
+        const body = document.body;
+        
+        // 마우스 오른쪽 버튼 클릭 방지
+        body.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // 복사, 잘라내기 방지
+        body.addEventListener('copy', function(e) {
+            e.preventDefault();
+        });
+        
+        body.addEventListener('cut', function(e) {
+            e.preventDefault();
+        });
+        
+        // 텍스트 드래그 선택 방지
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
     </script>
 </body>
 </html>
