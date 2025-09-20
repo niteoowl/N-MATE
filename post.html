@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/image/n-mate_favicon.png">
+    
+    <title>N-MATE | 게시글</title>
+    <meta name="google-adsense-account" content="ca-pub-4390848046914727">
+    <meta name=”description” content=”중학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.”>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4390848046914727"
+     crossorigin="anonymous"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background-color: #ffffff;
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;     /* Firefox */
+            -ms-user-select: none;      /* IE10+ */
+            user-select: none;          /* Standard syntax */
+        }
+        .scrollable-content {
+            padding-bottom: 96px;
+        }
+        @media (min-width: 768px) {
+            .scrollable-content {
+                padding-bottom: 0;
+            }
+        }
+        .skeleton {
+            animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: .5;
+            }
+        }
+        /* Ripple effect styles */
+        .ripple-btn {
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            will-change: transform, opacity;
+            opacity: 0.36;
+            background-color: rgba(0,0,0,0.12);
+        }
+        .ripple.animate {
+            transition: transform 520ms cubic-bezier(.2,.8,.2,1), opacity 520ms linear;
+            transform: translate(-50%,-50%) scale(1);
+            opacity: 0;
+        }
+
+        /* 로딩 애니메이션 스타일 */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            z-index: 1000;
+        }
+        .loader {
+            width: 60px;
+            aspect-ratio: 2;
+            --_g: no-repeat radial-gradient(circle closest-side, #3B82F6 90%, #0000);
+            background:
+                var(--_g) 0% 50%,
+                var(--_g) 50% 50%,
+                var(--_g) 100% 50%;
+            background-size: calc(100%/3) 50%;
+            animation: l3 1s infinite linear;
+        }
+        @keyframes l3 {
+            20%{background-position:0% 0%, 50% 50%, 100% 50%}
+            40%{background-position:0% 100%, 50% 0%, 100% 50%}
+            60%{background-position:0% 50%, 50% 100%, 100% 0%}
+            80%{background-position:0% 50%, 50% 50%, 100% 100%}
+        }
+    </style>
+</head>
+<body onselectstart="return false">
+
+    <!-- 로딩 화면 -->
+    <div id="loader-overlay" class="loader-overlay">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Mobile UI (768px 미만에서만 보임) -->
+    <div id="mobile-ui" class="h-screen flex flex-col md:hidden hidden">
+        <!-- 상단 헤더 -->
+        <header class="bg-white p-4 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+            </div>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-mobile" class="relative">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-mobile" class="hidden">
+                    <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                        <span id="user-name-mobile">이름</span>
+                    </button>
+                    <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main id="main-content-mobile" class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
+            <!-- 게시글 상세 페이지 (모바일) -->
+            <div id="post-view-page-mobile" class="h-full flex flex-col space-y-4">
+                <div class="flex items-center justify-start">
+                    <button id="post-view-back-btn-mobile" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
+                </div>
+                <!-- 게시글 콘텐츠 컨테이너 -->
+                <div id="post-view-content-container-mobile" class="flex-1 overflow-y-auto bg-white rounded-lg p-6 space-y-4 shadow-md border border-gray-200">
+                    <!-- 게시글 로딩 스켈레톤 -->
+                    <div id="post-view-skeleton-mobile" class="space-y-4 skeleton">
+                        <div class="h-8 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                        <div class="h-px bg-gray-200 my-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                    </div>
+
+                    <!-- 실제 게시글 내용 -->
+                    <div id="post-view-real-content-mobile" class="hidden">
+                        <h1 id="post-view-title-mobile" class="text-2xl font-bold text-gray-900"></h1>
+                        <div class="flex items-center space-x-2 text-sm text-gray-500">
+                            <span id="post-view-author-mobile"></span>
+                            <span>•</span>
+                            <span id="post-view-date-mobile"></span>
+                        </div>
+                        <hr class="border-gray-200" />
+                        <div id="post-view-content-mobile" class="prose max-w-none"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 하단 내비게이션 바 -->
+        <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
+            <div class="flex justify-around items-center px-4 py-3">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="home" href="/">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link bg-gray-100 rounded-xl ripple-btn" data-target="community" href="/community">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
+                </a>
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                    </svg>
+                    <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- PC UI (768px 이상에서만 보임) -->
+    <div id="desktop-ui" class="hidden h-screen md:flex md:flex-row hidden">
+        <!-- 좌측 사이드바 -->
+        <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
+            <div>
+                <div class="mb-4">
+                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                </div>
+                <nav class="space-y-1">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                        </svg>
+                        <span>홈</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                        </svg>
+                        <span>학교생활</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/community">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                        </svg>
+                        <span>커뮤니티</span>
+                    </a>
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                        <span>더보기</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- 로그인 버튼 및 프로필 드롭다운 -->
+            <div id="auth-ui-desktop" class="relative mt-4">
+                <!-- 로그인 전 버튼 -->
+                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
+                    로그인
+                </button>
+                <!-- 로그인 후 프로필 드롭다운 -->
+                <div id="profile-dropdown-container-desktop" class="hidden">
+                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
+                        <span id="user-name-desktop">이름</span>
+                    </button>
+                    <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 우측 메인 콘텐츠 영역 -->
+        <main id="main-content-desktop" class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+            <!-- 게시글 상세 페이지 (PC) -->
+            <div id="post-view-page-desktop" class="h-full flex flex-col space-y-6">
+                <div class="flex items-center justify-start">
+                    <button id="post-view-back-btn-desktop" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
+                        </svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
+                </div>
+                <!-- 게시글 콘텐츠 컨테이너 -->
+                <div id="post-view-content-container-desktop" class="flex-1 overflow-y-auto bg-white rounded-lg p-8 space-y-4 shadow-md border border-gray-200">
+                    <!-- 게시글 로딩 스켈레톤 -->
+                    <div id="post-view-skeleton-desktop" class="space-y-4 skeleton">
+                        <div class="h-10 bg-gray-200 rounded w-5/6"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+                        <div class="h-px bg-gray-200 my-4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-4/5"></div>
+                    </div>
+
+                    <!-- 실제 게시글 내용 -->
+                    <div id="post-view-real-content-desktop" class="hidden">
+                        <h1 id="post-view-title-desktop" class="text-3xl font-bold text-gray-900"></h1>
+                        <div class="flex items-center space-x-2 text-sm text-gray-500">
+                            <span id="post-view-author-desktop"></span>
+                            <span>•</span>
+                            <span id="post-view-date-desktop"></span>
+                        </div>
+                        <hr class="border-gray-200" />
+                        <div id="post-view-content-desktop" class="prose max-w-none"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Firestore 디버그 로깅 활성화
+        setLogLevel('debug');
+
+        // Firebase configuration and initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            messagingSenderId: "691313471077",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // UI 요소
+        const mobileUI = document.getElementById('mobile-ui');
+        const desktopUI = document.getElementById('desktop-ui');
+        const loaderOverlay = document.getElementById('loader-overlay');
+
+        const postViewBackBtnMobile = document.getElementById('post-view-back-btn-mobile');
+        const postViewBackBtnDesktop = document.getElementById('post-view-back-btn-desktop');
+
+        const postViewSkeletonMobile = document.getElementById('post-view-skeleton-mobile');
+        const postViewRealContentMobile = document.getElementById('post-view-real-content-mobile');
+        const postViewTitleMobile = document.getElementById('post-view-title-mobile');
+        const postViewAuthorMobile = document.getElementById('post-view-author-mobile');
+        const postViewDateMobile = document.getElementById('post-view-date-mobile');
+        const postViewContentMobile = document.getElementById('post-view-content-mobile');
+        
+        const postViewSkeletonDesktop = document.getElementById('post-view-skeleton-desktop');
+        const postViewRealContentDesktop = document.getElementById('post-view-real-content-desktop');
+        const postViewTitleDesktop = document.getElementById('post-view-title-desktop');
+        const postViewAuthorDesktop = document.getElementById('post-view-author-desktop');
+        const postViewDateDesktop = document.getElementById('post-view-date-desktop');
+        const postViewContentDesktop = document.getElementById('post-view-content-desktop');
+
+        // 날짜 포맷팅 함수
+        const formatDate = (timestamp) => {
+            if (!timestamp) return '';
+            const date = timestamp.toDate();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}.${month}.${day}`;
+        };
+
+        const showPost = async (postId) => {
+            // UI 상태 초기화
+            if (window.innerWidth < 768) {
+                postViewSkeletonMobile.classList.remove('hidden');
+                postViewRealContentMobile.classList.add('hidden');
+            } else {
+                postViewSkeletonDesktop.classList.remove('hidden');
+                postViewRealContentDesktop.classList.add('hidden');
+            }
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const postDocRef = doc(db, `artifacts/${appId}/public/data/posts`, postId);
+            
+            try {
+                const postSnapshot = await getDoc(postDocRef);
+                if (postSnapshot.exists()) {
+                    const post = postSnapshot.data();
+                    if (window.innerWidth < 768) {
+                        postViewTitleMobile.textContent = post.title;
+                        postViewAuthorMobile.textContent = post.authorName || "익명";
+                        postViewDateMobile.textContent = formatDate(post.createdAt);
+                        postViewContentMobile.innerHTML = post.content;
+                        postViewSkeletonMobile.classList.add('hidden');
+                        postViewRealContentMobile.classList.remove('hidden');
+                    } else {
+                        postViewTitleDesktop.textContent = post.title;
+                        postViewAuthorDesktop.textContent = post.authorName || "익명";
+                        postViewDateDesktop.textContent = formatDate(post.createdAt);
+                        postViewContentDesktop.innerHTML = post.content;
+                        postViewSkeletonDesktop.classList.add('hidden');
+                        postViewRealContentDesktop.classList.remove('hidden');
+                    }
+                } else {
+                    console.error("No such post found!");
+                    // 게시글이 없을 경우 메인 페이지로 리디렉션
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error("Error fetching post:", error);
+                window.location.href = '/';
+            }
+        };
+
+        // 이벤트 리스너 설정
+        if (postViewBackBtnMobile) { postViewBackBtnMobile.addEventListener('click', () => { window.location.href = '/community'; }); }
+        if (postViewBackBtnDesktop) { postViewBackBtnDesktop.addEventListener('click', () => { window.location.href = '/community'; }); }
+        
+        // 초기 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+            if (postId) {
+                showPost(postId);
+            } else {
+                console.error("No post ID provided in URL.");
+                window.location.href = '/';
+            }
+            loaderOverlay.classList.add('hidden');
+            mobileUI.classList.remove('hidden');
+            desktopUI.classList.remove('hidden');
+        });
+
+        // Ripple effect logic
+        function attachRipple(btn){
+            function createRipple(ev){
+                const rect = btn.getBoundingClientRect();
+                let x, y;
+                if(ev.type === 'keydown'){
+                    x = rect.width/2 + rect.left;
+                    y = rect.height/2 + rect.top;
+                } else {
+                    const e = ev.touches ? ev.touches[0] : ev;
+                    x = e.clientX;
+                    y = e.clientY;
+                }
+                const left = x - rect.left;
+                const top = y - rect.top;
+                const distX = Math.max(left, rect.width - left);
+                const distY = Math.max(top, rect.height - top);
+                const radius = Math.sqrt(distX*distX + distY*distY);
+                const size = radius * 2;
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.width = size + 'px';
+                ripple.style.height = size + 'px';
+                ripple.style.left = left + 'px';
+                ripple.style.top = top + 'px';
+                btn.appendChild(ripple);
+                requestAnimationFrame(()=>{
+                    ripple.classList.add('animate');
+                });
+                setTimeout(()=>{ ripple.remove(); }, 600);
+            }
+            btn.addEventListener('mousedown', createRipple);
+            btn.addEventListener('touchstart', e=>createRipple(e), {passive:true});
+            btn.addEventListener('keydown', e=>{
+                if(e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter'){
+                    createRipple({type:'keydown'});
+                }
+            });
+        }
+        document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+        
+        // --- 복사 방지 기능 추가 ---
+        const body = document.body;
+        
+        // 마우스 오른쪽 버튼 클릭 방지
+        body.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        
+        // 복사, 잘라내기 방지
+        body.addEventListener('copy', function(e) {
+            e.preventDefault();
+        });
+        
+        body.addEventListener('cut', function(e) {
+            e.preventDefault();
+        });
+        
+        // 텍스트 드래그 선택 방지
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
