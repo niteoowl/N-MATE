@@ -165,9 +165,9 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         커뮤니티
                     </h2>
-                    <button id="write-post-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
+                    <a href="/write" id="write-post-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
                         글쓰기
-                    </button>
+                    </a>
                 </div>
                 
                 <!-- 검색창 -->
@@ -244,28 +244,6 @@
                 <button id="submit-post-btn-mobile" class="w-full ripple-btn px-4 py-3 font-semibold rounded-lg bg-blue-500 text-white transition-colors duration-300 hover:bg-blue-600">
                     게시글 등록
                 </button>
-            </div>
-
-            <!-- 게시글 상세 페이지 (모바일) -->
-            <div id="post-view-page-mobile" class="hidden h-full flex flex-col space-y-4">
-                <div class="flex items-center justify-start">
-                    <button id="post-view-back-btn-mobile" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
-                        </svg>
-                    </button>
-                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
-                </div>
-                <div class="flex-1 overflow-y-auto bg-white rounded-lg p-4 space-y-4 shadow-sm">
-                    <h1 id="post-view-title-mobile" class="text-2xl font-bold text-gray-900"></h1>
-                    <div class="flex items-center space-x-2 text-sm text-gray-500">
-                        <span id="post-view-author-mobile"></span>
-                        <span>•</span>
-                        <span id="post-view-date-mobile"></span>
-                    </div>
-                    <hr class="border-gray-200" />
-                    <div id="post-view-content-mobile" class="prose max-w-none"></div>
-                </div>
             </div>
         </main>
 
@@ -451,35 +429,13 @@
                     게시글 등록
                 </button>
             </div>
-
-            <!-- 게시글 상세 페이지 (PC) -->
-            <div id="post-view-page-desktop" class="hidden h-full flex flex-col space-y-6">
-                <div class="flex items-center justify-start">
-                    <button id="post-view-back-btn-desktop" class="ripple-btn px-2 py-2 rounded-full text-gray-600 transition-colors duration-300 hover:bg-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M165.66,200.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z"></path>
-                        </svg>
-                    </button>
-                    <h2 class="text-xl font-bold text-gray-900 ml-2">게시글</h2>
-                </div>
-                <div class="flex-1 overflow-y-auto bg-white rounded-lg p-6 space-y-4 shadow-sm">
-                    <h1 id="post-view-title-desktop" class="text-3xl font-bold text-gray-900"></h1>
-                    <div class="flex items-center space-x-2 text-sm text-gray-500">
-                        <span id="post-view-author-desktop"></span>
-                        <span>•</span>
-                        <span id="post-view-date-desktop"></span>
-                    </div>
-                    <hr class="border-gray-200" />
-                    <div id="post-view-content-desktop" class="prose max-w-none"></div>
-                </div>
-            </div>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, collection, addDoc, query, orderBy, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // Firestore 디버그 로깅 활성화
@@ -520,10 +476,8 @@
         
         const communityListMobile = document.getElementById('community-list-mobile');
         const writePostPageMobile = document.getElementById('write-post-page-mobile');
-        const postViewPageMobile = document.getElementById('post-view-page-mobile');
         const writePostBtnMobile = document.getElementById('write-post-btn-mobile');
         const backBtnMobile = document.getElementById('back-btn-mobile');
-        const postViewBackBtnMobile = document.getElementById('post-view-back-btn-mobile');
         const editorMobileDiv = document.getElementById('editor-mobile');
         const postTitleMobileInput = document.getElementById('post-title-mobile');
         const submitPostBtnMobile = document.getElementById('submit-post-btn-mobile');
@@ -532,25 +486,13 @@
         
         const communityListDesktop = document.getElementById('community-list-desktop');
         const writePostPageDesktop = document.getElementById('write-post-page-desktop');
-        const postViewPageDesktop = document.getElementById('post-view-page-desktop');
         const writePostBtnDesktop = document.getElementById('write-post-btn-desktop');
         const backBtnDesktop = document.getElementById('back-btn-desktop');
-        const postViewBackBtnDesktop = document.getElementById('post-view-back-btn-desktop');
         const editorDesktopDiv = document.getElementById('editor-desktop');
         const postTitleDesktopInput = document.getElementById('post-title-desktop');
         const submitPostBtnDesktop = document.getElementById('submit-post-btn-desktop');
         const hotPostsListDesktop = document.getElementById('hot-posts-list-desktop');
         const allPostsListDesktop = document.getElementById('all-posts-list-desktop');
-
-        const postViewTitleMobile = document.getElementById('post-view-title-mobile');
-        const postViewAuthorMobile = document.getElementById('post-view-author-mobile');
-        const postViewDateMobile = document.getElementById('post-view-date-mobile');
-        const postViewContentMobile = document.getElementById('post-view-content-mobile');
-        
-        const postViewTitleDesktop = document.getElementById('post-view-title-desktop');
-        const postViewAuthorDesktop = document.getElementById('post-view-author-desktop');
-        const postViewDateDesktop = document.getElementById('post-view-date-desktop');
-        const postViewContentDesktop = document.getElementById('post-view-content-desktop');
 
         let isFirstLoad = true;
         let isAuthenticated = false;
@@ -572,11 +514,9 @@
             if (window.innerWidth < 768) {
                 communityListMobile.classList.remove('hidden');
                 writePostPageMobile.classList.add('hidden');
-                postViewPageMobile.classList.add('hidden');
             } else {
                 communityListDesktop.classList.remove('hidden');
                 writePostPageDesktop.classList.add('hidden');
-                postViewPageDesktop.classList.add('hidden');
             }
         };
 
@@ -584,33 +524,9 @@
             if (window.innerWidth < 768) {
                 communityListMobile.classList.add('hidden');
                 writePostPageMobile.classList.remove('hidden');
-                postViewPageMobile.classList.add('hidden');
             } else {
                 communityListDesktop.classList.add('hidden');
                 writePostPageDesktop.classList.remove('hidden');
-                postViewPageDesktop.classList.add('hidden');
-            }
-        };
-
-        const showPostViewPage = (post) => {
-            if (window.innerWidth < 768) {
-                communityListMobile.classList.add('hidden');
-                writePostPageMobile.classList.add('hidden');
-                postViewPageMobile.classList.remove('hidden');
-
-                postViewTitleMobile.textContent = post.title;
-                postViewAuthorMobile.textContent = post.authorName || "익명";
-                postViewDateMobile.textContent = formatDate(post.createdAt);
-                postViewContentMobile.innerHTML = post.content;
-            } else {
-                communityListDesktop.classList.add('hidden');
-                writePostPageDesktop.classList.add('hidden');
-                postViewPageDesktop.classList.remove('hidden');
-
-                postViewTitleDesktop.textContent = post.title;
-                postViewAuthorDesktop.textContent = post.authorName || "익명";
-                postViewDateDesktop.textContent = formatDate(post.createdAt);
-                postViewContentDesktop.innerHTML = post.content;
             }
         };
 
@@ -692,10 +608,7 @@
             document.querySelectorAll('.post-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const postId = item.dataset.id;
-                    const selectedPost = posts.find(p => p.id === postId);
-                    if (selectedPost) {
-                        showPostViewPage(selectedPost);
-                    }
+                    window.location.href = `/post.html?id=${postId}`;
                 });
             });
             document.querySelectorAll('.ripple-btn').forEach(attachRipple);
@@ -818,8 +731,6 @@
         if (logoutBtnDesktop) { logoutBtnDesktop.addEventListener('click', handleLogout); }
         if (backBtnMobile) { backBtnMobile.addEventListener('click', showCommunityListPage); }
         if (backBtnDesktop) { backBtnDesktop.addEventListener('click', showCommunityListPage); }
-        if (postViewBackBtnMobile) { postViewBackBtnMobile.addEventListener('click', showCommunityListPage); }
-        if (postViewBackBtnDesktop) { postViewBackBtnDesktop.addEventListener('click', showCommunityListPage); }
         if (submitPostBtnMobile) { submitPostBtnMobile.addEventListener('click', handleSubmitPost); }
         if (submitPostBtnDesktop) { submitPostBtnDesktop.addEventListener('click', handleSubmitPost); }
         
@@ -845,11 +756,6 @@
                 } else {
                     initEditor(editorDesktopDiv);
                 }
-            } else if (path.startsWith('/posts/')) {
-                const postId = path.split('/')[2];
-                // TODO: Firestore에서 해당 ID의 게시물 불러와서 showPostViewPage 호출
-                // 현재는 로딩 UI만 표시
-                showLoader(); // 로딩 UI 표시
             } else {
                 showCommunityListPage();
             }
