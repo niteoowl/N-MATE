@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="/image/n-mate_favicon.png
 ">
-    <title>N-MATE | 중학생을 위한 시간표, 급식표, 학사일정</title>
+    <title>N-MATE | 학교생활</title>
     <meta name=”description” content=”중학생을 위한 정보 플랫폼 Nmate! 급식표, 시간표, 학사일정, 커뮤니티까지 모두 한 곳에서 간편하게 확인하세요.”>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,21 +36,6 @@
         }
         .dropdown-menu.active {
             display: block;
-        }
-        .calendar-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            transition: opacity 0.3s ease-in-out;
-            opacity: 0;
-        }
-        .calendar-container {
-            transition: transform 0.3s ease-in-out;
-            transform: translateY(100%);
-        }
-        .calendar-overlay.active {
-            opacity: 1;
-        }
-        .calendar-container.active {
-            transform: translateY(0);
         }
         .skeleton {
             animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -114,6 +99,27 @@
             60%{background-position:0% 50%, 50% 100%, 100% 0%}
             80%{background-position:0% 50%, 50% 50%, 100% 100%}
         }
+        .tab-button {
+            position: relative;
+            padding: 1rem 0;
+            font-weight: 500;
+            color: #9CA3AF;
+            transition: color 0.3s ease;
+        }
+        .tab-button.active {
+            color: #111418;
+            font-weight: 600;
+        }
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #111418;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body onselectstart="return false">
@@ -151,118 +157,45 @@
                 </div>
             </div>
         </header>
+        
+        <!-- 학교생활 탭 네비게이션 -->
+        <nav class="bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div class="flex justify-around px-4">
+                <button id="tab-timetable-mobile" class="tab-button active flex-1 text-center">시간표</button>
+                <button id="tab-meal-mobile" class="tab-button flex-1 text-center">급식</button>
+                <button id="tab-schedule-mobile" class="tab-button flex-1 text-center">학사일정</button>
+            </div>
+        </nav>
 
         <!-- 메인 콘텐츠 영역 -->
         <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
-
-            <!-- 오늘의 메뉴 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 메뉴
-                </h2>
-                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- 급식 카드들 (중식만 남김) -->
-            <div class="grid grid-cols-1 gap-4">
-                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
-                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
-                        중식
-                    </h3>
-                    <ul id="lunch-list-mobile" class="mt-2 space-y-1 text-sm text-gray-700">
+            <!-- 시간표 탭 내용 -->
+            <div id="content-timetable-mobile" class="tab-content">
+                <div class="bg-[#f8f9fb] p-4 rounded-2xl">
+                    <h2 class="text-xl font-bold mb-4 text-[#111418]">오늘의 시간표</h2>
+                    <ul id="timetable-list-mobile" class="text-sm text-gray-700 space-y-2">
                         <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                     </ul>
                 </div>
             </div>
 
-            <div class="h-4"></div>
-
-            <!-- 오늘의 시간표 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 시간표
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
-            <div>
-                <ul id="timetable-list-mobile" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-4"></div>
-
-            <!-- 이번 달 학사일정 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    이번 달 학사일정
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 학사일정 리스트 -->
-            <div>
-                <ul id="schedule-list-mobile" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-4"></div>
-
-            <!-- 시험 디데이 섹션 -->
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    시험 디데이
-                </h2>
-                <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <div class="flex justify-around items-center text-center">
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">3모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">6모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">9모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">수능</span>
-                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
-                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+            <!-- 급식 탭 내용 -->
+            <div id="content-meal-mobile" class="tab-content hidden">
+                <div class="bg-[#f8f9fb] p-4 rounded-2xl">
+                    <h2 class="text-xl font-bold mb-4 text-[#111418]">오늘의 메뉴</h2>
+                    <ul id="lunch-list-mobile" class="text-sm text-gray-700 space-y-2">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
                 </div>
             </div>
 
-            <div class="h-4"></div>
-
-            <!-- 오늘의 뉴스 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 뉴스
-                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
-                </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
-            </div>
-
-            <div>
-                <ul id="news-list-mobile" class="text-sm text-gray-700">
-                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
-                </ul>
-                <div class="flex justify-center mt-4">
-                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
-                        더보기
-                    </button>
+            <!-- 학사일정 탭 내용 -->
+            <div id="content-schedule-mobile" class="tab-content hidden">
+                <div class="bg-[#f8f9fb] p-4 rounded-2xl">
+                    <h2 class="text-xl font-bold mb-4 text-[#111418]">이번 달 학사일정</h2>
+                    <ul id="schedule-list-mobile" class="text-sm text-gray-700 space-y-2">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
                 </div>
             </div>
         </main>
@@ -270,13 +203,13 @@
         <!-- 하단 내비게이션 바 -->
         <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
             <div class="flex justify-around items-center px-4 py-3">
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="home" href="/">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="home" href="/">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
                     </svg>
                     <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
                 </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
+                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="calendar" href="/sclife">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                         <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
                     </svg>
@@ -307,13 +240,13 @@
                     <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
                 </div>
                 <nav class="space-y-1">
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
                         </svg>
                         <span>홈</span>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/sclife">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
                         </svg>
@@ -356,159 +289,49 @@
         </aside>
 
         <!-- 우측 메인 콘텐츠 영역 -->
-        <main class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
-            <!-- 상단 검색 및 알림 영역 -->
-
-            <!-- 오늘의 메뉴 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 메뉴
-                </h2>
-                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- 급식 카드들 (중식만 남김) -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
-                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
-                        중식
-                    </h3>
-                    <ul id="lunch-list-desktop" class="mt-2 space-y-1 text-sm text-gray-700">
-                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                    </ul>
+        <main class="flex-1 overflow-y-auto p-6 pt-10">
+            <!-- 학교생활 탭 네비게이션 -->
+            <nav class="bg-white border-b border-gray-200">
+                <div class="flex justify-around px-4">
+                    <button id="tab-timetable-desktop" class="tab-button active flex-1 text-center">시간표</button>
+                    <button id="tab-meal-desktop" class="tab-button flex-1 text-center">급식</button>
+                    <button id="tab-schedule-desktop" class="tab-button flex-1 text-center">학사일정</button>
                 </div>
-            </div>
+            </nav>
 
-            <div class="h-6"></div>
-
-            <!-- 오늘의 시간표 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 시간표
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
-            <div>
-                <ul id="timetable-list-desktop" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-6"></div>
-
-            <!-- 이번 달 학사일정 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    이번 달 학사일정
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 학사일정 리스트 -->
-            <div>
-                <ul id="schedule-list-desktop" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-6"></div>
-
-            <!-- 시험 디데이 섹션 -->
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    시험 디데이
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <div class="flex justify-around items-center text-center">
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">3모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+            <!-- 학교생활 콘텐츠 섹션 -->
+            <div class="p-6 space-y-6">
+                <!-- 시간표 탭 내용 -->
+                <div id="content-timetable-desktop" class="tab-content">
+                    <div class="bg-[#f8f9fb] p-6 rounded-2xl">
+                        <h2 class="text-xl font-bold mb-4 text-[#111418]">오늘의 시간표</h2>
+                        <ul id="timetable-list-desktop" class="text-sm text-gray-700 space-y-2">
+                            <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                        </ul>
+                    </div>
                 </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">6모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">9모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">수능</span>
-                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
-                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
-                </div>
-            </div>
 
-            <div class="h-6"></div>
+                <!-- 급식 탭 내용 -->
+                <div id="content-meal-desktop" class="tab-content hidden">
+                    <div class="bg-[#f8f9fb] p-6 rounded-2xl">
+                        <h2 class="text-xl font-bold mb-4 text-[#111418]">오늘의 메뉴</h2>
+                        <ul id="lunch-list-desktop" class="text-sm text-gray-700 space-y-2">
+                            <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                        </ul>
+                    </div>
+                </div>
 
-            <!-- 오늘의 뉴스 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 뉴스
-                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
-                </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
-            </div>
-
-            <div>
-                <ul id="news-list-desktop" class="text-sm text-gray-700">
-                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
-                </ul>
-                 <div class="flex justify-center mt-4">
-                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
-                        더보기
-                    </button>
+                <!-- 학사일정 탭 내용 -->
+                <div id="content-schedule-desktop" class="tab-content hidden">
+                    <div class="bg-[#f8f9fb] p-6 rounded-2xl">
+                        <h2 class="text-xl font-bold mb-4 text-[#111418]">이번 달 학사일정</h2>
+                        <ul id="schedule-list-desktop" class="text-sm text-gray-700 space-y-2">
+                            <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                        </ul>
+                    </div>
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- Calendar Modal Overlay -->
-    <div id="calendar-overlay" class="fixed inset-0 z-50 flex items-end justify-center calendar-overlay hidden">
-        <div id="calendar-container" class="w-full max-w-sm mx-auto bg-white rounded-t-3xl shadow-xl p-6 calendar-container">
-            <!-- Calendar Header with month navigation -->
-            <div class="flex justify-between items-center mb-4">
-                <button id="prev-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
-                    </svg>
-                </button>
-                <span id="calendar-header" class="text-xl font-bold"></span>
-                <button id="next-month-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
-                    </svg>
-                </button>
-                <button id="close-calendar-btn" class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
-                    </svg>
-                </button>
-            </div>
-            <!-- Weekday Headers -->
-            <div class="grid grid-cols-7 text-center font-semibold text-sm text-gray-500 mb-2">
-                <div>일</div>
-                <div>월</div>
-                <div>화</div>
-                <div>수</div>
-                <div>목</div>
-                <div>금</div>
-                <div>토</div>
-            </div>
-            <!-- Calendar Grid -->
-            <div id="calendar-grid" class="grid grid-cols-7 text-center">
-                <!-- 날짜들이 여기에 동적으로 삽입됩니다 -->
-            </div>
-        </div>
     </div>
 
     <script type="module">
@@ -552,33 +375,27 @@
         const dropdownMenuDesktop = document.getElementById('dropdown-menu-desktop');
         const logoutBtnDesktop = document.getElementById('logout-btn-desktop');
 
-        const showCalendarBtnMobile = document.getElementById('show-calendar-btn-mobile');
-        const showCalendarBtnDesktop = document.getElementById('show-calendar-btn-desktop');
-        const calendarOverlay = document.getElementById('calendar-overlay');
-        const calendarContainer = document.getElementById('calendar-container');
-        const calendarHeader = document.getElementById('calendar-header');
-        const calendarGrid = document.getElementById('calendar-grid');
-        const closeCalendarBtn = document.getElementById('close-calendar-btn');
-        const prevMonthBtn = document.getElementById('prev-month-btn');
-        const nextMonthBtn = document.getElementById('next-month-btn');
-
         const lunchListMobile = document.getElementById('lunch-list-mobile');
         const lunchListDesktop = document.getElementById('lunch-list-desktop');
         const timetableListMobile = document.getElementById('timetable-list-mobile');
         const timetableListDesktop = document.getElementById('timetable-list-desktop');
         const scheduleListMobile = document.getElementById('schedule-list-mobile');
         const scheduleListDesktop = document.getElementById('schedule-list-desktop');
-        const newsListMobile = document.getElementById('news-list-mobile');
-        const newsListDesktop = document.getElementById('news-list-desktop');
-        const loadMoreNewsMobileBtn = document.getElementById('load-more-news-mobile');
-        const loadMoreNewsDesktopBtn = document.getElementById('load-more-news-desktop');
-
+        
+        const tabButtonsMobile = document.querySelectorAll('#mobile-ui .tab-button');
+        const tabContentsMobile = document.querySelectorAll('#mobile-ui .tab-content');
+        const tabButtonsDesktop = document.querySelectorAll('#desktop-ui .tab-button');
+        const tabContentsDesktop = document.querySelectorAll('#desktop-ui .tab-content');
+        
         let userSchoolData = null;
         let selectedDate = new Date();
         let isAuthenticated = false;
-        let newsData = [];
-        let newsItemsToShow = 3;
         let isFirstLoad = true;
+        let isDataLoaded = {
+            meal: false,
+            timetable: false,
+            schedule: false
+        };
 
         // 로더 숨기고 UI 표시
         const hideLoader = () => {
@@ -593,11 +410,12 @@
         // 로그인 상태에 따른 UI 업데이트
         const updateUIBasedOnAuth = () => {
             const loginMessage = '<li class="text-center text-sm text-gray-500 py-4">로그인하면<br>학교 정보를 불러올 수 있어요.</li>';
-
+            
             if (isAuthenticated) {
-                // 로그인 상태 - 데이터 로딩을 시작하고 스켈레톤을 표시
+                // 로그인 상태
                 if (userSchoolData) {
-                    fetchAndRenderAllData(selectedDate);
+                    // 데이터 로드
+                    fetchDataForActiveTab();
                 }
             } else {
                 // 로그아웃 상태 - 모든 목록에 알림 메시지 표시
@@ -649,96 +467,6 @@
             }
         });
 
-        // 캘린더 관련 함수
-        const showCalendar = () => {
-            renderCalendar(selectedDate);
-            calendarOverlay.classList.remove('hidden');
-            setTimeout(() => {
-                calendarOverlay.classList.add('active');
-                calendarContainer.classList.add('active');
-            }, 10);
-        };
-
-        const hideCalendar = () => {
-            calendarOverlay.classList.remove('active');
-            calendarContainer.classList.remove('active');
-            setTimeout(() => {
-                calendarOverlay.classList.add('hidden');
-            }, 300);
-        };
-
-        const renderCalendar = (date) => {
-            calendarGrid.innerHTML = '';
-            const today = new Date();
-            const year = date.getFullYear();
-            const month = date.getMonth();
-
-            calendarHeader.textContent = `${year}년 ${month + 1}월`;
-
-            const firstDayOfMonth = new Date(year, month, 1);
-            const lastDayOfMonth = new Date(year, month + 1, 0);
-            const startingDay = firstDayOfMonth.getDay();
-            const daysInMonth = lastDayOfMonth.getDate();
-
-            // 공백 채우기
-            for (let i = 0; i < startingDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'w-8 h-8 md:w-10 md:h-10';
-                calendarGrid.appendChild(emptyCell);
-            }
-
-            // 날짜 채우기
-            for (let i = 1; i <= daysInMonth; i++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-sm font-semibold cursor-pointer';
-                dayCell.textContent = i;
-                dayCell.dataset.date = i;
-                dayCell.dataset.month = month;
-                dayCell.dataset.year = year;
-
-                const cellDate = new Date(year, month, i);
-
-                if (cellDate.toDateString() === today.toDateString()) {
-                    dayCell.classList.add('bg-blue-500', 'text-white');
-                } else if (cellDate.toDateString() === selectedDate.toDateString()) {
-                    dayCell.classList.add('bg-gray-200', 'text-gray-900');
-                }
-
-                calendarGrid.appendChild(dayCell);
-            }
-        };
-
-        const handleDateClick = (event) => {
-            const day = event.target.dataset.date;
-            if (day) {
-                const newDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), parseInt(day));
-                selectedDate = newDate;
-                hideCalendar();
-                if (userSchoolData) {
-                    fetchAndRenderAllData(selectedDate);
-                }
-            }
-        };
-
-        // 이전 달 버튼 클릭 핸들러
-        const handlePrevMonth = () => {
-            selectedDate.setMonth(selectedDate.getMonth() - 1);
-            renderCalendar(selectedDate);
-        };
-
-        // 다음 달 버튼 클릭 핸들러
-        const handleNextMonth = () => {
-            selectedDate.setMonth(selectedDate.getMonth() + 1);
-            renderCalendar(selectedDate);
-        };
-        
-        if (showCalendarBtnMobile) showCalendarBtnMobile.addEventListener('click', showCalendar);
-        if (showCalendarBtnDesktop) showCalendarBtnDesktop.addEventListener('click', showCalendar);
-        if (closeCalendarBtn) closeCalendarBtn.addEventListener('click', hideCalendar);
-        if (calendarGrid) calendarGrid.addEventListener('click', handleDateClick);
-        if (prevMonthBtn) prevMonthBtn.addEventListener('click', handlePrevMonth);
-        if (nextMonthBtn) nextMonthBtn.addEventListener('click', handleNextMonth);
-        
         // 스켈레톤 UI 생성 함수
         const createSkeletonUI = (count) => {
             const skeletonList = document.createElement('div');
@@ -753,25 +481,56 @@
             return skeletonList;
         };
 
-        // 모든 데이터를 가져와서 렌더링하는 함수
-        const fetchAndRenderAllData = (date) => {
-            const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
-            fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode, date);
-            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date);
-            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, date);
-        };
+        // 탭 기능 설정
+        const setupTabs = (tabButtons, tabContents) => {
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.id.replace('tab-', 'content-');
+                    const targetContent = document.getElementById(targetId);
 
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.add('hidden'));
+
+                    button.classList.add('active');
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        fetchDataForActiveTab();
+                    }
+                });
+            });
+        };
+        
+        // 현재 활성화된 탭에 따라 데이터를 불러오는 함수
+        const fetchDataForActiveTab = () => {
+            if (!isAuthenticated || !userSchoolData) return;
+
+            const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
+            
+            const activeTab = document.querySelector('.tab-button.active');
+            if (!activeTab) return;
+
+            const tabId = activeTab.id.split('-')[1];
+
+            if (tabId === 'timetable' && !isDataLoaded.timetable) {
+                fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum);
+            } else if (tabId === 'meal' && !isDataLoaded.meal) {
+                fetchAndRenderLunch(atptOfcdcScCode, sdSchulCode);
+            } else if (tabId === 'schedule' && !isDataLoaded.schedule) {
+                fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode);
+            }
+        };
+        
         // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode, date) => {
+        const fetchAndRenderLunch = async (atptOfcdcScCode, sdSchulCode) => {
             // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             lunchListMobile.innerHTML = '';
             lunchListDesktop.innerHTML = '';
             lunchListMobile.appendChild(createSkeletonUI(3));
             lunchListDesktop.appendChild(createSkeletonUI(3));
 
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateString = `${year}${month}${day}`;
 
             const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
@@ -797,6 +556,7 @@
 
                 render(lunchListMobile, lunchData);
                 render(lunchListDesktop, lunchData);
+                isDataLoaded.meal = true;
 
             } catch (error) {
                 console.error("급식 정보 로드 실패:", error);
@@ -806,7 +566,7 @@
         };
 
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date) => {
+        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum) => {
             // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             timetableListMobile.innerHTML = '';
             timetableListDesktop.innerHTML = '';
@@ -828,12 +588,11 @@
                 return;
             }
             
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
             const dateString = `${year}${month}${day}`;
 
-            // API 명세서에 맞춰 ALL_TI_YMD 파라미터 추가
             const url = `${NEIS_BASE_URL}${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
             
             // UI에 시간표 데이터를 렌더링하는 내부 함수
@@ -872,6 +631,7 @@
 
                 render(timetableListMobile, timetableData);
                 render(timetableListDesktop, timetableData);
+                isDataLoaded.timetable = true;
 
             } catch (error) {
                 console.error("시간표 정보 로드 실패:", error);
@@ -881,15 +641,15 @@
         };
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
+        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode) => {
             // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
             scheduleListMobile.innerHTML = '';
             scheduleListDesktop.innerHTML = '';
             scheduleListMobile.appendChild(createSkeletonUI(3));
             scheduleListDesktop.appendChild(createSkeletonUI(3));
 
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
             const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${year}${month}01&AA_TO_YMD=${year}${month}31`;
             
             // UI에 학사일정 데이터를 렌더링하는 내부 함수
@@ -936,109 +696,15 @@
                 
                 render(scheduleListMobile, scheduleData);
                 render(scheduleListDesktop, scheduleData);
+                isDataLoaded.schedule = true;
+
             } catch (error) {
                 console.error("학사일정 정보 로드 실패:", error);
                 scheduleListMobile.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
                 scheduleListDesktop.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
             }
         };
-
-        // 뉴스 정보를 RSS 피드에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderNews = async () => {
-            // 데이터 로딩 중임을 알리는 스켈레톤 UI 표시
-            newsListMobile.innerHTML = '';
-            newsListDesktop.innerHTML = '';
-            newsListMobile.appendChild(createSkeletonUI(3));
-            newsListDesktop.appendChild(createSkeletonUI(3));
-            
-            const RSS_URL = 'https://www.jayupress.com/rss/clickTop.xml';
-            // CORS 문제를 해결하기 위해 프록시 서비스 사용
-            const PROXY_URL = 'https://api.allorigins.win/raw?url=';
-
-            try {
-                const response = await fetch(`${PROXY_URL}${encodeURIComponent(RSS_URL)}`);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const xmlText = await response.text();
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-                
-                const items = xmlDoc.querySelectorAll('item');
-                
-                newsData = [];
-                items.forEach(item => {
-                    const title = item.querySelector('title')?.textContent;
-                    const link = item.querySelector('link')?.textContent;
-                    const description = item.querySelector('description')?.textContent;
-                    if (title && link) {
-                        newsData.push({ title, link, description });
-                    }
-                });
-
-                // 초기 뉴스 렌더링
-                renderNews();
-
-            } catch (error) {
-                console.error("뉴스 정보 로드 실패:", error);
-                const errorMessage = '<li class="py-2">뉴스 정보를 불러오는 중 오류가 발생했습니다.</li>';
-                newsListMobile.innerHTML = errorMessage;
-                newsListDesktop.innerHTML = errorMessage;
-                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
-                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
-            }
-        };
-
-        // 뉴스 데이터를 렌더링하는 함수
-        const renderNews = () => {
-            const listElementMobile = newsListMobile;
-            const listElementDesktop = newsListDesktop;
-
-            if (newsData.length === 0) {
-                const noNewsMessage = '<li class="py-2">오늘의 뉴스 정보가 없습니다.</li>';
-                listElementMobile.innerHTML = noNewsMessage;
-                listElementDesktop.innerHTML = noNewsMessage;
-                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
-                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
-                return;
-            }
-
-            listElementMobile.innerHTML = '';
-            listElementDesktop.innerHTML = '';
-
-            const itemsToDisplay = newsData.slice(0, newsItemsToShow);
-
-            itemsToDisplay.forEach(item => {
-                const li = document.createElement('li');
-                li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
-                li.innerHTML = `
-                    <a href="${item.link}" target="_blank" class="block">
-                        <h3 class="font-semibold text-[#111418] leading-tight">${item.title}</h3>
-                        <p class="text-xs text-gray-500 mt-1">${item.description.replace(/<[^>]*>/g, '').trim()}</p>
-                    </a>
-                `;
-                listElementMobile.appendChild(li.cloneNode(true));
-                listElementDesktop.appendChild(li);
-            });
-            document.querySelectorAll('.ripple-btn').forEach(attachRipple);
-
-            // '더보기' 버튼 표시 여부 결정
-            if (newsItemsToShow >= newsData.length) {
-                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'none';
-                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'none';
-            } else {
-                if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.style.display = 'block';
-                if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.style.display = 'block';
-            }
-        };
-
-        // '더보기' 버튼 클릭 이벤트 핸들러
-        const handleLoadMoreNews = () => {
-            newsItemsToShow += 5;
-            renderNews();
-        };
-
-        if (loadMoreNewsMobileBtn) loadMoreNewsMobileBtn.addEventListener('click', handleLoadMoreNews);
-        if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.addEventListener('click', handleLoadMoreNews);
-
+        
         onAuthStateChanged(auth, async (user) => {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -1078,7 +744,7 @@
 
                         // 모든 필수 정보가 있는지 확인
                         if (atptOfcdcScCode && sdSchulCode && schoolType && grade && classNum) {
-                            fetchAndRenderAllData(selectedDate);
+                            updateUIBasedOnAuth();
                         } else {
                             console.error("프로필 정보가 불완전합니다. 필요한 필드: schoolType, grade, classNum");
                             const incompleteProfileMessage = '<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>';
@@ -1131,7 +797,8 @@
                 console.log("No custom auth token provided. Awaiting user login action.");
                 updateUIBasedOnAuth(); // 토큰이 없으면 즉시 알림 메시지 표시
             }
-            fetchAndRenderNews();
+            setupTabs(tabButtonsMobile, tabContentsMobile);
+            setupTabs(tabButtonsDesktop, tabContentsDesktop);
         });
 
         // Ripple effect logic
@@ -1196,7 +863,6 @@
         document.addEventListener('selectstart', function(e) {
             e.preventDefault();
         });
-
     </script>
 </body>
     </html>
