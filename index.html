@@ -83,357 +83,397 @@
             transform: translate(-50%,-50%) scale(1);
             opacity: 0;
         }
+        /* 로딩 애니메이션 스타일 */
+        .loader {
+            width: 60px;
+            aspect-ratio: 2;
+            --_g: no-repeat radial-gradient(circle closest-side,#000 90%,#0000);
+            background:
+                var(--_g) 0%   50%,
+                var(--_g) 50%  50%,
+                var(--_g) 100% 50%;
+            background-size: calc(100%/3) 50%;
+            animation: l3 1s infinite linear;
+        }
+        @keyframes l3 {
+            20%{background-position:0%   0%, 50%  50%,100%  50%}
+            40%{background-position:0% 100%, 50%    0%,100%  50%}
+            60%{background-position:0%  50%, 50% 100%,100%    0%}
+            80%{background-position:0%  50%, 50%  50%,100% 100%}
+        }
+        /* 로딩 컨테이너 */
+        #loading-container, #loading-container-desktop {
+            display: none;
+        }
     </style>
 </head>
 <body onselectstart="return false">
 
-    <!-- Mobile UI (768px 미만에서만 보임) -->
+    <!-- 모바일 UI (768px 미만) -->
     <div class="h-screen flex flex-col md:hidden">
-        <!-- 상단 헤더 -->
-        <header class="bg-white p-4 flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-                <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
-            </div>
+        <!-- 로딩 컨테이너 -->
+        <div id="loading-container-mobile" class="flex flex-col items-center justify-center h-full">
+            <div class="loader"></div>
+            <p class="mt-4 text-sm text-gray-500">정보를 불러오는 중...</p>
+        </div>
 
-            <!-- 로그인 버튼 및 프로필 드롭다운 -->
-            <div id="auth-ui-mobile" class="relative">
-                <!-- 로그인 전 버튼 -->
-                <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
-                    로그인
-                </button>
-                <!-- 로그인 후 프로필 드롭다운 -->
-                <div id="profile-dropdown-container-mobile" class="hidden">
-                    <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
-                        <span id="user-name-mobile">이름</span>
+        <!-- 메인 콘텐츠 (초기에는 숨김) -->
+        <div id="main-content-mobile" class="hidden h-screen flex flex-col">
+            <!-- 상단 헤더 -->
+            <header class="bg-white p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                </div>
+
+                <!-- 로그인 버튼 및 프로필 드롭다운 -->
+                <div id="auth-ui-mobile" class="relative">
+                    <!-- 로그인 전 버튼 -->
+                    <button id="login-btn-mobile" onclick="window.location.href='/auth'" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white">
+                        로그인
                     </button>
-                    <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
-                            <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                    <!-- 로그인 후 프로필 드롭다운 -->
+                    <div id="profile-dropdown-container-mobile" class="hidden">
+                        <button id="profile-btn-mobile" class="ripple-btn px-4 py-2 font-semibold text-sm rounded-full border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100">
+                            <span id="user-name-mobile">이름</span>
+                        </button>
+                        <div id="dropdown-menu-mobile" class="dropdown-menu absolute z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-mobile">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                                <button id="logout-btn-mobile" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </header>
+            </header>
 
-        <!-- 메인 콘텐츠 영역 -->
-        <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
+            <!-- 메인 콘텐츠 영역 -->
+            <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollable-content">
 
-            <!-- 오늘의 메뉴 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 메뉴
-                </h2>
-                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                    </svg>
-                </button>
-            </div>
+                <!-- 오늘의 메뉴 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 메뉴
+                    </h2>
+                    <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                    <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                        </svg>
+                    </button>
+                </div>
 
-            <!-- 급식 카드들 (중식만 남김) -->
-            <div class="grid grid-cols-1 gap-4">
-                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
-                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
-                        중식
-                    </h3>
-                    <ul id="lunch-list-mobile" class="mt-2 space-y-1 text-sm text-gray-700">
+                <!-- 급식 카드들 (중식만 남김) -->
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                        <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                            중식
+                        </h3>
+                        <ul id="lunch-list-mobile" class="mt-2 space-y-1 text-sm text-gray-700">
+                            <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="h-4"></div>
+
+                <!-- 오늘의 시간표 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 시간표
+                    </h2>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                </div>
+
+                <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+                <div>
+                    <ul id="timetable-list-mobile" class="text-sm text-gray-700">
                         <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                     </ul>
                 </div>
-            </div>
 
-            <div class="h-4"></div>
+                <div class="h-4"></div>
 
-            <!-- 오늘의 시간표 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 시간표
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
-            <div>
-                <ul id="timetable-list-mobile" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-4"></div>
-
-            <!-- 이번 달 학사일정 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    이번 달 학사일정
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 학사일정 리스트 -->
-            <div>
-                <ul id="schedule-list-mobile" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-4"></div>
-
-            <!-- 시험 디데이 섹션 -->
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    시험 디데이
-                </h2>
-                <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <div class="flex justify-around items-center text-center">
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">3모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                <!-- 이번 달 학사일정 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        이번 달 학사일정
+                    </h2>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
                 </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">6모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">9모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">수능</span>
-                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
-                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
-                </div>
-            </div>
 
-            <div class="h-4"></div>
-
-            <!-- 오늘의 뉴스 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 뉴스
-                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
-                </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
-            </div>
-
-            <div>
-                <ul id="news-list-mobile" class="text-sm text-gray-700">
-                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
-                </ul>
-                <div class="flex justify-center mt-4">
-                    <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
-                        더보기
-                    </button>
+                <!-- 학사일정 리스트 -->
+                <div>
+                    <ul id="schedule-list-mobile" class="text-sm text-gray-700">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
                 </div>
-            </div>
-        </main>
 
-        <!-- 하단 내비게이션 바 -->
-        <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
-            <div class="flex justify-around items-center px-4 py-3">
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="home" href="/">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
-                    </svg>
-                    <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
-                </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
-                    </svg>
-                    <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
-                </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="community" href="/community">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
-                        </svg>
-                    <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
-                </a>
-                <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
-                    </svg>
-                    <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
-                </a>
-            </div>
-        </nav>
-    </div>
+                <div class="h-4"></div>
 
-    <!-- PC UI (768px 이상에서만 보임) -->
-    <div class="hidden h-screen md:flex md:flex-row">
-        <!-- 좌측 사이드바 -->
-        <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
-            <div>
-                <div class="mb-4">
-                    <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                <!-- 시험 디데이 섹션 -->
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        시험 디데이
+                    </h2>
+                    <a href="#" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
                 </div>
-                <nav class="space-y-1">
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/">
+
+                <div class="flex justify-around items-center text-center">
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">3모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">6모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">9모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">수능</span>
+                        <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                        <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                    </div>
+                </div>
+
+                <div class="h-4"></div>
+
+                <!-- 오늘의 뉴스 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 뉴스
+                        <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
+                    </h2>
+                    <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
+                </div>
+
+                <div>
+                    <ul id="news-list-mobile" class="text-sm text-gray-700">
+                        <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
+                    </ul>
+                    <div class="flex justify-center mt-4">
+                        <button id="load-more-news-mobile" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
+                            더보기
+                        </button>
+                    </div>
+                </div>
+            </main>
+
+            <!-- 하단 내비게이션 바 -->
+            <nav class="fixed bottom-0 left-0 right-0 z-10 bg-white shadow-md border-t border-gray-200">
+                <div class="flex justify-around items-center px-4 py-3">
+                    <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#111418] nav-link ripple-btn" data-target="home" href="/">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
                         </svg>
-                        <span>홈</span>
+                        <p class="text-xs font-medium leading-normal tracking-wide">홈</p>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                    <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="calendar" href="/sclife">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
                         </svg>
-                        <span>학교생활</span>
+                        <p class="text-xs font-medium leading-normal tracking-wide">학교생활</p>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/community">
+                    <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="community" href="/community">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
-                        </svg>
-                        <span>커뮤니티</span>
+                            </svg>
+                        <p class="text-xs font-medium leading-normal tracking-wide">커뮤니티</p>
                     </a>
-                    <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
+                    <a class="flex flex-1 flex-col items-center justify-center gap-1 text-[#617589] nav-link ripple-btn" data-target="more" href="/more">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
                             <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
                         </svg>
-                        <span>더보기</span>
+                        <p class="text-xs font-medium leading-normal tracking-wide">더보기</p>
                     </a>
-                </nav>
-            </div>
+                </div>
+            </nav>
+        </div>
+    </div>
 
-            <!-- 로그인 버튼 및 프로필 드롭다운 -->
-            <div id="auth-ui-desktop" class="relative mt-4">
-                <!-- 로그인 전 버튼 -->
-                <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
-                    로그인
-                </button>
-                <!-- 로그인 후 프로필 드롭다운 -->
-                <div id="profile-dropdown-container-desktop" class="hidden">
-                    <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
-                        <span id="user-name-desktop">이름</span>
+    <!-- PC UI (768px 이상) -->
+    <div class="hidden h-screen md:flex md:flex-row">
+        <!-- 로딩 컨테이너 -->
+        <div id="loading-container-desktop" class="flex flex-col items-center justify-center flex-1">
+            <div class="loader"></div>
+            <p class="mt-4 text-sm text-gray-500">정보를 불러오는 중...</p>
+        </div>
+
+        <!-- 메인 콘텐츠 (초기에는 숨김) -->
+        <div id="main-content-desktop" class="hidden h-screen md:flex md:flex-row">
+            <!-- 좌측 사이드바 -->
+            <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
+                <div>
+                    <div class="mb-4">
+                        <img src="https://nmate.kr/image/logo.webp" alt="N-MATE 로고" class="h-10 w-auto">
+                    </div>
+                    <nav class="space-y-1">
+                        <a class="flex items-center space-x-3 p-2 rounded-lg text-[#111418] bg-gray-100 font-semibold ripple-btn" href="/">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
+                            </svg>
+                            <span>홈</span>
+                        </a>
+                        <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/sclife">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-96-88v64a8,8,0,0,1-16,0V132.94l-4.42,2.22a8,8,0,0,1-7.16-14.32l16-8A8,8,0,0,1,112,120Zm59.16,30.45L152,176h16a8,8,0,0,1,0,16H136a8,8,0,0,1-6.4-12.8l28.78-38.37A8,8,0,1,0,145.07,132a8,8,0,1,1-13.85-8A24,24,0,0,1,176,136,23.76,23.76,0,0,1,171.16,150.45Z"></path>
+                            </svg>
+                            <span>학교생활</span>
+                        </a>
+                        <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/community">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+                            </svg>
+                            <span>커뮤니티</span>
+                        </a>
+                        <a class="flex items-center space-x-3 p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors ripple-btn" href="/more">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                            </svg>
+                            <span>더보기</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- 로그인 버튼 및 프로필 드롭다운 -->
+                <div id="auth-ui-desktop" class="relative mt-4">
+                    <!-- 로그인 전 버튼 -->
+                    <button id="login-btn-desktop" onclick="window.location.href='/auth'" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-blue-500 bg-transparent text-blue-500 transition-colors duration-300 hover:bg-blue-500 hover:text-white ripple-btn">
+                        로그인
                     </button>
-                    <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
-                            <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                    <!-- 로그인 후 프로필 드롭다운 -->
+                    <div id="profile-dropdown-container-desktop" class="hidden">
+                        <button id="profile-btn-desktop" class="w-full px-6 py-3 font-semibold rounded-lg border-2 border-gray-300 bg-transparent text-gray-700 transition-colors duration-300 hover:bg-gray-100 ripple-btn">
+                            <span id="user-name-desktop">이름</span>
+                        </button>
+                        <div id="dropdown-menu-desktop" class="dropdown-menu absolute z-50 mt-2 w-full rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="profile-btn-desktop">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">내 프로필</a>
+                                <button id="logout-btn-desktop" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 ripple-btn" role="menuitem">로그아웃</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
 
-        <!-- 우측 메인 콘텐츠 영역 -->
-        <main class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
-            <!-- 상단 검색 및 알림 영역 -->
+            <!-- 우측 메인 콘텐츠 영역 -->
+            <main class="flex-1 overflow-y-auto p-6 pt-10 space-y-6">
+                <!-- 상단 검색 및 알림 영역 -->
 
-            <!-- 오늘의 메뉴 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 메뉴
-                </h2>
-                <!-- 아래를 향하는 화살표 버튼으로 변경 -->
-                <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                    </svg>
-                </button>
-            </div>
+                <!-- 오늘의 메뉴 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 메뉴
+                    </h2>
+                    <!-- 아래를 향하는 화살표 버튼으로 변경 -->
+                    <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                        </svg>
+                    </button>
+                </div>
 
-            <!-- 급식 카드들 (중식만 남김) -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
-                    <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
-                        중식
-                    </h3>
-                    <ul id="lunch-list-desktop" class="mt-2 space-y-1 text-sm text-gray-700">
+                <!-- 급식 카드들 (중식만 남김) -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="min-w-56 rounded-2xl bg-[#f8f9fb] p-5 text-neutral-900">
+                        <h3 class="font-bold text-sm flex justify-between items-center text-[#111418]">
+                            중식
+                        </h3>
+                        <ul id="lunch-list-desktop" class="mt-2 space-y-1 text-sm text-gray-700">
+                            <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="h-6"></div>
+
+                <!-- 오늘의 시간표 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 시간표
+                    </h2>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                </div>
+
+                <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
+                <div>
+                    <ul id="timetable-list-desktop" class="text-sm text-gray-700">
                         <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
                     </ul>
                 </div>
-            </div>
 
-            <div class="h-6"></div>
+                <div class="h-6"></div>
 
-            <!-- 오늘의 시간표 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 시간표
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 오늘의 시간표 리스트 (박스 디자인 제거) -->
-            <div>
-                <ul id="timetable-list-desktop" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-6"></div>
-
-            <!-- 이번 달 학사일정 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    이번 달 학사일정
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <!-- 학사일정 리스트 -->
-            <div>
-                <ul id="schedule-list-desktop" class="text-sm text-gray-700">
-                    <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
-                </ul>
-            </div>
-
-            <div class="h-6"></div>
-
-            <!-- 시험 디데이 섹션 -->
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    시험 디데이
-                </h2>
-                <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
-            </div>
-
-            <div class="flex justify-around items-center text-center">
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">3모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                <!-- 이번 달 학사일정 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        이번 달 학사일정
+                    </h2>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
                 </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">6모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">9모</span>
-                    <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-sm text-gray-500">수능</span>
-                    <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
-                    <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
-                </div>
-            </div>
 
-            <div class="h-6"></div>
-
-            <!-- 오늘의 뉴스 섹션 -->
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold flex items-center text-[#111418]">
-                    오늘의 뉴스
-                    <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
-                </h2>
-                <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
-            </div>
-
-            <div>
-                <ul id="news-list-desktop" class="text-sm text-gray-700">
-                    <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
-                </ul>
-                 <div class="flex justify-center mt-4">
-                    <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
-                        더보기
-                    </button>
+                <!-- 학사일정 리스트 -->
+                <div>
+                    <ul id="schedule-list-desktop" class="text-sm text-gray-700">
+                        <!-- 로그인 상태에 따라 스켈레톤 또는 알림 메시지 표시 -->
+                    </ul>
                 </div>
-            </div>
-        </main>
+
+                <div class="h-6"></div>
+
+                <!-- 시험 디데이 섹션 -->
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        시험 디데이
+                    </h2>
+                    <a href="/sclife" class="text-sm font-semibold text-gray-500 ripple-btn">더보기</a>
+                </div>
+
+                <div class="flex justify-around items-center text-center">
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">3모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">6모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">9모</span>
+                        <span class="text-sm text-gray-800 font-semibold mt-1">종료됨</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-sm text-gray-500">수능</span>
+                        <span class="text-lg text-[#3296f8] font-bold mt-1">D-61</span>
+                        <span class="w-1.5 h-1.5 bg-[#3296f8] rounded-full mt-2"></span>
+                    </div>
+                </div>
+
+                <div class="h-6"></div>
+
+                <!-- 오늘의 뉴스 섹션 -->
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold flex items-center text-[#111418]">
+                        오늘의 뉴스
+                        <span class="ml-2 bg-red-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">정치</span>
+                    </h2>
+                    <a href="https://www.jayupress.com/" target="_blank" class="text-sm font-semibold text-gray-500 ripple-btn">자유일보 더보기</a>
+                </div>
+
+                <div>
+                    <ul id="news-list-desktop" class="text-sm text-gray-700">
+                        <!-- 뉴스 목록이 여기에 동적으로 삽입됩니다 -->
+                    </ul>
+                    <div class="flex justify-center mt-4">
+                        <button id="load-more-news-desktop" class="text-sm text-gray-500 font-semibold px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-100 transition-colors ripple-btn">
+                            더보기
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
     <!-- Calendar Modal Overlay -->
@@ -477,7 +517,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase configuration and initialization
@@ -533,12 +573,33 @@
         const newsListDesktop = document.getElementById('news-list-desktop');
         const loadMoreNewsMobileBtn = document.getElementById('load-more-news-mobile');
         const loadMoreNewsDesktopBtn = document.getElementById('load-more-news-desktop');
+        
+        // 새로운 로딩/메인 콘텐츠 요소
+        const loadingContainerMobile = document.getElementById('loading-container-mobile');
+        const mainContentMobile = document.getElementById('main-content-mobile');
+        const loadingContainerDesktop = document.getElementById('loading-container-desktop');
+        const mainContentDesktop = document.getElementById('main-content-desktop');
 
         let userSchoolData = null;
         let selectedDate = new Date();
         let isAuthenticated = false;
         let newsData = [];
         let newsItemsToShow = 3;
+
+        // 로딩 화면 표시/숨김 함수
+        const showLoading = () => {
+            loadingContainerMobile.classList.remove('hidden');
+            loadingContainerDesktop.classList.remove('hidden');
+            mainContentMobile.classList.add('hidden');
+            mainContentDesktop.classList.add('hidden');
+        };
+
+        const hideLoading = () => {
+            loadingContainerMobile.classList.add('hidden');
+            loadingContainerDesktop.classList.add('hidden');
+            mainContentMobile.classList.remove('hidden');
+            mainContentDesktop.classList.remove('hidden');
+        };
 
         // 로그인 상태에 따른 UI 업데이트
         const updateUIBasedOnAuth = () => {
@@ -990,6 +1051,7 @@
         if (loadMoreNewsDesktopBtn) loadMoreNewsDesktopBtn.addEventListener('click', handleLoadMoreNews);
 
         onAuthStateChanged(auth, async (user) => {
+            hideLoading();
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
             if (user) {
@@ -1064,6 +1126,7 @@
 
         // Initial sign-in logic on page load
         document.addEventListener('DOMContentLoaded', async () => {
+            showLoading(); // 페이지 로드 시 로딩 화면 표시
             const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
             if (initialAuthToken) {
                 try {
