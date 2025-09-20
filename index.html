@@ -901,7 +901,7 @@
                     return;
                 }
                 // '토요휴업일' 제외
-                const filteredData = data.filter(item => item.EVENT_NM !== '[토요휴업일]');
+                const filteredData = data.filter(item => item.EVENT_NM !== '토요휴업일');
                 
                 if (filteredData.length === 0) {
                      listElement.innerHTML = '<li class="py-2">이번 달 학사일정 정보가 없습니다.</li>';
