@@ -298,9 +298,6 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 로깅을 활성화하여 디버깅 정보를 확인합니다.
-        // setLogLevel('debug'); // 주석 해제하여 디버그 로그 활성화 가능
-
         // 전역 변수 및 상수
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
@@ -495,194 +492,110 @@
         currentDateMobile.textContent = formatDate(today);
         currentDateDesktop.textContent = formatDate(today);
 
-        // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date) => {
+        // API 데이터를 가져와서 UI에 표시하는 함수
+        const fetchAndRenderContent = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum) => {
+            const dateString = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+            const yearMonth = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}`;
+            
+            // 시간표
+            let timetableEndpoint = '';
+            if (schoolType === '초등학교') timetableEndpoint = 'elsTimetable';
+            else if (schoolType === '중학교') timetableEndpoint = 'misTimetable';
+            else if (schoolType === '고등학교') timetableEndpoint = 'hisTimetable';
+            
+            const timetableUrl = `${NEIS_BASE_URL}${timetableEndpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
+
+            // 급식
+            const mealUrl = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
+
+            // 학사일정
+            const scheduleUrl = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${yearMonth}01&AA_TO_YMD=${yearMonth}31`;
+
+            // 스켈레톤 UI 표시
             timetableListMobile.innerHTML = '';
             timetableListDesktop.innerHTML = '';
-            timetableListMobile.appendChild(createSkeletonUI(3));
-            timetableListDesktop.appendChild(createSkeletonUI(3));
-
-            let endpoint = '';
-            if (schoolType === '초등학교') {
-                endpoint = 'elsTimetable';
-            } else if (schoolType === '중학교') {
-                endpoint = 'misTimetable';
-            } else if (schoolType === '고등학교') {
-                endpoint = 'hisTimetable';
-            } else {
-                console.error("알 수 없는 학교 유형입니다:", schoolType);
-                timetableListMobile.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
-                timetableListDesktop.innerHTML = '<li class="py-2">학교 유형을 알 수 없어<br>시간표를 불러올 수 없습니다.</li>';
-                return;
-            }
-            
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateString = `${year}${month}${day}`;
-
-            const url = `${NEIS_BASE_URL}${endpoint}?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&GRADE=${grade}&CLASS_NM=${classNum}&ALL_TI_YMD=${dateString}`;
-            
-            const render = (listElement, data) => {
-                listElement.innerHTML = '';
-                if (!data || data.length === 0) {
-                    listElement.innerHTML = '<li class="py-2 text-center text-gray-500">오늘의 시간표 정보가 없습니다.</li>';
-                    return;
-                }
-                data.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
-                data.forEach(item => {
-                    const subject = item.ITRT_CNTNT;
-                    const period = item.PERIO;
-                    const li = document.createElement('li');
-                    li.className = 'flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0';
-                    li.innerHTML = `<span class="font-semibold text-gray-900">${period}교시</span><span>${subject}</span>`;
-                    listElement.appendChild(li);
-                });
-            };
-
-            try {
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.RESULT && result.RESULT.CODE === 'INFO-200') {
-                    const noTimetableMessage = '<li class="py-2 text-center text-gray-500">오늘의 시간표 정보가 없습니다.<br>학사일정 또는 주말인지 확인해 보세요.</li>';
-                    timetableListMobile.innerHTML = noTimetableMessage;
-                    timetableListDesktop.innerHTML = noTimetableMessage;
-                    return;
-                }
-                
-                const timetableData = result[endpoint]?.[1]?.row;
-
-                render(timetableListMobile, timetableData);
-                render(timetableListDesktop, timetableData);
-
-            } catch (error) {
-                console.error("시간표 정보 로드 실패:", error);
-                timetableListMobile.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
-                timetableListDesktop.innerHTML = '<li class="py-2">시간표 정보를 불러오는 중 오류가 발생했습니다.</li>';
-            }
-        };
-
-        // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderMeals = async (atptOfcdcScCode, sdSchulCode, date) => {
             mealListMobile.innerHTML = '';
             mealListDesktop.innerHTML = '';
-            mealListMobile.appendChild(createSkeletonUI(3));
-            mealListDesktop.appendChild(createSkeletonUI(3));
-
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateString = `${year}${month}${day}`;
-            
-            const url = `${NEIS_BASE_URL}mealServiceDietInfo?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&MLSV_YMD=${dateString}`;
-
-            const render = (listElement, data) => {
-                listElement.innerHTML = '';
-                if (!data || data.length === 0) {
-                    listElement.innerHTML = '<li class="py-2 text-center text-gray-500">오늘의 급식 정보가 없습니다.</li>';
-                    return;
-                }
-                data.forEach(item => {
-                    const mealType = item.MMEAL_SC_NM; // 조식, 중식, 석식
-                    // allergens are numbers in () e.g., (5.13.)
-                    const mealItems = item.DDISH_NM.replace(/<br\/>/g, ', ').replace(/\s*\([^)]*\)\s*/g, ' ').split(',').filter(item => item.trim() !== '');
-
-                    const li = document.createElement('li');
-                    li.className = 'py-2 border-b border-gray-200 last:border-b-0';
-                    li.innerHTML = `
-                        <div class="flex items-center space-x-2">
-                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">${mealType}</span>
-                            <ul class="list-none text-sm space-y-1">
-                                ${mealItems.map(meal => `<li class="font-medium text-gray-900">${meal.trim()}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                    listElement.appendChild(li);
-                });
-            };
-            
-            try {
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.RESULT && result.RESULT.CODE === 'INFO-200') {
-                    const noMealMessage = '<li class="py-2 text-center text-gray-500">오늘의 급식 정보가 없습니다.<br>학사일정 또는 주말인지 확인해 보세요.</li>';
-                    mealListMobile.innerHTML = noMealMessage;
-                    mealListDesktop.innerHTML = noMealMessage;
-                    return;
-                }
-                
-                const mealData = result.mealServiceDietInfo?.[1]?.row;
-
-                render(mealListMobile, mealData);
-                render(mealListDesktop, mealData);
-
-            } catch (error) {
-                console.error("급식 정보 로드 실패:", error);
-                mealListMobile.innerHTML = '<li class="py-2">급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
-                mealListDesktop.innerHTML = '<li class="py-2">급식 정보를 불러오는 중 오류가 발생했습니다.</li>';
-            }
-        };
-
-        // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
-        const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
             scheduleListMobile.innerHTML = '';
             scheduleListDesktop.innerHTML = '';
+
+            timetableListMobile.appendChild(createSkeletonUI(3));
+            timetableListDesktop.appendChild(createSkeletonUI(3));
+            mealListMobile.appendChild(createSkeletonUI(3));
+            mealListDesktop.appendChild(createSkeletonUI(3));
             scheduleListMobile.appendChild(createSkeletonUI(3));
             scheduleListDesktop.appendChild(createSkeletonUI(3));
 
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${year}${month}01&AA_TO_YMD=${year}${month}31`;
-            
-            const render = (listElement, data) => {
-                listElement.innerHTML = '';
-                if (!data || data.length === 0) {
-                    listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
-                    return;
-                }
-                const filteredData = data.filter(item => item.EVENT_NM !== '[토요휴업일]');
-                
-                if (filteredData.length === 0) {
-                     listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
-                    return;
-                }
-
-                filteredData.forEach(item => {
-                    const schedule = item.EVENT_NM;
-                    const dateString = item.AA_YMD;
-                    const li = document.createElement('li');
-                    li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
-                    li.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-2">
-                                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
-                                <span>${schedule}</span>
-                            </div>
-                            <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
-                        </div>
-                    `;
-                    listElement.appendChild(li);
-                });
-                document.querySelectorAll('.ripple-btn').forEach(attachRipple);
-            };
-
+            // 모든 API 호출을 병렬로 처리
             try {
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                const scheduleData = result.SchoolSchedule?.[1]?.row;
-                
-                render(scheduleListMobile, scheduleData);
-                render(scheduleListDesktop, scheduleData);
+                const [timetableResponse, mealResponse, scheduleResponse] = await Promise.all([
+                    fetch(timetableUrl),
+                    fetch(mealUrl),
+                    fetch(scheduleUrl)
+                ]);
+
+                const timetableResult = await timetableResponse.json();
+                const mealResult = await mealResponse.json();
+                const scheduleResult = await scheduleResponse.json();
+
+                // 시간표 렌더링
+                const timetableData = timetableResult[timetableEndpoint]?.[1]?.row;
+                if (!timetableData || timetableResult.RESULT?.CODE === 'INFO-200') {
+                    const noTimetableMessage = '<li class="py-2 text-center text-gray-500">오늘의 시간표 정보가 없습니다.</li>';
+                    timetableListMobile.innerHTML = noTimetableMessage;
+                    timetableListDesktop.innerHTML = noTimetableMessage;
+                } else {
+                    timetableData.sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+                    timetableListMobile.innerHTML = timetableData.map(item => `<li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"><span class="font-semibold text-gray-900">${item.PERIO}교시</span><span>${item.ITRT_CNTNT}</span></li>`).join('');
+                    timetableListDesktop.innerHTML = timetableData.map(item => `<li class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0"><span class="font-semibold text-gray-900">${item.PERIO}교시</span><span>${item.ITRT_CNTNT}</span></li>`).join('');
+                }
+
+                // 급식 렌더링
+                const mealData = mealResult.mealServiceDietInfo?.[1]?.row;
+                if (!mealData || mealResult.RESULT?.CODE === 'INFO-200') {
+                    const noMealMessage = '<li class="py-2 text-center text-gray-500">오늘의 급식 정보가 없습니다.</li>';
+                    mealListMobile.innerHTML = noMealMessage;
+                    mealListDesktop.innerHTML = noMealMessage;
+                } else {
+                    mealListMobile.innerHTML = mealData.map(item => {
+                        const mealItems = item.DDISH_NM.replace(/<br\/>/g, ', ').replace(/\s*\([^)]*\)\s*/g, ' ').split(',').filter(meal => meal.trim() !== '');
+                        return `<li class="py-2 border-b border-gray-200 last:border-b-0"><div class="flex items-center space-x-2"><span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">${item.MMEAL_SC_NM}</span><ul class="list-none text-sm space-y-1">${mealItems.map(meal => `<li class="font-medium text-gray-900">${meal.trim()}</li>`).join('')}</ul></div></li>`;
+                    }).join('');
+                    mealListDesktop.innerHTML = mealData.map(item => {
+                        const mealItems = item.DDISH_NM.replace(/<br\/>/g, ', ').replace(/\s*\([^)]*\)\s*/g, ' ').split(',').filter(meal => meal.trim() !== '');
+                        return `<li class="py-2 border-b border-gray-200 last:border-b-0"><div class="flex items-center space-x-2"><span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">${item.MMEAL_SC_NM}</span><ul class="list-none text-sm space-y-1">${mealItems.map(meal => `<li class="font-medium text-gray-900">${meal.trim()}</li>`).join('')}</ul></div></li>`;
+                    }).join('');
+                }
+
+                // 학사일정 렌더링
+                const scheduleData = scheduleResult.SchoolSchedule?.[1]?.row;
+                if (!scheduleData || scheduleResult.RESULT?.CODE === 'INFO-200') {
+                    const noScheduleMessage = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
+                    scheduleListMobile.innerHTML = noScheduleMessage;
+                    scheduleListDesktop.innerHTML = noScheduleMessage;
+                } else {
+                    const filteredData = scheduleData.filter(item => item.EVENT_NM !== '[토요휴업일]');
+                    if (filteredData.length === 0) {
+                        const noScheduleMessage = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
+                        scheduleListMobile.innerHTML = noScheduleMessage;
+                        scheduleListDesktop.innerHTML = noScheduleMessage;
+                    } else {
+                        scheduleListMobile.innerHTML = filteredData.map(item => `<li class="py-2 border-b border-gray-200 last:border-b-0 ripple-btn"><div class="flex justify-between items-center"><div class="flex items-center space-x-2"><span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span><span>${item.EVENT_NM}</span></div><span class="text-gray-500">${item.AA_YMD.slice(0, 4)}.${item.AA_YMD.slice(4, 6)}.${item.AA_YMD.slice(6, 8)}</span></div></li>`).join('');
+                        scheduleListDesktop.innerHTML = filteredData.map(item => `<li class="py-2 border-b border-gray-200 last:border-b-0 ripple-btn"><div class="flex justify-between items-center"><div class="flex items-center space-x-2"><span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span><span>${item.EVENT_NM}</span></div><span class="text-gray-500">${item.AA_YMD.slice(0, 4)}.${item.AA_YMD.slice(4, 6)}.${item.AA_YMD.slice(6, 8)}</span></div></li>`).join('');
+                    }
+                }
             } catch (error) {
-                console.error("학사일정 정보 로드 실패:", error);
-                scheduleListMobile.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
-                scheduleListDesktop.innerHTML = '<li class="py-2">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
+                console.error("데이터 로드 실패:", error);
+                const errorMessage = '<li class="py-2 text-center text-gray-500">데이터를 불러오는 중 오류가 발생했습니다.</li>';
+                timetableListMobile.innerHTML = errorMessage;
+                timetableListDesktop.innerHTML = errorMessage;
+                mealListMobile.innerHTML = errorMessage;
+                mealListDesktop.innerHTML = errorMessage;
+                scheduleListMobile.innerHTML = errorMessage;
+                scheduleListDesktop.innerHTML = errorMessage;
             }
         };
-        
+
         // Firebase 앱 초기화
         try {
             app = initializeApp(firebaseConfig);
@@ -720,9 +633,7 @@
                         const { atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum } = userSchoolData;
 
                         if (atptOfcdcScCode && sdSchulCode && schoolType && grade && classNum) {
-                            fetchAndRenderTimetable(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, today);
-                            fetchAndRenderMeals(atptOfcdcScCode, sdSchulCode, today);
-                            fetchAndRenderSchedule(atptOfcdcScCode, sdSchulCode, today);
+                            fetchAndRenderContent(atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum);
                         } else {
                             console.error("프로필 정보가 불완전합니다. 필요한 필드: schoolType, grade, classNum");
                             const incompleteProfileMessage = '<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>';
@@ -755,57 +666,53 @@
                     console.log("Signed in with custom token.");
                 } catch (error) {
                     console.error("Error signing in with custom token:", error);
+                    updateUIBasedOnAuth(false);
                 }
             } else {
-                console.log("No custom auth token provided. Awaiting user login action.");
+                console.log("No custom auth token provided. Signing in anonymously.");
                 try {
                     await signInAnonymously(auth);
                 } catch (error) {
                     console.error("Error signing in anonymously:", error);
+                    updateUIBasedOnAuth(false);
                 }
             }
         });
 
-        // Ripple effect logic
-        function attachRipple(btn){
-            function createRipple(ev){
-                const rect = btn.getBoundingClientRect();
-                let x, y;
-                if(ev.type === 'keydown'){
-                    x = rect.width/2 + rect.left;
-                    y = rect.height/2 + rect.top;
-                } else {
-                    const e = ev.touches ? ev.touches[0] : ev;
-                    x = e.clientX;
-                    y = e.clientY;
+        // Ripple effect logic with Event Delegation
+        document.body.addEventListener('mousedown', createRipple);
+        document.body.addEventListener('touchstart', e => createRipple(e), {passive: true});
+        document.body.addEventListener('keydown', e => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                const target = document.activeElement;
+                if (target && target.classList.contains('ripple-btn')) {
+                    createRipple({ clientX: target.getBoundingClientRect().left, clientY: target.getBoundingClientRect().top, currentTarget: target });
                 }
-                const left = x - rect.left;
-                const top = y - rect.top;
-                const distX = Math.max(left, rect.width - left);
-                const distY = Math.max(top, rect.height - top);
-                const radius = Math.sqrt(distX*distX + distY*distY);
-                const size = radius * 2;
-                const ripple = document.createElement('span');
-                ripple.className = 'ripple';
-                ripple.style.width = size + 'px';
-                ripple.style.height = size + 'px';
-                ripple.style.left = left + 'px';
-                ripple.style.top = top + 'px';
-                btn.appendChild(ripple);
-                requestAnimationFrame(()=>{
-                    ripple.classList.add('animate');
-                });
-                setTimeout(()=>{ ripple.remove(); }, 600);
             }
-            btn.addEventListener('mousedown', createRipple);
-            btn.addEventListener('touchstart', e=>createRipple(e), {passive:true});
-            btn.addEventListener('keydown', e=>{
-                if(e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter'){
-                    createRipple({type:'keydown'});
-                }
+        });
+        
+        function createRipple(ev) {
+            const btn = ev.target.closest('.ripple-btn');
+            if (!btn) return;
+
+            const rect = btn.getBoundingClientRect();
+            const left = ev.clientX - rect.left;
+            const top = ev.clientY - rect.top;
+
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.width = ripple.style.height = `${Math.max(rect.width, rect.height) * 2}px`;
+            ripple.style.left = `${left}px`;
+            ripple.style.top = `${top}px`;
+            
+            btn.appendChild(ripple);
+            requestAnimationFrame(() => {
+                ripple.classList.add('animate');
             });
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
         }
-        document.querySelectorAll('.ripple-btn').forEach(attachRipple);
         
         // --- 복사 방지 기능 추가 ---
         const body = document.body;
