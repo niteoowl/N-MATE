@@ -82,7 +82,6 @@
             transform: translate(-50%,-50%) scale(1);
             opacity: 0;
         }
-
         /* 로딩 애니메이션 스타일 */
         .loader-overlay {
             position: fixed;
@@ -132,7 +131,7 @@
             grid-template-columns: 48px repeat(5, 1fr);
             gap: 4px;
         }
-        .timetable-grid {
+        .timetable-grid-view {
             display: grid;
             grid-template-columns: 48px repeat(5, 1fr);
             gap: 4px;
@@ -157,6 +156,15 @@
             border-bottom-width: 2px;
             border-color: #111418;
         }
+        .mode-btn {
+            @apply px-3 py-1 rounded-full text-xs font-semibold;
+        }
+        .mode-btn.active {
+            @apply bg-gray-900 text-white;
+        }
+        .view-container.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body onselectstart="return false">
@@ -167,7 +175,7 @@
     </div>
 
     <!-- Mobile UI (768px 미만에서만 보임) -->
-    <div id="mobile-ui" class="h-screen flex flex-col md:hidden hidden">
+    <div id="mobile-ui" class="h-screen flex flex-col md:hidden">
         <!-- 상단 헤더 -->
         <header class="bg-white p-4 flex items-center justify-between">
             <div class="flex items-center space-x-2">
@@ -213,23 +221,27 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         나의 시간표
                     </h2>
-                    <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div id="timetable-mode-switch-mobile" class="flex rounded-full bg-gray-200 p-0.5">
+                            <button class="mode-btn list-mode-btn" data-mode="list">목록</button>
+                            <button class="mode-btn grid-mode-btn active" data-mode="grid">표</button>
+                        </div>
+                        <button id="show-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div id="timetable-header-mobile" class="timetable-header text-xs text-gray-500">
-                    <div class="timetable-cell"></div>
-                    <div class="timetable-cell">월</div>
-                    <div class="timetable-cell">화</div>
-                    <div class="timetable-cell">수</div>
-                    <div class="timetable-cell">목</div>
-                    <div class="timetable-cell">금</div>
+                <!-- 시간표: 표(grid) 뷰 -->
+                <div id="timetable-grid-mobile" class="view-container timetable-grid-view rounded-lg border border-gray-200 p-2">
+                    <!-- 시간표 표가 여기에 동적으로 삽입됩니다 -->
                 </div>
 
-                <div id="timetable-grid-mobile" class="timetable-grid text-xs text-[#111418] rounded-lg border border-gray-200 p-2">
+                <!-- 시간표: 목록(list) 뷰 -->
+                <div id="timetable-list-mobile" class="view-container hidden">
+                    <!-- 시간표 목록이 여기에 동적으로 삽입됩니다 -->
                 </div>
             </div>
 
@@ -258,16 +270,49 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         학사일정
                     </h2>
-                    <button id="show-schedule-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div id="schedule-mode-switch-mobile" class="flex rounded-full bg-gray-200 p-0.5">
+                            <button class="mode-btn list-mode-btn active" data-mode="list">목록</button>
+                            <button class="mode-btn calendar-mode-btn" data-mode="calendar">달력</button>
+                        </div>
+                        <button id="show-schedule-calendar-btn-mobile" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-
-                <div>
-                    <ul id="schedule-list-mobile" class="text-sm text-gray-700">
+                <!-- 학사일정: 목록(list) 뷰 -->
+                <div id="schedule-list-mobile" class="view-container">
+                    <ul class="text-sm text-gray-700">
                     </ul>
+                </div>
+                <!-- 학사일정: 달력(calendar) 뷰 -->
+                <div id="schedule-calendar-mobile" class="view-container hidden rounded-lg border border-gray-200 p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <button class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn prev-month-btn-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                            </svg>
+                        </button>
+                        <span id="schedule-calendar-header-mobile" class="text-lg font-bold"></span>
+                        <button class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn next-month-btn-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-7 text-center font-semibold text-xs text-gray-500 mb-2">
+                        <div>일</div>
+                        <div>월</div>
+                        <div>화</div>
+                        <div>수</div>
+                        <div>목</div>
+                        <div>금</div>
+                        <div>토</div>
+                    </div>
+                    <div id="schedule-calendar-grid-mobile" class="grid grid-cols-7 text-center text-sm">
+                    </div>
                 </div>
             </div>
 
@@ -305,7 +350,7 @@
     </div>
 
     <!-- PC UI (768px 이상에서만 보임) -->
-    <div id="desktop-ui" class="hidden h-screen md:flex md:flex-row hidden">
+    <div id="desktop-ui" class="hidden h-screen md:flex md:flex-row">
         <!-- 좌측 사이드바 -->
         <aside class="w-60 bg-white flex flex-col justify-between p-4 shadow-sm">
             <div>
@@ -379,23 +424,27 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         나의 시간표
                     </h2>
-                    <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div id="timetable-mode-switch-desktop" class="flex rounded-full bg-gray-200 p-0.5">
+                            <button class="mode-btn list-mode-btn" data-mode="list">목록</button>
+                            <button class="mode-btn grid-mode-btn active" data-mode="grid">표</button>
+                        </div>
+                        <button id="show-calendar-btn-desktop" class="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 ripple-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-                <div id="timetable-header-desktop" class="timetable-header text-xs text-gray-500">
-                    <div class="timetable-cell"></div>
-                    <div class="timetable-cell">월</div>
-                    <div class="timetable-cell">화</div>
-                    <div class="timetable-cell">수</div>
-                    <div class="timetable-cell">목</div>
-                    <div class="timetable-cell">금</div>
+                <!-- 시간표: 표(grid) 뷰 -->
+                <div id="timetable-grid-desktop" class="view-container timetable-grid-view rounded-lg border border-gray-200 p-2">
+                    <!-- 시간표 표가 여기에 동적으로 삽입됩니다 -->
                 </div>
 
-                <div id="timetable-grid-desktop" class="timetable-grid text-xs text-[#111418] rounded-lg border border-gray-200 p-2">
+                <!-- 시간표: 목록(list) 뷰 -->
+                <div id="timetable-list-desktop" class="view-container hidden">
+                    <!-- 시간표 목록이 여기에 동적으로 삽입됩니다 -->
                 </div>
             </div>
 
@@ -423,16 +472,49 @@
                     <h2 class="text-2xl font-bold flex items-center text-[#111418]">
                         학사일정
                     </h2>
-                    <button id="show-schedule-calendar-btn-desktop" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                            <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
-                        </svg>
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <div id="schedule-mode-switch-desktop" class="flex rounded-full bg-gray-200 p-0.5">
+                            <button class="mode-btn list-mode-btn active" data-mode="list">목록</button>
+                            <button class="mode-btn calendar-mode-btn" data-mode="calendar">달력</button>
+                        </div>
+                        <button id="show-schedule-calendar-btn-desktop" class="ripple-btn p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M128,172a12,12,0,0,1-8.49-3.51l-40-40a12,12,0,0,1,17-17L128,144.93l31.51-31.42a12,12,0,0,1,17,17l-40,40A12,12,0,0,1,128,172Z"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-
-                <div>
-                    <ul id="schedule-list-desktop" class="text-sm text-gray-700">
+                <!-- 학사일정: 목록(list) 뷰 -->
+                <div id="schedule-list-desktop" class="view-container">
+                    <ul class="text-sm text-gray-700">
                     </ul>
+                </div>
+                <!-- 학사일정: 달력(calendar) 뷰 -->
+                <div id="schedule-calendar-desktop" class="view-container hidden rounded-lg border border-gray-200 p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <button class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn prev-month-btn-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M168.49,199.51a12,12,0,0,1-17,17l-80-80a12,12,0,0,1,0-17l80-80a12,12,0,0,1,17,17L97,128Z"></path>
+                            </svg>
+                        </button>
+                        <span id="schedule-calendar-header-desktop" class="text-lg font-bold"></span>
+                        <button class="p-2 text-gray-500 hover:text-gray-900 transition-colors ripple-btn next-month-btn-inline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                                <path d="M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,0,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-7 text-center font-semibold text-xs text-gray-500 mb-2">
+                        <div>일</div>
+                        <div>월</div>
+                        <div>화</div>
+                        <div>수</div>
+                        <div>목</div>
+                        <div>금</div>
+                        <div>토</div>
+                    </div>
+                    <div id="schedule-calendar-grid-desktop" class="grid grid-cols-7 text-center text-sm">
+                    </div>
                 </div>
             </div>
 
@@ -540,6 +622,20 @@
         const scheduleListMobile = document.getElementById('schedule-list-mobile');
         const scheduleListDesktop = document.getElementById('schedule-list-desktop');
 
+        const timetableListMobile = document.getElementById('timetable-list-mobile');
+        const timetableListDesktop = document.getElementById('timetable-list-desktop');
+        const scheduleCalendarMobile = document.getElementById('schedule-calendar-mobile');
+        const scheduleCalendarDesktop = document.getElementById('schedule-calendar-desktop');
+        const scheduleCalendarHeaderMobile = document.getElementById('schedule-calendar-header-mobile');
+        const scheduleCalendarHeaderDesktop = document.getElementById('schedule-calendar-header-desktop');
+        const scheduleCalendarGridMobile = document.getElementById('schedule-calendar-grid-mobile');
+        const scheduleCalendarGridDesktop = document.getElementById('schedule-calendar-grid-desktop');
+        
+        const timetableModeSwitchMobile = document.getElementById('timetable-mode-switch-mobile');
+        const timetableModeSwitchDesktop = document.getElementById('timetable-mode-switch-desktop');
+        const scheduleModeSwitchMobile = document.getElementById('schedule-mode-switch-mobile');
+        const scheduleModeSwitchDesktop = document.getElementById('schedule-mode-switch-desktop');
+
         const mobileTabs = document.querySelectorAll('#mobile-ui .tab');
         const desktopTabs = document.querySelectorAll('#desktop-ui .tab');
         const mobileSections = document.querySelectorAll('#mobile-ui .content-section');
@@ -553,6 +649,20 @@
         let scheduleData = [];
         let mealData = {};
         let activeTab = 'timetable';
+        let activeTimetableMode = 'grid';
+        let activeScheduleMode = 'list';
+        
+        // Mobile/PC UI 표시 토글
+        const handleResize = () => {
+            if (window.innerWidth < 768) {
+                mobileUI.style.display = 'flex';
+                desktopUI.style.display = 'none';
+            } else {
+                mobileUI.style.display = 'none';
+                desktopUI.style.display = 'flex';
+            }
+        };
+        window.addEventListener('resize', handleResize);
 
         // 탭 전환 핸들러
         const switchTab = (tabName, isMobile) => {
@@ -594,8 +704,7 @@
         const hideLoader = () => {
             if (isFirstLoad) {
                 loaderOverlay.classList.add('hidden');
-                mobileUI.classList.remove('hidden');
-                desktopUI.classList.remove('hidden');
+                handleResize(); // 로딩 후 바로 UI 표시
                 isFirstLoad = false;
             }
         };
@@ -613,10 +722,14 @@
                 // 로그아웃 상태
                 timetableGridMobile.innerHTML = loginMessage;
                 timetableGridDesktop.innerHTML = loginMessage;
+                timetableListMobile.innerHTML = loginMessage;
+                timetableListDesktop.innerHTML = loginMessage;
                 mealListMobile.innerHTML = loginMessage;
                 mealListDesktop.innerHTML = loginMessage;
-                scheduleListMobile.innerHTML = loginMessage;
-                scheduleListDesktop.innerHTML = loginMessage;
+                scheduleListMobile.querySelector('ul').innerHTML = loginMessage;
+                scheduleListDesktop.querySelector('ul').innerHTML = loginMessage;
+                scheduleCalendarMobile.innerHTML = loginMessage;
+                scheduleCalendarDesktop.innerHTML = loginMessage;
             }
         };
 
@@ -659,7 +772,7 @@
             }
         });
 
-        // 캘린더 관련 함수
+        // 캘린더 관련 함수 (모달)
         const showCalendar = () => {
             renderCalendar(selectedDate);
             calendarOverlay.classList.remove('hidden');
@@ -872,17 +985,26 @@
         
         // 시간표 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderTimetable = async (atptOfcdcScCode, sdSchulCode, schoolType, grade, classNum, date) => {
-            timetableGridMobile.innerHTML = '<div class="col-span-6"><div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div></div>';
-            timetableGridDesktop.innerHTML = '<div class="col-span-6"><div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div></div>';
-            
+            const mobileContainer = document.getElementById(`timetable-grid-mobile`);
+            const desktopContainer = document.getElementById(`timetable-grid-desktop`);
+            const mobileListContainer = document.getElementById(`timetable-list-mobile`);
+            const desktopListContainer = document.getElementById(`timetable-list-desktop`);
+
+            mobileContainer.innerHTML = '<div class="col-span-6"><div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div></div>';
+            desktopContainer.innerHTML = '<div class="col-span-6"><div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div></div>';
+            mobileListContainer.innerHTML = '<div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div>';
+            desktopListContainer.innerHTML = '<div class="space-y-4">' + createSkeletonUI(7).outerHTML + '</div>';
+
             let endpoint = '';
             if (schoolType === '초등학교') { endpoint = 'elsTimetable'; } 
             else if (schoolType === '중학교') { endpoint = 'misTimetable'; } 
             else if (schoolType === '고등학교') { endpoint = 'hisTimetable'; } 
             else {
                 const errorMessage = `<div class="col-span-6 text-center text-gray-500 py-4">학교 유형을 알 수 없어 시간표를 불러올 수 없습니다.</div>`;
-                timetableGridMobile.innerHTML = errorMessage;
-                timetableGridDesktop.innerHTML = errorMessage;
+                mobileContainer.innerHTML = errorMessage;
+                desktopContainer.innerHTML = errorMessage;
+                mobileListContainer.innerHTML = errorMessage;
+                desktopListContainer.innerHTML = errorMessage;
                 return;
             }
             
@@ -895,50 +1017,70 @@
                 const result = await response.json();
                 
                 if (result.RESULT && result.RESULT.CODE === 'INFO-200') {
-                    renderTimetable({});
-                    return;
+                    timetableData = {};
+                } else {
+                    const data = result[endpoint]?.[1]?.row;
+                    if (data) {
+                        timetableData = {};
+                        data.forEach(item => {
+                            const date = item.ALL_TI_YMD;
+                            if (!timetableData[date]) {
+                                timetableData[date] = [];
+                            }
+                            timetableData[date].push(item);
+                        });
+                    }
                 }
                 
-                timetableData = {};
-                const data = result[endpoint]?.[1]?.row;
-                if (data) {
-                    data.forEach(item => {
-                        const date = item.ALL_TI_YMD;
-                        if (!timetableData[date]) {
-                            timetableData[date] = [];
-                        }
-                        timetableData[date].push(item);
-                    });
-                }
-                renderTimetable(timetableData);
+                renderTimetable(timetableData, activeTimetableMode);
             } catch (error) {
                 console.error("시간표 정보 로드 실패:", error);
                 const errorMessage = `<div class="col-span-6 text-center text-gray-500 py-4">시간표 정보를 불러오는 중 오류가 발생했습니다.</div>`;
-                timetableGridMobile.innerHTML = errorMessage;
-                timetableGridDesktop.innerHTML = errorMessage;
+                mobileContainer.innerHTML = errorMessage;
+                desktopContainer.innerHTML = errorMessage;
+                mobileListContainer.innerHTML = errorMessage;
+                desktopListContainer.innerHTML = errorMessage;
             }
         };
-        
-        const renderTimetable = (data) => {
-            const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
-            
-            timetableGridMobile.innerHTML = '';
-            timetableGridDesktop.innerHTML = '';
 
-            if (Object.keys(data).length === 0) {
-                 const noTimetableMessage = `<div class="col-span-6 text-center text-gray-500 py-4">이번 달 시간표 정보가 없습니다.</div>`;
-                timetableGridMobile.innerHTML = noTimetableMessage;
-                timetableGridDesktop.innerHTML = noTimetableMessage;
-                return;
+        const renderTimetable = (data, mode) => {
+            const isMobile = window.innerWidth < 768;
+            const gridContainer = isMobile ? timetableGridMobile : timetableGridDesktop;
+            const listContainer = isMobile ? timetableListMobile : timetableListDesktop;
+            const noTimetableMessage = `<div class="col-span-6 text-center text-gray-500 py-4">이번 달 시간표 정보가 없습니다.</div>`;
+
+            // 뷰 전환
+            if (mode === 'grid') {
+                gridContainer.classList.remove('hidden');
+                listContainer.classList.add('hidden');
+                gridContainer.innerHTML = '';
+                if (Object.keys(data).length === 0) {
+                     gridContainer.innerHTML = noTimetableMessage;
+                } else {
+                    renderTimetableGrid(gridContainer, data);
+                }
+            } else {
+                gridContainer.classList.add('hidden');
+                listContainer.classList.remove('hidden');
+                listContainer.innerHTML = '';
+                 if (Object.keys(data).length === 0) {
+                     listContainer.innerHTML = noTimetableMessage;
+                } else {
+                    renderTimetableList(listContainer, data);
+                }
             }
-            
+        };
+
+        const renderTimetableGrid = (container, data) => {
+             const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+
             // 최대 교시 찾기
             const allPeriods = Object.values(data).flat().map(item => parseInt(item.PERIO));
             const maxPeriod = Math.max(...allPeriods, 0);
 
             for (let p = 1; p <= maxPeriod; p++) {
                 const row = document.createElement('div');
-                row.className = 'timetable-grid';
+                row.className = 'timetable-grid-view';
                 
                 const periodCell = document.createElement('div');
                 periodCell.className = 'timetable-cell bg-gray-100 rounded-lg font-bold text-gray-800';
@@ -946,7 +1088,6 @@
                 row.appendChild(periodCell);
 
                 for (let d = 1; d <= 5; d++) {
-                    const day = daysOfWeek[d];
                     const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
                     date.setDate(date.getDate() + (d - date.getDay() + 7) % 7);
                     
@@ -959,12 +1100,44 @@
                     cell.textContent = subject;
                     row.appendChild(cell);
                 }
-
-                timetableGridMobile.appendChild(row.cloneNode(true));
-                timetableGridDesktop.appendChild(row);
+                container.appendChild(row);
             }
         };
 
+        const renderTimetableList = (container, data) => {
+            const daysOfWeek = ['일', '월', '화', '수', '목', '금', '토'];
+            const sortedDates = Object.keys(data).sort();
+            
+            const listHtml = sortedDates.map(dateString => {
+                const year = dateString.substring(0, 4);
+                const month = dateString.substring(4, 6);
+                const day = dateString.substring(6, 8);
+                const date = new Date(year, month - 1, day);
+                const dayName = daysOfWeek[date.getDay()];
+                
+                if(date.getDay() === 0 || date.getDay() === 6) return ''; // 주말 제외
+
+                const dailyTimetable = data[dateString].sort((a, b) => parseInt(a.PERIO) - parseInt(b.PERIO));
+                const subjectsHtml = dailyTimetable.map(item => `
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold w-6 text-right">${item.PERIO}교시</span>
+                        <span>${item.ITRT_CNTNT}</span>
+                    </div>
+                `).join('');
+                
+                return `
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 mb-2">${month}.${day} (${dayName})</h3>
+                        <div class="space-y-1">
+                            ${subjectsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = `<div class="space-y-4">${listHtml}</div>`;
+        };
+        
         // 급식 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderMeal = async (atptOfcdcScCode, sdSchulCode, date) => {
             mealListMobile.innerHTML = '<div class="space-y-4">' + createSkeletonUI(3).outerHTML + '</div>';
@@ -1027,65 +1200,175 @@
 
         // 학사일정 정보를 API에서 가져와서 UI에 표시하는 함수
         const fetchAndRenderSchedule = async (atptOfcdcScCode, sdSchulCode, date) => {
-            scheduleListMobile.innerHTML = '';
-            scheduleListDesktop.innerHTML = '';
-            scheduleListMobile.appendChild(createSkeletonUI(3));
-            scheduleListDesktop.appendChild(createSkeletonUI(3));
+            const mobileListContainer = scheduleListMobile.querySelector('ul');
+            const desktopListContainer = scheduleListDesktop.querySelector('ul');
+            const mobileCalendarContainer = scheduleCalendarMobile.querySelector('#schedule-calendar-grid-mobile');
+            const desktopCalendarContainer = scheduleCalendarDesktop.querySelector('#schedule-calendar-grid-desktop');
+
+            mobileListContainer.innerHTML = createSkeletonUI(3).outerHTML;
+            desktopListContainer.innerHTML = createSkeletonUI(3).outerHTML;
+            mobileCalendarContainer.innerHTML = createSkeletonUI(3).outerHTML;
+            desktopCalendarContainer.innerHTML = createSkeletonUI(3).outerHTML;
+            
             scheduleData = [];
             
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const url = `${NEIS_BASE_URL}SchoolSchedule?KEY=${NEIS_API_KEY}&Type=json&ATPT_OFCDC_SC_CODE=${atptOfcdcScCode}&SD_SCHUL_CODE=${sdSchulCode}&AA_FROM_YMD=${year}${month}01&AA_TO_YMD=${year}${month}31`;
             
-            const render = (listElement, data) => {
-                listElement.innerHTML = '';
-                if (!data || data.length === 0) {
-                    listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
-                    return;
-                }
-                const filteredData = data.filter(item => item.EVENT_NM !== '토요휴업일');
-                
-                if (filteredData.length === 0) {
-                     listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
-                    return;
-                }
-
-                filteredData.forEach(item => {
-                    const schedule = item.EVENT_NM;
-                    const dateString = item.AA_YMD;
-                    const li = document.createElement('li');
-                    li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
-                    li.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-2">
-                                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
-                                <span>${schedule}</span>
-                            </div>
-                            <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
-                        </div>
-                    `;
-                    listElement.appendChild(li);
-                });
-                document.querySelectorAll('.ripple-btn').forEach(attachRipple);
-            };
-
             try {
                 const response = await fetch(url);
                 const result = await response.json();
                 
                 scheduleData = result.SchoolSchedule?.[1]?.row || [];
                 
-                render(scheduleListMobile, scheduleData);
-                render(scheduleListDesktop, scheduleData);
+                renderSchedule(scheduleData, activeScheduleMode);
             } catch (error) {
                 console.error("학사일정 정보 로드 실패:", error);
                 const errorMessage = '<li class="py-2 text-center text-gray-500">학사일정 정보를 불러오는 중 오류가 발생했습니다.</li>';
-                scheduleListMobile.innerHTML = errorMessage;
-                scheduleListDesktop.innerHTML = errorMessage;
+                mobileListContainer.innerHTML = errorMessage;
+                desktopListContainer.innerHTML = errorMessage;
+                mobileCalendarContainer.innerHTML = errorMessage;
+                desktopCalendarContainer.innerHTML = errorMessage;
+            }
+        };
+        
+        const renderSchedule = (data, mode) => {
+            const isMobile = window.innerWidth < 768;
+            const listContainer = isMobile ? scheduleListMobile : scheduleListDesktop;
+            const calendarContainer = isMobile ? scheduleCalendarMobile : scheduleCalendarDesktop;
+            
+            if (mode === 'list') {
+                listContainer.classList.remove('hidden');
+                calendarContainer.classList.add('hidden');
+                renderScheduleList(listContainer.querySelector('ul'), data);
+            } else {
+                listContainer.classList.add('hidden');
+                calendarContainer.classList.remove('hidden');
+                renderScheduleCalendar(isMobile, calendarContainer.querySelector('.grid-cols-7'), data);
             }
         };
 
+        const renderScheduleList = (listElement, data) => {
+            listElement.innerHTML = '';
+            if (!data || data.length === 0) {
+                listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
+                return;
+            }
+            const filteredData = data.filter(item => item.EVENT_NM !== '토요휴업일');
+            
+            if (filteredData.length === 0) {
+                 listElement.innerHTML = '<li class="py-2 text-center text-gray-500">이번 달 학사일정 정보가 없습니다.</li>';
+                return;
+            }
 
+            filteredData.forEach(item => {
+                const schedule = item.EVENT_NM;
+                const dateString = item.AA_YMD;
+                const li = document.createElement('li');
+                li.className = 'py-2 border-b border-gray-200 last:border-b-0 ripple-btn';
+                li.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-2">
+                            <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">일반</span>
+                            <span>${schedule}</span>
+                        </div>
+                        <span class="text-gray-500">${dateString.slice(0, 4)}.${dateString.slice(4, 6)}.${dateString.slice(6, 8)}</span>
+                    </div>
+                `;
+                listElement.appendChild(li);
+            });
+            document.querySelectorAll('.ripple-btn').forEach(attachRipple);
+        };
+        
+        const renderScheduleCalendar = (isMobile, container, data) => {
+            container.innerHTML = '';
+            const today = new Date();
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth();
+            const header = isMobile ? scheduleCalendarHeaderMobile : scheduleCalendarHeaderDesktop;
+            header.textContent = `${year}년 ${month + 1}월`;
+
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const startingDay = firstDayOfMonth.getDay();
+            const daysInMonth = lastDayOfMonth.getDate();
+            const eventsByDay = {};
+            data.forEach(item => {
+                const day = parseInt(item.AA_YMD.substring(6,8));
+                if (!eventsByDay[day]) {
+                    eventsByDay[day] = [];
+                }
+                eventsByDay[day].push(item.EVENT_NM);
+            });
+            
+
+            // 공백 채우기
+            for (let i = 0; i < startingDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'w-1/7 h-16';
+                container.appendChild(emptyCell);
+            }
+
+            // 날짜 채우기
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'h-16 p-1 border border-gray-200 text-xs rounded-lg overflow-hidden';
+                dayCell.innerHTML = `<div class="font-semibold text-gray-900 mb-1">${i}</div>`;
+
+                const events = eventsByDay[i] || [];
+                const eventHtml = events.map(event => `<div class="bg-blue-100 text-blue-800 text-[10px] truncate px-1 rounded-full">${event}</div>`).join('');
+                dayCell.innerHTML += eventHtml;
+
+                const cellDate = new Date(year, month, i);
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('bg-blue-50');
+                }
+
+                container.appendChild(dayCell);
+            }
+        };
+
+        // 모드 전환 버튼 핸들러
+        const setupModeSwitch = (containerId, initialMode, renderFn) => {
+            const container = document.getElementById(containerId);
+            const modeBtns = container.querySelectorAll('.mode-btn');
+            
+            modeBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === initialMode) {
+                    btn.classList.add('active');
+                }
+                btn.addEventListener('click', (e) => {
+                    const newMode = e.target.dataset.mode;
+                    if (containerId.includes('timetable')) {
+                        activeTimetableMode = newMode;
+                        renderTimetable(timetableData, activeTimetableMode);
+                    } else {
+                        activeScheduleMode = newMode;
+                        renderSchedule(scheduleData, activeScheduleMode);
+                    }
+                    modeBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+        };
+
+        // 인라인 달력 버튼 핸들러
+        const setupInlineCalendarNav = (isMobile) => {
+            const prevBtn = isMobile ? document.querySelector('#schedule-calendar-mobile .prev-month-btn-inline') : document.querySelector('#schedule-calendar-desktop .prev-month-btn-inline');
+            const nextBtn = isMobile ? document.querySelector('#schedule-calendar-mobile .next-month-btn-inline') : document.querySelector('#schedule-calendar-desktop .next-month-btn-inline');
+            
+            prevBtn.addEventListener('click', () => {
+                selectedDate.setMonth(selectedDate.getMonth() - 1);
+                fetchAndRenderSchedule(userSchoolData.atptOfcdcScCode, userSchoolData.sdSchulCode, selectedDate);
+            });
+            nextBtn.addEventListener('click', () => {
+                selectedDate.setMonth(selectedDate.getMonth() + 1);
+                fetchAndRenderSchedule(userSchoolData.atptOfcdcScCode, userSchoolData.sdSchulCode, selectedDate);
+            });
+        };
+        
         onAuthStateChanged(auth, async (user) => {
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
@@ -1124,15 +1407,25 @@
 
                         if (atptOfcdcScCode && sdSchulCode && schoolType && grade && classNum) {
                             fetchAndRenderAllData(selectedDate);
+                            setupModeSwitch('timetable-mode-switch-mobile', activeTimetableMode);
+                            setupModeSwitch('timetable-mode-switch-desktop', activeTimetableMode);
+                            setupModeSwitch('schedule-mode-switch-mobile', activeScheduleMode);
+                            setupModeSwitch('schedule-mode-switch-desktop', activeScheduleMode);
+                            setupInlineCalendarNav(true);
+                            setupInlineCalendarNav(false);
                         } else {
                             console.error("프로필 정보가 불완전합니다. 필요한 필드: schoolType, grade, classNum");
                             const incompleteProfileMessage = `<div class="col-span-6 text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</div>`;
                             timetableGridMobile.innerHTML = incompleteProfileMessage;
                             timetableGridDesktop.innerHTML = incompleteProfileMessage;
+                            timetableListMobile.innerHTML = incompleteProfileMessage;
+                            timetableListDesktop.innerHTML = incompleteProfileMessage;
                             mealListMobile.innerHTML = incompleteProfileMessage;
                             mealListDesktop.innerHTML = incompleteProfileMessage;
-                            scheduleListMobile.innerHTML = `<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>`;
-                            scheduleListDesktop.innerHTML = `<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>`;
+                            scheduleListMobile.querySelector('ul').innerHTML = `<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>`;
+                            scheduleListDesktop.querySelector('ul').innerHTML = `<li class="text-center text-sm text-gray-500 py-4">학교 정보가 불완전하여<br>데이터를 불러올 수 없습니다.<br>프로필을 확인해주세요.</li>`;
+                            scheduleCalendarMobile.innerHTML = incompleteProfileMessage;
+                            scheduleCalendarDesktop.innerHTML = incompleteProfileMessage;
                         }
                     } else {
                         console.error("No user profile document found.");
