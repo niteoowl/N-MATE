@@ -3,433 +3,901 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게시글 작성</title>
+    <title>부산남중학교 N-MATE - 글쓰기</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Quill.js CDN -->
+    <!-- Inter 및 Noto Sans KR 폰트 설정 (기본 body 폰트로 유지) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (제공된 '더보기' 페이지와 동일한 v8.10.1로 변경) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Quill.js CSS CDN -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <!-- Phosphor Icons for mobile header -->
-    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                /* Pretendard-Regular 웹폰트 정의 */
+        @font-face {
+            font-family: 'Pretendard-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/Project-Noonnu/noonfonts_2107@1.1/Pretendard-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+        /* Body styles for overall layout */
         body {
-            font-family: 'Inter', sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background-color: #ffffff;
+            font-family: 'Pretendard-Regular', 'Inter', sans-serif; /* Noto Sans KR 우선 적용 */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #ffffff; /* Light gray background */
+        }
+        /* Skeleton Loader animation for loading states (kept for consistency, not directly used here) */
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(-90deg, #f0f0f0 0%, #f8f8f8 50%, #f0f0f0 100%);
+            background-size: 200% 100%;
+        }
+        @keyframes pulse {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-text {
+            height: 1em; /* Adjust as needed */
+            width: 80%; /* Adjust as needed */
+            margin-bottom: 0.5em;
+            border-radius: 4px;
         }
 
-        /* Quill Editor Styles */
-        #editor-container {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            background-color: #ffffff;
+        /* Main content container for centering and max-width */
+        .main-content-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Aligns content to the left */
+            max-width: 36rem; /* Max width for content (reduced from 42rem) */
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+            position: relative; /* For absolute positioning of dropdown menu */
+            padding-bottom: 70px; /* Space for fixed bottom navigation */
+        }
+
+        /* Dropdown menu styles */
+        .dropdown-menu {
+            position: absolute; /* Relative to the parent with position: relative */
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2 px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            padding-top: 0.25rem; /* py-1 */
+            padding-bottom: 0.25rem;
+            min-width: 8rem; /* w-40 */
+            right: 0; /* Aligns to the right of the account tab button */
+            top: calc(100% + 0.5rem); /* Positions below the button with 0.5rem gap */
+            z-index: 20; /* Ensures it appears above other content */
+        }
+
+        .dropdown-menu button {
+            width: 100%;
+            text-align: left;
+            padding: 0.5rem 1rem; /* px-4 py-2 */
+            font-size: 0.875rem; /* text-sm */
+            color: #374151; /* text-gray-700 */
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-menu button:hover {
+            background-color: #f3f4f6; /* hover:bg-gray-100 */
+        }
+
+        /* Bottom Navigation Bar Styles */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem; /* p-2 */
+            border-radius: 0.75rem; /* rounded-xl */
+            transition: all 0.3s ease; /* transition-all duration-300 */
+            color: #6b7280; /* text-gray-500 */
+        }
+        .nav-item:hover {
+            color: #3b82f6; /* hover:text-blue-500 */
+            background-color: #f9fafb; /* hover:bg-gray-50 */
+        }
+        .nav-item.active {
+            color: #2563eb; /* text-blue-600 */
+        }
+        .nav-item.active span {
+            font-weight: 700; /* font-bold */
+        }
+        .nav-item.active svg {
+            color: #2563eb; /* text-blue-600 */
+        }
+
+        /* Quill Editor specific styles to fit Tailwind */
+        /* Ensure the main editor container has proper box-sizing */
+        #editor {
+            box-sizing: border-box;
         }
         .ql-toolbar.ql-snow {
-            border: none;
-            border-bottom: 1px solid #e2e8f0;
-            background-color: #ffffff;
-            border-top-left-radius: 0.5rem;
-            border-top-right-radius: 0.5rem;
+            border-top-left-radius: 0.5rem; /* rounded-lg */
+            border-top-right-radius: 0.5rem; /* rounded-lg */
+            border-color: #d1d5db; /* gray-300 */
+            border-bottom: none; /* No bottom border for toolbar */
+            width: 100%; /* Explicitly set width to 100% */
+            box-sizing: border-box; /* Ensure padding and border are included in width */
         }
         .ql-container.ql-snow {
-            border: none;
-            font-size: 1rem;
+            border-bottom-left-radius: 0.5rem; /* rounded-lg */
+            border-bottom-right-radius: 0.5rem; /* rounded-lg */
+            border-color: #d1d5db; /* gray-300 */
+            min-height: 12rem; /* h-48 */
+            font-size: 1rem; /* default text size */
+            color: #1f2937; /* gray-900 for text */
+            padding: 1rem; /* p-4 */
+            width: 100%; /* Explicitly set width to 100% */
+            box-sizing: border-box; /* Ensure padding and border are included in width */
         }
+
+        /* Default font for Quill editor content (now relies on body font-family) */
         .ql-editor {
-            min-height: 400px;
-            padding: 24px;
-        }
-        .ql-snow .ql-editor pre.ql-syntax {
-            background-color: #272822;
-            color: #f8f8f2;
-            overflow: visible;
-        }
-        
-        /* Custom HR button style */
-        .ql-toolbar.ql-snow .ql-hr:before {
-            content: 'HR';
-            font-weight: bold;
-            font-size: 10px;
-            line-height: 12px;
-            padding: 0 4px;
+            font-family: inherit; /* Inherit font from body */
         }
 
-        /* Mobile Header */
-        @media (max-width: 767px) {
-            .mobile-header { display: flex; }
-            .desktop-header { display: none; }
-        }
-        /* PC Header */
-        @media (min-width: 768px) {
-            .mobile-header { display: none; }
-            .desktop-header { display: flex; }
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3b82f6;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-        }
-
-        .disabled-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-weight: 500;
-            color: #4b5563;
-            border-radius: 0.5rem;
-            z-index: 10;
-        }
+        /* Quill Font Families - Custom styles are no longer needed as font selection is removed */
     </style>
 </head>
-<body class="bg-white text-gray-800">
+<body>
 
-    <!-- Mobile Header -->
-    <header class="mobile-header p-4 bg-white shadow-sm sticky top-0 z-10 md:hidden justify-between items-center">
-        <button onclick="window.history.back()" class="text-gray-500 hover:text-gray-700 transition-colors">
-            <i class="ph ph-arrow-left text-2xl"></i>
-        </button>
-        <h1 class="text-lg font-semibold">게시글 작성</h1>
-        <button id="submit-btn-mobile" class="px-4 py-1 rounded-full bg-blue-500 text-white font-semibold text-sm transition-colors hover:bg-blue-600 flex items-center justify-center">
-            <span id="submit-text-mobile">완료</span>
-            <div id="submit-spinner-mobile" class="spinner ml-2 hidden"></div>
-        </button>
-    </header>
+    <!-- Main content area -->
+    <div class="main-content-container">
 
-    <!-- PC Header -->
-    <header class="desktop-header p-4 bg-white shadow-sm sticky top-0 z-10 hidden md:flex items-center justify-between">
-        <h1 class="text-xl font-bold">새 게시글 작성</h1>
-        <div class="flex items-center space-x-2">
-            <button onclick="window.history.back()" class="px-4 py-2 rounded-full text-gray-600 border border-gray-300 hover:bg-gray-100 transition-colors">취소</button>
-            <button id="submit-btn-desktop" class="px-6 py-2 rounded-full bg-blue-500 text-white font-semibold transition-colors hover:bg-blue-600 flex items-center justify-center">
-                <span id="submit-text-desktop">게시글 올리기</span>
-                <div id="submit-spinner-desktop" class="spinner ml-2 hidden"></div>
+        <!-- Header: Logo and Account/Login section -->
+        <div class="w-full flex justify-between items-center px-6 pt-4">
+            <!-- Logo -->
+            <div class="flex items-center">
+                <img src="/image/logo.png" alt="가로형 로고" class="h-12">
+            </div>
+
+            <!-- Account/Login section with dropdown -->
+            <div class="relative">
+                <div id="accountStatusArea" class="flex items-center">
+                    <!-- Conditional content injected by JavaScript -->
+                </div>
+                <!-- Dropdown menu (initially hidden) -->
+                <div id="accountDropdown" class="dropdown-menu hidden">
+                    <button id="settingsButton" class="block">설정</button>
+                    <button id="logoutButton" class="block">로그아웃</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Write Post Section Content -->
+        <div class="w-full flex flex-col items-start px-6 mt-8 mb-4">
+            <!-- Section title -->
+            <h2 class="text-left text-xl font-bold text-gray-800 mb-4">글쓰기</h2>
+
+            <!-- Post Title Input -->
+            <input type="text" id="postTitle" placeholder="제목을 입력하세요"
+                   class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+
+            <!-- Category Select -->
+            <select id="postCategory"
+                    class="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800">
+                <option value="">카테고리 선택</option>
+                <optgroup label="일상">
+                    <option value="일상_이야기">이야기</option>
+                    <option value="일상_사진">사진</option>
+                    <option value="일상_고민">고민</option>
+                    <option value="일상_정보">정보</option>
+                    <option value="일상_질문">질문</option>
+                    <option value="일상_자유">자유</option>
+                    <option value="일상_뻘글">뻘글</option>
+                    <option value="일상_썰">썰</option>
+                    <option value="일상_연재">연재</option>
+                    <option value="일상_기타">기타 일상</option>
+                </optgroup>
+                <optgroup label="스포츠">
+                    <option value="스포츠_야구">야구</option>
+                    <option value="스포츠_농구">농구</option>
+                    <option value="스포츠_축구">축구</option>
+                    <option value="스포츠_배구">배구</option>
+                    <option value="스포츠_탁구">탁구</option>
+                    <option value="스포츠_테니스">테니스</option>
+                    <option value="스포츠_수영">수영</option>
+                    <option value="스포츠_배드민턴">배드민턴</option>
+                    <option value="스포츠_볼링">볼링</option>
+                    <option value="스포츠_골프">골프</option>
+                    <option value="스포츠_육상">육상</option>
+                    <option value="스포츠_기타">기타 스포츠</option>
+                </optgroup>
+                <optgroup label="예술">
+                    <option value="예술_미술">미술</option>
+                    <option value="예술_음악">음악</option>
+                    <option value="예술_영화">영화</option>
+                    <option value="예술_문학">문학</option>
+                    <option value="예술_공연">공연</option>
+                    <option value="예술_사진">사진</option>
+                    <option value="예술_디자인">디자인</option>
+                    <option value="예술_건축">건축</option>
+                    <option value="예술_기타">기타 예술</option>
+                </optgroup>
+                <optgroup label="학업">
+                    <option value="학업_국어">국어</option>
+                    <option value="학업_수학">수학</option>
+                    <option value="학업_영어">영어</option>
+                    <option value="학업_과학">과학</option>
+                    <option value="학업_사회">사회</option>
+                    <option value="학업_역사">역사</option>
+                    <option value="학업_코딩">코딩</option>
+                    <option value="학업_기타">기타 학업</option>
+                </optgroup>
+                <optgroup label="취미/여가">
+                    <option value="취미_게임">게임</option>
+                    <option value="취미_독서">독서</option>
+                    <option value="취미_여행">여행</option>
+                    <option value="취미_요리">요리</option>
+                    <option value="취미_반려동물">반려동물</option>
+                    <option value="취미_패션">패션</option>
+                    <option value="취미_IT기기">IT/기기</option>
+                    <option value="취미_기타">기타 취미</option>
+                </optgroup>
+                <optgroup label="학교생활">
+                    <option value="학교생활_급식">급식</option>
+                    <option value="학교생활_교복">교복</option>
+                    <option value="학교생활_선생님">선생님</option>
+                    <option value="학교생활_친구">친구</option>
+                    <option value="학교생활_수업">수업</option>
+                    <option value="학교생활_동아리">동아리</option>
+                    <option value="학교생활_행사">행사</option>
+                    <option value="학교생활_기타">기타 학교생활</option>
+                </optgroup>
+            </select>
+
+            <!-- Quill Editor Container -->
+            <div id="editor" class="w-full mb-6 border border-gray-300 rounded-lg">
+                <!-- Quill will initialize here -->
+            </div>
+
+            <!-- Hidden input to store Quill's HTML content before submission -->
+            <input type="hidden" id="postContentHtml" name="postContentHtml">
+
+            <!-- Policy Checkbox -->
+            <div class="flex items-center mb-4">
+                <input type="checkbox" id="policyCheckbox" class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="policyCheckbox" class="text-gray-700 text-sm">운영정책을 확인했고, 이에 동의합니다.</label>
+            </div>
+
+            <!-- Submit Button -->
+            <button id="submitPostButton"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                작성하기
             </button>
         </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <div class="bg-white rounded-xl p-6 md:p-10 relative">
-            <div id="auth-overlay" class="disabled-overlay hidden">
-                <div>게시글을 작성하려면 로그인이 필요합니다.</div>
-            </div>
-            <div class="space-y-6">
-                <!-- Title Input -->
-                <div class="flex flex-col">
-                    <label for="post-title" class="text-sm font-medium text-gray-700 mb-1">제목</label>
-                    <input type="text" id="post-title" placeholder="게시글 제목을 입력하세요." class="w-full px-4 py-3 border-b border-gray-300 rounded-none focus:outline-none focus:ring-0 focus:border-blue-500 transition-colors">
-                </div>
-
-                <!-- Quill Editor Container -->
-                <div id="editor-container">
-                    <div id="editor">
-                        <p>내용을 입력하세요...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Modal UI -->
-    <div id="modal-container" class="hidden modal-overlay">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-11/12 max-w-sm text-center transform transition-transform duration-300 scale-95">
-            <h3 id="modal-title" class="text-xl font-bold mb-2"></h3>
-            <p id="modal-message" class="text-gray-600 mb-6"></p>
-            <div id="modal-buttons" class="flex justify-center space-x-4">
-                <button id="modal-cancel-btn" class="px-4 py-2 rounded-lg text-gray-600 border border-gray-300 hover:bg-gray-100 transition-colors">취소</button>
-                <button id="modal-confirm-btn" class="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">확인</button>
-            </div>
-        </div>
+        <!-- Placeholder for additional content -->
+        <p class="text-2xl text-gray-700 px-6 mt-1"></p>
     </div>
 
-    <!-- Toast UI for messages -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2"></div>
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white p-3 border-t border-gray-300 max-w-xl mx-auto w-full z-10">
+        <div class="flex justify-around items-center h-12">
+            <!-- Home Navigation Item -->
+            <button id="nav-home" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="홈" data-path="/">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z"/>
+                </svg>
+                <span class="text-xs font-medium">홈</span>
+            </button>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, addDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        // Firestore 디버그 로깅 활성화
-        setLogLevel('debug');
+            <!-- School Life Navigation Item (consolidated) -->
+            <button id="nav-school-life" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="학교생활" data-path="/sclife/timetable">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 19V6.5C4 5.94772 4.44772 5.5 5 5.5H19C19.5523 5.5 20 5.94772 20 6.5V19C20 19.5523 19.5523 20 19 20H5C4.44772 20 4 19.5523 4 19ZM6 17H18V7.5H6V17ZM9 10H15V12H9V10Z"/>
+                </svg>
+                <span class="text-xs font-medium">학교생활</span>
+            </button>
 
-        // Firebase configuration and initialization
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        let userId = null;
-        let userName = "익명";
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            <!-- Community Navigation Item -->
+            <button id="nav-community" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="커뮤니티" data-path="/community">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C18.21 11 20 9.21 20 7C20 4.79 18.21 3 16 3C13.79 3 12 4.79 12 7C12 9.21 13.79 11 16 11ZM8 11C10.21 11 12 9.21 12 7C12 4.79 10.21 3 8 3C5.79 3 4 4.79 4 7C4 9.21 5.79 11 8 11ZM16 13C13.67 13 9.34 14.28 9 17V19H23V17C22.66 14.28 18.33 13 16 13ZM8 13C5.33 13 0 14.33 0 17V19H9V17C8.67 14.33 4.33 13 8 13Z"/>
+                </svg>
+                <span class="text-xs font-medium">커뮤니티</span>
+            </button>
 
-        // UI Elements
-        const postTitleInput = document.getElementById('post-title');
-        const submitBtnMobile = document.getElementById('submit-btn-mobile');
-        const submitBtnDesktop = document.getElementById('submit-btn-desktop');
-        const submitTextMobile = document.getElementById('submit-text-mobile');
-        const submitTextDesktop = document.getElementById('submit-text-desktop');
-        const submitSpinnerMobile = document.getElementById('submit-spinner-mobile');
-        const submitSpinnerDesktop = document.getElementById('submit-spinner-desktop');
-        const modalContainer = document.getElementById('modal-container');
-        const modalTitle = document.getElementById('modal-title');
-        const modalMessage = document.getElementById('modal-message');
-        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
-        const modalCancelBtn = document.getElementById('modal-cancel-btn');
-        const authOverlay = document.getElementById('auth-overlay');
+            <!-- Calendar Navigation Item -->
+            <button id="nav-calendar" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="캘린더" data-path="/calendar">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V9H19V20Z"/>
+                </svg>
+                <span class="text-xs font-medium">캘린더</span>
+            </button>
 
-        // Quill.js initialization with a richer toolbar
-        const toolbarOptions = [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'font': [] }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
+            <!-- More Navigation Item -->
+            <button id="nav-more" class="nav-item flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 text-gray-500 hover:text-blue-500 hover:bg-gray-50" data-tab="더보기" data-path="/plus">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 10C10.9 10 10 10.9 10 12C10 13.1 10.9 14 12 14C13.1 14 14 13.1 14 12C14 10.9 13.1 10 12 10ZM19 10C17.9 10 17 10.9 17 12C17 13.1 17.9 14 19 14C20.1 14 21 13.1 21 12C21 10.9 20.1 10 19 10ZM5 10C3.9 10 3 10.9 3 12C3 13.1 3.9 14 5 14C6.1 14 7 13.1 7 12C7 10.9 6.1 10 5 10Z"/>
+                </svg>
+                <span class="text-xs font-medium">더보기</span>
+            </button>
+        </div>
+    </nav>
 
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
+    <!-- Quill.js JavaScript CDN -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-            ['blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'list': 'checked' }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }],
+    <script>
+        // Firebase 전역 변수 직접 사용 (더보기 페이지와 동일한 v8 방식)
+        // Global variables for Firebase configuration (하드코딩된 '더보기' 페이지의 config 사용)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Canvas 환경변수 유지
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_SHRcQ9hXmjVbP3km4rdR4UvKIoqpLHo",
+            authDomain: "n-mate.firebaseapp.com",
+            projectId: "n-mate",
+            storageBucket: "n-mate.firebasestorage.app",
+            appId: "1:691313471077:web:3066aaeca0a1d9e448e08c",
+            measurementId: "G-0LCGVBKXLQ",
+            messagingSenderId: "691313471077"
+        };
 
-            ['link', 'image', 'video'],
-            ['hr'],
-            [{ 'align': [] }],
-            ['clean']
-        ];
+        // Firebase app, auth, and firestore instances
+        let app;
+        let auth;
+        let db;
 
-        Quill.register('modules/hr', function(quill, options) {
-            this.quill = quill;
-            this.toolbar = quill.getModule('toolbar');
-            this.toolbar.addHandler('hr', this.insertHr);
-        });
+        // Quill Editor instance
+        let quill;
 
-        let Embed = Quill.import('blots/embed');
-        class HorizontalRule extends Embed {
-            static create() {
-                let node = super.create();
-                return node;
+        // DOM elements
+        const accountStatusArea = document.getElementById('accountStatusArea');
+        const accountDropdown = document.getElementById('accountDropdown');
+        const submitPostButton = document.getElementById('submitPostButton'); // Get the submit button
+        const postTitleInput = document.getElementById('postTitle'); // Get the title input
+        const postCategorySelect = document.getElementById('postCategory'); // Get the category select
+        const policyCheckbox = document.getElementById('policyCheckbox'); // Get the policy checkbox
+        const postContentHtmlInput = document.getElementById('postContentHtml'); // Hidden input for HTML content
+
+        // Allowed font sizes for Quill editor (remains for size buttons if needed)
+        const allowedFontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '32px'];
+
+        // Store post ID if editing an existing post
+        let currentPostId = null;
+
+        /**
+         * Toggles the visibility of the account dropdown menu.
+         */
+        function toggleDropdown() {
+            accountDropdown.classList.toggle('hidden');
+        }
+
+        /**
+         * Handles user logout.
+         */
+        async function handleLogout() {
+            if (auth) {
+                try {
+                    await auth.signOut();
+                    console.log('로그아웃 성공.');
+                    window.location.href = '/login';
+                } catch (error) {
+                    console.error('로그아웃 오류:', error);
+                }
             }
         }
-        HorizontalRule.blotName = 'hr';
-        HorizontalRule.tagName = 'hr';
-        Quill.register(HorizontalRule);
 
-        const quill = new Quill('#editor', {
-            theme: 'snow',
-            placeholder: '내용을 입력하세요...',
-            modules: {
-                toolbar: toolbarOptions,
-                'hr': true
-            }
-        });
-        
-        // Toast message function
-        const showToast = (message, type = 'info') => {
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `p-4 rounded-lg shadow-lg mb-2 transition-transform transform translate-x-full duration-300 ease-out text-white ${
-                type === 'success' ? 'bg-green-500' :
-                type === 'error' ? 'bg-red-500' :
-                'bg-gray-800'
-            }`;
-            toast.textContent = message;
-            
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => toast.classList.remove('translate-x-full'), 100);
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-                toast.addEventListener('transitionend', () => toast.remove());
-            }, 3000);
-        };
-        
-        // Custom modal function
-        const showModal = (title, message, onConfirm, onCancel = null) => {
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-            modalContainer.classList.remove('hidden');
+        /**
+         * Handles navigation to the settings page.
+         */
+        function handleSettingsClick() {
+            window.location.href = '/settings';
+        }
 
-            const confirmListener = () => {
-                onConfirm();
-                modalContainer.classList.add('hidden');
-                modalConfirmBtn.removeEventListener('click', confirmListener);
-                if (onCancel) modalCancelBtn.removeEventListener('click', cancelListener);
-            };
+        /**
+         * Updates the account UI based on user authentication status.
+         * Displays email prefix if logged in, otherwise "로그인" button.
+         * @param {firebase.User} user - The authenticated user object or null.
+         */
+        async function updateAccountUI(user) {
+            if (user && user.email) { // Check if a user is logged in and has an email
+                const emailPrefix = user.email.split('@')[0];
+                accountStatusArea.innerHTML = `
+                    <button id="accountTabButton" class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <span class="text-gray-700 text-sm font-medium">${emailPrefix}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle-2"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                    </button>
+                `;
+                document.getElementById('accountTabButton').addEventListener('click', toggleDropdown);
 
-            const cancelListener = () => {
-                if (onCancel) onCancel();
-                modalContainer.classList.add('hidden');
-                modalConfirmBtn.removeEventListener('click', confirmListener);
-                modalCancelBtn.removeEventListener('click', cancelListener);
-            };
+                // Attach event listeners for dropdown buttons
+                const settingsButton = document.getElementById('settingsButton');
+                if (settingsButton && !settingsButton.dataset.listenerAdded) {
+                    settingsButton.addEventListener('click', handleSettingsClick);
+                    settingsButton.dataset.listenerAdded = 'true';
+                }
+                const logoutButton = document.getElementById('logoutButton');
+                if (logoutButton && !logoutButton.dataset.listenerAdded) {
+                    logoutButton.addEventListener('click', handleLogout);
+                    logoutButton.dataset.listenerAdded = 'true';
+                }
 
-            modalConfirmBtn.addEventListener('click', confirmListener);
-            if (onCancel) {
-                modalCancelBtn.classList.remove('hidden');
-                modalCancelBtn.addEventListener('click', cancelListener);
             } else {
-                modalCancelBtn.classList.add('hidden');
+                // User is logged out or does not have an email
+                accountStatusArea.innerHTML = `
+                    <button id="loginRedirectButton" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow transition duration-300">
+                        로그인
+                    </button>
+                `;
+                document.getElementById('loginRedirectButton').addEventListener('click', () => {
+                    window.location.href = '/login';
+                });
+                accountDropdown.classList.add('hidden'); // Hide dropdown if no user or email
             }
-        };
+            lucide.createIcons(); // Refresh Lucide icons
+        }
 
-        // Submit post to Firestore
-        const submitPost = async () => {
-            if (!userId) {
-                showToast("로그인이 필요합니다.", 'error');
-                return;
-            }
+        /**
+         * Updates the active state of the navigation bar buttons based on the current URL path.
+         */
+        function updateNavigationActiveState() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
 
-            const title = postTitleInput.value.trim();
-            const content = quill.root.innerHTML.trim();
-            
-            if (!title || content.replace(/<[^>]*>/g, '').trim() === '') {
-                showModal("작성 오류", "제목과 내용을 모두 입력해 주세요.");
-                return;
-            }
+            navItems.forEach(item => {
+                const itemPath = item.dataset.path;
+                const spanElement = item.querySelector('span');
+                const svgElement = item.querySelector('svg');
 
-            showModal("게시글 등록", "게시글을 등록하시겠습니까?", async () => {
-                try {
-                    setLoading(true);
-                    const communityRef = collection(db, `artifacts/${appId}/public/data/community_posts`);
-                    
-                    await addDoc(communityRef, {
-                        title: title,
-                        content: content,
-                        authorId: userId,
-                        authorName: userName,
-                        createdAt: serverTimestamp(),
-                        viewCount: 0,
-                        likeCount: 0,
-                    });
-                    
-                    showToast("게시글이 성공적으로 등록되었습니다!", 'success');
-                    setTimeout(() => window.history.back(), 1500);
+                // Reset classes
+                item.classList.remove('text-blue-600');
+                item.classList.add('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                if (spanElement) {
+                    spanElement.classList.remove('font-bold');
+                    spanElement.classList.add('font-medium');
+                }
+                if (svgElement) {
+                    svgElement.classList.remove('text-blue-600');
+                    svgElement.classList.add('text-gray-500'); // Ensure SVG also has gray base color
+                }
 
-                } catch (error) {
-                    console.error("Error adding document: ", error);
-                    showToast("게시글 등록 중 오류가 발생했습니다.", 'error');
-                } finally {
-                    setLoading(false);
+                // Check for exact path match or if it's the community button and current path is within /community or /write section
+                if (currentPath === itemPath || (item.id === 'nav-community' && (currentPath.startsWith('/community') || currentPath.startsWith('/write')))) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
+                } else if (item.id === 'nav-school-life' && currentPath.startsWith('/sclife')) {
+                    // Specific handling for school life tab if the current path is /sclife or a sub-path
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-gray-500', 'hover:text-blue-500', 'hover:bg-gray-50');
+                    if (spanElement) {
+                        spanElement.classList.add('font-bold');
+                        spanElement.classList.remove('font-medium');
+                    }
+                    if (svgElement) {
+                        svgElement.classList.add('text-blue-600');
+                        svgElement.classList.remove('text-gray-500');
+                    }
                 }
             });
-        };
+        }
 
-        // Show/hide loading state
-        const setLoading = (isLoading) => {
-            if (isLoading) {
-                submitTextMobile.classList.add('hidden');
-                submitTextDesktop.classList.add('hidden');
-                submitSpinnerMobile.classList.remove('hidden');
-                submitSpinnerDesktop.classList.remove('hidden');
-                submitBtnMobile.disabled = true;
-                submitBtnDesktop.disabled = true;
-            } else {
-                submitTextMobile.classList.remove('hidden');
-                submitTextDesktop.classList.remove('hidden');
-                submitSpinnerMobile.classList.add('hidden');
-                submitSpinnerDesktop.classList.add('hidden');
-                submitBtnMobile.disabled = false;
-                submitBtnDesktop.disabled = false;
-            }
-        };
+        /**
+         * Sets up click event listeners for navigation items.
+         */
+        function setupNavigationEvents() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const path = item.dataset.path;
+                    const currentPathname = window.location.pathname;
 
-        // Toggle UI based on auth state
-        const toggleUI = (isLoggedIn) => {
-            if (isLoggedIn) {
-                authOverlay.classList.add('hidden');
-                postTitleInput.disabled = false;
-                quill.enable(true);
-                submitBtnMobile.disabled = false;
-                submitBtnDesktop.disabled = false;
-            } else {
-                authOverlay.classList.remove('hidden');
-                postTitleInput.disabled = true;
-                quill.enable(false);
-                submitBtnMobile.disabled = true;
-                submitBtnDesktop.disabled = true;
-            }
-        };
-
-        // Initialization and event listeners
-        document.addEventListener('DOMContentLoaded', async () => {
-            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-            if (initialAuthToken) {
-                try {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    console.log("Signed in with custom token.");
-                } catch (error) {
-                    console.error("Error signing in with custom token:", error);
-                }
-            } else {
-                console.log("No custom auth token provided. Waiting for authentication.");
-            }
-        });
-
-        // Auth state change listener
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                userId = user.uid;
-                toggleUI(true);
-                const profileDocPath = `artifacts/${appId}/users/${userId}/profile/user_data`;
-                
-                const profileRef = doc(db, profileDocPath);
-                try {
-                    const profileSnapshot = await getDoc(profileRef);
-                    if (profileSnapshot.exists()) {
-                        userName = profileSnapshot.data().name || "익명";
+                    // If the target path is different from the current path, navigate.
+                    if (currentPathname !== path) {
+                        // Special handling for School Life button to set initial tab in localStorage
+                        if (item.id === 'nav-school-life') {
+                            localStorage.setItem('initialSchoolLifeTab', 'timetableContent');
+                        } else {
+                            localStorage.removeItem('initialSchoolLifeTab');
+                        }
+                        window.location.href = path;
                     }
-                } catch (e) {
-                    console.error("Error fetching user profile:", e);
+                });
+            });
+        }
+
+        /**
+         * Increases the font size in the Quill editor.
+         */
+        function increaseFontSize() {
+            if (!quill) return;
+
+            const range = quill.getSelection(true);
+            if (!range) return;
+
+            let currentSize = 16; // Default to 16px
+            const format = quill.getFormat(range.index, range.length);
+
+            if (format && typeof format.size === 'string' && format.size.endsWith('px')) {
+                currentSize = parseInt(format.size.replace('px', ''));
+            } else if (range.length === 0) { // If no explicit format on selection, check current line format
+                const lineFormat = quill.getFormat(); // Get format at current cursor position
+                if (lineFormat && typeof lineFormat.size === 'string' && lineFormat.size.endsWith('px')) {
+                    currentSize = parseInt(lineFormat.size.replace('px', ''));
+                }
+            }
+
+            const currentIndex = allowedFontSizes.indexOf(currentSize + 'px');
+            if (currentIndex !== -1 && currentIndex < allowedFontSizes.length - 1) {
+                const newSize = allowedFontSizes[currentIndex + 1];
+                quill.format('size', newSize, Quill.sources.USER);
+            } else if (currentIndex === -1) {
+                // If current size is not in whitelist, try to find the closest greater size or just use the smallest allowed
+                let foundIndex = allowedFontSizes.findIndex(s => parseInt(s.replace('px', '')) > currentSize);
+                if (foundIndex !== -1) {
+                    quill.format('size', allowedFontSizes[foundIndex], Quill.sources.USER);
+                } else if (allowedFontSizes.length > 0) {
+                    // If no larger size found, and current size is outside whitelist, default to largest
+                    quill.format('size', allowedFontSizes[allowedFontSizes.length - 1], Quill.sources.USER);
+                }
+            }
+        }
+
+        /**
+         * Decreases the font size in the Quill editor.
+         */
+        function decreaseFontSize() {
+            if (!quill) return;
+
+            const range = quill.getSelection(true);
+            if (!range) return;
+
+            let currentSize = 16; // Default to 16px
+            const format = quill.getFormat(range.index, range.length);
+
+            if (format && typeof format.size === 'string' && format.size.endsWith('px')) {
+                currentSize = parseInt(format.size.replace('px', ''));
+            } else if (range.length === 0) { // If no explicit format on selection, check current line format
+                const lineFormat = quill.getFormat(); // Get format at current cursor position
+                if (lineFormat && typeof lineFormat.size === 'string' && lineFormat.size.endsWith('px')) {
+                    currentSize = parseInt(lineFormat.size.replace('px', ''));
+                }
+            }
+
+            const currentIndex = allowedFontSizes.indexOf(currentSize + 'px');
+            if (currentIndex !== -1 && currentIndex > 0) {
+                const newSize = allowedFontSizes[currentIndex - 1];
+                quill.format('size', newSize, Quill.sources.USER);
+            } else if (currentIndex === -1) {
+                // If current size is not in whitelist, try to find the closest smaller size or just use the largest allowed
+                let foundIndex = allowedFontSizes.slice().reverse().findIndex(s => parseInt(s.replace('px', '')) < currentSize);
+                if (foundIndex !== -1) {
+                    quill.format('size', allowedFontSizes[allowedFontSizes.length - 1 - foundIndex], Quill.sources.USER);
+                } else if (allowedFontSizes.length > 0) {
+                    // If no smaller size found, and current size is outside whitelist, default to smallest
+                    quill.format('size', allowedFontSizes[0], Quill.sources.USER);
+                }
+            }
+        }
+
+        /**
+         * Handles local image selection and converts it to Base64 for insertion into Quill.
+         */
+        function selectLocalImage() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*'); // Only accept image files
+            input.click(); // Programmatically click the file input to open the file dialog
+
+            input.onchange = () => {
+                const file = input.files[0];
+                if (file) {
+                    // Basic file size validation (5MB for Base64 to prevent immediate Firestore limits for single image)
+                    // Note: Multiple small images can still exceed the 1MB Firestore document limit.
+                    if (file.size > 5 * 1024 * 1024) {
+                        showMessageBox('이미지 파일 크기가 너무 큽니다. 5MB 이하의 파일을 선택해주세요.');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const imageUrl = e.target.result; // This is the Base64 data URL
+                        const range = quill.getSelection(true); // Get current cursor position or selection
+
+                        if (range) {
+                            // Insert the Base64 image at the current cursor position
+                            quill.insertEmbed(range.index, 'image', imageUrl, Quill.sources.USER);
+                            // Move cursor after the inserted image
+                            quill.setSelection(range.index + 1, Quill.sources.SILENT);
+                        } else {
+                            // If no selection, insert at the end of the content
+                            quill.insertEmbed(quill.getLength(), 'image', imageUrl, Quill.sources.USER);
+                            quill.setSelection(quill.getLength(), Quill.sources.SILENT);
+                        }
+                    };
+                    reader.onerror = (error) => {
+                        console.error('파일 읽기 오류:', error);
+                        showMessageBox('이미지 파일을 읽는 중 오류가 발생했습니다.');
+                    };
+                    reader.readAsDataURL(file); // Read the file as a Base64 data URL
+                }
+            };
+        }
+
+        /**
+         * Loads post data into the form for editing.
+         * @param {string} postIdToLoad - The ID of the post to load.
+         */
+        async function loadPostForEdit(postIdToLoad) {
+            try {
+                // 이 함수는 v8 Firestore API를 사용하여 재작성해야 합니다.
+                // 현재는 기능 일치에 초점을 맞추므로 임시로 비활성화합니다.
+                // 보안 규칙에 따라 /artifacts/{appId}/public/data/posts/{postId} 경로를 사용해야 합니다.
+                const postDocRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts').doc(postIdToLoad);
+                const postSnap = await postDocRef.get(); // v8 get() 사용
+
+                if (postSnap.exists) { // v8에서는 .exists 속성을 사용
+                    const postData = postSnap.data(); // v8에서는 .data() 메서드를 사용
+                    if (auth.currentUser && auth.currentUser.uid === postData.authorUid) {
+                        postTitleInput.value = postData.title || '';
+                        postCategorySelect.value = postData.category || '';
+                        quill.root.innerHTML = postData.contentHtml || ''; // Set Quill content
+                        submitPostButton.textContent = '게시물 수정'; // Change button text
+                        document.querySelector('h2').textContent = '게시물 수정'; // Change section title
+                        currentPostId = postIdToLoad; // Store post ID for update
+                    } else {
+                        showMessageBox('이 게시물을 수정할 권한이 없습니다.');
+                        window.location.href = `/view/${postIdToLoad}`; // Redirect to view page
+                    }
+                } else {
+                    showMessageBox('수정할 게시물을 찾을 수 없습니다.');
+                    window.location.href = '/community'; // Redirect if post not found
+                }
+            } catch (error) {
+                console.error('게시물 로드 오류:', error);
+                showMessageBox('게시물 로드 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase initialization (제공된 '더보기' 페이지의 v8 방식과 동일하게)
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                if (firebase.apps.length === 0) { // 앱이 초기화되지 않았다면 초기화
+                    try {
+                        app = firebase.initializeApp(firebaseConfig);
+                        auth = firebase.auth();
+                        db = firebase.firestore();
+                        console.log('Firebase 앱, 인증, Firestore 초기화 성공.');
+
+                        // '더보기' 페이지와 동일하게 onAuthStateChanged만 설정
+                        auth.onAuthStateChanged(async (user) => {
+                            await updateAccountUI(user);
+                            // 글쓰기 페이지의 인증 필수 로직은 유지
+                            if (window.location.pathname === '/write' && !user) {
+                                showMessageBox('로그인해야 글을 작성할 수 있습니다.');
+                                window.location.href = '/login';
+                            }
+                        });
+
+                    } catch (error) {
+                        console.error('Firebase 초기화 실패:', error);
+                        await updateAccountUI(null);
+                        if (window.location.pathname === '/write') {
+                            showMessageBox('Firebase 초기화에 실패했습니다. 글쓰기 기능을 사용할 수 없습니다. 관리자에게 문의하세요.');
+                        }
+                    }
+                } else { // 앱이 이미 초기화되었다면 (예: SPA 탐색 또는 핫 리로드)
+                    app = firebase.app();
+                    auth = firebase.auth();
+                    db = firebase.firestore();
+                    console.log('Firebase 앱이 이미 초기화되었습니다. 기존 인스턴스를 사용합니다.');
+
+                    // '더보기' 페이지와 동일하게 onAuthStateChanged만 다시 연결
+                    auth.onAuthStateChanged(async (user) => {
+                        await updateAccountUI(user);
+                        // 글쓰기 페이지의 인증 필수 로직은 유지
+                        if (window.location.pathname === '/write' && !user) {
+                            showMessageBox('로그인해야 글을 작성할 수 있습니다.');
+                            window.location.href = '/login';
+                        }
+                    });
                 }
             } else {
-                userId = null;
-                userName = "익명";
-                toggleUI(false);
+                console.warn('Firebase 구성이 제대로 제공되지 않았습니다. Firebase를 초기화할 수 없습니다.');
+                await updateAccountUI(null);
+                if (window.location.pathname === '/write') {
+                    showMessageBox('Firebase 구성이 누락되었습니다. 글쓰기 기능을 사용할 수 없습니다.');
+                }
             }
-        });
 
-        // Event listeners
-        if (submitBtnMobile) { submitBtnMobile.addEventListener('click', submitPost); }
-        if (submitBtnDesktop) { submitBtnDesktop.addEventListener('click', submitPost); }
+            // Define custom sizes for Quill editor
+            const Size = Quill.import('attributors/style/size');
+            Size.whitelist = allowedFontSizes; // Use the globally defined allowedFontSizes array
+            Quill.register(Size, true);
+
+            const toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'],        // 볼드, 기울임꼴, 밑줄, 취소선
+                ['image'],                                        // 이미지 삽입
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],     // 순서 있는 리스트, 순서 없는 리스트
+                [{ 'align': [] }],                                // 텍스트 정렬
+                [{ 'color': [] }, { 'background': [] }],          // 텍스트 색상, 배경 색상
+                ['clean']                                         // 서식 지우기
+            ];
+
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: '내용을 입력하세요',
+                modules: {
+                    toolbar: {
+                        container: toolbarOptions,
+                        handlers: {
+                            // Custom handler for image button
+                            'image': () => {
+                                selectLocalImage();
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Dynamically add font size adjustment buttons to the toolbar
+            const toolbar = quill.getModule('toolbar');
+            const firstFormatsGroup = toolbar.container.querySelector('.ql-formats');
+            if (firstFormatsGroup) { // Ensure there's at least one ql-formats group
+                const sizeControlsContainer = document.createElement('span');
+                sizeControlsContainer.classList.add('ql-formats'); // Use ql-formats to group buttons
+                sizeControlsContainer.innerHTML = `
+                    <button type="button" class="ql-font-size-decrease">
+                        <svg viewBox="0 0 18 18"> <line class="ql-stroke" x1="5" x2="13" y1="9" y2="9"></line> </svg>
+                    </button>
+                    <button type="button" class="ql-font-size-increase">
+                        <svg viewBox="0 0 18 18"> <line class="ql-stroke" x1="5" x2="13" y1="9" y2="9"></line> <line class="ql-stroke" x1="9" x2="9" y1="5" y2="13"></line> </svg>
+                    </button>
+                `;
+                toolbar.container.insertBefore(sizeControlsContainer, firstFormatsGroup);
+
+                sizeControlsContainer.querySelector('.ql-font-size-decrease').addEventListener('click', decreaseFontSize);
+                sizeControlsContainer.querySelector('.ql-font-size-increase').addEventListener('click', increaseFontSize);
+            }
+
+            // Check if we are editing an existing post
+            const urlParams = new URLSearchParams(window.location.search);
+            const postIdFromUrl = urlParams.get('postId');
+            if (postIdFromUrl) {
+                // v8 Firestore API 호환성을 위해 loadPostForEdit 함수는 이제 제대로 작동하도록 수정되었습니다.
+                await loadPostForEdit(postIdFromUrl);
+            }
+
+            // Handle submit button click
+            submitPostButton.addEventListener('click', async () => {
+                const title = postTitleInput.value.trim();
+                const category = postCategorySelect.value;
+                const contentHtml = quill.root.innerHTML; // Get Quill editor content as HTML
+                const contentText = quill.getText().trim(); // Get plain text for validation
+
+                // Validate inputs
+                if (!auth.currentUser) {
+                    showMessageBox('로그인해야 글을 작성하거나 수정할 수 있습니다.');
+                    window.location.href = '/login';
+                    return;
+                }
+                if (title === '') {
+                    showMessageBox('제목을 입력해주세요.');
+                    return;
+                }
+                if (category === '') {
+                    showMessageBox('카테고리를 선택해주세요.');
+                    return;
+                }
+                if (contentText === '' || contentText === '내용을 입력하세요') { // Add check for placeholder text
+                    showMessageBox('내용을 입력해주세요.');
+                    return;
+                }
+                if (!policyCheckbox.checked) {
+                    showMessageBox('운영정책 확인에 동의해주세요.');
+                    return;
+                }
+
+                try {
+                    // Firestore 컬렉션 참조 생성
+                    // 경로를 /artifacts/{appId}/public/data/posts 로 수정
+                    const postsCollectionRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('posts');
+                    
+                    const postData = {
+                        title: title,
+                        category: category,
+                        contentHtml: contentHtml,
+                        authorUid: auth.currentUser.uid,
+                        authorEmail: auth.currentUser.email,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() // v8 방식
+                    };
+
+                    if (currentPostId) {
+                        // 기존 게시물 수정 (문서 참조에서 update() 호출)
+                        const postDocRef = postsCollectionRef.doc(currentPostId);
+                        await postDocRef.update(postData);
+                        showMessageBox('게시물이 성공적으로 수정되었습니다!');
+                        window.location.href = `/view/${currentPostId}`; // Redirect to updated post with new URL format
+                    } else {
+                        // 새 게시물 생성 (컬렉션 참조에서 add() 호출)
+                        postData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // v8 방식
+                        postData.likes = 0;
+                        postData.views = 0;
+                        const docRef = await postsCollectionRef.add(postData); // v8 방식
+                        showMessageBox('게시물이 성공적으로 작성되었습니다!');
+                        window.location.href = `/view/${docRef.id}`; // Redirect to newly created post with new URL format
+                    }
+
+                    // Clear form after successful submission (if creating new)
+                    if (!currentPostId) {
+                        postTitleInput.value = '';
+                        postCategorySelect.value = '';
+                        policyCheckbox.checked = false;
+                        quill.setContents([]); // Clears the editor
+                    }
+
+                } catch (error) {
+                    console.error('게시물 작성/수정 오류:', error);
+                    // Check for Firestore specific errors like document size limit
+                    if (error.code === 'resource-exhausted' || error.message.includes('Document exceeds maximum size')) {
+                        showMessageBox('게시물 크기가 너무 큽니다. 이미지 수를 줄이거나 이미지 크기를 조정해주세요.');
+                    } else {
+                        showMessageBox('게시물 작성/수정 중 오류가 발생했습니다: ' + error.message);
+                    }
+                }
+            });
+
+            /**
+             * Displays a custom message box.
+             * Replaces native alert() for better UI control in an iframe environment.
+             * @param {string} message - The message to display.
+             */
+            function showMessageBox(message) {
+                const messageBox = document.createElement('div');
+                messageBox.classList.add('fixed', 'inset-0', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50', 'z-50');
+                messageBox.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4 text-center">
+                        <p class="text-gray-800 text-lg mb-4">${message}</p>
+                        <button id="messageBoxClose" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md transition duration-300">확인</button>
+                    </div>
+                `;
+                document.body.appendChild(messageBox);
+
+                document.getElementById('messageBoxClose').addEventListener('click', () => {
+                    document.body.removeChild(messageBox);
+                });
+            }
+
+            // Global click listener to close dropdown when clicking outside
+            window.addEventListener('click', function(e) {
+                const accountTabButton = document.getElementById('accountTabButton');
+                if (accountTabButton && !accountTabButton.contains(e.target) && !accountDropdown.contains(e.target)) {
+                    accountDropdown.classList.add('hidden');
+                }
+            });
+
+            // Setup navigation click handlers
+            setupNavigationEvents();
+            // Update navigation active state on initial load
+            updateNavigationActiveState();
+
+            // Initial icon creation
+            lucide.createIcons();
+        });
     </script>
 </body>
-</html>
+                </html>
