@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3.5cm x 4.5cm 사진 비율 변환기 (7:9)</title>
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 캔버스 스타일 및 상호작용 커서 */
+        #imageCanvas {
+            border: 2px dashed #a0aec0; /* 회색 점선 테두리 */
+            background-color: #ffffff; /* 배경색을 흰색으로 통일 */
+            max-width: 100%;
+            height: auto;
+            cursor: grab; /* 평소 커서 */
+            user-select: none; /* 드래그 시 텍스트 선택 방지 */
+        }
+        #imageCanvas.cursor-grabbing {
+            cursor: grabbing; /* 드래그 중 커서 */
+        }
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem;
+            min-height: 480px; /* 캔버스 높이보다 약간 크게 설정 */
+        }
+        /* 로딩 스피너 애니메이션 */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white min-h-screen p-4 sm:p-8 font-sans"> <!-- 배경색을 흰색으로 변경 (bg-gray-50 -> bg-white) -->
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-700 mb-2">
+                자동 증명사진 비율 변환기
+            </h1>
+            <!-- 요청에 따라 설명 문구 삭제 -->
+        </header>
+
+        <main class="bg-white p-6 sm:p-10 rounded-xl shadow-2xl border border-gray-100">
+
+            <!-- 1. 이미지 업로드 영역 -->
+            <div class="mb-8">
+                <label for="imageUpload" class="block text-xl font-semibold text-gray-800 mb-3">
+                    1. 이미지 파일 선택
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" class="w-full text-sm text-gray-700
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100 cursor-pointer"/>
+                <p id="uploadStatus" class="mt-2 text-sm text-red-500 hidden">이미지 파일을 선택해 주세요.</p>
+            </div>
+
+            <!-- 2. 결과 미리보기 영역 -->
+            <div class="mb-10 border-t pt-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">
+                    2. 결과 미리보기 (7:9 비율)
+                </h2>
+                <!-- 요청에 따라 드래그/줌 안내 텍스트 삭제 -->
+                <div class="flex flex-col md:flex-row items-center justify-around space-y-4 md:space-y-0 md:space-x-8">
+                    <!-- 원본 이미지 정보 -->
+                    <div id="originalInfo" class="text-center text-gray-500 w-full md:w-1/2">
+                        <p class="font-medium text-lg text-gray-700">원본 정보:</p>
+                        <p id="originalDimensions">가로: N/A, 세로: N/A</p>
+                    </div>
+
+                    <!-- 캔버스 컨테이너 (7:9 비율) -->
+                    <div class="canvas-container w-full md:w-1/2 relative">
+                         <!--
+                            캔버스의 내부 해상도를 700x900px로 설정합니다. (W:H = 7:9 유지)
+                            CSS를 통해 사용자에게는 350x450px 크기로 표시됩니다.
+                        -->
+                        <canvas id="imageCanvas" width="700" height="900" class="rounded-lg shadow-lg w-[350px] h-[450px] transition duration-300 hover:shadow-xl"></canvas>
+                        <div id="loadingIndicator" class="absolute inset-0 flex items-center justify-center bg-white/70 rounded-lg hidden">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 다운로드 버튼 영역 -->
+            <div class="flex justify-center border-t pt-6">
+                <button id="downloadButton" disabled
+                    class="px-8 py-3 bg-green-500 text-white font-bold rounded-full shadow-lg hover:bg-green-600 transition duration-150 disabled:bg-gray-400 disabled:cursor-not-allowed text-lg">
+                    3. 변환된 이미지 다운로드 (PNG)
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadInput = document.getElementById('imageUpload');
+            const canvas = document.getElementById('imageCanvas');
+            const ctx = canvas.getContext('2d');
+            const downloadButton = document.getElementById('downloadButton');
+            const originalDimensions = document.getElementById('originalDimensions');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            // 캔버스의 내부 해상도 (7:9 비율 유지)
+            const CANVAS_W = canvas.width;  // 700
+            const CANVAS_H = canvas.height; // 900
+            const targetRatio = 7 / 9;      // 3.5cm / 4.5cm
+
+            // 이미지 상태를 저장하는 변수
+            let currentImage = null;
+            let scale = 1.0;
+            let offsetX = 0; // 캔버스 기준 이미지 좌측 상단 x 좌표
+            let offsetY = 0; // 캔버스 기준 이미지 좌측 상단 y 좌표
+
+            // 드래그 상태 관리 변수
+            let isDragging = false;
+            let startX = 0; // 마우스/터치 시작 시 오프셋을 저장하기 위한 임시 변수
+            let startY = 0;
+
+            // 캔버스 초기화 (클리어)
+            function clearCanvas() {
+                ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+                ctx.fillStyle = '#ffffff'; // 배경색을 흰색으로 통일
+                ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+                downloadButton.disabled = true;
+                originalDimensions.textContent = '가로: N/A, 세로: N/A';
+            }
+
+            // 초기 상태 설정
+            clearCanvas();
+
+            /**
+             * 드래그 경계를 확인하고 offset을 조정합니다.
+             * 이미지가 캔버스 영역(700x900)을 항상 완전히 덮도록 보장합니다.
+             */
+            function checkBounds() {
+                if (!currentImage) return;
+                const imgW = currentImage.width;
+                const imgH = currentImage.height;
+                const drawW = imgW * scale;
+                const drawH = imgH * scale;
+
+                // X축 경계: 이미지가 캔버스 전체를 덮어야 함
+                const minX = CANVAS_W - drawW;
+                const maxX = 0;
+                offsetX = Math.min(Math.max(offsetX, minX), maxX);
+
+                // Y축 경계: 이미지가 캔버스 전체를 덮어야 함
+                const minY = CANVAS_H - drawH;
+                const maxY = 0;
+                offsetY = Math.min(Math.max(offsetY, minY), maxY);
+            }
+
+            /**
+             * 이미지와 현재 상태(scale, offset)를 사용하여 캔버스에 그립니다.
+             */
+            function drawCroppedImage() {
+                clearCanvas();
+                if (!currentImage) return;
+
+                const imgW = currentImage.width;
+                const imgH = currentImage.height;
+
+                // 캔버스에 그릴 이미지의 최종 크기
+                const drawW = imgW * scale;
+                const drawH = imgH * scale;
+
+                // drawImage(image, dx, dy, dWidth, dHeight)
+                ctx.drawImage(
+                    currentImage,
+                    offsetX, // 캔버스 X 위치
+                    offsetY, // 캔버스 Y 위치
+                    drawW,   // 캔버스에 그려질 폭
+                    drawH    // 캔버스에 그려질 높이
+                );
+
+                downloadButton.disabled = false;
+            }
+
+            /**
+             * 초기 스케일 및 위치를 설정합니다. (캔버스를 완전히 덮도록 최소 스케일 설정)
+             * @param {Image} img 로드된 Image 객체
+             */
+            function initializeState(img) {
+                const imgW = img.width;
+                const imgH = img.height;
+
+                // 최소 스케일 계산: 이미지가 캔버스를 완전히 덮도록 설정
+                // Math.max(700/imgW, 900/imgH)
+                scale = Math.max(CANVAS_W / imgW, CANVAS_H / imgH);
+
+                // 중앙 정렬
+                const drawW = imgW * scale;
+                const drawH = imgH * scale;
+
+                offsetX = (CANVAS_W - drawW) / 2;
+                offsetY = (CANVAS_H - drawH) / 2;
+
+                checkBounds(); // 다시 한번 경계 확인
+            }
+
+
+            /**
+             * 줌 인/아웃 핸들러 (마우스 휠)
+             */
+            function handleZoom(event) {
+                if (!currentImage) return;
+                event.preventDefault(); // 스크롤 막기
+
+                const zoomFactor = 1.1; // 10%씩 확대/축소
+                let newScale = scale;
+
+                if (event.deltaY < 0) {
+                    // Zoom In
+                    newScale *= zoomFactor;
+                } else {
+                    // Zoom Out
+                    newScale /= zoomFactor;
+                }
+
+                // --- 스케일 제한 ---
+                const minScale = Math.max(CANVAS_W / currentImage.width, CANVAS_H / currentImage.height);
+                // 최소 스케일 제한 (캔버스를 완전히 덮는 스케일)
+                if (newScale < minScale) {
+                    newScale = minScale;
+                }
+                // 최대 스케일 제한 (원본 크기의 4배를 초과하지 않도록)
+                if (newScale > 4) {
+                    newScale = 4;
+                }
+
+                // 스케일 변경 비율
+                const scaleChange = newScale / scale;
+
+                // 캔버스 상의 마우스 위치를 캔버스 내부 좌표(700x900)로 변환
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = (event.clientX - rect.left) * (CANVAS_W / rect.width);
+                const mouseY = (event.clientY - rect.top) * (CANVAS_H / rect.height);
+
+                // 줌 중심을 마우스 위치로 유지하면서 오프셋 조정
+                offsetX = mouseX - ((mouseX - offsetX) * scaleChange);
+                offsetY = mouseY - ((mouseY - offsetY) * scaleChange);
+
+                scale = newScale;
+
+                checkBounds();
+                drawCroppedImage();
+            }
+
+            /**
+             * 드래그 시작 핸들러 (마우스 다운 또는 터치 스타트)
+             */
+            function handleDragStart(event) {
+                if (!currentImage) return;
+                event.preventDefault();
+                isDragging = true;
+
+                // Touch 이벤트 처리
+                const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+                const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+                // 마우스/터치 시작 위치와 현재 오프셋의 차이를 저장 (이동량 계산을 위함)
+                const rect = canvas.getBoundingClientRect();
+                const canvasX = (clientX - rect.left) * (CANVAS_W / rect.width);
+                const canvasY = (clientY - rect.top) * (CANVAS_H / rect.height);
+
+                startX = canvasX - offsetX;
+                startY = canvasY - offsetY;
+
+                canvas.classList.add('cursor-grabbing');
+            }
+
+            /**
+             * 드래그 이동 핸들러 (마우스 무브 또는 터치 무브)
+             */
+            function handleDrag(event) {
+                if (!currentImage || !isDragging) return;
+                event.preventDefault();
+
+                // Touch 이벤트 처리
+                const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+                const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+                const rect = canvas.getBoundingClientRect();
+                const canvasX = (clientX - rect.left) * (CANVAS_W / rect.width);
+                const canvasY = (clientY - rect.top) * (CANVAS_H / rect.height);
+
+                // 새로운 오프셋 계산
+                offsetX = canvasX - startX;
+                offsetY = canvasY - startY;
+
+                checkBounds(); // 경계 확인 및 조정
+                drawCroppedImage();
+            }
+
+            /**
+             * 드래그 종료 핸들러 (마우스 업 또는 터치 엔드)
+             */
+            function handleDragEnd() {
+                isDragging = false;
+                canvas.classList.remove('cursor-grabbing');
+            }
+
+
+            /**
+             * 이미지를 업로드하고 초기 상태를 설정합니다.
+             * @param {Event} event 파일 업로드 이벤트
+             */
+            function handleImageUpload(event) {
+                clearCanvas();
+                const file = event.target.files[0];
+
+                if (!file) {
+                    uploadStatus.classList.remove('hidden');
+                    return;
+                }
+                uploadStatus.classList.add('hidden');
+                loadingIndicator.classList.remove('hidden'); // 로딩 시작
+
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        currentImage = img; // 로드된 이미지 객체 저장
+                        originalDimensions.textContent = `가로: ${img.width}px, 세로: ${img.height}px`;
+
+                        // 초기 상태 설정 및 그리기
+                        initializeState(img);
+                        drawCroppedImage();
+
+                        // 캔버스 크기 정보를 사용자에게 시각적으로 업데이트
+                        canvas.title = `변환된 이미지 (${CANVAS_W}px x ${CANVAS_H}px)`;
+                        loadingIndicator.classList.add('hidden'); // 로딩 종료
+
+                    };
+                    img.src = e.target.result;
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            /**
+             * 캔버스 이미지를 PNG 파일로 다운로드합니다.
+             */
+            function downloadImage() {
+                // 캔버스 내용을 데이터 URL로 가져옵니다. (PNG 형식, 고해상도)
+                const imageURL = canvas.toDataURL('image/png');
+
+                // 가상의 링크 요소 생성 및 다운로드 실행
+                const link = document.createElement('a');
+                link.href = imageURL;
+                link.download = `35x45mm_image_${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            // --- 이벤트 리스너 등록 ---
+            uploadInput.addEventListener('change', handleImageUpload);
+            downloadButton.addEventListener('click', downloadImage);
+
+            // 마우스 이벤트 (드래그 및 줌)
+            canvas.addEventListener('mousedown', handleDragStart);
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', handleDragEnd);
+            canvas.addEventListener('wheel', handleZoom, { passive: false }); // 줌 기능 (스크롤 방지)
+
+            // 터치 이벤트 (드래그)
+            canvas.addEventListener('touchstart', handleDragStart);
+            document.addEventListener('touchmove', handleDrag);
+            document.addEventListener('touchend', handleDragEnd);
+        });
+    </script>
+</body>
+</html>
