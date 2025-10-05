@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>250KB 미만 이미지 최적화 도구</title>
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 폰트 설정 및 기본 스타일 */
+        body { font-family: 'Inter', sans-serif; background-color: #f7f7f7; }
+        .card { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 10px -5px rgba(0, 0, 0, 0.04); }
+        /* 숨겨진 캔버스 */
+        #processingCanvas { display: none; }
+        /* 로딩 스피너 (상태 메시지용) */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div id="appContainer" class="card bg-white p-8 rounded-xl w-full max-w-lg">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">
+            🚀 이미지 용량 최적화 도구 <span class="text-blue-600">v2.0</span>
+        </h1>
+        <p class="text-center text-sm text-gray-500 mb-8">
+            파일을 선택하시면 **설정된 목표 용량** 미만으로 자동으로 최적화합니다. (JPG, PNG 지원)
+        </p>
+
+        <!-- 목표 용량 설정 섹션 (선택 옵션으로 변경됨) -->
+        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <label for="targetSizeSelect" class="block text-sm font-bold text-gray-800 mb-2">
+                ⭐ 목표 파일 용량 설정
+            </label>
+            <div class="flex space-x-2">
+                <select id="targetSizeSelect" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" onchange="updateMaxSizeDisplay()">
+                    <option value="250_KB">250 KB (기본값)</option>
+                    <option value="500_KB">500 KB</option>
+                    <option value="1_MB">1 MB (1,024 KB)</option>
+                    <option value="2_MB">2 MB (2,048 KB)</option>
+                    <option value="100_KB">100 KB (고압축)</option>
+                    <option value="10_MB">10 MB (고화질 유지)</option>
+                </select>
+            </div>
+            <p id="currentMaxSizeDisplay" class="text-xs text-gray-500 mt-1">
+                현재 목표 바이트 크기: 256.00 KB
+            </p>
+        </div>
+        
+        <!-- 파일 입력 섹션 -->
+        <div class="mb-6">
+            <label for="fileInput" class="block text-sm font-medium text-gray-700 mb-2">이미지 파일 업로드</label>
+            <input type="file" id="fileInput" accept="image/jpeg, image/png" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 p-2.5" onchange="handleFileSelect(this.files)">
+        </div>
+
+        <!-- 상태 및 결과 표시 섹션 -->
+        <div id="statusMessage" class="text-center text-sm text-blue-600 font-semibold mb-4 hidden p-2 bg-blue-100 rounded-lg flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>✨ v2.0 로딩 중... 이미지 최적화 중입니다. 잠시만 기다려 주세요.</span>
+        </div>
+
+        <div id="resultSection" class="border border-gray-200 rounded-xl p-4 bg-gray-50 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">변환 결과</h2>
+            <div id="sizeInfo" class="mb-4 text-sm space-y-1">
+                <!-- 여기에 원본/결과 용량 정보 표시 -->
+            </div>
+            
+            <div id="imagePreviewContainer" class="flex justify-center mb-4">
+                <img id="compressedImagePreview" class="rounded-lg max-w-full h-auto border border-gray-300" alt="최적화된 이미지 미리보기" style="max-height: 200px;">
+            </div>
+
+            <!-- 다운로드 버튼 -->
+            <button id="downloadButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 ease-in-out" onclick="downloadImage()" disabled>
+                💾 최적화된 이미지 다운로드
+            </button>
+        </div>
+
+        <!-- 에러 메시지 -->
+        <div id="errorMessage" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg hidden">
+            <!-- 에러 메시지 표시 -->
+        </div>
+
+        <!-- 이미지 처리를 위한 캔버스 (숨김) -->
+        <canvas id="processingCanvas"></canvas>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const statusMessage = document.getElementById('statusMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const resultSection = document.getElementById('resultSection');
+        const sizeInfo = document.getElementById('sizeInfo');
+        const compressedImagePreview = document.getElementById('compressedImagePreview');
+        const downloadButton = document.getElementById('downloadButton');
+        const canvas = document.getElementById('processingCanvas');
+        const ctx = canvas.getContext('2d');
+        const targetSizeSelect = document.getElementById('targetSizeSelect'); // 변경된 요소 ID
+        const currentMaxSizeDisplay = document.getElementById('currentMaxSizeDisplay');
+        
+        let finalDataUrl = ''; // 최종 압축된 이미지 Data URL 저장
+
+        // 초기 목표 용량 표시 업데이트
+        document.addEventListener('DOMContentLoaded', updateMaxSizeDisplay);
+
+        /**
+         * 현재 선택된 목표 용량을 계산하여 바이트 단위로 반환합니다.
+         * @returns {number} - 목표 바이트 크기
+         */
+        function getCurrentMaxSize() {
+            const selectedValue = targetSizeSelect.value; // 예: "250_KB" 또는 "1_MB"
+            const parts = selectedValue.split('_');
+            const size = parseFloat(parts[0]);
+            const unit = parts[1].toLowerCase();
+            
+            let maxSize = 250 * 1024; // 기본값 250 KB
+            
+            if (isNaN(size) || size <= 0) {
+                return maxSize; 
+            }
+
+            if (unit === 'mb') {
+                maxSize = size * 1024 * 1024;
+            } else { // 'kb'
+                maxSize = size * 1024;
+            }
+            return maxSize;
+        }
+
+        /**
+         * UI에 현재 설정된 목표 용량을 표시합니다.
+         */
+        function updateMaxSizeDisplay() {
+            const maxSize = getCurrentMaxSize();
+            
+            // 선택 상자에서 현재 선택된 텍스트와 계산된 바이트 크기를 표시
+            currentMaxSizeDisplay.textContent = `현재 목표 바이트 크기: ${formatBytes(maxSize)}`;
+        }
+
+
+        /**
+         * Data URL 문자열의 크기를 바이트 단위로 계산합니다.
+         * @param {string} dataUrl - 'data:image/jpeg;base64,...' 형식의 문자열
+         * @returns {number} - 바이트 크기
+         */
+        function getDataUrlSize(dataUrl) {
+            // Data URL에서 'data:mime/type;base64,' 부분을 제외한 순수 base64 문자열만 추출
+            const base64 = dataUrl.split(',')[1];
+            // base64 문자열의 길이 (바이트당 6비트, 4글자당 3바이트)를 이용해 실제 데이터 크기 계산
+            // = 패딩 문자는 제외해야 정확하지만, 근사치로 계산
+            return (base64.length * 0.75) - (base64.indexOf('=') > 0 ? (base64.length - base64.indexOf('=')) : 0);
+        }
+
+        /**
+         * 바이트 크기를 KB 또는 MB로 변환하여 보기 쉽게 포맷합니다.
+         * @param {number} bytes - 바이트 크기
+         * @returns {string} - 포맷된 문자열
+         */
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        /**
+         * 이미지를 로드하고 압축 프로세스를 시작합니다.
+         * @param {File[]} files - 선택된 파일 배열
+         */
+        function handleFileSelect(files) {
+            if (!files || files.length === 0) return;
+            
+            const file = files[0];
+            const MAX_SIZE_BYTES = getCurrentMaxSize(); // 최신 목표 용량 가져오기
+
+            // UI 초기화
+            errorMessage.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            statusMessage.classList.remove('hidden');
+            downloadButton.disabled = true;
+
+            if (file.size <= MAX_SIZE_BYTES) {
+                // 이미 용량 미만일 경우 처리
+                statusMessage.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+                sizeInfo.innerHTML = `
+                    <p class="text-green-600 font-medium">✅ 파일이 이미 목표 용량(${formatBytes(MAX_SIZE_BYTES)}) 미만입니다! (원본 용량: ${formatBytes(file.size)})</p>
+                    <p>별도의 압축 없이 다운로드 가능합니다.</p>
+                `;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    finalDataUrl = e.target.result;
+                    compressedImagePreview.src = finalDataUrl;
+                    downloadButton.disabled = false;
+                };
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            if (!file.type.match('image.*')) {
+                displayError('⚠️ 이미지 파일만 업로드할 수 있습니다.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // 이미지 처리를 비동기로 시작
+                    processImage(img, file.size, MAX_SIZE_BYTES);
+                };
+                img.onerror = function() {
+                    displayError('이미지를 로드하는 데 실패했습니다.');
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * 이미지 객체를 받아 목표 용량 미만이 될 때까지 반복적으로 압축합니다.
+         * @param {Image} img - 로드된 이미지 객체
+         * @param {number} originalSize - 원본 파일 크기 (바이트)
+         * @param {number} MAX_SIZE_BYTES - 목표 파일 크기 (바이트)
+         */
+        function processImage(img, originalSize, MAX_SIZE_BYTES) {
+            // 캔버스 크기 설정 (원본 크기 유지)
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            // 압축 품질 (0.0 - 1.0)
+            let quality = 0.9; 
+            // 품질 감소 단계
+            const step = 0.05; 
+            let compressedSize = originalSize;
+
+            console.log('--- 압축 시작 ---');
+            
+            // 반복적으로 품질을 낮춰가며 압축 시도
+            while (compressedSize > MAX_SIZE_BYTES && quality > 0.1) {
+                // JPG로 압축하여 Data URL 생성
+                finalDataUrl = canvas.toDataURL('image/jpeg', quality);
+                compressedSize = getDataUrlSize(finalDataUrl);
+
+                console.log(`품질: ${quality.toFixed(2)}, 크기: ${formatBytes(compressedSize)}`);
+
+                if (compressedSize <= MAX_SIZE_BYTES) {
+                    break; // 목표 달성
+                }
+
+                // 품질 감소
+                quality -= step;
+                // 최소 품질 보장 (너무 낮아지면 퀄리티가 심하게 저하됨)
+                if (quality < 0.1) quality = 0.1; 
+            }
+
+            statusMessage.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+
+            if (compressedSize <= MAX_SIZE_BYTES) {
+                // 성공적으로 압축된 경우 (체크 이모티콘 추가)
+                compressedImagePreview.src = finalDataUrl;
+                downloadButton.disabled = false;
+                downloadButton.classList.remove('bg-gray-400');
+                downloadButton.classList.add('bg-green-600');
+
+                sizeInfo.innerHTML = `
+                    <p>✅ **원본 용량**: ${formatBytes(originalSize)}</p>
+                    <p>🎉 **최적화 용량**: <span class="text-green-600 font-bold">${formatBytes(compressedSize)}</span></p>
+                    <p>🔒 **사용된 품질**: ${quality.toFixed(2)}</p>
+                `;
+
+            } else {
+                // 최대 압축에도 목표 달성 실패한 경우
+                finalDataUrl = canvas.toDataURL('image/jpeg', 0.1); // 최소 품질로 최종 변환
+                compressedSize = getDataUrlSize(finalDataUrl);
+                compressedImagePreview.src = finalDataUrl;
+                downloadButton.disabled = false; // 다운로드는 가능하게 하되, 경고 표시
+
+                sizeInfo.innerHTML = `
+                    <p>✅ **원본 용량**: ${formatBytes(originalSize)}</p>
+                    <p>⚠️ **최적화 용량**: <span class="text-red-600 font-bold">${formatBytes(compressedSize)}</span></p>
+                    <p class="text-red-600 font-semibold mt-2">최소 품질(0.1)로 압축했으나 ${formatBytes(MAX_SIZE_BYTES)}를 초과했습니다. 더 큰 이미지일 경우 리사이즈(크기 조절)가 필요할 수 있습니다.</p>
+                `;
+            }
+            
+            console.log('--- 압축 완료 ---');
+        }
+
+        /**
+         * 변환된 이미지를 다운로드합니다.
+         */
+        function downloadImage() {
+            if (!finalDataUrl) {
+                displayError('다운로드할 이미지가 없습니다.');
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = finalDataUrl;
+            // 파일 이름을 'compressed_이미지명.jpg' 형식으로 설정
+            const originalFileName = fileInput.files[0] ? fileInput.files[0].name.split('.')[0] : 'image';
+            a.download = `compressed_${originalFileName}.jpg`;
+            
+            // 다운로드 링크를 DOM에 추가했다가 바로 클릭 후 제거
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        /**
+         * 에러 메시지를 사용자에게 표시합니다.
+         * @param {string} message - 표시할 에러 메시지
+         */
+        function displayError(message) {
+            statusMessage.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            errorMessage.innerHTML = message;
+            errorMessage.classList.remove('hidden');
+            // 파일 입력 초기화 (선택된 파일명 제거)
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
