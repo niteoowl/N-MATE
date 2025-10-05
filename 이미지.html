@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사진 용량 압축기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 폰트 설정 및 기본 스타일 */
+        body { font-family: 'Inter', sans-serif; background-color: #e2e8f0; } /* slate-200 */
+
+        /* ------------------ 커스텀 애니메이션: 초기 로드 페이드 인 ------------------ */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-startup-fade {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        /* ------------------ Range Slider 스타일 ------------------ */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #059669; /* emerald-600 */
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(5, 150, 105, 0.6);
+            margin-top: -8px;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            background: #047857; /* emerald-700 */
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #059669;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(5, 150, 105, 0.6);
+            border: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #a7f3d0; /* emerald-200 */
+            border-radius: 2px;
+        }
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #a7f3d0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <!-- Loading Overlay for Compression Process -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex flex-col items-center justify-center z-50 transition-opacity duration-500 opacity-0 pointer-events-none">
+        <!-- Particle/Glow Effect (Pulsing Blur) -->
+        <div class="relative flex items-center justify-center">
+             <!-- 중앙 스피너 -->
+            <div class="animate-spin rounded-full h-28 w-28 border-t-4 border-b-4 border-emerald-400"></div>
+             <!-- 빛나는 효과 -->
+            <div class="absolute inset-0 w-28 h-28 bg-emerald-500 rounded-full mix-blend-multiply filter blur-xl opacity-40 animate-pulse"></div>
+        </div>
+        
+        <p class="text-white text-2xl font-bold mt-8 tracking-wider">이미지 마법 처리 중...</p>
+    </div>
+
+    <!-- Main Content Container with Startup Fade Animation -->
+    <div id="mainContent" class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-4xl opacity-0 animate-startup-fade">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-6 text-center">✨ 스마트 사진 압축 마법사</h1>
+        <p class="text-center text-gray-500 mb-8 text-lg">파일을 업로드하고 슬라이더를 조절하여 용량을 최적화하세요.</p>
+
+        <!-- 1. 파일 입력 -->
+        <div class="mb-8 p-4 border border-gray-200 rounded-xl shadow-md">
+            <label for="fileInput" class="block text-xl font-bold text-gray-700 mb-3">
+                1. 이미지 파일 선택
+            </label>
+            <input type="file" id="fileInput" accept="image/jpeg, image/png" class="block w-full text-base text-gray-500
+                file:mr-4 file:py-3 file:px-6
+                file:rounded-full file:border-0
+                file:text-base file:font-bold
+                file:bg-emerald-100 file:text-emerald-700
+                hover:file:bg-emerald-200 transition duration-150" onchange="handleFileChange()">
+        </div>
+
+        <!-- 2. 압축 품질 조절 -->
+        <div class="mb-8 p-6 bg-emerald-50 rounded-xl shadow-inner" id="qualityControlContainer" style="display:none;">
+            <label for="qualitySlider" class="block text-xl font-bold text-gray-800 mb-4 flex justify-between items-center">
+                <span>2. 압축 품질 조절: (낮을수록 용량 감소)</span>
+                <span id="qualityValue" class="text-2xl font-extrabold text-emerald-800 bg-emerald-200 px-4 py-1 rounded-lg min-w-[70px] text-center shadow-md">1.0</span>
+            </label>
+            <input type="range" id="qualitySlider" min="0.1" max="1.0" step="0.05" value="1.0"
+                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" oninput="handleQualityChange()">
+        </div>
+
+        <!-- 3. 결과 표시 -->
+        <div id="resultArea" class="mt-10" style="display:none;">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">🚀 압축 결과 분석</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- 파일 크기 정보 -->
+                <div class="bg-blue-50 p-5 rounded-xl shadow-lg">
+                    <p class="text-base font-medium text-blue-700">원본 파일 크기:</p>
+                    <p id="originalSize" class="text-2xl font-extrabold text-blue-900 mt-1"></p>
+                </div>
+                <div class="bg-emerald-50 p-5 rounded-xl shadow-lg relative overflow-hidden">
+                    <p class="text-base font-medium text-emerald-700">압축 후 파일 크기:</p>
+                    <p id="compressedSize" class="text-2xl font-extrabold text-emerald-900 mt-1"></p>
+                </div>
+            </div>
+
+            <!-- 압축 이미지 미리보기 및 다운로드 버튼 -->
+            <div class="text-center mt-6">
+                <img id="compressedPreview" class="max-w-full h-auto mx-auto border-8 border-emerald-400 rounded-3xl shadow-2xl transition duration-500 max-h-[400px] object-contain" alt="압축 이미지 미리보기">
+                
+                <a id="downloadButton" href="#" download="compressed_image.jpeg"
+                   class="inline-block mt-8 px-10 py-4 bg-emerald-600 text-white font-extrabold rounded-full text-xl hover:bg-emerald-700 transition duration-300 transform hover:scale-105 shadow-2xl shadow-emerald-400/50 disabled:bg-gray-400 disabled:shadow-none"
+                   onclick="this.blur()">
+                    📥 압축된 이미지 다운로드 (.jpeg)
+                </a>
+            </div>
+        </div>
+
+        <!-- 숨겨진 Canvas (압축 작업용) -->
+        <canvas id="imageCanvas" class="hidden"></canvas>
+
+        <!-- 메시지 박스 -->
+        <div id="messageBox" class="mt-8 p-4 text-center rounded-xl text-sm transition-opacity duration-300" style="opacity:0; display:none;"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const qualitySlider = document.getElementById('qualitySlider');
+        const qualityValueSpan = document.getElementById('qualityValue');
+        const originalSizeElem = document.getElementById('originalSize');
+        const compressedSizeElem = document.getElementById('compressedSize');
+        const compressedPreview = document.getElementById('compressedPreview');
+        const downloadButton = document.getElementById('downloadButton');
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+        const resultArea = document.getElementById('resultArea');
+        const qualityControlContainer = document.getElementById('qualityControlContainer');
+        const messageBox = document.getElementById('messageBox');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        let originalFile = null;
+        let originalFileName = 'compressed_image';
+
+        /**
+         * 바이트 크기를 읽기 쉬운 형식으로 변환합니다.
+         * @param {number} bytes - 바이트 크기
+         * @returns {string} - KB, MB 등으로 변환된 문자열
+         */
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        /**
+         * 로딩 오버레이를 표시합니다.
+         */
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.style.pointerEvents = 'auto'; // 상호 작용 차단
+            setTimeout(() => { loadingOverlay.style.opacity = 1; }, 10);
+        }
+
+        /**
+         * 로딩 오버레이를 숨깁니다.
+         */
+        function hideLoading() {
+            loadingOverlay.style.opacity = 0;
+            setTimeout(() => { 
+                loadingOverlay.style.display = 'none'; 
+                loadingOverlay.style.pointerEvents = 'none'; // 상호 작용 허용
+            }, 500); // CSS transition duration과 일치
+        }
+
+
+        /**
+         * 사용자에게 메시지를 표시합니다. (Alert 대체)
+         * @param {string} message - 표시할 메시지
+         * @param {string} type - 'success', 'error', 'info' 중 하나
+         */
+        function showMessage(message, type) {
+            messageBox.textContent = message;
+            messageBox.style.display = 'block';
+            
+            // Tailwind 클래스 초기화
+            messageBox.className = 'mt-8 p-4 text-center rounded-xl text-sm transition-opacity duration-300 font-medium shadow-lg';
+
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-300');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-300');
+            } else { // info
+                messageBox.classList.add('bg-blue-100', 'text-blue-700', 'border', 'border-blue-300');
+            }
+            
+            // 페이드 인 효과
+            setTimeout(() => { messageBox.style.opacity = 1; }, 10);
+            
+            // 5초 후 페이드 아웃
+            setTimeout(() => {
+                messageBox.style.opacity = 0;
+                setTimeout(() => { messageBox.style.display = 'none'; }, 300);
+            }, 5000);
+        }
+
+
+        /**
+         * 압축 품질이 변경될 때 호출됩니다.
+         */
+        function handleQualityChange() {
+            const quality = parseFloat(qualitySlider.value);
+            qualityValueSpan.textContent = quality.toFixed(2);
+            if (originalFile) {
+                compressAndDisplay(originalFile, quality);
+            }
+        }
+
+        /**
+         * 파일이 선택될 때 호출됩니다.
+         */
+        function handleFileChange() {
+            const file = fileInput.files[0];
+            if (!file) {
+                originalFile = null;
+                resultArea.style.display = 'none';
+                qualityControlContainer.style.display = 'none';
+                return;
+            }
+
+            if (!file.type.startsWith('image/')) {
+                showMessage('이미지 파일(JPEG 또는 PNG)만 선택해주세요.', 'error');
+                fileInput.value = '';
+                originalFile = null;
+                resultArea.style.display = 'none';
+                qualityControlContainer.style.display = 'none';
+                return;
+            }
+
+            originalFile = file;
+            // 확장자를 제외한 파일 이름 추출
+            const fileNameParts = file.name.split('.');
+            if (fileNameParts.length > 1) {
+                fileNameParts.pop(); // 확장자 제거
+            }
+            originalFileName = fileNameParts.join('.');
+
+
+            // 원본 크기 표시
+            originalSizeElem.textContent = formatBytes(originalFile.size);
+            
+            // UI 초기화 및 표시
+            qualityControlContainer.style.display = 'block';
+            resultArea.style.display = 'block';
+            
+            // 기본 품질로 압축 시작
+            const initialQuality = parseFloat(qualitySlider.value);
+            compressAndDisplay(originalFile, initialQuality);
+        }
+
+
+        /**
+         * 이미지 파일(Blob)을 압축하고 결과를 표시합니다.
+         * @param {File} file - 원본 이미지 파일 객체
+         * @param {number} quality - JPEG 압축 품질 (0.0 ~ 1.0)
+         */
+        function compressAndDisplay(file, quality) {
+            showLoading(); // 로딩 시작
+
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        // 캔버스 크기 설정
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        
+                        // 이미지 그리기
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                        // JPEG 포맷으로 압축된 Blob 데이터 얻기
+                        // toBlob은 비동기 작업이므로, Promise로 감싸면 더 좋지만 여기서는 콜백 패턴을 유지합니다.
+                        canvas.toBlob(function(blob) {
+                            hideLoading(); // 로딩 완료
+                            if (blob) {
+                                // 1. 압축 후 크기 표시
+                                compressedSizeElem.textContent = formatBytes(blob.size);
+
+                                // 2. 미리보기 및 다운로드 링크 설정
+                                const compressedDataUrl = URL.createObjectURL(blob);
+                                compressedPreview.src = compressedDataUrl;
+                                
+                                // 다운로드 버튼 설정
+                                downloadButton.href = compressedDataUrl;
+                                downloadButton.download = `${originalFileName}_compressed_q${quality.toFixed(2)}.jpeg`;
+                                downloadButton.classList.remove('opacity-50');
+                                downloadButton.disabled = false;
+                                showMessage('압축이 완료되었습니다! 크기를 확인해 보세요.', 'success');
+                            } else {
+                                showMessage('이미지 압축 중 오류가 발생했습니다. 다른 파일을 시도해 보세요.', 'error');
+                                downloadButton.disabled = true;
+                                downloadButton.href = '#';
+                            }
+                        }, 'image/jpeg', quality); // <--- 이 부분이 압축 핵심
+                    } catch (e) {
+                        hideLoading();
+                        console.error("Compression error:", e);
+                        showMessage('이미지 처리 중 심각한 오류가 발생했습니다: ' + e.message, 'error');
+                    }
+                };
+                img.onerror = () => {
+                    hideLoading();
+                    showMessage('이미지 로딩 중 오류가 발생했습니다. 파일이 손상되지 않았는지 확인하세요.', 'error');
+                };
+                img.src = event.target.result;
+            };
+
+            reader.onerror = (e) => {
+                hideLoading();
+                showMessage('파일을 읽는 도중 오류가 발생했습니다.', 'error');
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        // 초기 로드 시 UI 설정
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('mainContent');
+            
+            downloadButton.classList.add('opacity-50');
+            downloadButton.disabled = true;
+            
+            // 페이지 로드 후 100ms 지연 후 애니메이션 시작
+            setTimeout(() => {
+                mainContent.style.opacity = 1;
+                showMessage('파일을 선택하면 압축을 시작할 수 있습니다. 품질 $1.0$이 최고 품질입니다.', 'info');
+            }, 100);
+        });
+
+    </script>
+</body>
+</html>
