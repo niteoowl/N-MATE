@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>분할 화면 웹뷰어</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 뷰포트 높이 설정: 헤더 높이(h-12) 제외 */
+        .h-screen-custom {
+            height: calc(100vh - 3rem); /* h-12 (3rem) 제외 */
+        }
+        /* iframe 스타일: 테두리 없이, 부모 컨테이너에 꽉 차게 */
+        .iframe-container {
+            flex-grow: 1; /* 남은 공간을 모두 차지 */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* 스크롤바 숨기기 */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+
+        /**
+         * 분할 뷰어 중 하나를 최대화하거나 원래 분할 상태로 복원하는 함수
+         * @param {string} currentPaneId - 현재 조작하려는 뷰어의 ID (예: 'pane1')
+         * @param {string} otherPaneId - 반대편 뷰어의 ID (예: 'pane2')
+         */
+        function togglePaneFullscreen(currentPaneId, otherPaneId) {
+            const currentPane = document.getElementById(currentPaneId);
+            const otherPane = document.getElementById(otherPaneId);
+            const textSpan = document.getElementById(`${currentPaneId}-fs-text`);
+            const iconSvg = document.getElementById(`${currentPaneId}-fs-icon`);
+            
+            // 헤더와 메인 컨테이너 참조
+            const header = document.getElementById('header');
+            const mainContent = document.getElementById('mainContent');
+
+            // otherPane이 숨겨져 있다면, 현재 pane은 최대화 상태임 -> 분할 보기로 복원
+            if (otherPane.classList.contains('hidden')) {
+                // --- 1. 복원 (Restore Split View) ---
+                
+                // 헤더 다시 표시
+                header.classList.remove('hidden');
+
+                // 메인 컨테이너 높이 복원 (h-12 제외)
+                mainContent.classList.remove('h-screen');
+                mainContent.classList.add('h-screen-custom');
+                
+                // 다른 pane 다시 표시
+                otherPane.classList.remove('hidden');
+                
+                // 텍스트 및 아이콘 업데이트
+                textSpan.textContent = '전체 보기';
+                // Maximize Icon (확대 아이콘)
+                iconSvg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9" />`;
+
+            } else {
+                // --- 2. 최대화 (Maximize Single Pane) ---
+
+                // 헤더 숨기기
+                header.classList.add('hidden');
+                
+                // 메인 컨테이너 높이를 100vh로 최대화
+                mainContent.classList.remove('h-screen-custom');
+                mainContent.classList.add('h-screen');
+
+                // 다른 pane 숨기기
+                otherPane.classList.add('hidden');
+                
+                // 텍스트 및 아이콘 업데이트
+                textSpan.textContent = '분할 보기';
+                // Minimize Icon (축소 아이콘)
+                iconSvg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M9 9V4.5M9 9h4.5M9 9l3.75 3.75M15 15v4.5M15 15h-4.5M15 15l-3.75-3.75" />`;
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans overflow-hidden">
+
+    <!-- Header (Logo and Control Bar) - 이 요소가 전체화면시 사라집니다. -->
+    <header id="header" class="bg-white border-b border-indigo-200 p-2 h-12 flex items-center justify-start shadow-md transition-all duration-300">
+        <!-- Logo Image -->
+        <img 
+            src="https://img1s.mbest.co.kr/main/new2017/logo.png" 
+            alt="M-Best Logo" 
+            class="h-full w-auto object-contain py-1"
+            onerror="this.onerror=null;this.src='https://placehold.co/120x30/4338CA/ffffff?text=M-BEST+Logo'"
+        >
+    </header>
+
+    <!-- Main Split View Container -->
+    <main id="mainContent" class="h-screen-custom flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-indigo-200 transition-all duration-300">
+
+        <!-- Left Pane (Site 1) -->
+        <div id="pane1" class="flex-1 overflow-hidden flex flex-col shadow-inner bg-gray-50 transition-all duration-300">
+            <!-- Control Bar 1: 셀레나 선생님 (볼드 처리) -->
+            <div class="flex-shrink-0 flex justify-between items-center p-2 bg-indigo-100/50 border-b border-indigo-200">
+                <!-- font-bold 클래스 적용 -->
+                <span class="text-sm font-bold text-indigo-800">셀레나 선생님</span>
+                <button onclick="togglePaneFullscreen('pane1', 'pane2')" class="flex items-center space-x-1 px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded-md shadow-md hover:bg-indigo-700 transition duration-150 active:scale-95">
+                    <svg id="pane1-fs-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9" />
+                    </svg>
+                    <span id="pane1-fs-text">전체 보기</span>
+                </button>
+            </div>
+            <!-- Iframe Container 1 -->
+            <div class="iframe-container overflow-hidden hide-scrollbar">
+                <iframe 
+                    id="site1" 
+                    src="https://www.mbest.co.kr/inc_common/vod/starplayer/vodplayer_intro_2025.asp?gbn=sample&tp=1&gm_key=1022486&gm_gbn=0&mum=0" 
+                    title="Site 1 - VOD 1022486">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Right Pane (Site 2) -->
+        <div id="pane2" class="flex-1 overflow-hidden flex flex-col shadow-inner bg-gray-50 transition-all duration-300">
+            <!-- Control Bar 2: 박제이 선생님 (볼드 처리) -->
+            <div class="flex-shrink-0 flex justify-between items-center p-2 bg-indigo-100/50 border-b border-indigo-200">
+                <!-- font-bold 클래스 적용 -->
+                <span class="text-sm font-bold text-indigo-800">박제이 선생님</span>
+                <button onclick="togglePaneFullscreen('pane2', 'pane1')" class="flex items-center space-x-1 px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded-md shadow-md hover:bg-indigo-700 transition duration-150 active:scale-95">
+                    <svg id="pane2-fs-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9" />
+                    </svg>
+                    <span id="pane2-fs-text">전체 보기</span>
+                </button>
+            </div>
+            <!-- Iframe Container 2 -->
+            <div class="iframe-container overflow-hidden hide-scrollbar">
+                <iframe 
+                    id="site2" 
+                    src="https://www.mbest.co.kr/inc_common/vod/starplayer/vodplayer_intro_2025.asp?gbn=sample&tp=1&gm_key=1045339&gm_gbn=0&mum=0" 
+                    title="Site 2 - VOD 1045339">
+                </iframe>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+</html>
