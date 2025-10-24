@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>삼성 갤럭시 탭 울트라 사이즈 비교</title>
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 폰트 설정 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        
+        /* 3D 태블릿 시각화를 위한 커스텀 스타일 */
+        .device-visualization {
+            /* 2D 크기 (높이, 너비) */
+            background-color: #f9fafb; /* 태블릿 화면 부분 */
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem; /* 부드러운 모서리 */
+            transition: all 0.5s ease-in-out;
+            position: relative;
+            margin: 0 1.5rem; /* 중앙 정렬과 간격 */
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 두께(Thickness) 시뮬레이션: Shadow를 깊이감 있게 사용 */
+        .device-visualization.shadow-depth-1 { box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 0 5px rgba(0, 163, 74, 0.4), 0 0 10px rgba(0, 0, 0, 0.2); }
+        .device-visualization.shadow-depth-2 { box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 0 8px rgba(0, 163, 74, 0.6), 0 0 15px rgba(0, 0, 0, 0.3); }
+        .device-visualization.shadow-depth-3 { box-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 0 10px rgba(0, 163, 74, 0.8), 0 0 20px rgba(0, 0, 0, 0.4); }
+
+        .device-visualization-label {
+            position: absolute;
+            bottom: -32px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* 크기 비율을 시각적으로 보여주기 위한 컨테이너 */
+        .comparison-area {
+            min-height: 400px; /* 충분한 공간 확보 */
+        }
+        
+        /* Bar Chart Styles */
+        .bar-chart-container {
+            display: flex;
+            align-items: flex-end;
+            height: 100px; /* 고정 높이 */
+            margin-top: 1rem;
+        }
+        .bar-segment {
+            transition: height 0.7s ease-out;
+            border-radius: 0.25rem 0.25rem 0 0;
+            width: 50%;
+            margin: 0 0.5rem;
+        }
+        .border-thin-r { border-right-width: 1px; border-right-color: #e5e7eb; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl p-6 md:p-12">
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-gray-900 mb-2 leading-tight">
+            Samsung Galaxy Tab <span class="text-emerald-500">Ultimate Size Comparison</span>
+        </h1>
+        <p class="text-lg text-gray-600 mb-10">
+            두 모델을 선택하여 크기, 무게, 두께를 입체적이고 직관적인 방식으로 비교해 보세요.
+        </p>
+
+        <!-- 선택 드롭다운 영역 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <!-- 모델 1 선택 -->
+            <div>
+                <label for="model1Select" class="block text-sm font-bold text-gray-700 mb-2">
+                    모델 A (기준)
+                </label>
+                <select id="model1Select" onchange="compareTabs()" class="w-full p-4 border-2 border-green-500 rounded-xl shadow-lg focus:border-green-700 focus:ring-4 focus:ring-green-100 transition duration-300 ease-in-out appearance-none bg-white font-semibold">
+                    <option value="">-- 모델을 선택하세요 --</option>
+                    <!-- 옵션은 JS에서 채워집니다 -->
+                </select>
+            </div>
+            
+            <!-- 모델 2 선택 -->
+            <div>
+                <label for="model2Select" class="block text-sm font-bold text-gray-700 mb-2">
+                    모델 B (비교 대상)
+                </label>
+                <select id="model2Select" onchange="compareTabs()" class="w-full p-4 border-2 border-gray-300 rounded-xl shadow-lg focus:border-gray-500 focus:ring-4 focus:ring-gray-100 transition duration-300 ease-in-out appearance-none bg-white font-semibold">
+                    <option value="">-- 모델을 선택하세요 --</option>
+                    <!-- 옵션은 JS에서 채워집니다 -->
+                </select>
+            </div>
+        </div>
+
+        <!-- 비교 결과 및 시각화 영역 -->
+        <div id="comparisonContainer" class="hidden">
+            
+            <!-- 2D & 3D 시각적 비교 영역 -->
+            <h3 class="text-2xl font-extrabold text-gray-800 mb-12 border-b-4 border-emerald-100 pb-3">
+                1. 2D/3D 크기 및 두께 비교
+            </h3>
+            <div id="visualComparison" class="comparison-area flex flex-col sm:flex-row justify-center items-center sm:items-end p-4 relative mb-12">
+                <!-- 시각화 요소는 JS에서 채워집니다 -->
+            </div>
+            <p class="text-sm text-gray-500 mt-4 text-center mb-8">
+                * 시각화된 크기는 실제 물리적 크기(높이 x 너비)의 상대적 비율을 나타냅니다.
+            </p>
+
+            <!-- 바 차트 비교 영역 -->
+            <h3 class="text-2xl font-extrabold text-gray-800 mb-8 border-b-4 border-emerald-100 pb-3 mt-12">
+                2. 주요 수치 직관적 비교 (바 차트)
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                <!-- 무게 바 차트 -->
+                <div class="p-4 bg-gray-50 rounded-xl shadow-inner">
+                    <p class="text-lg font-bold text-gray-700 mb-4">무게 (g)</p>
+                    <div class="bar-chart-container">
+                        <div id="weightBar1" class="bar-segment bg-emerald-500 shadow-lg" data-value="0"></div>
+                        <div id="weightBar2" class="bar-segment bg-gray-400 shadow-lg" data-value="0"></div>
+                    </div>
+                    <div class="flex justify-between text-sm font-medium mt-2">
+                        <p id="weightValue1" class="text-emerald-600 w-1/2 text-center"></p>
+                        <p id="weightValue2" class="text-gray-600 w-1/2 text-center"></p>
+                    </div>
+                </div>
+
+                <!-- 두께 바 차트 -->
+                <div class="p-4 bg-gray-50 rounded-xl shadow-inner">
+                    <p class="text-lg font-bold text-gray-700 mb-4">두께 (mm)</p>
+                    <div class="bar-chart-container">
+                        <div id="thicknessBar1" class="bar-segment bg-emerald-500 shadow-lg" data-value="0"></div>
+                        <div id="thicknessBar2" class="bar-segment bg-gray-400 shadow-lg" data-value="0"></div>
+                    </div>
+                    <div class="flex justify-between text-sm font-medium mt-2">
+                        <p id="thicknessValue1" class="text-emerald-600 w-1/2 text-center"></p>
+                        <p id="thicknessValue2" class="text-gray-600 w-1/2 text-center"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 수치 비교 테이블 (더 깔끔하게) -->
+            <h3 class="text-2xl font-extrabold text-gray-800 mb-6 border-b-4 border-emerald-100 pb-3 mt-12">
+                3. 상세 사양 수치 비교
+            </h3>
+            <div class="overflow-x-auto shadow-xl rounded-lg mb-10 border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-emerald-50">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-extrabold text-gray-700 uppercase tracking-wider rounded-tl-lg">사양</th>
+                            <th id="model1NameHeader" class="px-6 py-4 text-left text-sm font-extrabold text-emerald-800 tracking-wider">모델 A</th>
+                            <th id="model2NameHeader" class="px-6 py-4 text-left text-sm font-extrabold text-gray-800 tracking-wider">모델 B</th>
+                            <th class="px-6 py-4 text-left text-sm font-extrabold text-gray-700 uppercase tracking-wider hidden sm:table-cell rounded-tr-lg">차이</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody" class="bg-white divide-y divide-gray-100">
+                        <!-- 데이터는 JS에서 채워집니다 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 초기 안내 메시지 -->
+        <div id="initialMessage" class="flex flex-col items-center justify-center p-16 bg-emerald-50 rounded-xl border-4 border-dashed border-emerald-300">
+            <svg class="w-16 h-16 text-emerald-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <p class="text-xl font-bold text-emerald-700">
+                갤럭시 탭 A와 B를 선택하여 직관적으로 비교해 보세요!
+            </p>
+        </div>
+    </div>
+
+
+    <script>
+        // 갤럭시 탭 데이터 (인기 모델 및 최신 모델 위주로 실제 사양을 참고하여 작성)
+        const tabData = [
+            { model: "Galaxy Tab S9 Ultra", display: 14.6, height: 326.4, width: 208.6, thickness: 5.5, weight: 732, resolution: "2960 x 1848" },
+            { model: "Galaxy Tab S9+", display: 12.4, height: 285.4, width: 185.4, thickness: 5.7, weight: 586, resolution: "2800 x 1752" },
+            { model: "Galaxy Tab S9", display: 11.0, height: 254.3, width: 165.8, thickness: 5.9, weight: 498, resolution: "2560 x 1600" },
+            { model: "Galaxy Tab S9 FE+", display: 12.4, height: 285.4, width: 185.4, thickness: 6.5, weight: 628, resolution: "2560 x 1600" },
+            { model: "Galaxy Tab S9 FE", display: 10.9, height: 257.1, width: 168.7, thickness: 6.5, weight: 524, resolution: "2304 x 1440" },
+            { model: "Galaxy Tab A9+", display: 11.0, height: 257.1, width: 168.7, thickness: 6.9, weight: 480, resolution: "1920 x 1200" },
+            { model: "Galaxy Tab A9", display: 8.7, height: 211.0, width: 124.7, thickness: 8.0, weight: 333, resolution: "1340 x 800" },
+            { model: "Galaxy Tab S8 Ultra", display: 14.6, height: 326.4, width: 208.6, thickness: 5.5, weight: 726, resolution: "2960 x 1848" },
+        ];
+
+        // 초기화: 드롭다운에 옵션 채우기
+        function populateSelects() {
+            const select1 = document.getElementById('model1Select');
+            const select2 = document.getElementById('model2Select');
+
+            tabData.forEach(tab => {
+                const option1 = new Option(tab.model, tab.model);
+                const option2 = new Option(tab.model, tab.model);
+                select1.add(option1);
+                select2.add(option2);
+            });
+            
+            // 초기값 설정 (선택 사항)
+            select1.value = "Galaxy Tab S9 Ultra";
+            select2.value = "Galaxy Tab S9";
+
+            // 초기 비교 실행
+            compareTabs();
+        }
+
+        // 선택된 두 모델 비교 및 화면 업데이트
+        function compareTabs() {
+            const model1Name = document.getElementById('model1Select').value;
+            const model2Name = document.getElementById('model2Select').value;
+            const comparisonContainer = document.getElementById('comparisonContainer');
+            const initialMessage = document.getElementById('initialMessage');
+
+            // 모델이 모두 선택되지 않은 경우
+            if (!model1Name || !model2Name) {
+                comparisonContainer.classList.add('hidden');
+                initialMessage.classList.remove('hidden');
+                return;
+            }
+
+            comparisonContainer.classList.remove('hidden');
+            initialMessage.classList.add('hidden');
+
+            const model1 = tabData.find(t => t.model === model1Name);
+            const model2 = tabData.find(t => t.model === model2Name);
+
+            if (!model1 || !model2) return; // 데이터 오류 방지
+
+            // 모든 업데이트 함수 호출
+            updateComparisonTable(model1, model2);
+            updateVisualComparison(model1, model2);
+            updateBarCharts(model1, model2); 
+        }
+
+        // --- 1. 2D/3D 시각화 업데이트 ---
+        function updateVisualComparison(m1, m2) {
+            const visualArea = document.getElementById('visualComparison');
+            visualArea.innerHTML = ''; 
+
+            // 최대 크기 계산 (시각화 스케일링용)
+            const maxW = Math.max(m1.width, m2.width);
+
+            // 시각화에 사용할 기준 너비 (가장 큰 너비를 300px로 설정)
+            const baseWidth = 300; 
+            const scaleFactor = baseWidth / maxW; 
+
+            const h1 = m1.height * scaleFactor;
+            const w1 = m1.width * scaleFactor;
+            const h2 = m2.height * scaleFactor;
+            const w2 = m2.width * scaleFactor;
+            
+            // 두께를 3D 그림자 깊이로 매핑 (얇을수록 옅고, 두꺼울수록 진한 그림자)
+            // 가장 얇은 두께(5.5mm)를 shadow-depth-1로, 가장 두꺼운 두께(8.0mm)를 shadow-depth-3로 매핑
+            const minThickness = 5.5; 
+            const maxThickness = 8.0; 
+            
+            const getDepthClass = (thickness) => {
+                if (thickness <= minThickness + 0.5) return 'shadow-depth-1'; // 5.5 - 6.0
+                if (thickness <= minThickness + 1.5) return 'shadow-depth-2'; // 6.0 - 7.0
+                return 'shadow-depth-3'; // 7.0 이상
+            };
+
+            const depthClass1 = getDepthClass(m1.thickness);
+            const depthClass2 = getDepthClass(m2.thickness);
+
+            // 모델 1 시각화 요소 (모델 A: 그린 계열)
+            const viz1 = document.createElement('div');
+            viz1.className = `device-visualization ${depthClass1} mb-10 sm:mb-0 transform hover:scale-[1.03] active:scale-[0.98]`; // 반응형 마진/패딩
+            viz1.style.width = `${w1}px`;
+            viz1.style.height = `${h1}px`;
+            viz1.innerHTML = `
+                <div class="absolute inset-0 bg-emerald-500 bg-opacity-10 rounded-xl flex items-center justify-center text-xs font-semibold text-emerald-800 opacity-80">
+                    H: ${m1.height}mm | W: ${m1.width}mm
+                </div>
+                <span class="device-visualization-label bg-emerald-500 text-white shadow-md">${m1.model}</span>
+            `;
+
+            // 모델 2 시각화 요소 (모델 B: 회색 계열)
+            const viz2 = document.createElement('div');
+            viz2.className = `device-visualization ${depthClass2} transform hover:scale-[1.03] active:scale-[0.98]`;
+            viz2.style.width = `${w2}px`;
+            viz2.style.height = `${h2}px`;
+            viz2.innerHTML = `
+                <div class="absolute inset-0 bg-gray-500 bg-opacity-10 rounded-xl flex items-center justify-center text-xs font-semibold text-gray-800 opacity-80">
+                    H: ${m2.height}mm | W: ${m2.width}mm
+                </div>
+                <span class="device-visualization-label bg-gray-500 text-white shadow-md">${m2.model}</span>
+            `;
+
+            visualArea.appendChild(viz1);
+            visualArea.appendChild(viz2);
+        }
+
+        // --- 2. 바 차트 시각화 업데이트 ---
+        function updateBarCharts(m1, m2) {
+            // 1. 무게 (Weight)
+            const maxWeight = Math.max(m1.weight, m2.weight, 750); // 최대값 설정 (750g을 기준으로 하면 탭의 상대적 크기가 더 잘 보임)
+            const weightBar1 = document.getElementById('weightBar1');
+            const weightBar2 = document.getElementById('weightBar2');
+            const weightValue1 = document.getElementById('weightValue1');
+            const weightValue2 = document.getElementById('weightValue2');
+
+            // 높이를 최대값에 비례하여 설정 (최대 100%)
+            const weightHeight1 = (m1.weight / maxWeight) * 100;
+            const weightHeight2 = (m2.weight / maxWeight) * 100;
+
+            weightBar1.style.height = `${weightHeight1}%`;
+            weightBar2.style.height = `${weightHeight2}%`;
+            weightValue1.textContent = `${m1.weight} g`;
+            weightValue2.textContent = `${m2.weight} g`;
+            
+            // 2. 두께 (Thickness)
+            // 두께는 얇은 것이 좋으므로, 값이 작을수록 바가 길어지도록 반전 로직 사용
+            const minThickness = Math.min(m1.thickness, m2.thickness, 5.5); // 최소 두께
+            const maxThickness = Math.max(m1.thickness, m2.thickness, 8.5); // 최대 두께
+
+            const thicknessBar1 = document.getElementById('thicknessBar1');
+            const thicknessBar2 = document.getElementById('thicknessBar2');
+            const thicknessValue1 = document.getElementById('thicknessValue1');
+            const thicknessValue2 = document.getElementById('thicknessValue2');
+            
+            // (최대 두께 - 현재 두께 + 얇음 강조값) 을 사용하여 얇을수록 높이가 높아지게 조정
+            const t1Normalized = maxThickness - m1.thickness + minThickness;
+            const t2Normalized = maxThickness - m2.thickness + minThickness;
+            const maxTNormalized = Math.max(t1Normalized, t2Normalized); 
+
+            const thicknessHeight1 = (t1Normalized / maxTNormalized) * 100;
+            const thicknessHeight2 = (t2Normalized / maxTNormalized) * 100;
+
+            thicknessBar1.style.height = `${thicknessHeight1}%`;
+            thicknessBar2.style.height = `${thicknessHeight2}%`;
+            thicknessValue1.textContent = `${m1.thickness} mm`;
+            thicknessValue2.textContent = `${m2.thickness} mm`;
+
+            // 두께 바 차트 레이블 조정 (두께는 얇은 것이 좋으므로 '얇음' 텍스트 추가)
+            if(m1.thickness < m2.thickness) {
+                thicknessValue1.innerHTML = `<span class="text-green-600 font-extrabold">${m1.thickness} mm</span> (더 얇음)`;
+                thicknessValue2.innerHTML = `${m2.thickness} mm`;
+            } else if (m2.thickness < m1.thickness) {
+                thicknessValue1.innerHTML = `${m1.thickness} mm`;
+                thicknessValue2.innerHTML = `<span class="text-green-600 font-extrabold">${m2.thickness} mm</span> (더 얇음)`;
+            } else {
+                 thicknessValue1.innerHTML = `${m1.thickness} mm`;
+                 thicknessValue2.innerHTML = `${m2.thickness} mm`;
+            }
+        }
+
+        // --- 3. 수치 비교 테이블 업데이트 ---
+        function updateComparisonTable(m1, m2) {
+            const tableBody = document.getElementById('comparisonTableBody');
+            const header1 = document.getElementById('model1NameHeader');
+            const header2 = document.getElementById('model2NameHeader');
+            
+            // 헤더 업데이트
+            header1.textContent = m1.model;
+            header2.textContent = m2.model;
+
+            tableBody.innerHTML = ''; 
+
+            const properties = [
+                { label: '디스플레이 크기', key: 'display', unit: '인치', isNumeric: true, decimals: 1, compare: 'bigger_is_better' },
+                { label: '높이 (H)', key: 'height', unit: 'mm', isNumeric: true, decimals: 1, compare: 'smaller_is_better' },
+                { label: '너비 (W)', key: 'width', unit: 'mm', isNumeric: true, decimals: 1, compare: 'smaller_is_better' },
+                { label: '두께 (T)', key: 'thickness', unit: 'mm', isNumeric: true, decimals: 1, compare: 'smaller_is_better' },
+                { label: '무게', key: 'weight', unit: 'g', isNumeric: true, decimals: 0, compare: 'smaller_is_better' },
+                { label: '해상도', key: 'resolution', unit: '', isNumeric: false, compare: 'neutral' },
+            ];
+
+            properties.forEach(prop => {
+                const val1 = m1[prop.key];
+                const val2 = m2[prop.key];
+                
+                let diffText = '';
+                let val1Text = `${val1}${prop.unit}`;
+                let val2Text = `${val2}${prop.unit}`;
+                let diffClass = 'text-gray-500';
+                let winnerClass1 = 'text-gray-700';
+                let winnerClass2 = 'text-gray-700';
+
+                if (prop.isNumeric) {
+                    const diff = val1 - val2;
+                    const formattedDiff = Math.abs(diff).toFixed(prop.decimals);
+                    
+                    if (diff !== 0) {
+                        if (prop.compare === 'bigger_is_better') {
+                            // 클수록 좋은 경우 (디스플레이)
+                            if (diff > 0) { // 1이 큼
+                                diffText = `+${formattedDiff}${prop.unit} (1이 큼)`;
+                                winnerClass1 = 'text-emerald-600 font-extrabold';
+                            } else { // 2가 큼
+                                diffText = `-${formattedDiff}${prop.unit} (2가 큼)`;
+                                winnerClass2 = 'text-emerald-600 font-extrabold';
+                            }
+                        } else if (prop.compare === 'smaller_is_better') {
+                            // 작을수록 좋은 경우 (크기, 무게, 두께)
+                            if (diff < 0) { // 1이 작음
+                                diffText = `-${formattedDiff}${prop.unit} (1이 작음)`;
+                                winnerClass1 = 'text-emerald-600 font-extrabold';
+                            } else { // 2가 작음
+                                diffText = `+${formattedDiff}${prop.unit} (2가 작음)`;
+                                winnerClass2 = 'text-emerald-600 font-extrabold';
+                            }
+                        }
+                        diffClass = 'text-gray-600 font-medium';
+                    } else {
+                        diffText = '동일';
+                        diffClass = 'text-gray-400 italic';
+                    }
+                    
+                    // 숫자 형식 보정
+                    val1Text = `${Number(val1).toFixed(prop.decimals)}${prop.unit}`;
+                    val2Text = `${Number(val2).toFixed(prop.decimals)}${prop.unit}`;
+                } else if (val1 === val2) {
+                    diffText = '동일';
+                    diffClass = 'text-gray-400 italic';
+                }
+
+                const row = `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 border-thin-r">${prop.label}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${winnerClass1} border-thin-r">${val1Text}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm ${winnerClass2} border-thin-r">${val2Text}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs ${diffClass} hidden sm:table-cell">${diffText}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // 페이지 로드 시 초기화 함수 실행
+        window.onload = populateSelects;
+    </script>
+</body>
+</html>
