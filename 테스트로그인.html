@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>doing! - 로그인/회원가입</title>
+    <!-- 모바일 앱의 깔끔함을 위해 시스템 폰트 사용 -->
+    <style>
+        /* 기본 스타일 및 제약 조건 반영 */
+        :root {
+            --color-white: #ffffff;
+            --color-black: #000000;
+            --color-accent: #1E90FF; /* 포인트 블루 (Dodger Blue) */
+            --color-light-gray: #f5f5f5; /* 배경에 미묘한 구분을 위한 아주 연한 회색 */
+            --color-medium-gray: #cccccc;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-light-gray);
+            display: flex;
+            justify-content: center;
+            align-items: center; /* 세로 중앙 정렬 */
+            min-height: 100vh;
+            color: var(--color-black);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 420px; /* 일반적인 모바일 최대 너비 */
+            background-color: var(--color-white);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            min-height: 100vh; /* 전체 화면 채우기 */
+            padding: 2rem 1.5rem; /* 상하 여백 추가 */
+            justify-content: center; /* 내부 콘텐츠 중앙 정렬 */
+        }
+
+        /* 헤더 스타일 (로고) */
+        .header-title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--color-accent);
+            letter-spacing: -2px;
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        /* 탭 토글 버튼 컨테이너 */
+        .tab-toggle-container {
+            display: flex;
+            background-color: var(--color-light-gray);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .tab-toggle-button {
+            flex: 1;
+            padding: 0.75rem 0;
+            border: none;
+            background-color: transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #777;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            z-index: 2;
+            position: relative;
+        }
+
+        .tab-toggle-button.active {
+            color: var(--color-black);
+        }
+
+        /* 토글 애니메이션을 위한 슬라이더 */
+        #tab-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            height: calc(100% - 8px);
+            width: calc(50% - 4px);
+            background-color: var(--color-white);
+            border-radius: 8px;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* 슬라이더에만 은은한 그림자 허용 */
+            z-index: 1;
+        }
+        
+        /* 폼 컨테이너 */
+        .form-container {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .form-container.hidden {
+            display: none;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        /* 입력 필드 스타일 */
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--color-medium-gray);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+            outline: none;
+        }
+
+        .auth-input:focus {
+            border-color: var(--color-accent);
+        }
+
+        /* 액션 버튼 (로그인/회원가입) */
+        .action-button {
+            width: 100%;
+            padding: 1rem;
+            background-color: var(--color-accent);
+            color: var(--color-white);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.1s ease;
+            margin-top: 1rem;
+        }
+
+        /* 버튼 '누르면 작아지는 효과' */
+        .interactive:active {
+            transform: scale(0.97);
+            opacity: 0.9;
+        }
+        
+        /* 추가적인 링크 (비밀번호 찾기 등) */
+        .extra-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .extra-link {
+            color: #777;
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 0 0.5rem;
+            transition: color 0.1s ease;
+        }
+
+        .extra-link:hover {
+            color: var(--color-accent);
+        }
+
+        /* 모바일 화면 높이 조정 */
+        @media (max-width: 420px) {
+            #app-container {
+                min-height: 100vh;
+                height: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1 class="header-title">doing!</h1>
+
+    <!-- 탭 토글 버튼 -->
+    <div class="tab-toggle-container">
+        <div id="tab-slider"></div>
+        <button id="login-tab" class="tab-toggle-button active" onclick="switchTab('login')">로그인</button>
+        <button id="register-tab" class="tab-toggle-button" onclick="switchTab('register')">회원가입</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="login-form" class="form-container">
+        <div class="input-group">
+            <input type="email" id="login-email" class="auth-input" placeholder="이메일 주소" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="login-password" class="auth-input" placeholder="비밀번호" required>
+        </div>
+        
+        <button id="login-button" class="action-button interactive" onclick="handleAuth('login')">
+            로그인
+        </button>
+
+        <div class="extra-links">
+            <a href="#" class="extra-link" onclick="showModal('기능 준비 중', '비밀번호 찾기 기능은 준비 중입니다.')">비밀번호 찾기</a>
+            <span class="extra-link">|</span>
+            <a href="#" class="extra-link" onclick="switchTab('register')">회원가입</a>
+        </div>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="register-form" class="form-container hidden">
+        <div class="input-group">
+            <input type="email" id="register-email" class="auth-input" placeholder="이메일 주소" required>
+        </div>
+        <div class="input-group">
+            <input type="text" id="register-nickname" class="auth-input" placeholder="사용자 이름 (닉네임)" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="register-password" class="auth-input" placeholder="비밀번호 (6자 이상)" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="register-confirm-password" class="auth-input" placeholder="비밀번호 확인" required>
+        </div>
+        
+        <button id="register-button" class="action-button interactive" onclick="handleAuth('register')">
+            회원가입
+        </button>
+        
+        <div class="extra-links">
+            <a href="#" class="extra-link" onclick="switchTab('login')">로그인으로 돌아가기</a>
+        </div>
+    </div>
+</div>
+
+<!-- 모달 팝업 구조 (메시지 박스 용도) -->
+<div id="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; max-width: 420px; background-color: rgba(0, 0, 0, 0.4); display: none; justify-content: center; align-items: center; z-index: 100;">
+    <div class="modal-content" style="background-color: var(--color-white); padding: 1.5rem; border-radius: 16px; width: 90%; max-width: 300px; text-align: center; transform: scale(0.9); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease;">
+        <h3 class="modal-title" id="modal-title" style="font-size: 1.2rem; font-weight: 700; color: var(--color-black); margin-bottom: 0.75rem;"></h3>
+        <p class="modal-text" id="modal-text" style="color: #555; margin-bottom: 1.5rem;"></p>
+        <button class="modal-close-button interactive" onclick="hideModal()" style="padding: 0.75rem 1.5rem; background-color: var(--color-accent); color: var(--color-white); border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;">확인</button>
+    </div>
+</div>
+
+<script>
+    // --- UI 로직 ---
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    const loginTab = document.getElementById('login-tab');
+    const registerTab = document.getElementById('register-tab');
+    const tabSlider = document.getElementById('tab-slider');
+    
+    // 모달 관련 요소
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+
+    /**
+     * 로그인/회원가입 폼 전환 및 슬라이더 이동
+     * @param {string} tabName - 'login' 또는 'register'
+     */
+    function switchTab(tabName) {
+        if (tabName === 'login') {
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            tabSlider.style.left = '4px';
+        } else {
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+            loginTab.classList.remove('active');
+            registerTab.classList.add('active');
+            // 슬라이더를 오른쪽으로 이동
+            tabSlider.style.left = `calc(50% + 4px)`;
+        }
+    }
+
+    // --- 인증 처리 로직 (프론트엔드 유효성 검사 예시) ---
+
+    /**
+     * 인증 처리 (로그인 또는 회원가입)
+     * @param {string} type - 'login' 또는 'register'
+     */
+    function handleAuth(type) {
+        if (type === 'login') {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            if (!email || !password) {
+                showModal('오류', '이메일과 비밀번호를 모두 입력해주세요.');
+                return;
+            }
+            
+            // 실제 로그인 로직 (API 호출, Firebase 연동 등)은 여기에 구현됩니다.
+            showModal('로그인 시도', `이메일: ${email}로 로그인 시도 (실제 인증 로직은 미구현)`);
+
+        } else if (type === 'register') {
+            const email = document.getElementById('register-email').value.trim();
+            const nickname = document.getElementById('register-nickname').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            const confirmPassword = document.getElementById('register-confirm-password').value.trim();
+            
+            if (!email || !nickname || !password || !confirmPassword) {
+                showModal('오류', '모든 필수 정보를 입력해주세요.');
+                return;
+            }
+
+            if (password.length < 6) {
+                showModal('오류', '비밀번호는 6자 이상이어야 합니다.');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showModal('오류', '비밀번호 확인이 일치하지 않습니다.');
+                return;
+            }
+
+            // 실제 회원가입 로직 (API 호출, Firebase 연동 등)은 여기에 구현됩니다.
+            showModal('회원가입 시도', `닉네임: ${nickname}, 이메일: ${email}로 회원가입 시도 (실제 인증 로직은 미구현)`);
+        }
+    }
+
+    // --- 모달 팝업 함수 ---
+
+    function showModal(title, text) {
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        modal.style.display = 'flex';
+        // 애니메이션 클래스 추가
+        setTimeout(() => {
+            modal.querySelector('.modal-content').style.transform = 'scale(1)';
+            modal.querySelector('.modal-content').style.opacity = '1';
+        }, 10); 
+    }
+
+    function hideModal() {
+        // 애니메이션 클래스 제거
+        modal.querySelector('.modal-content').style.transform = 'scale(0.9)';
+        modal.querySelector('.modal-content').style.opacity = '0';
+        // 애니메이션 완료 후 display: none 처리
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 200); 
+    }
+
+    // 초기 로드 시 모바일 화면 높이 조정
+    window.addEventListener('load', () => {
+        const appContainer = document.getElementById('app-container');
+        appContainer.style.minHeight = `${window.innerHeight}px`;
+    });
+    // 화면 크기 변경 시 높이 조정
+    window.addEventListener('resize', () => {
+        const appContainer = document.getElementById('app-container');
+        appContainer.style.minHeight = `${window.innerHeight}px`;
+    });
+</script>
+</body>
+</html>
