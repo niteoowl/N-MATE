@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어 단어 시험지 생성기</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#4F46E5', // Indigo 600
+                        'secondary': '#6EE7B7', // Emerald 300
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* 인쇄를 위한 스타일 */
+        @media print {
+            body {
+                /* 인쇄 시 여백 최소화 */
+                margin: 0;
+                padding: 0;
+            }
+            .no-print {
+                /* 제어판 숨기기 */
+                display: none;
+            }
+            .test-paper {
+                /* A4 크기처럼 보이도록 설정 */
+                width: 210mm; /* A4 width */
+                min-height: 297mm; /* A4 height */
+                margin: 0 auto;
+                padding: 20mm;
+                box-shadow: none; /* 그림자 제거 */
+                border: none; /* 테두리 제거 */
+                background-color: white;
+            }
+            /* 문제 번호와 줄 간격 조정 */
+            .test-paper ol {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            .test-paper li {
+                margin-bottom: 1.5rem; /* 문제 간 간격 */
+                padding-bottom: 0.25rem;
+                border-bottom: 1px dashed #ccc; /* 답안 작성 줄 */
+                display: flex;
+                align-items: flex-end;
+            }
+            .test-paper .question-text {
+                flex-grow: 1;
+                margin-right: 1rem;
+            }
+        }
+
+        /* 화면에서 인쇄 가능한 영역 스타일 */
+        .test-paper {
+            background-color: white;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        /* 텍스트 입력 영역 스타일 */
+        #vocab-input {
+            min-height: 300px;
+            font-family: monospace;
+            white-space: pre;
+        }
+
+        /* 문제 번호 스타일 */
+        .test-item-num {
+            font-weight: bold;
+            margin-right: 0.75rem;
+            width: 30px; /* 번호 영역 너비 고정 */
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col items-center p-4 sm:p-8 font-sans">
+
+    <!-- 메인 컨테이너 -->
+    <div class="max-w-7xl w-full flex flex-col lg:flex-row gap-8">
+
+        <!-- No Print: 제어판 영역 -->
+        <div class="no-print lg:w-1/3 bg-white p-6 rounded-xl shadow-lg h-fit sticky top-8">
+            <h1 class="text-3xl font-bold text-primary mb-4">📝 단어 시험지 생성기</h1>
+            <p class="text-gray-600 mb-6">단어와 뜻을 입력하고 시험지 형태를 선택하세요.</p>
+
+            <!-- 1. 단어 목록 입력 -->
+            <div class="mb-6">
+                <label for="vocab-input" class="block text-sm font-medium text-gray-700 mb-2">
+                    단어 목록 입력 (예: apple - 사과)
+                </label>
+                <textarea id="vocab-input"
+                    class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring-primary p-3 text-sm"
+                    placeholder="word - 뜻&#10;example - 예시&#10;list - 목록&#10;..."></textarea>
+                <p class="text-xs text-gray-500 mt-1">한 줄에 '단어 [구분자] 뜻' 형식으로 입력하세요. 기본 구분자는 '-'입니다.</p>
+            </div>
+
+            <!-- 2. 설정 옵션 -->
+            <div class="mb-6">
+                <label for="delimiter" class="block text-sm font-medium text-gray-700 mb-2">구분자 선택</label>
+                <input type="text" id="delimiter" value="-"
+                    class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring-primary p-2 text-sm max-w-xs" maxlength="5">
+            </div>
+
+            <div class="mb-6">
+                <label for="test-type" class="block text-sm font-medium text-gray-700 mb-2">시험 유형 선택</label>
+                <select id="test-type"
+                    class="w-full border-gray-300 rounded-lg shadow-sm focus:border-primary focus:ring-primary p-2 text-sm">
+                    <option value="meaning_to_word">1. 뜻 보고 단어 쓰기 (가장 일반적)</option>
+                    <option value="word_to_meaning">2. 단어 보고 뜻 쓰기</option>
+                    <option value="all">3. 두 유형 모두 (단어 1~N, 뜻 1~N)</option>
+                </select>
+            </div>
+
+            <!-- 3. 버튼 그룹 -->
+            <div class="flex flex-col space-y-3">
+                <button onclick="generateTest()"
+                    class="w-full bg-primary hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150">
+                    시험지 생성 / 미리보기
+                </button>
+                <button onclick="printTest()"
+                    class="w-full bg-secondary hover:bg-emerald-400 text-gray-800 font-semibold py-3 px-4 rounded-lg shadow-md transition duration-150">
+                    🖨️ 인쇄하기
+                </button>
+            </div>
+
+            <!-- 메시지 박스 -->
+            <div id="message-box" class="mt-4 p-3 bg-red-100 text-red-700 rounded-lg hidden"></div>
+        </div>
+
+        <!-- Print: 시험지 출력 영역 -->
+        <div id="test-output-container" class="lg:w-2/3 flex justify-center p-0 lg:p-4">
+            <!-- 시험지 미리보기 영역 -->
+            <div id="test-paper" class="test-paper w-full min-h-[500px] border border-gray-300 text-gray-800 hidden">
+                <!-- 여기에 생성된 시험지 내용이 들어갑니다 -->
+                <div class="text-center text-gray-500 py-20">
+                    <p class="text-xl font-medium">⬆️ 단어 목록을 입력하고 '시험지 생성' 버튼을 눌러주세요.</p>
+                    <p class="mt-2 text-sm">단어와 뜻이 최소 5쌍 이상 있어야 합니다.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 전역 변수 설정
+        let vocabularyList = [];
+
+        /**
+         * 메시지 박스를 표시하거나 숨깁니다.
+         * @param {string} message 표시할 메시지
+         * @param {string} type 메시지 유형 ('error' 또는 'success')
+         */
+        function showMessage(message, type = 'error') {
+            const box = document.getElementById('message-box');
+            box.textContent = message;
+            box.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+
+            if (type === 'error') {
+                box.classList.add('bg-red-100', 'text-red-700');
+            } else if (type === 'success') {
+                box.classList.add('bg-green-100', 'text-green-700');
+            }
+        }
+
+        /**
+         * 입력된 텍스트를 파싱하여 단어/뜻 쌍을 추출합니다.
+         * @param {string} rawText 사용자 입력 텍스트
+         * @param {string} delimiter 구분 문자
+         * @returns {{word: string, meaning: string}[]} 단어/뜻 객체 배열
+         */
+        function parseInput(rawText, delimiter) {
+            const lines = rawText.split('\n');
+            const list = [];
+            const trimmedDelimiter = delimiter.trim();
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    // 구분자로 분할 (첫 번째 구분자만 사용)
+                    const parts = trimmedLine.split(trimmedDelimiter, 2);
+
+                    if (parts.length === 2) {
+                        const word = parts[0].trim();
+                        const meaning = parts[1].trim();
+                        if (word && meaning) {
+                            list.push({ word, meaning });
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+
+        /**
+         * 시험지 상단 머리글 HTML을 생성합니다.
+         * @returns {string} HTML 문자열
+         */
+        function createHeader(title) {
+            const date = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            return `
+                <header class="mb-10 border-b-2 border-gray-600 pb-3">
+                    <h1 class="text-3xl font-bold text-center mb-1">${title}</h1>
+                    <div class="flex justify-between text-sm text-gray-700">
+                        <div class="flex items-center space-x-6">
+                            <span>날짜: ${date}</span>
+                            <span>점수: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/ ${vocabularyList.length * (document.getElementById('test-type').value === 'all' ? 2 : 1)}</span>
+                        </div>
+                        <span class="font-medium text-lg">이름: _________________________</span>
+                    </div>
+                </header>
+                <div class="text-sm mb-6 text-gray-600">
+                    <p>다음 단어/뜻을 정확하게 작성하세요. (총 ${vocabularyList.length}문항${document.getElementById('test-type').value === 'all' ? ' x 2유형' : ''})</p>
+                </div>
+            `;
+        }
+
+        /**
+         * 개별 시험 문제 목록 HTML을 생성합니다.
+         * @param {{word: string, meaning: string}[]} list 문제 목록
+         * @param {string} type 'meaning_to_word' 또는 'word_to_meaning'
+         * @param {number} startNum 시작 문제 번호
+         * @returns {string} HTML 문자열
+         */
+        function createTestList(list, type, startNum = 1) {
+            let html = '<ol class="space-y-4">';
+            let currentNum = startNum;
+
+            list.forEach(item => {
+                let question, answerLabel;
+
+                if (type === 'meaning_to_word') {
+                    // 뜻 보고 단어 쓰기
+                    question = item.meaning;
+                    answerLabel = '단어:';
+                } else {
+                    // 단어 보고 뜻 쓰기
+                    question = item.word;
+                    answerLabel = '뜻:';
+                }
+
+                html += `
+                    <li class="flex items-end">
+                        <span class="test-item-num">${currentNum}.</span>
+                        <div class="question-text flex-grow flex justify-between items-end">
+                            <span class="text-base">${question}</span>
+                            <span class="text-sm text-gray-500 whitespace-nowrap">${answerLabel}</span>
+                        </div>
+                        <span class="text-base ml-2 min-w-[200px]">_________________________</span>
+                    </li>
+                `;
+                currentNum++;
+            });
+
+            html += '</ol>';
+            return html;
+        }
+
+        /**
+         * 시험지 HTML을 생성하고 화면에 표시합니다.
+         */
+        function generateTest() {
+            const rawText = document.getElementById('vocab-input').value;
+            const delimiter = document.getElementById('delimiter').value;
+            const testType = document.getElementById('test-type').value;
+            const outputContainer = document.getElementById('test-paper');
+            const inputBox = document.getElementById('vocab-input');
+
+            // 메시지 숨김
+            document.getElementById('message-box').classList.add('hidden');
+
+            // 1. 입력 파싱
+            vocabularyList = parseInput(rawText, delimiter);
+
+            if (vocabularyList.length < 1) {
+                showMessage('단어 목록을 정확히 입력해주세요. (예: word - 뜻)', 'error');
+                outputContainer.classList.add('hidden');
+                return;
+            }
+
+            // 2. HTML 생성 시작
+            let testHTML = '';
+
+            if (testType === 'all' || testType === 'meaning_to_word') {
+                testHTML += createHeader('영어 단어 시험지 (뜻 → 단어)');
+                testHTML += createTestList(vocabularyList, 'meaning_to_word', 1);
+
+                if (testType === 'all') {
+                    testHTML += `
+                        <div class="my-12 border-t border-gray-300 pt-8">
+                            <h2 class="text-2xl font-bold text-center mb-6">Part 2. 단어 보고 뜻 쓰기</h2>
+                            <div class="text-sm mb-6 text-gray-600">
+                                <p>총 ${vocabularyList.length}문항</p>
+                            </div>
+                    `;
+                    testHTML += createTestList(vocabularyList, 'word_to_meaning', 1);
+                    testHTML += '</div>';
+                }
+            } else if (testType === 'word_to_meaning') {
+                testHTML += createHeader('영어 단어 시험지 (단어 → 뜻)');
+                testHTML += createTestList(vocabularyList, 'word_to_meaning', 1);
+            }
+
+            // 3. 결과 출력
+            outputContainer.innerHTML = testHTML;
+            outputContainer.classList.remove('hidden');
+
+            showMessage(`${vocabularyList.length}개의 단어 쌍으로 시험지가 성공적으로 생성되었습니다.`, 'success');
+        }
+
+        /**
+         * 시험지 인쇄를 실행합니다.
+         */
+        function printTest() {
+            if (vocabularyList.length === 0) {
+                showMessage('먼저 [시험지 생성] 버튼을 눌러 시험지를 미리보기 해야 합니다.', 'error');
+                return;
+            }
+            window.print();
+        }
+
+        // 초기 예시 데이터 로드
+        window.onload = function() {
+            document.getElementById('vocab-input').value = `
+                apple - 사과
+                banana - 바나나
+                car - 자동차
+                house - 집
+                tree - 나무
+                school - 학교
+                water - 물
+                book - 책
+                computer - 컴퓨터
+                friend - 친구
+                family - 가족
+            `.trim();
+        }
+    </script>
+</body>
+</html>
