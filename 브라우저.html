@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>웹 브라우저 시뮬레이터</title>
+    <!-- 트레일윈드 CSS 사용 금지 요청에 따라 커스텀 CSS를 사용합니다. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-dark: #1e1e1e;
+            --bg-medium: #2a2a2a;
+            --text-light: #e0e0e0;
+            --accent-blue: #007acc;
+            --border-color: #3e3e3e;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden; /* 전체 페이지 스크롤 방지 */
+        }
+
+        #browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* 툴바 스타일 */
+        #toolbar {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--bg-medium);
+            border-bottom: 1px solid var(--border-color);
+            gap: 6px;
+            flex-shrink: 0; /* 툴바는 크기가 고정되도록 */
+        }
+
+        /* 주소창 스타일 */
+        #address-bar {
+            flex-grow: 1;
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        #address-bar:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.5);
+        }
+
+        /* 버튼 기본 스타일 */
+        .nav-button {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+            border: none;
+            color: var(--text-light);
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: background-color 0.15s, color 0.15s;
+            flex-shrink: 0;
+            outline: none;
+        }
+
+        .nav-button:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-button:active:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-button:disabled {
+            color: #666;
+            cursor: not-allowed;
+        }
+        
+        /* 'Go' 버튼 스타일 */
+        #go-button {
+            width: auto;
+            border-radius: 20px;
+            padding: 0 15px;
+            background-color: var(--accent-blue);
+            color: white;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        #go-button:hover {
+            background-color: #0066a3;
+        }
+
+
+        /* 컨텐츠 영역 (iframe) 스타일 */
+        #content-frame {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            background-color: white; /* 로딩 중 배경 */
+        }
+
+        /* 아이콘 (Lucide Icons SVG 사용 - 폰트 대신 인라인 SVG 사용) */
+        .icon {
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* 로딩 인디케이터 스타일 */
+        #loading-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--accent-blue);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease-out;
+            z-index: 10;
+        }
+
+        .loading #loading-indicator {
+            animation: progress-bar 1.5s infinite linear;
+        }
+
+        @keyframes progress-bar {
+            0% { transform: scaleX(0); }
+            50% { transform: scaleX(0.7); }
+            100% { transform: scaleX(0.95); } /* 100%에 도달하지 않게 하여 완전히 로드된 후 완료되도록 유도 */
+        }
+        
+        .loading {
+            cursor: wait;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="browser-container">
+        <div id="toolbar">
+            <!-- 뒤로가기 버튼 (Arrow Left) -->
+            <button id="back-button" class="nav-button" disabled title="뒤로 가기">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="icon"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+            </button>
+            
+            <!-- 앞으로 가기 버튼 (Arrow Right) -->
+            <button id="forward-button" class="nav-button" disabled title="앞으로 가기">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="icon"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+
+            <!-- 새로고침 버튼 (Rotate CCW) -->
+            <button id="reload-button" class="nav-button" title="새로고침">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="icon"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M21.5 13a9 9 0 1 0-9 9"/></svg>
+            </button>
+
+            <!-- 주소 표시줄 -->
+            <input type="text" id="address-bar" placeholder="웹 주소 입력 (예: https://www.google.com)">
+            
+            <!-- 이동 버튼 -->
+            <button id="go-button" class="nav-button" title="이동">
+                이동
+            </button>
+        </div>
+
+        <!-- 로딩 인디케이터 -->
+        <div id="loading-indicator"></div>
+
+        <!-- 컨텐츠 프레임 -->
+        <iframe id="content-frame" src="about:blank" title="웹 컨텐츠"></iframe>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // DOM 요소 선택
+            const addressBar = document.getElementById('address-bar');
+            const goButton = document.getElementById('go-button');
+            const backButton = document.getElementById('back-button');
+            const forwardButton = document.getElementById('forward-button');
+            const reloadButton = document.getElementById('reload-button');
+            const contentFrame = document.getElementById('content-frame');
+            const browserContainer = document.getElementById('browser-container');
+            const loadingIndicator = document.getElementById('loading-indicator');
+
+            // --- History Management (히스토리 관리) ---
+            let historyStack = [];
+            let historyIndex = -1;
+
+            /**
+             * UI 버튼 상태를 업데이트합니다.
+             */
+            const updateButtons = () => {
+                backButton.disabled = historyIndex <= 0;
+                forwardButton.disabled = historyIndex >= historyStack.length - 1;
+            };
+
+            /**
+             * 주소를 정규화하여 iframe에 로드합니다.
+             * @param {string} url - 로드할 URL.
+             * @param {boolean} isNewNavigation - 사용자가 새로운 주소를 입력했는지 여부.
+             */
+            const navigate = (url, isNewNavigation = true) => {
+                if (!url) return;
+
+                let finalUrl = url.trim();
+                
+                // about:blank는 직접 로드
+                if (finalUrl.toLowerCase() === 'about:blank') {
+                     contentFrame.src = 'about:blank';
+                } else {
+                    // 프로토콜이 없는 경우 https:// 추가
+                    if (!/^https?:\/\//i.test(finalUrl)) {
+                        finalUrl = 'https://' + finalUrl;
+                    }
+
+                    // 로딩 시작
+                    browserContainer.classList.add('loading');
+                    loadingIndicator.style.transform = 'scaleX(0.1)';
+
+                    contentFrame.src = finalUrl;
+                }
+
+                if (isNewNavigation) {
+                    // 현재 인덱스 이후의 히스토리를 잘라냅니다.
+                    historyStack = historyStack.slice(0, historyIndex + 1);
+                    // 새 URL을 스택에 추가합니다.
+                    historyStack.push(finalUrl);
+                    // 인덱스를 마지막으로 업데이트합니다.
+                    historyIndex = historyStack.length - 1;
+                }
+                
+                addressBar.value = finalUrl; // 주소 표시줄 업데이트
+                updateButtons();
+            };
+
+            // --- Event Listeners (이벤트 리스너) ---
+
+            /**
+             * '이동' 버튼 클릭 핸들러
+             */
+            const handleGo = () => {
+                const url = addressBar.value;
+                if (url) {
+                    navigate(url, true);
+                }
+            };
+
+            // '이동' 버튼 클릭
+            goButton.addEventListener('click', handleGo);
+
+            // 주소창에서 Enter 키 입력
+            addressBar.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleGo();
+                }
+            });
+
+            // '뒤로' 버튼 클릭
+            backButton.addEventListener('click', () => {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    const url = historyStack[historyIndex];
+                    // 새로운 네비게이션이 아님을 알림 (히스토리 스택 조작하지 않음)
+                    navigate(url, false); 
+                }
+            });
+
+            // '앞으로' 버튼 클릭
+            forwardButton.addEventListener('click', () => {
+                if (historyIndex < historyStack.length - 1) {
+                    historyIndex++;
+                    const url = historyStack[historyIndex];
+                    // 새로운 네비게이션이 아님을 알림
+                    navigate(url, false); 
+                }
+            });
+
+            // '새로고침' 버튼 클릭
+            reloadButton.addEventListener('click', () => {
+                // iframe의 현재 src를 다시 로드
+                if (contentFrame.src && contentFrame.src !== 'about:blank') {
+                    // 로딩 시작
+                    browserContainer.classList.add('loading');
+                    loadingIndicator.style.transform = 'scaleX(0.1)';
+
+                    contentFrame.src = contentFrame.src; // 현재 주소로 다시 설정하여 새로고침 트리거
+                }
+            });
+
+            // Iframe 로딩 완료 이벤트
+            contentFrame.addEventListener('load', () => {
+                // 로딩 완료
+                browserContainer.classList.remove('loading');
+                loadingIndicator.style.transform = 'scaleX(1)';
+                
+                // URL이 변경되었을 수 있으므로 주소 표시줄을 업데이트 시도
+                // (크로스 오리진 제한으로 인해 실제 URL을 가져오기 어려울 수 있음)
+                try {
+                    // contentFrame.contentWindow.location.href가 보안 문제로 접근 불가할 수 있음
+                    // 가장 안전한 값은 현재 historyStack의 값입니다.
+                    const currentUrl = historyStack[historyIndex] || contentFrame.src;
+                    addressBar.value = currentUrl;
+                } catch (e) {
+                    console.warn("크로스 오리진 보안으로 인해 iframe 내부 URL 접근이 제한됩니다.");
+                }
+
+                updateButtons(); // 버튼 상태 최종 업데이트
+            });
+
+            // 초기 로드: 기본 페이지 설정
+            navigate('https://www.google.com', true); 
+        });
+    </script>
+</body>
+</html>
