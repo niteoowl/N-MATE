@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>개인 재정 기록 관리 시스템</title>
+    <title>개인 재정 기록 관리 시스템 (2025년 버전)</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -20,6 +20,7 @@
             background-color: #D3D3D3;
             box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
             transition: all 0.05s;
+            user-select: none;
         }
         .classic-button:active {
             border-color: #808080 #DFDFDF #DFDFDF #808080;
@@ -53,97 +54,162 @@
         }
         /* 기타 UI 요소 */
         .classic-menu-bar { background-color: #D3D3D3; border-top: 1px solid #DFDFDF; border-bottom: 1px solid #808080; }
-        .classic-active-menu { background-color: #FFC06C; border: 1px dashed #000000; }
+        .classic-active-menu { 
+            background-color: #FFC06C; 
+            border: 1px dashed #000000; 
+            margin: -1px;
+            box-shadow: none !important;
+        }
         .table-input { width: 100%; height: 100%; border: none; outline: none; background-color: transparent; padding: 2px 4px; }
         .content-area-wrapper { flex-grow: 1; }
         
         /* 캘린더 스타일 */
         #calendar-days td span { display: block; width: 100%; height: 100%; cursor: pointer; padding: 2px 0; text-align: center; }
         #calendar-days td span:hover { background-color: #C0C0C0; }
+        /* 데이터 행 높이 고정 */
+        .data-row td { height: 28px; }
 
-        /* 메시지 박스 스타일 */
-        #message-box {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 30px;
-            background-color: #FFFFE0;
-            border: 2px solid #0000AA;
-            box-shadow: 4px 4px 0px #808080;
-            z-index: 2000;
-            font-size: 14px;
+        /* 로딩 스피너 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 시스템 상태 오류 메시지 스타일 추가 */
+        .error-status {
+            background-color: #FFDDDD !important; /* Light Red */
+            color: #CC0000 !important; /* Dark Red Text */
             font-weight: bold;
-            display: none;
-            min-width: 250px;
-            text-align: center;
+            border: 2px solid #CC0000 !important;
+        }
+
+        /* Modal Backdrop */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+
+        /* Report View Style */
+        #report-output-area {
+            white-space: pre-wrap;
+            font-family: 'Malgun Gothic', 'Dotum', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 200px;
+            background-color: #FFFFFF;
+            padding: 10px;
+            border: 1px solid #808080;
+            box-shadow: 1px 1px 0px #A0A0A0 inset;
+            overflow: auto;
         }
     </style>
 </head>
 
-<body class="flex flex-col min-h-screen"> 
-    
-    <!-- 시스템 메시지 박스 (alert() 대체) -->
-    <div id="message-box"></div>
-
-    <!-- 최소 코드 로그인/회원가입 폼 (인증이 필요할 때만 표시됨) -->
-    <div id="auth-container" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background-color: white; padding: 20px; border: 1px solid black; box-shadow: 4px 4px 0px #808080; min-width: 300px;">
-            <h2 style="font-size: 1.2em; font-weight: bold; margin-bottom: 15px;">이메일 로그인/회원가입</h2>
-            <input type="email" id="auth-email" placeholder="이메일" style="border: 1px solid #ccc; margin-bottom: 5px; padding: 3px; width: 100%;"><br>
-            <input type="password" id="auth-password" placeholder="비밀번호" style="border: 1px solid #ccc; margin-bottom: 10px; padding: 3px; width: 100%;"><br>
-            <button id="auth-signup-btn" class="classic-button px-3 py-1 mr-2">회원가입</button>
-            <button id="auth-login-btn" class="classic-button px-3 py-1">로그인</button>
-            <p id="auth-message" style="color: red; margin-top: 10px; font-size: 0.8em;"></p>
-        </div>
-    </div>
-    
-    <!-- 메인 앱 컨테이너 (로그인 시에만 표시됨) -->
-    <div id="main-app-container" class="flex-grow flex flex-col p-2" style="display: none;">
-        <div class="classic-frame flex-grow flex flex-col p-2"> 
-            <!-- 1. 헤더 (타이틀 및 로고) -->
-            <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-1 flex-shrink-0">
-                <div class="flex items-center">
-                    <!-- 로고 크기 h-12 w-12로 확대 -->
-                    <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-12 w-12 mr-3 object-contain" onerror="this.style.display='none'">
-                    <span>개인 재정 기록 관리 시스템</span>
-                </div>
-                <div class="text-sm font-normal" id="user-info">
-                    사용자 ID: (인증 중) | 접속 일자: 2024-11-08
-                </div>
-            </header>
-
-            <!-- 2. 메뉴 바 -->
-            <div class="classic-menu-bar flex text-sm p-0.5 mb-2 flex-shrink-0">
-                <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">데이터(D)</span>
-                <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">설정(S)</span>
-                <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">보고서(R)</span>
-                <span class="px-2 cursor-pointer hover:bg-white">정보(I)</span>
-                <span id="logout-button" class="px-2 cursor-pointer hover:bg-white text-red-600 font-bold">로그아웃</span>
+<body class="min-h-screen flex flex-col"> 
+    <!-- 전체 컨테이너 -->
+    <div class="classic-frame min-h-screen flex flex-col p-2"> 
+        
+        <!-- 1. 헤더 (타이틀 및 로고) -->
+        <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-1 flex-shrink-0">
+            <div class="flex items-center">
+                <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-12 w-12 mr-3 object-contain" onerror="this.style.display='none'">
+                <span>개인 재정 기록 관리 시스템 (2025)</span>
             </div>
+            <div class="text-sm font-normal flex items-center" id="user-info-container">
+                <span id="user-info">
+                    시스템 로드 중...
+                </span>
+                <button id="logout-button" class="classic-button text-xs ml-4 px-2 py-0.5 hidden">
+                    로그아웃
+                </button>
+            </div>
+        </header>
 
-            <!-- 3. 재정 현황판 -->
+        <!-- 2. 메뉴 바 -->
+        <div id="menu-bar" class="classic-menu-bar flex text-sm p-0.5 mb-2 flex-shrink-0 hidden">
+            <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">데이터(D)</span>
+            <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">설정(S)</span>
+            <span class="px-2 cursor-pointer hover:bg-white border-r border-gray-400">보고서(R)</span>
+            <span class="px-2 cursor-pointer hover:bg-white">정보(I)</span>
+        </div>
+        
+        <!-- 5. 로그인 폼 -->
+        <div id="auth-view" class="flex flex-grow justify-center items-center p-4">
+            <div id="login-form-card" class="classic-frame bg-white p-6 w-full max-w-sm shadow-xl">
+                <div class="classic-title-bar text-sm mb-4 text-center">
+                    [계정 인증 필요]
+                </div>
+                <div id="auth-loading" class="text-center hidden">
+                    <div class="loading-spinner mx-auto"></div>
+                    <p class="mt-2 text-gray-700">인증 처리 중...</p>
+                </div>
+                <form id="auth-form">
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold mb-1">이메일:</label>
+                        <input type="email" id="auth-email" placeholder="example@domain.com" class="classic-input w-full" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold mb-1">비밀번호 (6자리 이상):</label>
+                        <input type="password" id="auth-password" placeholder="******" class="classic-input w-full" required>
+                    </div>
+                    <div class="flex flex-col space-y-2">
+                        <button type="submit" id="login-button" class="px-4 py-1 classic-button font-bold text-blue-800 w-full">
+                            로그인
+                        </button>
+                        <button type="button" id="signup-button" class="px-4 py-1 classic-button w-full">
+                            계정 생성 (회원가입)
+                        </button>
+                    </div>
+                    <p class="mt-4 text-xs text-red-600 text-center" id="auth-error-message"></p>
+                    <div class="mt-6 text-xs p-2 classic-frame bg-gray-100 border border-gray-400">
+                        <p class="font-bold mb-1">🚨 중요 공지 (익명 로그인 비활성화):</p>
+                        <p>- 커스텀 토큰이 없거나 만료되면 자동으로 로그아웃 상태가 됩니다.</p>
+                        <p>- 반드시 **'계정 생성'** 버튼을 눌러 테스트 계정을 만들어야 정상적으로 이용 가능합니다.</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- 3 & 4. 메인 앱 콘텐츠 (인증 상태에 따라 숨김/표시) -->
+        <div id="app-content" class="flex flex-col flex-grow hidden">
+            <!-- 3. 재정 현황판 (실시간 데이터 반영) -->
             <div class="classic-frame bg-white p-2 mb-3 border-2 border-[#808080] flex-shrink-0">
                 <div class="classic-title-bar text-xs mb-1">
-                    [월간 재정 집계 현황] (<span id="current-month-display"></span> 기준)
+                    [월간 재정 집계 현황] (<span id="summary-month-year">2025년 11월</span> 기준)
                 </div>
                 <div class="grid grid-cols-3 gap-4 text-center p-2 bg-[#D3D3D3]">
                     <div class="classic-frame p-2 bg-green-50">
                         <div class="text-xs text-gray-600 font-bold">월간 총 수입액 (+)</div>
-                        <div class="text-lg font-extrabold text-green-700" id="monthly-income-display">￦ 0</div>
+                        <div class="text-lg font-extrabold text-green-700" id="total-income">￦ 0</div>
                     </div>
                     <div class="classic-frame p-2 bg-red-50">
                         <div class="text-xs text-gray-600 font-bold">월간 총 지출액 (-)</div>
-                        <div class="text-lg font-extrabold text-red-700" id="monthly-expense-display">￦ 0</div>
+                        <div class="text-lg font-extrabold text-red-700" id="total-expense">￦ 0</div>
                     </div>
                     <div class="classic-frame p-2 bg-yellow-50">
                         <div class="text-xs text-gray-600 font-bold">월간 순 잔액</div>
-                        <div class="text-lg font-extrabold text-blue-700" id="monthly-balance-display">￦ 0</div>
+                        <div class="text-lg font-extrabold text-blue-700" id="net-balance">￦ 0</div>
                     </div>
                 </div>
             </div>
             
-            <!-- 4. 메인 콘텐츠 영역 (사이드바 + 메인) -->
+            <!-- 4. 메인 작업 영역 -->
             <div class="content-area-wrapper flex flex-grow">
                 
                 <!-- 4.1. 좌측 메뉴 (월별 기록 탐색기) -->
@@ -151,35 +217,27 @@
                     <div class="classic-title-bar text-xs">
                         [월별 기록 탐색기]
                     </div>
-                    <ul class="p-1 text-sm">
-                        <!-- 월별 메뉴는 현재는 더미 데이터로 유지 -->
-                        <li class="p-1 font-bold flex items-center">
-                            <span class="mr-1">▼</span> 2024년 기록
-                        </li>
-                        <li class="p-1 pl-4 cursor-pointer classic-active-menu font-bold text-black">
-                            ㄴ 11월 (현재)
-                        </li>
-                        <li class="p-1 font-bold mt-2 flex items-center">
-                            <span class="mr-1">▶</span> 2023년 기록
-                        </li>
+                    <ul class="p-1 text-sm space-y-1" id="month-explorer-list">
+                        <!-- 동적으로 내용이 채워집니다. -->
+                        <li class="p-1 text-gray-500">거래 내역 로드 중...</li>
                     </ul>
                 </aside>
                 
                 <!-- 4.2. 메인 작업 영역 -->
                 <main class="flex-grow bg-[#F0F0F0] p-4 border border-[#BDBDBD] flex flex-col">
                     <div class="classic-title-bar text-sm mb-3 flex-shrink-0">
-                        [거래 내역 입력 및 등록] - 기준 일자: <span id="current-transaction-date-display"></span>
+                        [거래 내역 입력 및 등록] - 기준 일자: <span id="current-transaction-date-display">2025-11-08</span>
                     </div>
 
                     <!-- 지출/수입 등록 프레임 -->
-                    <div id="record-form" class="classic-frame bg-white p-3 mb-4 shadow-inner border border-[#BDBDBD] flex-shrink-0">
+                    <div class="classic-frame bg-white p-3 mb-4 shadow-inner border border-[#BDBDBD] flex-shrink-0">
                         <h2 class="text-sm font-bold mb-2">① 거래 내역 등록</h2>
                         <div class="grid grid-cols-4 gap-x-4 gap-y-2">
                             
                             <!-- 1. 일자 -->
                             <label class="col-span-1 flex items-center font-bold">일자:</label>
                             <div class="col-span-3 flex classic-input p-0 relative" id="dateInputContainer">
-                                <input type="text" id="transaction-date" readonly class="table-input flex-grow cursor-pointer" style="box-shadow: none;">
+                                <input type="text" id="transaction-date" value="2025-11-08" readonly class="table-input flex-grow cursor-pointer" style="box-shadow: none;">
                                 <button id="calendar-toggle-button" class="classic-button px-2 py-0 border-none" style="border: none; margin: -1px; background-color: #D3D3D3;">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-black" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
@@ -194,7 +252,7 @@
                                     </div>
                                     <table class="w-full text-center text-xs border border-collapse border-[#808080]">
                                         <thead class="bg-[#DFDFDF]">
-                                            <tr><th class="border border-[#808080] text-red-600">일</th><th class="border border-[#808080]">월</th><th class="border border-[#808080]">화</th><th class="border border-[#808080]">수</th><th class="border border-[#808080]">목</th><th class="border border-[#808080]">금</th><th class="border border-[#808080] text-blue-600">토</th></tr>
+                                            <tr><th class="border border-[#808080] p-1 w-[8%]">일</th><th class="border border-[#808080]">월</th><th class="border border-[#808080]">화</th><th class="border border-[#808080]">수</th><th class="border border-[#808080]">목</th><th class="border border-[#808080]">금</th><th class="border border-[#808080] text-blue-600">토</th></tr>
                                         </thead>
                                         <tbody id="calendar-days"></tbody>
                                     </table>
@@ -208,25 +266,24 @@
                                     <option value="expense">지출 (-)</option>
                                     <option value="income">수입 (+)</option>
                                 </select>
-                                <input type="text" id="transaction-amount" placeholder="금액 (숫자만 입력)" class="classic-input w-2/3 text-right">
+                                <input type="text" id="transaction-amount" placeholder="금액 (숫자만 입력)" class="classic-input w-2/3 text-right" required>
                             </div>
 
-                            <!-- 3. 결제 수단 (분류 입력 필드 삭제) -->
+                            <!-- 3. 결제 수단 (Method) -->
                             <label class="col-span-1 flex items-center font-bold">결제 수단:</label>
                             <div class="col-span-3 flex">
-                                <!-- 결제 수단이 w-full을 차지하도록 조정 -->
                                 <select id="transaction-method" class="classic-input w-full">
                                     <option value="현금">현금</option>
-                                    <option value="체크카드">체크카드</option>
-                                    <option value="신용카드">신용카드</option>
+                                    <option value="카드">카드</option>
                                     <option value="계좌이체">계좌이체</option>
-                                    <option value="증여/선물">증여/선물</option>
+                                    <option value="기타">기타</option>
                                 </select>
                             </div>
 
+
                             <!-- 4. 적요 (내용) -->
-                            <label class="col-span-1 flex items-center font-bold">적요 (내용):</label>
-                            <input type="text" id="transaction-memo" placeholder="간단한 거래 내역 기록" class="col-span-3 classic-input w-full">
+                            <label class="col-span-1 flex items-center font-bold">내용:</label>
+                            <input type="text" id="transaction-memo" placeholder="간단한 거래 내역 기록" class="col-span-3 classic-input w-full" required>
                         </div>
                         
                         <div class="flex justify-end mt-4 space-x-2">
@@ -250,21 +307,22 @@
                         <table class="w-full text-sm">
                             <thead class="bg-[#BDBDBD] text-black sticky top-0">
                                 <tr>
-                                    <th class="border border-[#808080] p-1 w-1/12">No.</th>
-                                    <th class="border border-[#808080] p-1 w-2/12">날짜</th>
-                                    <th class="border border-[#808080] p-1 w-2/12">수단</th> <!-- '분류' -> '수단'으로 변경 -->
-                                    <th class="border border-[#808080] p-1 w-4/12">내용</th>
-                                    <th class="border border-[#808080] p-1 w-2/12">금액 (원)</th>
-                                    <th class="border border-[#808080] p-1 w-1/12">액션</th>
+                                    <th class="border border-[#808080] p-1 w-[8%]">No.</th>
+                                    <th class="border border-[#808080] p-1 w-[18%]">날짜</th>
+                                    <th class="border border-[#808080] p-1 w-[14%]">수단</th>
+                                    <th class="border border-[#808080] p-1 w-[42%]">내용</th>
+                                    <th class="border border-[#808080] p-1 w-[12%]">금액 (원)</th>
+                                    <th class="border border-[#808080] p-1 w-[6%]">액션</th>
                                 </tr>
                             </thead>
-                            <tbody id="transaction-list">
-                                <!-- 여기에 Firestore 데이터가 렌더링됩니다. -->
+                            <tbody id="transaction-list-body">
+                                <!-- 거래 데이터가 여기에 삽입됩니다 -->
+                                <tr class="data-row"><td class="border p-1 text-center" colspan="6">거래 내역 로드 중...</td></tr>
                             </tbody>
                             <tfoot>
                                 <tr class="bg-[#DFDFDF] font-bold">
                                     <td class="border p-1 text-right" colspan="4">월 합계 잔액:</td>
-                                    <td class="border p-1 text-right text-green-800" id="table-footer-balance">0</td>
+                                    <td class="border p-1 text-right text-green-800" id="monthly-net-balance-footer">0</td>
                                     <td class="border"></td>
                                 </tr>
                             </tfoot>
@@ -273,291 +331,789 @@
                     
                     <!-- 하단 버튼 그룹/상태 표시줄 -->
                     <div class="mt-4 flex justify-center space-x-4 p-2 bg-[#D3D3D3] border border-[#808080] shadow-inner flex-shrink-0">
-                        <button class="px-6 py-2 classic-button font-bold text-black">전체 목록 (L)</button>
-                        <button class="px-6 py-2 classic-button">선택 삭제 (D)</button>
-                        <button class="px-6 py-2 classic-button">엑셀 저장 (E)</button>
-                        <button class="px-6 py-2 classic-button bg-yellow-500 text-black">보고서 출력 (P)</button>
+                        <button id="report-button" class="px-4 py-2 classic-button font-bold text-black bg-yellow-400">보고서 출력 (P)</button>
+                        <button id="excel-button" class="px-4 py-2 classic-button font-bold text-green-700">엑셀 저장 (E)</button>
+                        <button id="share-button" class="px-4 py-2 classic-button font-bold text-blue-700">부모님에게 전달 (S)</button>
                     </div>
-                    <div class="mt-4 text-xs p-1 classic-frame bg-white border border-[#BDBDBD] shadow-inner flex-shrink-0">
-                        [시스템 상태]: Firebase 로드 중...
+
+                    <!-- 보고서 출력 결과 영역 (숨겨져 있음) -->
+                    <div id="report-output-container" class="classic-frame mt-4 hidden bg-white p-3 flex-shrink-0">
+                        <div class="classic-title-bar text-xs mb-2 flex justify-between items-center">
+                            <span>[월간 보고서 미리보기] - <span id="report-month-display"></span></span>
+                            <button class="classic-button px-2 py-0.5 text-xs" onclick="document.getElementById('report-output-container').classList.add('hidden')">닫기</button>
+                        </div>
+                        <pre id="report-output-area"></pre>
                     </div>
+
                 </main>
+            </div>
+        </div>
+        <!-- 시스템 상태 메시지는 로그인 상태와 상관없이 표시 -->
+        <div class="mt-4 text-xs p-1 classic-frame bg-white border border-[#BDBDBD] shadow-inner flex-shrink-0" id="status-message">
+            [시스템 상태]: Firebase 로드 중...
+        </div>
+
+    </div>
+
+    <!-- 공유 모달 (Share Modal) -->
+    <div id="share-modal" class="modal-backdrop hidden">
+        <div class="classic-frame bg-white p-6 w-full max-w-lg shadow-2xl" style="border: 2px solid #0000AA;">
+            <div class="classic-title-bar text-sm mb-4 flex justify-between items-center">
+                <span>[용돈기입장 공유하기]</span>
+                <button id="modal-close-button" class="classic-button px-2 py-0.5 text-xs">X</button>
+            </div>
+            
+            <p class="text-sm font-bold mb-3 text-red-700">⚠️ 공유할 월: <span id="share-month-display"></span>의 기록만 공개됩니다.</p>
+            
+            <div id="share-input-section">
+                <label class="block text-xs font-bold mb-1">부모님 전화번호:</label>
+                <input type="text" id="parent-phone-number" placeholder="'-' 없이 숫자만 입력 (예: 01012345678)" class="classic-input w-full mb-4">
+                <p id="share-status-message" class="text-xs text-gray-600 mb-4"></p>
+                <button id="share-submit-button" class="px-4 py-1 classic-button font-bold text-blue-800 w-full">
+                    공유 보고서 생성 (데이터 저장)
+                </button>
+            </div>
+
+            <div id="share-result-section" class="hidden mt-4 p-3 classic-frame bg-green-50">
+                <p class="font-bold text-sm text-green-800 mb-2">✅ 공유 보고서가 성공적으로 생성되었습니다!</p>
+                <p class="text-xs mb-3">📞 부모님 전화번호 (<span id="simulated-phone"></span>)로 아래 링크가 발송될 예정입니다. **아래 버튼을 누르면 메시지 앱으로 이동합니다.**</p>
+                
+                <label class="block text-xs font-bold mb-1">공유 링크 (복사해서 전달하세요):</label>
+                <input type="text" id="generated-share-link" class="classic-input w-full text-xs bg-yellow-100" readonly>
+                
+                <a id="send-message-button" href="#" class="mt-4 px-4 py-2 classic-button font-bold text-white bg-green-600 hover:bg-green-700 block text-center border-none">
+                    [메시지 앱으로 이동하여] 부모님께 공유 링크 전달
+                </a>
+                
+                <p class="mt-3 text-xs text-blue-700">이 링크는 현재 월의 거래 내역을 볼 수 있는 (시뮬레이션된) *읽기 전용 뷰*입니다.</p>
             </div>
         </div>
     </div>
 
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, setLogLevel, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signOut,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signInWithCustomToken
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            addDoc, 
+            onSnapshot, 
+            collection, 
+            query, 
+            deleteDoc,
+            setDoc, // setDoc 추가 (공유 데이터 저장용)
+            setLogLevel 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         setLogLevel('Debug');
         
         // --- Firebase/Auth/Global Setup ---
-        // Global variables provided by the Canvas environment (Mandatory usage)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = {
-            apiKey: "AIzaSyCgZL83YJIM0iXXRttTmoeyJvekBBkOhX4",
-            authDomain: "k-chulnap.firebaseapp.com",
-            projectId: "k-chulnap",
-            storageBucket: "k-chulnap.firebasestorage.app",
-            messagingSenderId: "169980642255",
-            appId: "1:169980642255:web:572c781aa6b010de6e08ba",
-            measurementId: "G-49GQLQ5HLC"
-        };
-
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        
         let app;
         let db;
         let auth;
         let userId = null;
-
-        const userInfoElement = document.getElementById('user-info');
-        const statusElement = document.querySelector('.classic-frame:last-child');
-        const mainAppContainer = document.getElementById('main-app-container');
-        const authContainer = document.getElementById('auth-container');
-        const messageBox = document.getElementById('message-box');
+        let allTransactions = []; 
         
-        // Transaction Elements
-        const transactionList = document.getElementById('transaction-list');
+        // 초기 날짜를 2025년 11월 8일로 설정
+        const TODAY = new Date('2025-11-08'); 
+        let currentMonthFilter = '2025-11'; 
+        let unsubscribeFromFirestore = null; 
+        
+        // UI Elements
+        const userInfoElement = document.getElementById('user-info');
+        const statusElement = document.getElementById('status-message');
+        const listBody = document.getElementById('transaction-list-body');
         const registerButton = document.getElementById('register-button');
         const resetButton = document.getElementById('reset-button');
-        const transactionDateInput = document.getElementById('transaction-date');
+        const appContent = document.getElementById('app-content');
+        const authView = document.getElementById('auth-view');
+        const logoutButton = document.getElementById('logout-button');
+        const menuBar = document.getElementById('menu-bar');
+        const monthExplorerList = document.getElementById('month-explorer-list'); 
+
+        // Auth Elements
+        const authForm = document.getElementById('auth-form');
+        const authEmailInput = document.getElementById('auth-email');
+        const authPasswordInput = document.getElementById('auth-password');
+        const loginButton = document.getElementById('login-button');
+        const signupButton = document.getElementById('signup-button');
+        const authErrorMessage = document.getElementById('auth-error-message');
+        const authLoading = document.getElementById('auth-loading');
         
-        // Monthly Summary Elements
-        const monthlyIncomeDisplay = document.getElementById('monthly-income-display');
-        const monthlyExpenseDisplay = document.getElementById('monthly-expense-display');
-        const monthlyBalanceDisplay = document.getElementById('monthly-balance-display');
-        const tableFooterBalance = document.getElementById('table-footer-balance');
-        const currentMonthDisplay = document.getElementById('current-month-display');
-        const currentTransactionDateDisplay = document.getElementById('current-transaction-date-display');
+        // Transaction Input Elements
+        const dateInput = document.getElementById('transaction-date');
+        const typeSelect = document.getElementById('transaction-type');
+        const amountInput = document.getElementById('transaction-amount');
+        const methodSelect = document.getElementById('transaction-method'); 
+        const memoInput = document.getElementById('transaction-memo');
+        const dateDisplay = document.getElementById('current-transaction-date-display');
+
+        // Summary Elements
+        const incomeEl = document.getElementById('total-income');
+        const expenseEl = document.getElementById('total-expense');
+        const netBalanceEl = document.getElementById('net-balance');
+        const footerNetBalanceEl = document.getElementById('monthly-net-balance-footer');
+        const summaryMonthYearEl = document.getElementById('summary-month-year');
+        
+        // New Feature Elements
+        const reportOutputContainer = document.getElementById('report-output-container');
+        const reportOutputArea = document.getElementById('report-output-area');
+        const reportMonthDisplay = document.getElementById('report-month-display');
+        const shareModal = document.getElementById('share-modal');
+        const shareMonthDisplay = document.getElementById('share-month-display');
+        const parentPhoneNumberInput = document.getElementById('parent-phone-number');
+        const shareStatusMessage = document.getElementById('share-status-message');
+        const shareResultSection = document.getElementById('share-result-section');
+        const shareInputSection = document.getElementById('share-input-section');
+        const generatedShareLink = document.getElementById('generated-share-link');
+        const simulatedPhone = document.getElementById('simulated-phone');
+        const sendMessageButton = document.getElementById('send-message-button'); // 추가됨
 
 
-        // Utility function to format numbers
-        const formatCurrency = (num) => {
-            return `￦ ${new Intl.NumberFormat('ko-KR').format(Math.abs(num))}`;
+        // Helper for Currency Formatting
+        const formatCurrency = (amount) => {
+            const sign = amount < 0 ? '￦ -' : '￦ ';
+            return sign + Math.abs(amount).toLocaleString('ko-KR');
+        };
+        const formatNumber = (amount) => {
+            return amount.toLocaleString('ko-KR');
         };
 
-        // Utility function to display messages instead of alert()
-        function showSystemMessage(message, type = 'info', duration = 2000) {
-            messageBox.textContent = message;
-            messageBox.style.display = 'block';
-            
-            if (type === 'error') {
-                messageBox.style.backgroundColor = '#FFCCCC';
-                messageBox.style.borderColor = '#AA0000';
-            } else if (type === 'success') {
-                messageBox.style.backgroundColor = '#CCFFCC';
-                messageBox.style.borderColor = '#00AA00';
+        // Helper for Status Messages
+        const setStatus = (message, isError = false) => {
+            statusElement.innerHTML = `[시스템 상태]: ${isError ? '오류: ' : ''}${message}`;
+            if (isError) {
+                statusElement.classList.add('error-status');
+                console.error(message);
             } else {
-                messageBox.style.backgroundColor = '#FFFFE0';
-                messageBox.style.borderColor = '#0000AA';
+                statusElement.classList.remove('error-status');
+                console.log(message);
             }
+        };
 
-            setTimeout(() => {
-                messageBox.style.display = 'none';
-            }, duration);
+        // UUID Generator (for unique share IDs)
+        function generateUUID() {
+            return crypto.randomUUID();
         }
 
-        async function initFirebaseAndAuth() {
+        function setAuthLoading(isLoading, error = null) {
+            authLoading.classList.toggle('hidden', !isLoading);
+            authForm.classList.toggle('hidden', isLoading);
+            authErrorMessage.textContent = error || '';
+            
+            loginButton.disabled = isLoading;
+            signupButton.disabled = isLoading;
+        }
+
+        async function initFirebase() {
             try {
+                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다.", true);
+                    return;
+                }
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
-
-                // Auth Listener: 로그인 상태에 따라 UI를 전환하고 데이터 로드를 시작합니다.
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userInfoElement.innerHTML = `사용자 ID: ${userId} | 접속 일자: ${new Date().toLocaleDateString('ko-KR')}`;
-                        statusElement.innerHTML = '[시스템 상태]: 로그인 완료. 시스템 준비 완료.';
-                        mainAppContainer.style.display = 'flex'; // 메인 앱 표시
-                        authContainer.style.display = 'none';    // 로그인 폼 숨김
-                        
-                        // 데이터 로드 시작
-                        loadTransactions();
-                    } else {
-                        userId = null;
-                        userInfoElement.innerHTML = `사용자 ID: (로그인 필요) | 접속 일자: ${new Date().toLocaleDateString('ko-KR')}`;
-                        statusElement.innerHTML = '[시스템 상태]: 로그인이 필요합니다.';
-                        mainAppContainer.style.display = 'none'; // 메인 앱 숨김
-                        authContainer.style.display = 'flex';    // 로그인 폼 표시
+                
+                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                
+                // 익명 로그인 없이, 초기 토큰만 시도하고 실패하면 로그인 화면 유지
+                if (initialAuthToken) {
+                    try {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        setStatus("초기 인증 토큰으로 자동 로그인 성공.");
+                    } catch (e) {
+                        console.warn("커스텀 토큰 로그인 실패. 수동 로그인 필요.", e.message);
+                        setStatus("초기 인증 토큰 실패. 이메일/비밀번호로 로그인하거나 계정을 만드세요.", true);
                     }
-                });
+                } else {
+                    setStatus("자동 인증 토큰 없음. 이메일/비밀번호로 로그인하거나 계정을 만드세요.");
+                }
+
+                onAuthStateChanged(auth, handleAuthStateChange);
 
             } catch (error) {
-                console.error("Firebase 초기화 또는 인증 오류:", error);
-                showSystemMessage(`Firebase 초기화 실패: ${error.message}`, 'error');
+                console.error("Firebase 초기화 오류:", error);
+                setStatus(`Firebase 초기화 실패. (${error.message})`, true);
             }
         }
         
-        // --- Transaction Logic (Firestore) ---
-        function loadTransactions() {
-            if (!userId || !db) return;
+        // --- AUTH LOGIC (Actual Login) ---
+        function handleAuthStateChange(user) {
+            if (user) {
+                // 로그인 상태
+                userId = user.uid;
+                userInfoElement.innerHTML = `사용자 ID: ${userId.substring(0, 8)}... | 접속 일자: ${new Date().toLocaleDateString('ko-KR')}`;
+                setStatus(`로그인 성공. 사용자: ${userId.substring(0, 8)}... 데이터 로드를 시작합니다.`);
+                
+                authView.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                logoutButton.classList.remove('hidden');
+                menuBar.classList.remove('hidden');
+                
+                loadAllTransactions(); // 인증 완료 후 모든 데이터 로드 시작
+            } else {
+                // 로그아웃 상태
+                userId = null;
+                allTransactions = [];
+                userInfoElement.innerHTML = `사용자 ID: (로그아웃됨)`;
+                setStatus("로그아웃 상태입니다. 이메일/비밀번호로 로그인해주세요.", true);
+                
+                authView.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                logoutButton.classList.add('hidden');
+                menuBar.classList.add('hidden');
 
-            const path = `/artifacts/${appId}/users/${userId}/transactions`;
-            const transactionsCol = collection(db, path);
+                if (unsubscribeFromFirestore) {
+                    unsubscribeFromFirestore();
+                    unsubscribeFromFirestore = null;
+                }
+                
+                listBody.innerHTML = `<tr class="data-row"><td class="border p-2 text-center text-red-500" colspan="6">로그인 상태가 아닙니다. 거래 내역을 볼 수 없습니다.</td></tr>`;
+                updateSummary(0, 0); 
+                monthExplorerList.innerHTML = `<li class="p-1 text-gray-500">로그인 필요</li>`;
+            }
+            setAuthLoading(false);
+        }
+
+        async function handleAuthAction(isSignUp) {
+            const email = authEmailInput.value.trim();
+            const password = authPasswordInput.value;
             
-            // onSnapshot을 사용하여 실시간으로 데이터를 불러오고 업데이트합니다.
-            onSnapshot(transactionsCol, (snapshot) => {
-                const records = [];
-                let totalIncome = 0;
-                let totalExpense = 0;
-                const currentMonthYear = transactionDateInput.value.substring(0, 7); // YYYY-MM
-                
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    // 월별 필터링 (현재는 입력 날짜 필드의 YYYY-MM 기준으로 필터링)
-                    if (data.date.substring(0, 7) === currentMonthYear) {
-                        records.push({ id: doc.id, ...data });
+            if (!email || !password) {
+                authErrorMessage.textContent = "이메일과 비밀번호를 모두 입력해주세요.";
+                return;
+            }
 
-                        if (data.type === 'income') {
-                            totalIncome += data.amount;
-                        } else if (data.type === 'expense') {
-                            totalExpense += data.amount;
-                        }
-                    }
+            setAuthLoading(true);
+            authErrorMessage.textContent = '';
+
+            try {
+                if (isSignUp) {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                    setStatus("회원가입 및 자동 로그인 성공!");
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    setStatus("로그인 성공!");
+                }
+                // onAuthStateChanged가 나머지를 처리합니다.
+
+            } catch (error) {
+                setAuthLoading(false, `인증 오류: ${authErrorToKorean(error.code)}`);
+                console.error("인증 오류:", error.message);
+            }
+        }
+        
+        function authErrorToKorean(code) {
+            switch (code) {
+                case 'auth/invalid-email': return '유효하지 않은 이메일 형식입니다.';
+                case 'auth/user-disabled': return '비활성화된 사용자 계정입니다.';
+                case 'auth/user-not-found': return '등록되지 않은 이메일입니다.';
+                case 'auth/wrong-password': return '비밀번호가 일치하지 않습니다.';
+                case 'auth/email-already-in-use': return '이미 사용 중인 이메일입니다.';
+                case 'auth/weak-password': return '비밀번호는 6자리 이상이어야 합니다.';
+                case 'auth/operation-not-allowed': return '이메일/비밀번호 로그인이 활성화되지 않았습니다.';
+                default: return `알 수 없는 인증 오류가 발생했습니다 (${code}).`;
+            }
+        }
+        
+        function handleLogout() {
+            if (auth) {
+                signOut(auth).then(() => {
+                    setStatus("성공적으로 로그아웃되었습니다.");
+                }).catch((error) => {
+                    setStatus(`로그아웃 오류: ${error.message}`, true);
+                });
+            }
+        }
+        
+        // --- Transaction Logic ---
+        function loadAllTransactions() {
+            if (!userId || !db) { return; }
+            
+            const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
+            const q = query(transactionsColRef);
+
+            if (unsubscribeFromFirestore) {
+                unsubscribeFromFirestore();
+            }
+
+            // 모든 거래 내역을 실시간으로 가져와 allTransactions 배열에 저장
+            unsubscribeFromFirestore = onSnapshot(q, (snapshot) => {
+                allTransactions = [];
+                snapshot.forEach(doc => {
+                    allTransactions.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // 날짜(최신순)와 타임스탬프(최신순)로 인메모리 정렬
-                records.sort((a, b) => {
-                    if (a.date < b.date) return 1; 
-                    if (a.date > b.date) return -1;
-                    return b.timestamp - a.timestamp; 
-                });
-
-                renderTransactions(records, totalIncome, totalExpense, currentMonthYear);
-
+                // 데이터가 변경될 때마다 사이드바와 목록을 모두 업데이트
+                renderMonthExplorer();
+                filterAndRenderTransactions(currentMonthFilter);
+                
             }, (error) => {
-                console.error("거래 기록 불러오기 오류:", error);
-                showSystemMessage(`거래 기록 로드 실패: ${error.message}`, 'error');
+                console.error("거래 목록 로드 오류:", error);
+                setStatus('거래 목록 로드 실패. (네트워크 또는 권한 확인 필요)', true);
+                listBody.innerHTML = `<tr class="data-row"><td class="border p-2 text-center text-red-700" colspan="6">🚨 데이터 로드 오류.</td></tr>`;
             });
-        }
-
-        function renderTransactions(records, totalIncome, totalExpense, currentMonthYear) {
-            transactionList.innerHTML = '';
-            const totalBalance = totalIncome - totalExpense;
-            
-            if (records.length === 0) {
-                transactionList.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">
-                    현재 월 (${currentMonthYear})의 거래 기록이 없습니다. 새로운 기록을 등록해 주세요.
-                </td></tr>`;
-            }
-
-            records.forEach((record, index) => {
-                const amountText = (record.type === 'expense' ? '-' : '+') + new Intl.NumberFormat('ko-KR').format(record.amount);
-                const amountClass = record.type === 'expense' ? 'text-red-600' : 'text-green-600';
-                const rowClass = record.type === 'income' ? 'bg-green-50 hover:bg-green-100' : 'hover:bg-blue-100';
-
-                const row = `
-                    <tr class="${rowClass}">
-                        <td class="border p-1 text-center">${records.length - index}</td>
-                        <td class="border p-1"><input type="text" value="${record.date}" class="table-input" readonly></td>
-                        <td class="border p-1"><input type="text" value="${record.method}" class="table-input" readonly></td>
-                        <td class="border p-1"><input type="text" value="${record.memo}" class="table-input"></td>
-                        <td class="border p-1 text-right ${amountClass}">${amountText}</td>
-                        <td class="border p-1 text-center">
-                            <button data-id="${record.id}" class="text-xs text-red-500 hover:text-red-800 delete-btn">삭제</button>
-                        </td>
-                    </tr>
-                `;
-                transactionList.innerHTML += row;
-            });
-
-            // Update Summary Panel
-            currentMonthDisplay.textContent = currentMonthYear;
-            monthlyIncomeDisplay.textContent = formatCurrency(totalIncome);
-            monthlyExpenseDisplay.textContent = formatCurrency(totalExpense);
-            monthlyBalanceDisplay.textContent = formatCurrency(totalBalance);
-            
-            // Update Table Footer
-            tableFooterBalance.textContent = formatCurrency(totalBalance);
-            tableFooterBalance.className = `border p-1 text-right font-bold ${totalBalance >= 0 ? 'text-green-800' : 'text-red-800'}`;
         }
         
-        async function addTransaction() {
-            if (!userId) {
-                showSystemMessage('로그인이 필요합니다.', 'error'); 
+        // --- 사이드바 및 목록 필터링 함수 ---
+
+        // 월별로 데이터를 필터링하고 UI를 업데이트하는 함수
+        function filterAndRenderTransactions(monthFilter) {
+            currentMonthFilter = monthFilter;
+
+            const filteredTransactions = allTransactions.filter(tx => 
+                tx.date.startsWith(monthFilter)
+            );
+
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            filteredTransactions.forEach(tx => {
+                if (tx.amount > 0) {
+                    totalIncome += tx.amount;
+                } else {
+                    totalExpense += tx.amount;
+                }
+            });
+
+            // 정렬 (최신순)
+            filteredTransactions.sort((a, b) => {
+                if (a.date === b.date) {
+                    return b.timestamp - a.timestamp; 
+                }
+                return b.date.localeCompare(a.date); 
+            });
+
+            renderTransactionList(filteredTransactions);
+            updateSummary(totalIncome, totalExpense);
+            setStatus(`필터링된 거래 내역 (${monthFilter}): 총 ${filteredTransactions.length}건`);
+            
+            // 사이드바의 활성화 상태 업데이트
+            document.querySelectorAll('.month-nav-link').forEach(el => {
+                el.classList.remove('classic-active-menu');
+                if (el.dataset.month === monthFilter) {
+                    el.classList.add('classic-active-menu');
+                }
+            });
+
+            // 보고서/엑셀에 사용될 현재 필터링된 데이터 반환
+            return filteredTransactions;
+        }
+
+        // --- 기타 UI/Render 함수들은 생략 ---
+        function updateSummary(income, expense) {
+            const netBalance = income + expense;
+            const year = currentMonthFilter.substring(0, 4);
+            const month = currentMonthFilter.substring(5, 7);
+
+            incomeEl.textContent = formatCurrency(income);
+            expenseEl.textContent = formatCurrency(expense);
+            netBalanceEl.textContent = formatCurrency(netBalance);
+            footerNetBalanceEl.textContent = netBalance.toLocaleString('ko-KR');
+
+            summaryMonthYearEl.textContent = `${year}년 ${month}월`;
+        }
+        function renderMonthExplorer() { /* ... 기존과 동일 ... */ 
+            monthExplorerList.innerHTML = '';
+
+            if (allTransactions.length === 0) {
+                 monthExplorerList.innerHTML = `<li class="p-1 text-gray-500">등록된 거래가 없습니다.</li>`;
+                 return;
+            }
+
+            const months = [...new Set(allTransactions.map(tx => tx.date.substring(0, 7)))];
+            months.sort().reverse(); 
+
+            const years = [...new Set(months.map(m => m.substring(0, 4)))];
+            years.sort().reverse();
+
+            let outputHtml = '';
+
+            years.forEach(year => {
+                outputHtml += `
+                    <li class="p-1 font-bold flex items-center year-toggle" data-year="${year}">
+                        <span class="mr-1 year-icon">▼</span> ${year}년 기록
+                    </li>
+                `;
+                
+                const yearMonths = months.filter(m => m.startsWith(year));
+                yearMonths.forEach(month => {
+                    const monthName = month.substring(5, 7);
+                    const isActive = month === currentMonthFilter;
+                    
+                    outputHtml += `
+                        <li class="pl-4 cursor-pointer month-nav-link ${isActive ? 'classic-active-menu font-bold text-black' : 'hover:bg-gray-200'}" 
+                            data-month="${month}">
+                            ㄴ ${monthName}월
+                        </li>
+                    `;
+                });
+            });
+
+            monthExplorerList.innerHTML = outputHtml;
+            
+            monthExplorerList.querySelectorAll('.month-nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    filterAndRenderTransactions(e.target.dataset.month);
+                });
+            });
+        }
+        function renderTransactionList(transactions) { /* ... 기존과 동일 ... */
+             listBody.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                listBody.innerHTML = `<tr class="data-row"><td class="border p-2 text-center text-gray-500" colspan="6">선택한 월에 등록된 거래 내역이 없습니다.</td></tr>`;
+                return;
+            }
+            
+            transactions.forEach((tx, index) => {
+                const isIncome = tx.amount > 0;
+                const rowClass = isIncome ? 'bg-green-50' : '';
+                const amountClass = isIncome ? 'text-green-600' : 'text-red-600';
+                const displayAmount = Math.abs(tx.amount).toLocaleString('ko-KR');
+
+                const row = document.createElement('tr');
+                row.className = `data-row hover:bg-blue-100 ${rowClass}`;
+                row.innerHTML = `
+                    <td class="border p-1 text-center">${transactions.length - index}</td>
+                    <td class="border p-1"><span class="block px-1">${tx.date}</span></td>
+                    <td class="border p-1"><span class="block px-1">${tx.method}</span></td>
+                    <td class="border p-1"><span class="block px-1">${tx.memo}</span></td>
+                    <td class="border text-right ${amountClass} p-1"><span class="block px-1">${isIncome ? '+' : '-'}${displayAmount}</span></td>
+                    <td class="border text-center">
+                        <button class="text-xs text-red-500 hover:text-red-800 delete-btn classic-button px-1" data-id="${tx.id}">삭제</button>
+                    </td>
+                `;
+                listBody.appendChild(row);
+            });
+            
+            listBody.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const docId = e.target.getAttribute('data-id');
+                    deleteTransaction(docId);
+                });
+            });
+        }
+
+        // --- CRUD Operations ---
+        function resetForm() { /* ... 기존과 동일 ... */
+            amountInput.value = '';
+            memoInput.value = '';
+            typeSelect.value = 'expense';
+            if (methodSelect) methodSelect.value = '현금'; 
+            setStatus("입력 필드를 초기화했습니다.");
+        }
+        async function saveTransaction() { /* ... 기존과 동일 ... */
+            if (!userId || !db) {
+                setStatus('인증되지 않은 사용자입니다. 기록 등록 불가.', true);
+                return;
+            }
+            
+            const date = dateInput.value;
+            const type = typeSelect.value;
+            const rawAmount = amountInput.value.replace(/[^0-9.]/g, ''); 
+            const method = methodSelect.value; 
+            const memo = memoInput.value.trim();
+
+            if (!date || !rawAmount || !memo) {
+                setStatus("모든 필드를 입력해주세요. (날짜, 금액, 내용)", true);
+                return;
+            }
+            
+            const amount = parseFloat(rawAmount);
+            if (isNaN(amount) || amount <= 0) {
+                setStatus("유효한 금액을 입력해주세요.", true);
                 return;
             }
 
-            const date = transactionDateInput.value;
-            const type = document.getElementById('transaction-type').value; 
-            let amount = document.getElementById('transaction-amount').value.replace(/[^0-9]/g, ''); 
-            const method = document.getElementById('transaction-method').value; 
-            const memo = document.getElementById('transaction-memo').value.trim();
-            
-            // Basic Validation (분류 필드 삭제로 인해 유효성 검사 항목 축소)
-            if (!date || !amount || !memo) {
-                showSystemMessage('필수 필드(날짜, 금액, 내용)를 채워주세요.', 'error');
-                return;
-            }
-            
-            amount = parseInt(amount, 10);
-            if (isNaN(amount) || amount <= 0) {
-                showSystemMessage('유효한 금액을 입력해 주세요.', 'error');
-                return;
-            }
+            const finalAmount = type === 'expense' ? -amount : amount;
 
             const transactionData = {
                 date,
-                type,
-                amount, // Always stored as a positive number. Type determines sign.
+                type, 
+                amount: finalAmount,
                 method,
                 memo,
-                timestamp: Date.now()
-                // category 필드 삭제됨
+                timestamp: new Date().getTime(),
             };
 
-            showSystemMessage('기록 저장 중...', 'info');
-
             try {
-                const path = `/artifacts/${appId}/users/${userId}/transactions`;
-                await addDoc(collection(db, path), transactionData);
+                const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
+                await addDoc(transactionsColRef, transactionData);
                 
-                showSystemMessage('거래 기록이 성공적으로 등록되었습니다!', 'success');
+                const newMonth = date.substring(0, 7);
+                if (newMonth !== currentMonthFilter) {
+                    currentMonthFilter = newMonth;
+                }
                 
-                // Clear inputs
-                document.getElementById('transaction-amount').value = '';
-                document.getElementById('transaction-memo').value = '';
-
+                resetForm();
+                setStatus(`거래 기록이 성공적으로 등록되었습니다: ${date} - ${memo}`);
+                
             } catch (error) {
-                console.error("거래 기록 저장 오류:", error);
-                showSystemMessage(`거래 기록 저장 실패: ${error.message}`, 'error');
+                console.error("거래 등록 오류:", error);
+                setStatus(`거래 등록 실패: ${error.message}`, true);
             }
         }
-        
-        // --- Calendar Logic (Simplified) ---
+        async function deleteTransaction(docId) { /* ... 기존과 동일 ... */
+            if (!userId || !db) {
+                setStatus('인증되지 않은 사용자입니다. 삭제 불가.', true);
+                return;
+            }
+            
+            setStatus("거래를 삭제합니다... (실제 앱에서는 확인 모달이 필요합니다)");
+
+            try {
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/transactions`, docId);
+                await deleteDoc(docRef);
+                setStatus(`거래 (${docId.substring(0, 5)}...)가 성공적으로 삭제되었습니다.`);
+            } catch (error) {
+                console.error("거래 삭제 오류:", error);
+                setStatus(`거래 삭제 실패: ${error.message}`, true);
+            }
+        }
+
+        // --- NEW FEATURE: Report Generation ---
+        function generateReport() {
+            if (!userId) {
+                setStatus('보고서를 출력하려면 로그인해야 합니다.', true);
+                return;
+            }
+
+            const filteredData = filterAndRenderTransactions(currentMonthFilter);
+            const totalIncome = parseFloat(incomeEl.textContent.replace(/[￦, -]/g, ''));
+            const totalExpense = parseFloat(expenseEl.textContent.replace(/[￦, -]/g, ''));
+            const netBalance = totalIncome - totalExpense; 
+
+            const monthName = summaryMonthYearEl.textContent;
+            reportMonthDisplay.textContent = monthName;
+
+            let reportText = `[ ${monthName} 용돈기입장 월간 요약 보고서 ]\n`;
+            reportText += `===========================================================\n`;
+            reportText += `\n`;
+            reportText += `▶ 총 수입액: ${formatCurrency(totalIncome)}\n`;
+            reportText += `▶ 총 지출액: ${formatCurrency(totalExpense)}\n`;
+            reportText += `-----------------------------------------------------------\n`;
+            reportText += `▶ 순 잔액: ${formatCurrency(netBalance)}\n`;
+            reportText += `\n`;
+            reportText += `[ 상세 거래 내역 (${filteredData.length}건) ]\n`;
+            reportText += `-----------------------------------------------------------\n`;
+            reportText += `날짜      | 금액 (원) | 수단 | 내용\n`;
+            reportText += `-----------------------------------------------------------\n`;
+
+            if (filteredData.length === 0) {
+                reportText += `해당 월에 등록된 거래 내역이 없습니다.\n`;
+            } else {
+                filteredData.forEach(tx => {
+                    const datePart = tx.date.substring(5); // MM-DD
+                    const amountSign = tx.amount > 0 ? '+' : '-';
+                    const amountDisplay = formatNumber(Math.abs(tx.amount));
+                    const line = 
+                        `${datePart} | ` + 
+                        `${amountSign}${amountDisplay.padEnd(8)} | ` + 
+                        `${tx.method.padEnd(4)} | ` + 
+                        `${tx.memo.substring(0, 20)}\n`;
+                    reportText += line;
+                });
+            }
+            reportText += `===========================================================\n`;
+            reportText += `\n보고서 생성 일시: ${new Date().toLocaleString('ko-KR')}\n`;
+
+
+            reportOutputArea.textContent = reportText;
+            reportOutputContainer.classList.remove('hidden');
+            setStatus('월간 보고서를 생성했습니다. 화면에서 확인해주세요.');
+        }
+
+        // --- NEW FEATURE: Excel (CSV) Export ---
+        function exportToCsv() {
+            if (!userId) {
+                setStatus('엑셀로 저장하려면 로그인해야 합니다.', true);
+                return;
+            }
+
+            const filteredData = filterAndRenderTransactions(currentMonthFilter);
+            if (filteredData.length === 0) {
+                setStatus('내보낼 거래 내역이 없습니다.', true);
+                return;
+            }
+            
+            let csv = "No,날짜,구분,금액,수단,내용,타임스탬프\n";
+
+            filteredData.forEach((tx, index) => {
+                const row = [
+                    filteredData.length - index,
+                    tx.date,
+                    tx.amount > 0 ? '수입' : '지출',
+                    tx.amount, // 숫자 그대로 CSV에 저장
+                    tx.method,
+                    `"${tx.memo.replace(/"/g, '""')}"`, // 콤마 포함 문제 방지
+                    tx.timestamp
+                ].join(',');
+                csv += row + "\n";
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `용돈기입장_내역_${currentMonthFilter}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setStatus(`[${currentMonthFilter}] 거래 내역을 CSV 파일로 내보냈습니다.`);
+        }
+
+        // --- NEW FEATURE: Share with Parent ---
+
+        function openShareModal() {
+            if (!userId) {
+                setStatus('공유 기능을 사용하려면 로그인해야 합니다.', true);
+                return;
+            }
+            shareModal.classList.remove('hidden');
+            shareMonthDisplay.textContent = summaryMonthYearEl.textContent;
+            shareStatusMessage.textContent = '전화번호를 입력하고 공유 버튼을 눌러주세요.';
+            shareResultSection.classList.add('hidden');
+            shareInputSection.classList.remove('hidden');
+            parentPhoneNumberInput.value = '';
+            generatedShareLink.value = '';
+            // 버튼 비활성화 해제 (재시도 대비)
+            parentPhoneNumberInput.disabled = false;
+            document.getElementById('share-submit-button').disabled = false;
+            sendMessageButton.removeEventListener('click', handleSendMessage);
+        }
+
+        // 새롭게 추가된 메시지 전송 시뮬레이션 핸들러
+        function handleSendMessage(event) {
+            const phone = simulatedPhone.textContent.replace(/[^0-9]/g, '');
+            const link = generatedShareLink.value;
+            const messageBody = encodeURIComponent(`[${shareMonthDisplay.textContent} 용돈기입장]\n자세한 내역은 아래 링크에서 확인해주세요:\n${link}`);
+            
+            // sms: 프로토콜을 사용하여 메시지 앱으로 이동 시뮬레이션
+            const smsLink = `sms:${phone}?body=${messageBody}`;
+            
+            // A 태그의 href를 업데이트하고 클릭을 시뮬레이션
+            sendMessageButton.setAttribute('href', smsLink);
+            
+            setStatus("메시지 앱으로 이동하는 것을 시뮬레이션했습니다. (실제 전송은 되지 않습니다)");
+        }
+
+
+        async function generateShareLink() {
+            if (!db || !userId) return;
+
+            const phone = parentPhoneNumberInput.value.replace(/[^0-9]/g, '');
+            if (phone.length < 8) {
+                shareStatusMessage.textContent = '유효한 전화번호를 입력해주세요.';
+                return;
+            }
+
+            shareStatusMessage.textContent = '공유 보고서 생성 중... (데이터를 공용 DB에 저장)';
+            parentPhoneNumberInput.disabled = true;
+            document.getElementById('share-submit-button').disabled = true;
+
+
+            const filteredData = filterAndRenderTransactions(currentMonthFilter);
+            if (filteredData.length === 0) {
+                shareStatusMessage.textContent = '공유할 거래 내역이 없습니다.';
+                parentPhoneNumberInput.disabled = false;
+                document.getElementById('share-submit-button').disabled = false;
+                return;
+            }
+
+            try {
+                const shareId = generateUUID();
+                const shareData = {
+                    sharedBy: userId,
+                    month: currentMonthFilter,
+                    transactions: filteredData.map(({ id, ...rest }) => rest), // Firestore Doc ID 제외
+                    summary: {
+                        income: parseFloat(incomeEl.textContent.replace(/[￦, -]/g, '')),
+                        expense: parseFloat(expenseEl.textContent.replace(/[￦, -]/g, '')),
+                        netBalance: parseFloat(netBalanceEl.textContent.replace(/[￦, ]/g, '')),
+                    },
+                    createdAt: new Date().toISOString(),
+                };
+                
+                // 공용 컬렉션에 데이터 저장
+                const publicReportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                await setDoc(publicReportRef, shareData);
+                
+                // 요청하신 경로와 shareId를 포함한 링크 생성
+                const simulatedLink = `https://yourdomain.com/k-chulnap/view.html?shareId=${shareId}`;
+
+                // UI 업데이트
+                generatedShareLink.value = simulatedLink;
+                simulatedPhone.textContent = phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, `$1-$2-$3`); // 전화번호 형식화
+                
+                shareInputSection.classList.add('hidden');
+                shareResultSection.classList.remove('hidden');
+                shareStatusMessage.textContent = `보고서 생성 완료. 아래 버튼을 눌러 메시지를 전송하세요.`;
+
+                setStatus(`[${currentMonthFilter}] 보고서가 공용 ID (${shareId.substring(0, 5)}...)로 저장되었습니다.`);
+
+                // 메시지 전송 버튼에 이벤트 리스너 추가 (링크 생성 후)
+                sendMessageButton.addEventListener('click', handleSendMessage);
+
+            } catch (error) {
+                shareStatusMessage.textContent = `공유 보고서 생성 중 오류 발생: ${error.message}`;
+                setStatus(`공유 보고서 생성 실패: ${error.message}`, true);
+                parentPhoneNumberInput.disabled = false;
+                document.getElementById('share-submit-button').disabled = false;
+            }
+        }
+
+
+        // --- Calendar Logic ---
         const dateInputContainer = document.getElementById('dateInputContainer');
         const calendarToggleButton = document.getElementById('calendar-toggle-button');
         const customCalendar = document.getElementById('custom-calendar');
+        const transactionDateInput = document.getElementById('transaction-date');
         const calendarDays = document.getElementById('calendar-days');
         const monthYearSpan = document.getElementById('calendar-month-year');
         const prevMonthButton = document.getElementById('prev-month-button');
         const nextMonthButton = document.getElementById('next-month-button');
         
-        let currentDate = new Date(); 
+        let calendarCurrentDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); 
 
-        const toggleCalendar = (event) => {
+        const toggleCalendar = (event) => { /* ... 기존과 동일 ... */
+            if (!userId) {
+                setStatus('로그인 후 날짜를 선택할 수 있습니다.', true);
+                return;
+            }
             event.stopPropagation();
             customCalendar.classList.toggle('hidden');
             if (!customCalendar.classList.contains('hidden')) {
                 const inputDateValue = transactionDateInput.value;
-                let dateToView = new Date();
+                let dateToView = TODAY;
                 if (inputDateValue) {
                     const parts = inputDateValue.split('-');
-                    // Date(year, monthIndex, day)
                     dateToView = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
                 }
-                currentDate = new Date(dateToView.getFullYear(), dateToView.getMonth(), 1);
-                renderCalendar(currentDate);
+                calendarCurrentDate = new Date(dateToView.getFullYear(), dateToView.getMonth(), 1);
+                renderCalendar(calendarCurrentDate);
             }
         };
 
-        function renderCalendar(date) {
+        function renderCalendar(date) { /* ... 기존과 동일 ... */
             const year = date.getFullYear();
             const month = date.getMonth(); 
-            const today = new Date();
+            const today = TODAY; 
             const selectedDateString = transactionDateInput.value;
             
             monthYearSpan.textContent = `${year}년 ${month + 1}월`;
@@ -578,6 +1134,7 @@
                         tableHtml += '&nbsp;';
                     } else if (day <= daysInMonth) {
                         const cellDateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        
                         const isToday = (cellDateString === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
                         const isCurrentSelection = (cellDateString === selectedDateString);
                         
@@ -588,7 +1145,7 @@
                         if (isToday) classes += ' bg-blue-100 border border-blue-500 font-bold';
                         if (isCurrentSelection) classes = 'p-1 bg-yellow-400 border border-black font-bold';
 
-                        tableHtml += `<span class="${classes.trim()}" data-day="${day}">${day}</span>`;
+                        tableHtml += `<span class="${classes.trim()} cursor-pointer" data-day="${day}">${day}</span>`;
                         day++;
                     }
                     
@@ -600,100 +1157,46 @@
             calendarDays.innerHTML = tableHtml;
         }
 
-        function selectDate(e) {
+        function selectDate(e) { /* ... 기존과 동일 ... */
             const daySpan = e.target.closest('[data-day]');
-            if (!daySpan) return;
+            if (!daySpan || !daySpan.classList.contains('cursor-pointer')) return;
 
             const day = daySpan.getAttribute('data-day');
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth() + 1;
 
             const newDateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             transactionDateInput.value = newDateString;
-            currentTransactionDateDisplay.textContent = newDateString;
+            dateDisplay.textContent = newDateString; 
 
             customCalendar.classList.add('hidden');
-            renderCalendar(currentDate); 
-
-            // 날짜가 바뀌면 거래 목록을 다시 로드 
-            if (userId) loadTransactions();
         }
 
-        function handleMonthChange(delta, e) {
+        function handleMonthChange(delta, e) { /* ... 기존과 동일 ... */
             if (e) e.stopPropagation();
-            currentDate.setMonth(currentDate.getMonth() + delta);
-            renderCalendar(currentDate);
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
+            renderCalendar(calendarCurrentDate);
         }
-
-        // --- Simple Auth Logic ---
-        const emailInput = document.getElementById('auth-email');
-        const passwordInput = document.getElementById('auth-password');
-        const signupBtn = document.getElementById('auth-signup-btn');
-        const loginBtn = document.getElementById('auth-login-btn');
-        const authMessage = document.getElementById('auth-message');
-        const logoutButton = document.getElementById('logout-button');
-
-        signupBtn.addEventListener('click', async () => {
-            try {
-                authMessage.textContent = '회원가입 처리 중...';
-                await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-                authMessage.textContent = '회원가입 성공. 로그인 되었습니다.';
-            } catch (error) {
-                console.error("회원가입 오류:", error);
-                authMessage.textContent = `회원가입 오류: ${error.message.replace('Firebase: ', '')}`;
-            }
-        });
-
-        loginBtn.addEventListener('click', async () => {
-            try {
-                authMessage.textContent = '로그인 처리 중...';
-                await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-                authMessage.textContent = '로그인 성공!';
-            } catch (error) {
-                console.error("로그인 오류:", error);
-                authMessage.textContent = `로그인 오류: ${error.message.replace('Firebase: ', '')}`;
-            }
-        });
-
-        logoutButton.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                showSystemMessage('로그아웃되었습니다.', 'info');
-                statusElement.innerHTML = '[시스템 상태]: 로그아웃되었습니다.';
-            } catch (error) {
-                console.error("로그아웃 오류:", error);
-                showSystemMessage(`로그아웃 실패: ${error.message}`, 'error');
-            }
-        });
-
 
         // --- Event Listeners and Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Set Initial Date
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            const initialDate = `${year}-${month}-${day}`;
+            // 1. Firebase/Auth Initialization
+            initFirebase();
+
+            // 2. Initial Date Setup (2025-11-08)
+            const year = TODAY.getFullYear();
+            const month = String(TODAY.getMonth() + 1).padStart(2, '0');
+            const day = String(TODAY.getDate()).padStart(2, '0');
+            const todayString = `${year}-${month}-${day}`;
             
-            transactionDateInput.value = initialDate;
-            currentTransactionDateDisplay.textContent = initialDate;
-            currentMonthDisplay.textContent = initialDate.substring(0, 7);
-            currentDate = new Date(year, today.getMonth(), 1); 
-
-            // 2. Firebase/Auth Initialization
-            initFirebaseAndAuth();
-
-            // 3. Register Button Event
-            registerButton.addEventListener('click', addTransaction);
+            transactionDateInput.value = todayString;
+            dateDisplay.textContent = todayString;
+            currentMonthFilter = `${year}-${month}`; // 2025-11
             
-            // 4. Reset Button Event
-            resetButton.addEventListener('click', () => {
-                document.getElementById('transaction-amount').value = '';
-                document.getElementById('transaction-memo').value = '';
-            });
+            calendarCurrentDate = new Date(year, TODAY.getMonth(), 1); 
+            renderCalendar(calendarCurrentDate);
 
-            // 5. Calendar Event Listeners
+            // Calendar Listeners
             if (calendarToggleButton) calendarToggleButton.addEventListener('click', toggleCalendar);
             if (transactionDateInput) transactionDateInput.addEventListener('click', toggleCalendar);
             if (prevMonthButton) prevMonthButton.addEventListener('click', (e) => handleMonthChange(-1, e));
@@ -701,12 +1204,41 @@
             if (calendarDays) calendarDays.addEventListener('click', selectDate);
 
             document.addEventListener('click', (event) => {
-                const dateInputContainer = document.getElementById('dateInputContainer');
-                if (customCalendar && !customCalendar.classList.contains('hidden') && 
-                    !customCalendar.contains(event.target) && !dateInputContainer.contains(event.target)) {
+                if (customCalendar && !customCalendar.contains(event.target) && !dateInputContainer.contains(event.target)) {
                     customCalendar.classList.add('hidden');
                 }
             });
+            
+            // 3. Transaction/Auth Listeners
+            if (registerButton) registerButton.addEventListener('click', saveTransaction);
+            if (resetButton) resetButton.addEventListener('click', resetForm);
+            if (logoutButton) logoutButton.addEventListener('click', handleLogout);
+
+            // Auth Form Listeners
+            if (authForm) authForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleAuthAction(false); // Login
+            });
+            if (signupButton) signupButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleAuthAction(true); // Sign Up
+            });
+
+            // NEW FEATURE Listeners
+            document.getElementById('report-button').addEventListener('click', generateReport);
+            document.getElementById('excel-button').addEventListener('click', exportToCsv);
+            document.getElementById('share-button').addEventListener('click', openShareModal);
+            document.getElementById('share-submit-button').addEventListener('click', generateShareLink);
+            document.getElementById('modal-close-button').addEventListener('click', () => shareModal.classList.add('hidden'));
+
+            // 모달 닫기
+            shareModal.addEventListener('click', (e) => {
+                if (e.target === shareModal) {
+                    shareModal.classList.add('hidden');
+                }
+            });
+
+            // 메시지 전송 버튼에 초기에는 리스너를 추가하지 않습니다. (generateShareLink 성공 후 추가)
         });
     </script>
 </body>
