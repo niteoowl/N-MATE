@@ -156,14 +156,23 @@
                     </div>
                 </div>
 
-                <!-- 3. 승인/확인 영역 -->
+                <!-- 3. 승인/확인 영역 (메시지 기능 추가) -->
                 <div id="approval-section" class="mt-4 classic-frame bg-white p-3 border border-[#808080] flex-shrink-0 text-center">
                     <div id="approval-status-display" class="font-bold text-base mb-2 text-gray-700">
                         보고서 확인 후, 아래 버튼을 눌러 승인해주세요.
                     </div>
+                    
+                    <!-- 부모님 코멘트 입력 영역 -->
+                    <textarea id="approval-comment" class="w-full classic-frame p-2 mb-3 text-sm resize-y" rows="3" placeholder="자녀에게 전달할 승인 메시지나 간단한 코멘트를 남겨주세요 (선택 사항)"></textarea>
+
                     <button id="approve-button" class="classic-button text-base px-6 py-2 w-full max-w-xs mx-auto disabled:opacity-50">
                         ✅ 용돈기입장 확인 및 승인
                     </button>
+
+                    <!-- 저장된 승인 메시지 표시 영역 (승인 완료 시 표시) -->
+                    <div id="saved-approval-message" class="hidden mt-3 p-3 classic-frame bg-yellow-100 text-left text-sm whitespace-pre-wrap">
+                        <!-- 저장된 메시지가 여기에 표시됩니다 -->
+                    </div>
                 </div>
 
             </div>
@@ -223,6 +232,8 @@
         const reportInfoEl = document.getElementById('report-info');
         const approveButton = document.getElementById('approve-button');
         const approvalStatusDisplay = document.getElementById('approval-status-display');
+        const approvalCommentInput = document.getElementById('approval-comment'); // NEW
+        const savedApprovalMessageEl = document.getElementById('saved-approval-message'); // NEW
         
         // Summary Elements
         const incomeEl = document.getElementById('summary-income');
@@ -324,10 +335,10 @@
             }
         }
 
-        // --- Approval Logic ---
+        // --- Approval Logic (Updated to include comment) ---
 
         /**
-         * 부모가 보고서를 승인하고 Firestore 문서에 상태를 업데이트합니다.
+         * 부모가 보고서를 승인하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
          */
         async function approveReport() {
             const shareId = getShareIdFromUrl();
@@ -335,9 +346,15 @@
                 setStatus("승인에 필요한 공유 ID 또는 데이터베이스 연결이 없습니다.", true);
                 return;
             }
+            
+            // 코멘트 캡처
+            const comment = approvalCommentInput.value.trim();
+            const defaultComment = '확인했습니다.';
+            const commentToSave = comment || defaultComment;
 
-            // 승인 버튼 비활성화 및 로딩 표시
+            // 승인 버튼/입력 비활성화 및 로딩 표시
             approveButton.disabled = true;
+            approvalCommentInput.disabled = true; // 코멘트 입력 비활성화
             approveButton.textContent = '처리 중...';
             setStatus("보고서 승인 정보를 데이터베이스에 기록하는 중...");
             
@@ -349,7 +366,8 @@
                 await updateDoc(reportRef, {
                     status: 'Approved',
                     approvedBy: parentUserId,
-                    approvedAt: new Date().getTime()
+                    approvedAt: new Date().getTime(),
+                    parentComment: commentToSave // 코멘트 저장
                 });
 
                 // 성공 메시지 및 UI 업데이트
@@ -359,19 +377,24 @@
                 approvalStatusDisplay.classList.remove('text-gray-700');
                 approvalStatusDisplay.classList.add('text-green-700');
                 approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true; // 영구 비활성화
+                approveButton.disabled = true; 
+
+                // 저장된 코멘트 표시
+                savedApprovalMessageEl.innerHTML = `<strong>부모님 코멘트:</strong><br>${commentToSave}`;
+                savedApprovalMessageEl.classList.remove('hidden');
 
                 setStatus(approvalMessage);
 
             } catch (error) {
                 setStatus(`승인 실패: ${error.message}. Firestore 쓰기 권한을 확인하세요.`, true);
                 approveButton.disabled = false;
+                approvalCommentInput.disabled = false; // 에러 발생 시 입력 다시 활성화
                 approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
             }
         }
 
 
-        // --- Report Rendering ---
+        // --- Report Rendering (Updated to display comment) ---
 
         function renderReport(data, shareId) {
             loadingView.classList.add('hidden');
@@ -387,16 +410,29 @@
             // 1. 승인 상태 확인 및 UI 업데이트
             if (data.status === 'Approved') {
                 const approvedAtDate = new Date(data.approvedAt).toLocaleString('ko-KR');
+                const parentComment = data.parentComment || '코멘트 없음';
+
                 approvalStatusDisplay.textContent = `🎉 승인 완료: ${approvedAtDate}에 확인되었습니다.`;
                 approvalStatusDisplay.classList.remove('text-gray-700');
                 approvalStatusDisplay.classList.add('text-green-700');
+                
                 approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true;
+                approveButton.disabled = true; // 영구 비활성화
+                approvalCommentInput.disabled = true; // 코멘트 입력 비활성화
+                
+                // 저장된 코멘트 표시
+                savedApprovalMessageEl.innerHTML = `<strong>부모님 코멘트:</strong><br>${parentComment}`;
+                savedApprovalMessageEl.classList.remove('hidden');
+                
             } else {
                  approvalStatusDisplay.textContent = '보고서 확인 후, 아래 버튼을 눌러 승인해주세요.';
                  approvalStatusDisplay.classList.add('text-gray-700');
+                 
                  approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
                  approveButton.disabled = false;
+                 approvalCommentInput.disabled = false; // 입력 활성화
+                 
+                 savedApprovalMessageEl.classList.add('hidden'); // 메시지 영역 숨김
             }
 
 
