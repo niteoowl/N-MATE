@@ -3,6 +3,522 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[부모용] K-출납부</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 폰트 및 기본 설정 */
+        body {
+            font-family: 'Dotum', 'Gulim', sans-serif;
+            background-color: #EFEFEF; 
+            font-size: 13px;
+        }
+        /* 2000년대 스타일 3D 버튼 */
+        .classic-button {
+            border: 1px solid #000;
+            border-color: #DFDFDF #808080 #808080 #DFDFDF;
+            background-color: #D3D3D3;
+            box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
+            user-select: none;
+        }
+        .classic-button:hover:not(:disabled) {
+            background-color: #BCBCBC;
+        }
+        .classic-button:active:not(:disabled) {
+            border-color: #808080 #DFDFDF #DFDFDF #808080; /* 눌린 효과 */
+            box-shadow: -1px -1px 0px #F0F0F0 inset, 1px 1px 0px #A0A0A0 inset;
+        }
+        .classic-button:disabled {
+            background-color: #F0F0F0;
+            color: #A0A0A0;
+            cursor: not-allowed;
+        }
+        /* 깊게 파인 입력 필드/영역 (여기에선 readonly display) */
+        .classic-output-area {
+            border: 1px solid #808080;
+            background-color: white;
+            padding: 4px;
+            box-shadow: 1px 1px 0px #FFFFFF inset;
+            min-height: 50px;
+        }
+        /* 헤더 그라데이션 */
+        .classic-header-gradient {
+            background: linear-gradient(to bottom, #A0C4E6 0%, #2B5876 100%);
+            color: white;
+            text-shadow: 1px 1px #000000;
+        }
+        /* 프레임/그룹 박스 */
+        .classic-frame {
+            border: 1px solid #808080;
+            padding: 4px;
+            background-color: #F0F0F0;
+        }
+        /* 타이틀 바 (파란색) */
+        .classic-title-bar {
+            background-color: #0000AA;
+            color: white;
+            padding: 2px 8px;
+            font-weight: bold;
+        }
+        /* 테이블 스타일 */
+        .report-table th, .report-table td {
+            border: 1px solid #808080;
+            padding: 4px;
+        }
+        .report-table th {
+            background-color: #BDBDBD;
+        }
+        .report-table {
+            border-collapse: collapse;
+        }
+        /* 로딩 스피너 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col"> 
+    <!-- 전체 컨테이너 -->
+    <div class="classic-frame min-h-screen flex flex-col p-2 max-w-4xl mx-auto w-full"> 
+        
+        <!-- 1. 헤더 (타이틀 및 로고) -->
+        <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-2 flex-shrink-0">
+            <div class="flex items-center">
+                <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-10 w-10 mr-3 object-contain" onerror="this.style.display='none'">
+                <span>K-출납부</span>
+            </div>
+            <div class="text-sm font-normal" id="share-info">
+                공유 보고서 ID: <span id="share-id-display">로드 중...</span>
+            </div>
+        </header>
+
+        <!-- 2. 메인 보고서 영역 -->
+        <main class="flex-grow bg-[#F0F0F0] p-4 border border-[#BDBDBD] flex flex-col">
+            <div class="classic-title-bar text-sm mb-3 flex-shrink-0">
+                [자녀의 월간 용돈기입장 보고서] - <span id="report-month-display"></span>
+            </div>
+
+            <!-- 로딩/에러 메시지 -->
+            <div id="loading-status" class="classic-output-area text-center p-8 bg-yellow-50">
+                <div class="loading-spinner mx-auto mb-2"></div>
+                <p class="font-bold text-gray-700">보고서 데이터를 로드하는 중입니다...</p>
+                <p class="text-xs mt-1 text-gray-500">잠시만 기다려주세요.</p>
+            </div>
+
+            <!-- 보고서 콘텐츠 (로드 완료 시 표시) -->
+            <div id="report-content" class="hidden flex flex-col space-y-4">
+                
+                <!-- 재정 집계 현황 -->
+                <div class="classic-frame bg-white p-3 border border-[#BDBDBD] flex-shrink-0">
+                    <h2 class="text-sm font-bold mb-2 text-blue-700">▶ 월간 요약 현황</h2>
+                    <div class="grid grid-cols-3 gap-3 text-center p-2 bg-[#D3D3D3] text-black">
+                        <div class="classic-output-area p-2 bg-green-50">
+                            <div class="text-xs text-gray-600 font-bold">총 수입액 (+)</div>
+                            <div class="text-lg font-extrabold text-green-700" id="view-total-income">￦ 0</div>
+                        </div>
+                        <div class="classic-output-area p-2 bg-red-50">
+                            <div class="text-xs text-gray-600 font-bold">총 지출액 (-)</div>
+                            <div class="text-lg font-extrabold text-red-700" id="view-total-expense">￦ 0</div>
+                        </div>
+                        <div class="classic-output-area p-2 bg-yellow-50">
+                            <div class="text-xs text-gray-600 font-bold">순 잔액</div>
+                            <div class="text-lg font-extrabold text-blue-700" id="view-net-balance">￦ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상세 거래 내역 -->
+                <div class="classic-frame bg-white p-3 border border-[#BDBDBD] flex-grow flex flex-col">
+                    <h2 class="text-sm font-bold mb-2 text-blue-700">▶ 상세 거래 내역</h2>
+                    <div class="overflow-auto flex-grow classic-output-area p-0">
+                        <table class="report-table w-full text-sm">
+                            <thead class="bg-[#BDBDBD] text-black sticky top-0">
+                                <tr>
+                                    <th class="p-2 w-[10%]">No.</th>
+                                    <th class="p-2 w-[15%]">날짜</th>
+                                    <th class="p-2 w-[15%]">구분</th>
+                                    <th class="p-2 w-[40%]">내용</th>
+                                    <th class="p-2 w-[20%]">금액 (원)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="view-transaction-list-body">
+                                <!-- 데이터가 여기에 로드됩니다 -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-[#DFDFDF] font-bold">
+                                    <td class="p-2 text-right" colspan="4">월 합계 잔액:</td>
+                                    <td class="p-2 text-right text-blue-800" id="view-monthly-net-balance-footer">0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 부모 승인/메시지 섹션 (새로 추가) -->
+            <div id="approval-section" class="mt-4 classic-frame bg-white p-3 border border-[#BDBDBD] flex-shrink-0">
+                <h2 class="text-sm font-bold mb-2 text-blue-700" id="approval-title">▶ 보고서 승인 및 메시지 작성</h2>
+                
+                <div id="approval-form">
+                    <textarea id="parent-message" rows="3" placeholder="메시지" 
+                              class="w-full classic-output-area mb-3 text-sm resize-none"></textarea>
+                    
+                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                        <p class="text-xs text-red-500 font-bold flex items-center">
+                            <svg class="w-4 h-4 inline-block align-text-bottom mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span class="text-[10px] sm:text-xs">승인 후 자녀가 확인 시 이 문서는 삭제됩니다.</span>
+                        </p>
+                        <button id="approve-button" class="px-4 py-2 classic-button font-bold bg-green-200 hover:bg-green-300 transition duration-100 w-full sm:w-auto" disabled>
+                            승인 & 메시지 전송
+                        </button>
+                    </div>
+                </div>
+
+                <div id="approval-status" class="hidden p-3 bg-gray-100 border border-gray-300 rounded">
+                    <p class="text-lg font-bold text-green-700 mb-2 text-center">✅ 이 보고서는 승인되었습니다.</p>
+                    <p class="text-xs text-gray-600 mb-2 text-center" id="approved-by-info"></p>
+                    <div class="classic-title-bar text-xs">부모 메시지</div>
+                    <div id="approved-message-display" class="classic-output-area mt-0 text-sm text-gray-800 text-left"></div>
+                </div>
+            </div>
+            
+            <p id="shared-by-info" class="text-xs text-gray-600 mt-4 text-center hidden">
+                이 보고서는 <span id="shared-by-user"></span> 님이 <span id="shared-at-time"></span>에 공유하셨습니다.
+            </p>
+        </main>
+
+        <!-- 시스템 상태 메시지 -->
+        <div class="mt-4 text-xs p-1 classic-frame bg-white border border-[#BDBDBD] shadow-inner flex-shrink-0" id="status-message">
+            [시스템 상태]: 공유 ID 확인 중...
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js"; // Auth Import 추가
+
+        // 디버그 로깅 활성화
+        setLogLevel('Debug');
+        
+        // --- Firebase 설정 및 전역 변수 ---
+        // Canvas 환경에서 제공되는 전역 변수 사용 (MUST BE USED)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : { /* Fallback for local testing */ };
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId; 
+
+        let db;
+        let auth;
+        let currentUserId = null;
+        let shareIdCache = null;
+        
+        // UI Elements
+        const statusElement = document.getElementById('status-message');
+        const loadingStatus = document.getElementById('loading-status');
+        const reportContent = document.getElementById('report-content');
+        const shareIdDisplay = document.getElementById('share-id-display');
+        const reportMonthDisplay = document.getElementById('report-month-display');
+
+        // Approval Elements (New)
+        const parentMessageEl = document.getElementById('parent-message');
+        const approveButton = document.getElementById('approve-button');
+        const approvalSection = document.getElementById('approval-section');
+        const approvalForm = document.getElementById('approval-form');
+        const approvalStatus = document.getElementById('approval-status');
+        const approvedByInfoEl = document.getElementById('approved-by-info');
+        const approvedMessageDisplayEl = document.getElementById('approved-message-display');
+        const approvalTitleEl = document.getElementById('approval-title');
+
+        // Summary Elements
+        const incomeEl = document.getElementById('view-total-income');
+        const expenseEl = document.getElementById('view-total-expense');
+        const netBalanceEl = document.getElementById('view-net-balance');
+        const footerNetBalanceEl = document.getElementById('view-monthly-net-balance-footer');
+        const listBody = document.getElementById('view-transaction-list-body');
+        const sharedByInfo = document.getElementById('shared-by-info');
+        const sharedByUser = document.getElementById('shared-by-user');
+        const sharedAtTime = document.getElementById('shared-at-time');
+
+        // Helper for Currency Formatting
+        const formatCurrency = (amount) => {
+            if (typeof amount !== 'number') return '￦ 0';
+            const sign = amount < 0 ? '￦ -' : '￦ ';
+            return sign + Math.abs(amount).toLocaleString('ko-KR');
+        };
+        
+        // Helper for Status Messages
+        const setStatus = (message, isError = false) => {
+            statusElement.innerHTML = `[시스템 상태]: ${isError ? '오류: ' : ''}${message}`;
+            if (isError) {
+                statusElement.classList.add('error-status');
+                console.error(message);
+            } else {
+                statusElement.classList.remove('error-status');
+                console.log(message);
+            }
+        };
+
+        // --- Core Logic ---
+
+        function initFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app); // Auth 초기화
+
+                // Firebase 인증 처리
+                if (initialAuthToken) {
+                    signInWithCustomToken(auth, initialAuthToken)
+                        .then((userCredential) => {
+                            currentUserId = userCredential.user.uid;
+                            setStatus(`인증 완료. 사용자 ID: ${currentUserId.substring(0, 8)}...`);
+                            // 인증 후 보고서 로드 시작
+                            const shareId = getShareIdFromUrl();
+                            if (shareId) {
+                                shareIdCache = shareId;
+                                loadReport(shareId);
+                            } else {
+                                loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 공유 링크가 올바르지 않습니다. (shareId 누락)</p>';
+                                shareIdDisplay.textContent = 'N/A';
+                            }
+                        })
+                        .catch((error) => {
+                            setStatus(`인증 실패 (토큰 오류): ${error.message}. 익명 모드로 전환합니다.`, true);
+                            return signInAnonymously(auth);
+                        });
+                } else {
+                    // 토큰이 없는 환경에서는 익명 인증
+                    signInAnonymously(auth).then((userCredential) => {
+                        currentUserId = userCredential.user.uid;
+                        setStatus(`익명 인증 완료. ID: ${currentUserId.substring(0, 8)}... (쓰기 권한 제한 가능성 있음)`);
+                    });
+                }
+                
+                // onAuthStateChanged를 사용하여 최종 인증 상태 확인 및 보고서 로드
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        currentUserId = user.uid;
+                        // 보고서 로드가 아직 안되었으면 시작
+                        if (!shareIdCache) {
+                            const shareId = getShareIdFromUrl();
+                            if (shareId) {
+                                shareIdCache = shareId;
+                                loadReport(shareId);
+                            } else {
+                                if (document.getElementById('loading-status').innerHTML.includes('로드하는 중')) {
+                                    loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 공유 링크가 올바르지 않습니다. (shareId 누락)</p>';
+                                    shareIdDisplay.textContent = 'N/A';
+                                }
+                            }
+                        }
+                    } else {
+                         // 익명 사용자라도 currentUserId를 설정
+                         if (auth.currentUser) currentUserId = auth.currentUser.uid;
+                         // 인증 정보가 없어도 일단 로드는 시도 (읽기 권한은 public이기 때문)
+                         if (!shareIdCache) {
+                            const shareId = getShareIdFromUrl();
+                            if (shareId) {
+                                shareIdCache = shareId;
+                                loadReport(shareId);
+                            }
+                         }
+                    }
+                });
+
+
+                setStatus("Firebase 초기화 완료. 인증 진행 중...");
+            } catch (error) {
+                setStatus(`Firebase 초기화 실패: ${error.message}`, true);
+            }
+        }
+
+        function getShareIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('shareId');
+        }
+
+        async function loadReport(shareId) {
+            if (!db || !shareId) {
+                loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 유효한 공유 ID가 URL에 포함되어 있지 않습니다.</p>';
+                return;
+            }
+
+            shareIdDisplay.textContent = shareId.substring(0, 8) + '...';
+            setStatus(`공유 ID (${shareId.substring(0, 5)}...)로 보고서를 로드하는 중...`);
+
+            try {
+                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                const docSnap = await getDoc(reportRef);
+
+                if (docSnap.exists()) {
+                    const reportData = docSnap.data();
+                    renderReport(reportData);
+                    setStatus("보고서 로드 성공. 아래 내용을 확인하세요.");
+                } else {
+                    loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 해당 ID에 해당하는 공유 보고서를 찾을 수 없습니다. (ID 만료 또는 삭제)</p>';
+                }
+            } catch (error) {
+                console.error("보고서 로드 오류:", error);
+                loadingStatus.innerHTML = `<p class="font-bold text-red-700">🚨 보고서 로드 중 심각한 오류 발생: ${error.message}</p>`;
+                setStatus(`보고서 로드 실패: ${error.message}`, true);
+            }
+        }
+
+        function renderReport(data) {
+            // 1. 로딩 상태 숨기기, 콘텐츠 표시
+            loadingStatus.classList.add('hidden');
+            reportContent.classList.remove('hidden');
+
+            // 2. 제목 및 공유 정보 업데이트
+            const [year, month] = data.month.split('-');
+            reportMonthDisplay.textContent = `${year}년 ${month}월`;
+            
+            const sharedDate = new Date(data.createdAt).toLocaleString('ko-KR');
+            sharedByUser.textContent = data.sharedBy.substring(0, 8) + '...';
+            sharedAtTime.textContent = sharedDate;
+            sharedByInfo.classList.remove('hidden');
+
+            // 3. 요약 정보 업데이트
+            const { income, expense, netBalance } = data.summary;
+            incomeEl.textContent = formatCurrency(income);
+            expenseEl.textContent = formatCurrency(expense);
+            netBalanceEl.textContent = formatCurrency(netBalance);
+            footerNetBalanceEl.textContent = netBalance.toLocaleString('ko-KR');
+
+            // 4. 상세 거래 내역 업데이트
+            renderTransactions(data.transactions);
+            
+            // 5. 승인 상태 업데이트
+            renderApprovalStatus(data);
+        }
+        
+        function renderApprovalStatus(data) {
+            const { approved, parentMessage, approvedBy, approvedAt } = data;
+            
+            if (approved) {
+                // 승인 완료 상태 표시
+                approvalForm.classList.add('hidden');
+                approvalStatus.classList.remove('hidden');
+                approvalTitleEl.textContent = '▶ 승인 완료 정보';
+
+                const approvedDate = new Date(approvedAt).toLocaleString('ko-KR');
+                
+                approvedByInfoEl.textContent = 
+                    `승인자 ID: ${approvedBy.substring(0, 8)}... | 승인 일시: ${approvedDate}`;
+                
+                approvedMessageDisplayEl.innerHTML = `
+                    <p class="p-1">${parentMessage || '메시지 없음'}</p>
+                `;
+                
+            } else {
+                // 승인 대기 상태 (폼 표시)
+                approvalForm.classList.remove('hidden');
+                approvalStatus.classList.add('hidden');
+                approvalTitleEl.textContent = '▶ 보고서 승인 및 메시지 작성';
+                
+                // 인증이 완료되고 userId가 있어야 버튼 활성화
+                if (currentUserId) {
+                    approveButton.disabled = false;
+                    approveButton.onclick = handleApproval;
+                    approveButton.textContent = '승인 & 메시지 전송';
+                } else {
+                     approveButton.disabled = true;
+                     approveButton.textContent = '인증 대기 중...';
+                }
+            }
+        }
+        
+        function renderTransactions(transactions) {
+            listBody.innerHTML = '';
+            
+            if (!transactions || transactions.length === 0) {
+                listBody.innerHTML = `<tr><td class="p-2 text-center text-gray-500" colspan="5">등록된 거래 내역이 없습니다.</td></tr>`;
+                return;
+            }
+            
+            transactions.forEach((tx, index) => {
+                const isIncome = tx.amount > 0;
+                const rowClass = isIncome ? 'bg-green-50' : 'bg-red-50';
+                const amountClass = isIncome ? 'text-green-700' : 'text-red-700';
+                const displayAmount = Math.abs(tx.amount).toLocaleString('ko-KR');
+
+                const row = document.createElement('tr');
+                row.className = `text-xs ${rowClass}`;
+                row.innerHTML = `
+                    <td class="text-center">${transactions.length - index}</td>
+                    <td class="text-center">${tx.date.substring(5)}</td>
+                    <td class="text-center">${isIncome ? '수입 (+)' : '지출 (-)'}</td>
+                    <td>${tx.memo} (${tx.method})</td>
+                    <td class="text-right font-bold ${amountClass}">${isIncome ? '+' : '-'}${displayAmount}</td>
+                `;
+                listBody.appendChild(row);
+            });
+        }
+        
+        async function handleApproval() {
+            if (!currentUserId || !shareIdCache) {
+                setStatus("승인에 실패했습니다: 사용자 인증 정보 또는 공유 ID가 없습니다.", true);
+                return;
+            }
+            
+            // UI 로딩 상태 및 버튼 비활성화
+            approveButton.disabled = true;
+            approveButton.textContent = '전송 중...';
+
+            const message = parentMessageEl.value.trim() || '확인했습니다. 수고했어!';
+            
+            try {
+                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareIdCache);
+                
+                // Firestore 문서 업데이트
+                await updateDoc(reportRef, {
+                    approved: true,
+                    parentMessage: message,
+                    approvedBy: currentUserId, // Parent's ID (Authenticated user)
+                    approvedAt: new Date().toISOString()
+                });
+
+                // 성공 후 UI 업데이트
+                setStatus("보고서 승인 및 메시지 전송 성공!");
+                
+                // UI를 수동으로 업데이트하여 즉시 반영 (실제 앱에서는 onSnapshot을 사용하는 것이 일반적)
+                renderApprovalStatus({ 
+                    approved: true, 
+                    parentMessage: message, 
+                    approvedBy: currentUserId,
+                    approvedAt: new Date().toISOString()
+                });
+
+            } catch (error) {
+                setStatus(`보고서 승인 중 오류 발생: ${error.message}`, true);
+                approveButton.disabled = false;
+                approveButton.textContent = '승인 & 메시지 전송';
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+            // loadReport는 initFirebase 내에서 인증 완료 후 호출됩니다.
+        });
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>자녀 용돈기입장 공유 보고서 (읽기 전용)</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
