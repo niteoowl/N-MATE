@@ -415,8 +415,18 @@
         setLogLevel('Debug');
         
         // --- Firebase/Auth/Global Setup ---
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // 사용자 요청에 따라 Firebase 설정을 직접 정의합니다.
+        const firebaseConfig = {
+            apiKey: "AIzaSyCgZL83YJIM0iXXRttTmoeyJvekBBkOhX4",
+            authDomain: "k-chulnap.firebaseapp.com",
+            projectId: "k-chulnap",
+            storageBucket: "k-chulnap.firebasestorage.app",
+            messagingSenderId: "169980642255",
+            appId: "1:169980642255:web:572c781aa6b010de6e08ba",
+            measurementId: "G-49GQLQ5HLC"
+        };
+        // Canvas 환경 변수 대신 projectId를 사용하여 appId를 설정합니다.
+        const appId = firebaseConfig.projectId; 
         
         let app;
         let db;
@@ -525,7 +535,8 @@
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                // 전역 변수 대신 null로 설정하여 커스텀 토큰 인증 시도를 건너뜁니다.
+                const initialAuthToken = null; // typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
                 
                 // 익명 로그인 없이, 초기 토큰만 시도하고 실패하면 로그인 화면 유지
                 if (initialAuthToken) {
