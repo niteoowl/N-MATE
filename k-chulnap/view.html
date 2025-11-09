@@ -21,12 +21,16 @@
             box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
             user-select: none;
         }
+        .classic-button:hover:not(:disabled) {
+            background-color: #C3C3C3;
+        }
         .classic-button:active:not(:disabled) {
-            border-color: #808080 #DFDFDF #DFDFDF #808080;
-            box-shadow: -1px -1px 0px #F0F0F0 inset, 1px 1px 0px #A0A0A0 inset;
+            border-color: #808080 #DFDFDF #DFDFDF #808080; /* 눌린 효과 */
+            box-shadow: 1px 1px 0px #A0A0A0 inset, -1px -1px 0px #F0F0F0 inset;
         }
         .classic-button:disabled {
             color: #808080;
+            background-color: #EFEFEF;
         }
 
         /* 헤더 그라데이션 */
@@ -128,7 +132,7 @@
                 </div>
 
                 <!-- 상세 내역 표 -->
-                <div class="flex flex-col flex-grow">
+                <div class="flex flex-col flex-grow mb-4">
                     <div class="classic-title-bar text-xs mb-1 bg-blue-700">
                         [상세 거래 내역]
                     </div>
@@ -155,15 +159,24 @@
                         </table>
                     </div>
                 </div>
-
-                <!-- 3. 승인/확인 영역 -->
-                <div id="approval-section" class="mt-4 classic-frame bg-white p-3 border border-[#808080] flex-shrink-0 text-center">
-                    <div id="approval-status-display" class="font-bold text-base mb-2 text-gray-700">
-                        보고서 확인 후, 아래 버튼을 눌러 승인해주세요.
+                
+                <!-- 부모 승인 영역 (추가됨) -->
+                <div id="approval-section" class="classic-frame bg-white p-3 border border-[#808080] flex-shrink-0">
+                    <div class="classic-title-bar text-xs mb-2 bg-purple-700">
+                        [용돈기입장 보고서 승인]
                     </div>
-                    <button id="approve-button" class="classic-button text-base px-6 py-2 w-full max-w-xs mx-auto disabled:opacity-50">
-                        ✅ 용돈기입장 확인 및 승인
-                    </button>
+                    
+                    <p class="mb-2 text-xs text-gray-700 font-bold" id="approval-status-text">
+                        자녀의 월간 보고서를 확인하셨다면 아래 '승인 완료' 버튼을 눌러주세요.
+                    </p>
+
+                    <textarea id="approval-message-input" rows="3" class="w-full classic-frame p-2 mb-2 resize-none border border-[#BDBDBD]" placeholder="선택 사항: 자녀에게 전달할 간단한 메시지를 남겨주세요. (최대 100자)" maxlength="100"></textarea>
+
+                    <div class="flex justify-end">
+                        <button id="approve-button" class="classic-button px-4 py-1 text-sm font-bold bg-green-200 hover:bg-green-300 active:bg-green-400">
+                            ✅ 승인 완료
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -181,14 +194,14 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
 
         // --- Firebase/Auth/Global Setup ---
         
-        // 사용자가 제공한 Firebase 구성 (환경 변수가 없을 경우 사용될 대체 구성)
+        // 제공된 Firebase 구성 (환경 변수가 없을 경우 사용될 대체 구성)
         const providedFirebaseConfig = {
             apiKey: "AIzaSyCgZL83YJIM0iXXRttTmoeyJvekBBkOhX4",
             authDomain: "k-chulnap.firebaseapp.com",
@@ -206,12 +219,15 @@
         // 환경 변수를 먼저 사용하고, 없으면 제공된 설정을 사용
         const firebaseConfig = Object.keys(envFirebaseConfig).length > 0 ? envFirebaseConfig : providedFirebaseConfig;
 
-        // appId는 환경 변수를 우선 사용하고, 없으면 firebaseConfig의 projectId를 사용합니다.
+        // appId 및 초기 인증 토큰 로드
         const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
         
         let app;
         let db;
-        let auth; // Auth instance is initialized but not used for sign-in, only for future reference.
+        let auth;
+        let userId = null;
+        let isAuthReady = false; 
 
         // UI Elements
         const statusElement = document.getElementById('status-message');
@@ -221,8 +237,6 @@
         const reportContent = document.getElementById('report-content');
         const reportTitleEl = document.getElementById('report-month-year');
         const reportInfoEl = document.getElementById('report-info');
-        const approveButton = document.getElementById('approve-button');
-        const approvalStatusDisplay = document.getElementById('approval-status-display');
         
         // Summary Elements
         const incomeEl = document.getElementById('summary-income');
@@ -230,7 +244,13 @@
         const netBalanceEl = document.getElementById('summary-balance');
         const footerNetBalanceEl = document.getElementById('monthly-net-balance-footer');
         const listBody = document.getElementById('transaction-list-body');
-
+        
+        // Approval Elements (New)
+        const approvalSection = document.getElementById('approval-section');
+        const approvalStatusText = document.getElementById('approval-status-text');
+        const approvalMessageInput = document.getElementById('approval-message-input');
+        const approveButton = document.getElementById('approve-button');
+        let currentShareId = null;
 
         // Helper for Currency Formatting
         const formatCurrency = (amount) => {
@@ -250,30 +270,6 @@
                 console.log(message);
             }
         };
-
-        // --- Initialization and Data Load ---
-        async function initFirebase() {
-            try {
-                // 1. Firebase Config 유효성 확인
-                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
-                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다. (설정 객체 비어있음)", true);
-                    return;
-                }
-                
-                // 2. Firebase App과 Firestore 초기화
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app); // Get auth instance
-
-                // 3. (중요 수정) 인증 단계 건너뛰고 바로 데이터 로드
-                setStatus("Firebase 초기화 성공. 공용 보고서 데이터 로드를 시도합니다.");
-                loadSharedReport();
-                
-            } catch (error) {
-                console.error("Firebase 초기화 오류:", error);
-                showError(`Firebase 초기화 실패. (${error.message})`);
-            }
-        }
         
         function showError(message) {
             loadingView.classList.add('hidden');
@@ -283,8 +279,55 @@
             setStatus(message, true);
         }
 
-        // --- Main Logic: Load Shared Report ---
+        // --- Initialization and Data Load ---
+        async function initFirebase() {
+            try {
+                // 1. Firebase Config 유효성 확인
+                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다.", true);
+                    showError("Firebase 설정 오류: 앱 초기화 실패.");
+                    return;
+                }
+                
+                // 2. Firebase App, Firestore, Auth 초기화
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                setStatus("Firebase 초기화 성공. 사용자 인증 대기 중...");
 
+                // 3. 인증 처리 (토큰 사용 또는 익명 로그인)
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        setStatus(`인증 완료 (UID: ${userId.substring(0, 8)}...).`);
+                        loadSharedReport();
+                    } else {
+                        // 인증되지 않은 상태 -> 익명 로그인 시도
+                        try {
+                            if (initialAuthToken) {
+                                // Custom Token 사용
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                // 익명 로그인 시도
+                                await signInAnonymously(auth);
+                            }
+                        } catch(e) {
+                            // 익명 로그인/토큰 로그인 실패 시
+                            console.error("인증 실패:", e);
+                            isAuthReady = true; // 인증은 실패했지만 다음 단계로 진행 (userId는 null)
+                            loadSharedReport(); // 데이터 로드는 시도해 봄 (읽기 권한은 열려있을 수 있으므로)
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error("Firebase 초기화 또는 인증 오류:", error);
+                showError(`Firebase 초기화/인증 실패. (${error.message})`);
+            }
+        }
+        
         // URL에서 shareId를 가져오는 함수
         function getShareIdFromUrl() {
             const params = new URLSearchParams(window.location.search);
@@ -292,6 +335,7 @@
         }
 
         async function loadSharedReport() {
+            // 인증 완료 후 호출됨.
             const shareId = getShareIdFromUrl();
 
             if (!shareId) {
@@ -301,17 +345,18 @@
             }
             
             reportInfoEl.textContent = `공유 ID: ${shareId.substring(0, 8)}...`;
+            currentShareId = shareId; // 공유 ID 저장
 
             try {
                 // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId}
                 const docRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
                 
-                // Firestore 데이터 로드 (인증 없이)
+                // Firestore 데이터 로드
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
                     const reportData = docSnap.data();
-                    renderReport(reportData, shareId);
+                    renderReport(reportData);
                     setStatus("공유 보고서 로드 성공.");
                 } else {
                     showError(`해당 ID (${shareId.substring(0, 8)}...)에 해당하는 공유 보고서가 존재하지 않습니다. URL을 확인하세요.`);
@@ -319,61 +364,13 @@
 
             } catch (error) {
                 console.error("공유 보고서 로드 오류:", error);
-                // Firestore 규칙 오류가 발생하면 (Permission denied)가 뜰 것입니다.
                 showError(`데이터베이스 접근 오류. (FireStore 권한 또는 네트워크 문제): ${error.message}`);
             }
         }
 
-        // --- Approval Logic ---
-
-        /**
-         * 부모가 보고서를 승인하고 Firestore 문서에 상태를 업데이트합니다.
-         */
-        async function approveReport() {
-            const shareId = getShareIdFromUrl();
-            if (!shareId || !db) {
-                setStatus("승인에 필요한 공유 ID 또는 데이터베이스 연결이 없습니다.", true);
-                return;
-            }
-
-            // 승인 버튼 비활성화 및 로딩 표시
-            approveButton.disabled = true;
-            approveButton.textContent = '처리 중...';
-            setStatus("보고서 승인 정보를 데이터베이스에 기록하는 중...");
-            
-            try {
-                // 임시 사용자 ID를 생성합니다. (실제 인증이 없으므로)
-                const parentUserId = crypto.randomUUID(); 
-                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
-
-                await updateDoc(reportRef, {
-                    status: 'Approved',
-                    approvedBy: parentUserId,
-                    approvedAt: new Date().getTime()
-                });
-
-                // 성공 메시지 및 UI 업데이트
-                const now = new Date().toLocaleString('ko-KR');
-                const approvalMessage = `🎉 승인 완료: ${now}에 확인되었습니다.`;
-                approvalStatusDisplay.textContent = approvalMessage;
-                approvalStatusDisplay.classList.remove('text-gray-700');
-                approvalStatusDisplay.classList.add('text-green-700');
-                approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true; // 영구 비활성화
-
-                setStatus(approvalMessage);
-
-            } catch (error) {
-                setStatus(`승인 실패: ${error.message}. Firestore 쓰기 권한을 확인하세요.`, true);
-                approveButton.disabled = false;
-                approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
-            }
-        }
-
-
         // --- Report Rendering ---
 
-        function renderReport(data, shareId) {
+        function renderReport(data) {
             loadingView.classList.add('hidden');
             reportContent.classList.remove('hidden');
 
@@ -383,24 +380,8 @@
             const reportMonthName = `${year}년 ${monthPart}월`;
             
             reportTitleEl.textContent = reportMonthName;
-            
-            // 1. 승인 상태 확인 및 UI 업데이트
-            if (data.status === 'Approved') {
-                const approvedAtDate = new Date(data.approvedAt).toLocaleString('ko-KR');
-                approvalStatusDisplay.textContent = `🎉 승인 완료: ${approvedAtDate}에 확인되었습니다.`;
-                approvalStatusDisplay.classList.remove('text-gray-700');
-                approvalStatusDisplay.classList.add('text-green-700');
-                approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true;
-            } else {
-                 approvalStatusDisplay.textContent = '보고서 확인 후, 아래 버튼을 눌러 승인해주세요.';
-                 approvalStatusDisplay.classList.add('text-gray-700');
-                 approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
-                 approveButton.disabled = false;
-            }
 
-
-            // 2. 요약 정보 업데이트
+            // 1. 요약 정보 업데이트
             const summary = data.summary || { income: 0, expense: 0, netBalance: 0 };
             
             incomeEl.textContent = formatCurrency(summary.income);
@@ -408,7 +389,7 @@
             netBalanceEl.textContent = formatCurrency(summary.netBalance);
             footerNetBalanceEl.textContent = summary.netBalance.toLocaleString('ko-KR');
             
-            // 3. 상세 거래 내역 업데이트
+            // 2. 상세 거래 내역 업데이트
             listBody.innerHTML = '';
             const transactions = data.transactions || [];
             
@@ -442,6 +423,79 @@
                 `;
                 listBody.appendChild(row);
             });
+            
+            // 3. 승인 상태 확인 및 UI 업데이트
+            if (data.status === 'approved') {
+                updateApprovalUI(data);
+            }
+        }
+
+        // --- New Logic: Report Approval ---
+
+        // 승인 완료 시 UI를 업데이트하는 함수
+        function updateApprovalUI(data) {
+            approveButton.disabled = true;
+            approveButton.textContent = '✅ 이미 승인됨';
+            approveButton.classList.remove('bg-green-200', 'hover:bg-green-300', 'active:bg-green-400');
+            approveButton.classList.add('bg-gray-400', 'cursor-default');
+            approvalMessageInput.disabled = true;
+            
+            const approvedByDisplay = data.approvedBy ? data.approvedBy.substring(0, 8) + '...' : '알 수 없음';
+            const approvedAtDisplay = data.approvedAt ? new Date(data.approvedAt).toLocaleString('ko-KR') : '알 수 없음';
+            
+            let msg = `✅ ${approvedByDisplay} 님이 ${approvedAtDisplay}에 확인 및 승인하셨습니다.`;
+            if (data.approvalMessage) {
+                msg += `<br>👉 메시지: "${data.approvalMessage}"`;
+            }
+            approvalStatusText.innerHTML = `<span class="text-green-700 font-bold">${msg}</span>`;
+            setStatus("보고서는 이미 승인된 상태입니다.");
+        }
+
+        async function approveReport() {
+            if (!currentShareId || !userId) {
+                setStatus("승인 처리 실패: 사용자 인증이 완료되지 않았습니다. 잠시 후 다시 시도하거나 새로고침하세요.", true);
+                return;
+            }
+            
+            if (approveButton.disabled) {
+                setStatus("이미 승인 처리 중이거나 완료된 보고서입니다.", false);
+                return;
+            }
+
+            const originalButtonText = approveButton.textContent;
+            approveButton.textContent = '처리 중...';
+            approveButton.disabled = true;
+            
+            const message = approvalMessageInput.value.trim().substring(0, 100);
+            const finalMessage = message || '확인 완료. 수고했어요!'; // 기본 메시지 추가
+
+            try {
+                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, currentShareId);
+                
+                const updateData = {
+                    status: 'approved',
+                    approvedBy: userId,
+                    approvedAt: new Date().toISOString(),
+                    approvalMessage: finalMessage,
+                };
+                
+                await updateDoc(reportRef, updateData);
+                
+                // UI 업데이트 (성공)
+                updateApprovalUI(updateData);
+                
+                const successMsg = `보고서가 성공적으로 승인되었습니다! (메시지: "${finalMessage}")`;
+                setStatus(successMsg, false);
+
+            } catch (error) {
+                console.error("보고서 승인 오류:", error);
+                // Firestore 권한 문제가 가장 흔합니다.
+                setStatus(`보고서 승인 실패: ${error.message} (데이터베이스 쓰기 권한을 확인하세요)`, true);
+                
+                // 실패 시 버튼 상태 복구
+                approveButton.textContent = originalButtonText;
+                approveButton.disabled = false;
+            }
         }
 
         // --- Event Listeners and Initialization ---
