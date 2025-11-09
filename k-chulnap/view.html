@@ -99,7 +99,7 @@
             </div>
             
             <div id="error-view" class="hidden classic-frame p-6 bg-red-100 border-red-800 text-red-800 text-center flex-grow">
-                <p class="text-lg font-bold mb-3">🚨 오류 발생 또는 공유 ID가 유효하지 않습니다 🚨</p>
+                <p class="text-lg font-bold mb-3">보고서 로드 중 오류가 발생했습니다</p>
                 <p id="error-message" class="text-sm">URL을 확인하거나 자녀에게 다시 공유를 요청하세요.</p>
             </div>
 
@@ -191,7 +191,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // addDoc, collection 함수를 새로 import 합니다.
+        import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
 
@@ -363,11 +364,23 @@
                 const parentUserId = crypto.randomUUID(); 
                 const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
 
+                // 1. sharedReports 문서 업데이트 (승인 상태 및 코멘트 저장)
+                // 코멘트는 UI 표시를 위해 이 문서에 유지합니다.
                 await updateDoc(reportRef, {
                     status: 'Approved',
                     approvedBy: parentUserId,
                     approvedAt: new Date().getTime(),
-                    parentComment: commentToSave // 코멘트 저장
+                    parentComment: commentToSave // UI 표시를 위해 저장
+                });
+
+                // 2. (NEW) 요청하신 'messages' 컬렉션에 별도로 메시지 기록
+                const messageCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
+                await addDoc(messageCollectionRef, {
+                    senderId: parentUserId, // 임시 부모 ID
+                    shareId: shareId,
+                    type: 'approval_comment',
+                    timestamp: new Date().getTime(),
+                    content: commentToSave
                 });
 
                 // 성공 메시지 및 UI 업데이트
