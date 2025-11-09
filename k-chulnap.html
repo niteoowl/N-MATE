@@ -117,15 +117,6 @@
             box-shadow: 1px 1px 0px #A0A0A0 inset;
             overflow: auto;
         }
-
-        /* Blocking Modal Animation */
-        .animate-pulse {
-            animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .9; }
-        }
     </style>
 </head>
 
@@ -186,8 +177,9 @@
                     </div>
                     <p class="mt-4 text-xs text-red-600 text-center" id="auth-error-message"></p>
                     <div class="mt-6 text-xs p-2 classic-frame bg-gray-100 border border-gray-400">
-                        <p class="font-bold mb-1">k-출납부</p>
-                        <p>- matenet에서 제공하는 무료 청소년용 용돈기입장입니다.</p>
+                        <p class="font-bold mb-1">🚨 중요 공지 (익명 로그인 비활성화):</p>
+                        <p>- 커스텀 토큰이 없거나 만료되면 자동으로 로그아웃 상태가 됩니다.</p>
+                        <p>- 반드시 **'계정 생성'** 버튼을 눌러 테스트 계정을 만들어야 정상적으로 이용 가능합니다.</p>
                     </div>
                 </form>
             </div>
@@ -307,7 +299,7 @@
                         </div>
                     </div>
 
-                    <!-- 4.1. 승인 상태 패널 (UPDATED - 삭제 버튼 제거) -->
+                    <!-- 4.1. 승인 상태 패널 (NEW) -->
                     <div class="classic-frame bg-yellow-100 p-3 mb-4 flex-shrink-0" id="approval-status-panel">
                         <div class="classic-title-bar text-xs mb-2 flex justify-between items-center bg-gray-600">
                             <span>[공유 보고서 승인 상태] - 월: <span id="approval-month-display"></span></span>
@@ -317,6 +309,9 @@
                             <span id="approval-status-text" class="text-gray-500">
                                 현재 공유된 보고서 없음.
                             </span>
+                            <button id="confirm-delete-button" class="px-3 py-1 classic-button bg-red-400 text-white font-bold hidden">
+                                승인 확인 & 기록 삭제
+                            </button>
                         </div>
                         <p id="approval-code-display" class="mt-1 text-xs text-blue-700 hidden">
                             승인 코드: <span class="font-bold"></span>
@@ -419,36 +414,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- 🚨 부모님 승인 BLOCKING MODAL (NEW) 🚨 -->
-    <div id="approval-blocking-modal" class="modal-backdrop hidden" style="background-color: rgba(0, 0, 0, 0.7); z-index: 9999;">
-        <div class="classic-frame bg-white p-8 w-full max-w-xl shadow-2xl animate-pulse" style="border: 4px solid #CC0000;">
-            <div class="classic-title-bar text-lg mb-6 flex justify-between items-center bg-red-800">
-                <span class="text-yellow-300">🚨 부모님 승인 완료! - 즉시 확인 필요 🚨</span>
-            </div>
-            
-            <p class="text-xl font-extrabold text-green-700 mb-4">
-                ✅ 보고서가 성공적으로 승인되었습니다!
-            </p>
-
-            <div class="p-3 bg-gray-100 classic-frame mb-6">
-                <p class="text-base text-gray-700">
-                    보고서 (<span id="modal-approval-month-display"></span> 기준)가 부모님에 의해 **승인(Approved)**되었습니다.
-                </p>
-                <p class="text-sm font-bold text-blue-700 mt-2">
-                    승인 코드: <span id="modal-approval-code-display" class="text-xl"></span>
-                </p>
-            </div>
-            
-            <p class="text-base text-red-600 mb-8 font-bold">
-                ⚠️ 공개 접근을 차단하고 기록을 최종적으로 확인하려면 아래 버튼을 눌러주세요. 이 작업을 완료하기 전까지 다른 기능을 사용할 수 없습니다.
-            </p>
-
-            <button id="modal-confirm-delete-button" class="px-6 py-3 classic-button font-bold text-white text-lg w-full bg-red-600 hover:bg-red-700 border-none">
-                승인 확인 & 공유 기록 완전 삭제
-            </button>
-        </div>
-    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -469,8 +434,8 @@
             query, 
             deleteDoc,
             setDoc,
-            getDoc, 
-            serverTimestamp, 
+            getDoc, // getDoc 추가 (공유 기록 확인용)
+            serverTimestamp, // Firestore Timestamp 사용을 위해 추가
             setLogLevel 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -502,7 +467,7 @@
         let unsubscribeFromFirestore = null; 
         let unsubscribeFromApproval = null; // 승인 상태 리스너
 
-        // 상태 변수
+        // 상태 변수 (새로 추가)
         let currentShareId = null; 
         
         // UI Elements
@@ -557,19 +522,15 @@
         const simulatedPhone = document.getElementById('simulated-phone');
         const sendMessageButton = document.getElementById('send-message-button');
 
-        // Approval Status Elements
+        // Approval Status Elements (NEW)
         const approvalStatusPanel = document.getElementById('approval-status-panel');
         const approvalMonthDisplay = document.getElementById('approval-month-display');
         const approvalStatusText = document.getElementById('approval-status-text');
         const approvalCodeDisplay = document.getElementById('approval-code-display');
         const approvalInfoText = document.getElementById('approval-info-text');
+        const confirmDeleteButton = document.getElementById('confirm-delete-button');
         const approvalLoadingSpinner = document.getElementById('approval-loading-spinner');
 
-        // Blocking Modal Elements (NEW)
-        const blockingModal = document.getElementById('approval-blocking-modal');
-        const modalApprovalMonthDisplay = document.getElementById('modal-approval-month-display');
-        const modalApprovalCodeDisplay = document.getElementById('modal-approval-code-display');
-        const modalConfirmDeleteButton = document.getElementById('modal-confirm-delete-button');
 
         // Helper for Currency Formatting
         const formatCurrency = (amount) => {
@@ -653,7 +614,10 @@
         function handleAuthStateChange(user) {
             if (user) {
                 // 로그인 상태
-                userId = user.uid;                
+                userId = user.uid;
+                userInfoElement.innerHTML = `사용자 ID: ${userId.substring(0, 8)}... | 접속 일자: ${new Date().toLocaleDateString('ko-KR')}`;
+                setStatus(`로그인 성공. 사용자: ${userId.substring(0, 8)}... 데이터 로드를 시작합니다.`);
+                
                 authView.classList.add('hidden');
                 appContent.classList.remove('hidden');
                 logoutButton.classList.remove('hidden');
@@ -693,7 +657,7 @@
             setAuthLoading(false);
         }
 
-        async function handleAuthAction(isSignUp) { 
+        async function handleAuthAction(isSignUp) { /* ... 기존과 동일 ... */
             const email = authEmailInput.value.trim();
             const password = authPasswordInput.value;
             
@@ -721,7 +685,7 @@
             }
         }
         
-        function authErrorToKorean(code) { 
+        function authErrorToKorean(code) { /* ... 기존과 동일 ... */
             switch (code) {
                 case 'auth/invalid-email': return '유효하지 않은 이메일 형식입니다.';
                 case 'auth/user-disabled': return '비활성화된 사용자 계정입니다.';
@@ -734,7 +698,7 @@
             }
         }
         
-        function handleLogout() { 
+        function handleLogout() { /* ... 기존과 동일 ... */
             if (auth) {
                 signOut(auth).then(() => {
                     setStatus("성공적으로 로그아웃되었습니다.");
@@ -745,7 +709,7 @@
         }
         
         // --- Transaction Logic ---
-        function loadAllTransactions() { 
+        function loadAllTransactions() { /* ... 기존과 동일 ... */
             if (!userId || !db) { return; }
             
             const transactionsColRef = collection(db, `artifacts/${appId}/users/${userId}/transactions`);
@@ -814,7 +778,7 @@
                 }
             });
             
-            // 월 변경 시 승인 상태도 새로고침
+            // 월 변경 시 승인 상태도 새로고침 (NEW)
             loadSharedRecordsAndApprovals();
 
             // 보고서/엑셀에 사용될 현재 필터링된 데이터 반환
@@ -828,15 +792,13 @@
             approvalMonthDisplay.textContent = summaryMonthYearEl.textContent;
             approvalLoadingSpinner.classList.add('hidden');
             
-            // 🚨 블로킹 모달 숨기기 (기본 상태) 🚨
-            blockingModal.classList.add('hidden'); 
-            
             if (!currentShareId) {
                 approvalStatusPanel.classList.remove('bg-green-100', 'bg-red-100');
                 approvalStatusPanel.classList.add('bg-yellow-100');
                 approvalStatusText.className = 'text-sm font-bold text-gray-500';
                 approvalStatusText.textContent = '현재 공유된 보고서 없음.';
                 approvalCodeDisplay.classList.add('hidden');
+                confirmDeleteButton.classList.add('hidden');
                 approvalInfoText.textContent = '부모님에게 전달(S) 버튼을 눌러 공유 보고서를 생성하세요.';
                 return;
             }
@@ -847,30 +809,25 @@
                 approvalStatusText.className = 'text-sm font-bold text-gray-500';
                 approvalStatusText.textContent = '승인 상태 문서 확인 중... (부모님이 아직 보고서를 열어보지 않았을 수 있습니다.)';
                 approvalCodeDisplay.classList.add('hidden');
+                confirmDeleteButton.classList.add('hidden');
                 approvalInfoText.textContent = `공유 ID: ${currentShareId.substring(0, 8)}... (대기 중)`;
                 return;
             }
             
             if (statusData.approved === true) {
-                // 🚨 승인 완료 상태: 블로킹 모달 표시 🚨
-                
-                // 1. 메인 패널은 '승인 완료' 상태만 표시 (앱은 블록됨)
                 approvalStatusPanel.classList.remove('bg-yellow-100', 'bg-red-100');
                 approvalStatusPanel.classList.add('bg-green-100');
                 approvalStatusText.className = 'text-sm font-bold text-green-700';
                 approvalStatusText.textContent = `✅ 승인 완료! (학생: ${statusData.studentName})`;
+                
                 approvalCodeDisplay.classList.remove('hidden');
                 approvalCodeDisplay.querySelector('span').textContent = statusData.approvalCode;
-                approvalInfoText.textContent = '🚨 화면 중앙의 팝업에서 확인 및 삭제 처리를 완료해야 합니다.';
-                
-                // 2. 블로킹 모달 업데이트 및 표시
-                modalApprovalMonthDisplay.textContent = summaryMonthYearEl.textContent;
-                modalApprovalCodeDisplay.textContent = statusData.approvalCode;
-                blockingModal.classList.remove('hidden'); // 화면 전체를 덮음
-                
-                // setStatus는 메인 화면이 가려지기 전에 호출
-                setStatus(`[${currentMonthFilter}] 보고서가 승인되었습니다! 승인 코드: ${statusData.approvalCode}. 블로킹 모달이 활성화되었습니다.`);
 
+                confirmDeleteButton.classList.remove('hidden');
+                confirmDeleteButton.classList.remove('bg-red-400');
+                confirmDeleteButton.classList.add('bg-blue-600');
+                approvalInfoText.textContent = '승인 확인 후 기록을 삭제하여 공개 접근을 차단하세요.';
+                setStatus(`[${currentMonthFilter}] 보고서가 승인되었습니다! 승인 코드: ${statusData.approvalCode}`);
 
             } else { // approved: false (Pending)
                 approvalStatusPanel.classList.remove('bg-yellow-100', 'bg-green-100');
@@ -878,10 +835,8 @@
                 approvalStatusText.className = 'text-sm font-bold text-red-700';
                 approvalStatusText.textContent = '❌ 승인 대기 중...';
                 approvalCodeDisplay.classList.add('hidden');
+                confirmDeleteButton.classList.add('hidden');
                 approvalInfoText.textContent = `공유 ID: ${currentShareId.substring(0, 8)}... (부모님의 확인을 기다리고 있습니다.)`;
-                
-                // 🚨 승인 대기 중이므로 블로킹 모달은 숨김
-                blockingModal.classList.add('hidden');
             }
         }
 
@@ -957,8 +912,9 @@
                 return;
             }
 
+            // (실제 앱이라면 여기서 '정말로 삭제하시겠습니까?' 모달이 필요합니다.)
             setStatus(`[${currentMonthFilter}] 공유 기록 및 승인 문서를 삭제합니다...`);
-            modalConfirmDeleteButton.disabled = true;
+            confirmDeleteButton.disabled = true;
 
             try {
                 // 1. 공용 보고서 (Public Shared Report) 삭제
@@ -981,21 +937,18 @@
                 currentShareId = null;
                 updateApprovalStatusUI(null);
                 
-                // 🚨 블로킹 모달 숨김 🚨
-                blockingModal.classList.add('hidden');
-
                 setStatus(`[${currentMonthFilter}] 공유 보고서가 성공적으로 삭제되었습니다. 공개 접근이 차단됩니다.`);
                 
             } catch (error) {
                 setStatus(`공유 기록 삭제 실패: ${error.message}. Firestore 보안 규칙을 확인하세요.`, true);
             } finally {
-                modalConfirmDeleteButton.disabled = false;
+                confirmDeleteButton.disabled = false;
             }
         }
 
 
         // --- 기타 UI/Render 함수들은 생략 ---
-        function updateSummary(income, expense) { 
+        function updateSummary(income, expense) { /* ... 기존과 동일 ... */
             const netBalance = income + expense;
             const year = currentMonthFilter.substring(0, 4);
             const month = currentMonthFilter.substring(5, 7);
@@ -1010,7 +963,7 @@
             // 월 변경 시 승인 패널 제목 업데이트
             approvalMonthDisplay.textContent = summaryMonthYearEl.textContent;
         }
-        function renderMonthExplorer() { 
+        function renderMonthExplorer() { /* ... 기존과 동일 ... */ 
              monthExplorerList.innerHTML = '';
 
             if (allTransactions.length === 0) {
@@ -1055,7 +1008,7 @@
                 });
             });
         }
-        function renderTransactionList(transactions) { 
+        function renderTransactionList(transactions) { /* ... 기존과 동일 ... */
              listBody.innerHTML = '';
             
             if (transactions.length === 0) {
@@ -1093,14 +1046,14 @@
         }
 
         // --- CRUD Operations ---
-        function resetForm() { 
+        function resetForm() { /* ... 기존과 동일 ... */
             amountInput.value = '';
             memoInput.value = '';
             typeSelect.value = 'expense';
             if (methodSelect) methodSelect.value = '현금'; 
             setStatus("입력 필드를 초기화했습니다.");
         }
-        async function saveTransaction() { 
+        async function saveTransaction() { /* ... 기존과 동일 ... */
             if (!userId || !db) {
                 setStatus('인증되지 않은 사용자입니다. 기록 등록 불가.', true);
                 return;
@@ -1151,7 +1104,7 @@
                 setStatus(`거래 등록 실패: ${error.message}`, true);
             }
         }
-        async function deleteTransaction(docId) { 
+        async function deleteTransaction(docId) { /* ... 기존과 동일 ... */
             if (!userId || !db) {
                 setStatus('인증되지 않은 사용자입니다. 삭제 불가.', true);
                 return;
@@ -1170,7 +1123,7 @@
         }
 
         // --- Report Generation ---
-        function generateReport() { 
+        function generateReport() { /* ... 기존과 동일 ... */
             if (!userId) {
                 setStatus('보고서를 출력하려면 로그인해야 합니다.', true);
                 return;
@@ -1222,7 +1175,7 @@
         }
 
         // --- Excel (CSV) Export ---
-        function exportToCsv() { 
+        function exportToCsv() { /* ... 기존과 동일 ... */
             if (!userId) {
                 setStatus('엑셀로 저장하려면 로그인해야 합니다.', true);
                 return;
@@ -1266,7 +1219,7 @@
 
         // --- Share with Parent (MODIFIED) ---
 
-        function openShareModal() { 
+        function openShareModal() { /* ... 기존과 동일 ... */
             if (!userId) {
                 setStatus('공유 기능을 사용하려면 로그인해야 합니다.', true);
                 return;
@@ -1284,7 +1237,7 @@
             sendMessageButton.removeEventListener('click', handleSendMessage);
         }
 
-        function handleSendMessage(event) { 
+        function handleSendMessage(event) { /* ... 기존과 동일 ... */
             const phone = simulatedPhone.textContent.replace(/[^0-9]/g, '');
             const link = generatedShareLink.value;
             // 메시지 내용에 완전한 링크가 포함되도록 인코딩
@@ -1340,7 +1293,7 @@
                 const publicReportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
                 await setDoc(publicReportRef, shareData);
 
-                // 2. 공용 승인 상태 초기 문서 생성
+                // 2. 공용 승인 상태 초기 문서 생성 (NEW)
                 const approvalCode = generateApprovalCode();
                 const initialApprovalData = {
                     approved: false,
@@ -1351,7 +1304,7 @@
                 const approvalRef = doc(db, `artifacts/${appId}/public/data/reportApprovals`, shareId);
                 await setDoc(approvalRef, initialApprovalData);
 
-                // 3. 사설 공유 기록 저장
+                // 3. 사설 공유 기록 저장 (NEW)
                 const recordData = {
                     shareId: shareId,
                     phoneNumber: phone,
@@ -1397,7 +1350,7 @@
         
         let calendarCurrentDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); 
 
-        const toggleCalendar = (event) => { 
+        const toggleCalendar = (event) => { /* ... 기존과 동일 ... */
             if (!userId) {
                 setStatus('로그인 후 날짜를 선택할 수 있습니다.', true);
                 return;
@@ -1416,7 +1369,7 @@
             }
         };
 
-        function renderCalendar(date) { 
+        function renderCalendar(date) { /* ... 기존과 동일 ... */
             const year = date.getFullYear();
             const month = date.getMonth(); 
             const today = TODAY; 
@@ -1463,7 +1416,7 @@
             calendarDays.innerHTML = tableHtml;
         }
 
-        function selectDate(e) { 
+        function selectDate(e) { /* ... 기존과 동일 ... */
             const daySpan = e.target.closest('[data-day]');
             if (!daySpan || !daySpan.classList.contains('cursor-pointer')) return;
 
@@ -1478,7 +1431,7 @@
             customCalendar.classList.add('hidden');
         }
 
-        function handleMonthChange(delta, e) { 
+        function handleMonthChange(delta, e) { /* ... 기존과 동일 ... */
             if (e) e.stopPropagation();
             calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
             renderCalendar(calendarCurrentDate);
@@ -1537,8 +1490,8 @@
             document.getElementById('share-submit-button').addEventListener('click', generateShareLink);
             document.getElementById('modal-close-button').addEventListener('click', () => shareModal.classList.add('hidden'));
 
-            // 승인 및 삭제 버튼 리스너 (NEW - 모달 버튼에 연결)
-            if (modalConfirmDeleteButton) modalConfirmDeleteButton.addEventListener('click', deleteSharedReport);
+            // 승인 및 삭제 버튼 리스너 (NEW)
+            if (confirmDeleteButton) confirmDeleteButton.addEventListener('click', deleteSharedReport);
 
             // 모달 닫기
             shareModal.addEventListener('click', (e) => {
