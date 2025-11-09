@@ -200,9 +200,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        // Auth 관련 함수: signInAnonymously를 추가합니다.
+        // getAuth, signInAnonymously를 사용합니다.
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // updateDoc 사용을 위해 updateDoc을 추가하고 addDoc, collection은 메시지 시스템 제거로 인해 더 이상 필요하지 않습니다.
+        // getDoc, doc, updateDoc을 사용하여 기존 문서를 업데이트합니다.
         import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
@@ -275,21 +275,18 @@
             }
         };
 
-        // --- Initialization and Data Load (익명 인증 추가) ---
+        // --- Initialization and Data Load ---
         async function initFirebase() {
             try {
-                // 1. Firebase Config 유효성 확인
                 if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
                     setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다. (설정 객체 비어있음)", true);
                     return;
                 }
                 
-                // 2. Firebase App과 Firestore 초기화
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app); 
 
-                // 3. 인증 단계: 익명 로그인
                 setStatus("Firebase 초기화 성공. 부모님 확인을 위해 익명 로그인 중...");
                 await signInAnonymously(auth);
 
@@ -330,23 +327,22 @@
             reportInfoEl.textContent = `공유 ID: ${shareId.substring(0, 8)}...`;
 
             try {
-                // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId}
-                const docRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
-                
-                // Firestore 데이터 로드
-                const docSnap = await getDoc(docRef);
+                // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId} - 보고서 데이터 (거래 내역 및 승인 상태)
+                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                const reportSnap = await getDoc(reportRef);
 
-                if (docSnap.exists()) {
-                    const reportData = docSnap.data();
-                    renderReport(reportData, shareId);
-                    setStatus("공유 보고서 로드 성공.");
-                } else {
+                if (!reportSnap.exists()) {
                     showError(`해당 ID (${shareId.substring(0, 8)}...)에 해당하는 공유 보고서가 존재하지 않습니다. URL을 확인하세요.`);
+                    return;
                 }
+                const reportData = reportSnap.data();
+
+                // 이 보고서 문서에 status 필드가 포함되어 있을 것으로 기대하고 렌더링합니다.
+                renderReport(reportData, shareId);
+                setStatus("공유 보고서 로드 성공.");
 
             } catch (error) {
                 console.error("공유 보고서 로드 오류:", error);
-                // Firestore 규칙 오류가 발생하면 (Permission denied)가 뜰 것입니다.
                 showError(`데이터베이스 접근 오류. (FireStore 권한 또는 네트워크 문제): ${error.message}`);
             }
         }
@@ -354,8 +350,7 @@
         // --- Action Logic (승인/반려 통합) ---
 
         /**
-         * 부모가 보고서를 승인하거나 반려하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
-         * 이 함수는 요청하신 대로 'sharedReports' 문서에 직접 업데이트합니다.
+         * 부모가 보고서를 승인하거나 반려하고 기존 sharedReports 문서에 상태와 코멘트 필드를 추가하여 업데이트합니다.
          * @param {string} action - 'Approved' 또는 'Rejected'
          */
         async function handleReportAction(action) {
@@ -365,7 +360,6 @@
                 return;
             }
             
-            // 익명 로그인 UID를 부모님 ID로 사용
             const parentUserId = auth.currentUser.uid;
             const comment = approvalCommentInput.value.trim();
             
@@ -374,11 +368,9 @@
             const defaultComment = action === 'Approved' ? '확인했습니다.' : '수정 후 다시 공유해 주세요.';
             const commentToSave = comment || defaultComment;
 
-            // Determine the button to update
             const targetButton = action === 'Approved' ? approveButton : rejectButton;
             const otherButton = action === 'Approved' ? rejectButton : approveButton;
 
-            // Disable buttons and show loading
             approveButton.disabled = true;
             rejectButton.disabled = true;
             approvalCommentInput.disabled = true; 
@@ -386,7 +378,7 @@
             setStatus(`보고서 ${actionText} 정보를 데이터베이스에 기록하는 중...`);
             
             try {
-                // /artifacts/{appId}/public/data/sharedReports/{shareId} 문서에 직접 업데이트합니다.
+                // ★★★ 변경된 부분: 기존 sharedReports 문서에 status 필드를 추가하여 업데이트합니다. ★★★
                 const reportPath = `artifacts/${appId}/public/data/sharedReports/${shareId}`;
                 const reportRef = doc(db, reportPath);
 
@@ -397,10 +389,11 @@
                     parentComment: commentToSave
                 };
 
-                // ★★★ 디버깅용 로그 추가 ★★★
-                console.log(`[Firestore WRITE ATTEMPT] Target Path: ${reportPath}`);
+                // 디버깅용 로그 추가: 이제 이 경로로 쓰게 됩니다.
+                console.log(`[Firestore WRITE ATTEMPT] Target Path (Updating Existing Report): ${reportPath}`);
                 console.log('[Firestore WRITE ATTEMPT] Payload:', updatePayload);
                 
+                // updateDoc을 사용하여 기존 문서에 status 필드를 추가합니다.
                 await updateDoc(reportRef, updatePayload);
                 
                 // 성공 메시지 및 UI 업데이트
@@ -412,9 +405,8 @@
                 
                 targetButton.textContent = `${actionSymbol} ${actionText} 완료됨`;
                 targetButton.disabled = true; 
-                otherButton.style.display = 'none'; // 다른 버튼 숨기기
+                otherButton.style.display = 'none'; 
                 
-                // 저장된 코멘트 표시
                 savedApprovalMessageEl.innerHTML = `<strong>부모님 ${actionText} 코멘트:</strong><br>${commentToSave}`;
                 savedApprovalMessageEl.classList.remove('hidden');
 
@@ -433,7 +425,7 @@
         }
 
 
-        // --- Report Rendering (Updated to display Rejected status) ---
+        // --- Report Rendering ---
 
         function renderReport(data, shareId) {
             loadingView.classList.add('hidden');
@@ -446,7 +438,7 @@
             
             reportTitleEl.textContent = reportMonthName;
             
-            // 1. 승인/반려 상태 확인 및 UI 업데이트
+            // 1. 승인/반려 상태 확인 및 UI 업데이트 (이제 data 객체 안에 status 필드가 있을 것으로 기대)
             if (data.status === 'Approved' || data.status === 'Rejected') {
                 const actionText = data.status === 'Approved' ? '승인' : '반려';
                 const actionColor = data.status === 'Approved' ? 'text-green-700' : 'text-red-700';
@@ -474,14 +466,14 @@
                  approvalStatusDisplay.classList.add('text-gray-700');
                  
                  // 버튼 보이기 및 입력 활성화
-                 approveButton.style.display = 'flex'; // flex-1이 적용되도록 flex로 변경
+                 approveButton.style.display = 'flex'; 
                  rejectButton.style.display = 'flex';
                  
                  approveButton.disabled = false;
                  rejectButton.disabled = false;
                  approvalCommentInput.disabled = false; 
                  
-                 savedApprovalMessageEl.classList.add('hidden'); // 메시지 영역 숨김
+                 savedApprovalMessageEl.classList.add('hidden'); 
             }
 
 
