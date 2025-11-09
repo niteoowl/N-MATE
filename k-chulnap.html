@@ -103,20 +103,6 @@
             align-items: center;
             z-index: 50;
         }
-
-        /* Report View Style (사용되지 않지만 코드를 유지) */
-        #report-output-area {
-            white-space: pre-wrap;
-            font-family: 'Malgun Gothic', 'Dotum', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            min-height: 200px;
-            background-color: #FFFFFF;
-            padding: 10px;
-            border: 1px solid #808080;
-            box-shadow: 1px 1px 0px #A0A0A0 inset;
-            overflow: auto;
-        }
     </style>
 </head>
 
@@ -177,7 +163,6 @@
                         </button>
                     </div>
                     <p class="mt-4 text-xs text-red-600 text-center" id="auth-error-message"></p>
-                    <!-- 중요 공지 삭제 -->
                 </form>
             </div>
         </div>
@@ -296,19 +281,7 @@
                         </div>
                     </div>
                     
-                    <!-- [새 기능] 부모님 승인 상태 확인 박스 -->
-                    <div id="approval-status-box" class="classic-frame bg-gray-200 p-2 mb-4 hidden">
-                        <div class="font-bold text-xs mb-1 flex items-center">
-                            <div class="w-2 h-2 rounded-full mr-2" id="approval-indicator" style="background-color: #AAAAAA;"></div>
-                            ▶ 부모님 승인 상태 (최근 공유 건):
-                            <button id="check-approval-btn" class="classic-button ml-auto px-2 py-0 text-xs">상태 재확인</button>
-                        </div>
-                        <div id="approval-status-message" class="text-sm font-bold text-gray-700">
-                            최근 공유된 보고서가 없습니다.
-                        </div>
-                        <div class="text-xs mt-1 text-gray-500" id="approval-status-id"></div>
-                    </div>
-
+                    <!-- [기존 기능 제거됨] 부모님 승인 상태 확인 박스 -->
 
                     <!-- 탭 메뉴 및 정렬 선택 -->
                     <div class="flex justify-between items-center space-x-0.5 -mb-px flex-shrink-0">
@@ -355,7 +328,6 @@
                     
                     <!-- 하단 버튼 그룹/상태 표시줄 -->
                     <div class="mt-4 flex justify-center space-x-4 p-2 bg-[#D3D3D3] border border-[#808080] shadow-inner flex-shrink-0">
-                        <!-- 보고서 출력 버튼 삭제됨 -->
                         <button id="excel-button" class="px-4 py-2 classic-button font-bold text-green-700">엑셀 저장 (E)</button>
                         <button id="share-button" class="px-4 py-2 classic-button font-bold text-blue-700">부모님에게 전달 (S)</button>
                     </div>
@@ -450,6 +422,7 @@
         import { 
             getFirestore, 
             doc, 
+            getDoc,
             addDoc, 
             onSnapshot, 
             collection, 
@@ -480,14 +453,18 @@
         let auth;
         let userId = null;
         let allTransactions = []; 
-        let lastSharedReportId = null; // [NEW] 마지막으로 공유한 보고서 ID 추적
+        let lastSharedReportId = null; // 마지막으로 공유한 보고서 ID 추적
         
         // 초기 날짜를 2025년 11월 8일로 설정
         const TODAY = new Date('2025-11-08'); 
         let currentMonthFilter = '2025-11'; 
         let unsubscribeFromFirestore = null; 
-        let unsubscribeFromApproval = null; // [NEW] 승인 상태 리스너
+        let unsubscribeFromApproval = null; // 승인 상태 리스너
 
+        // Helper function to get the reference for the user's private settings document
+        function getUserSettingsRef(db, appId, userId) {
+            return doc(db, `artifacts/${appId}/users/${userId}/settings/appState`);
+        }
         
         // UI Elements
         const userInfoElement = document.getElementById('user-info');
@@ -525,10 +502,7 @@
         const footerNetBalanceEl = document.getElementById('monthly-net-balance-footer');
         const summaryMonthYearEl = document.getElementById('summary-month-year');
         
-        // New Feature Elements
-        const reportOutputContainer = document.getElementById('report-output-container');
-        const reportOutputArea = document.getElementById('report-output-area');
-        const reportMonthDisplay = document.getElementById('report-month-display');
+        // Share Modal Elements
         const shareModal = document.getElementById('share-modal');
         const shareMonthDisplay = document.getElementById('share-month-display');
         const parentPhoneNumberInput = document.getElementById('parent-phone-number');
@@ -539,14 +513,7 @@
         const simulatedPhone = document.getElementById('simulated-phone');
         const sendMessageButton = document.getElementById('send-message-button');
 
-        // [NEW] Approval Status Elements
-        const approvalStatusBox = document.getElementById('approval-status-box');
-        const approvalStatusMessage = document.getElementById('approval-status-message');
-        const approvalStatusId = document.getElementById('approval-status-id');
-        const approvalIndicator = document.getElementById('approval-indicator');
-        const checkApprovalBtn = document.getElementById('check-approval-btn');
-        
-        // [NEW] Approval Notification Modal Elements
+        // Approval Notification Modal Elements (작은 박스는 삭제되었으므로 모달 요소만 남음)
         const approvalNotificationModal = document.getElementById('approval-notification-modal');
         const modalTitleBar = document.getElementById('modal-title-bar');
         const modalStatusText = document.getElementById('modal-status-text');
@@ -554,7 +521,7 @@
         const modalShareIdDisplay = document.getElementById('modal-share-id-display');
         const modalConfirmButton = document.getElementById('modal-confirm-button');
         
-        // [NEW] Sorting Element
+        // Sorting Element
         const sortOrderSelect = document.getElementById('sort-order');
 
 
@@ -562,9 +529,6 @@
         const formatCurrency = (amount) => {
             const sign = amount < 0 ? '￦ -' : '￦ ';
             return sign + Math.abs(amount).toLocaleString('ko-KR');
-        };
-        const formatNumber = (amount) => {
-            return amount.toLocaleString('ko-KR');
         };
 
         // Helper for Status Messages
@@ -631,7 +595,6 @@
             if (user) {
                 // 로그인 상태
                 userId = user.uid;
-                // 사용자 ID 및 접속 일자 제거
                 userInfoElement.innerHTML = `로그인됨`;
                 setStatus(`로그인 성공. 사용자: ${user.email} 데이터 로드를 시작합니다.`);
                 
@@ -639,9 +602,11 @@
                 appContent.classList.remove('hidden');
                 logoutButton.classList.remove('hidden');
                 menuBar.classList.remove('hidden');
-                approvalStatusBox.classList.remove('hidden'); 
+                // approvalStatusBox.classList.remove('hidden'); // REMOVED
                 
                 loadAllTransactions(); // 인증 완료 후 모든 데이터 로드 시작
+                loadUserSettings(); // 사용자 설정 로드 시작
+
             } else {
                 // 로그아웃 상태
                 userId = null;
@@ -653,7 +618,7 @@
                 appContent.classList.add('hidden');
                 logoutButton.classList.add('hidden');
                 menuBar.classList.add('hidden');
-                approvalStatusBox.classList.add('hidden'); 
+                // approvalStatusBox.classList.add('hidden'); // REMOVED
                 
                 if (unsubscribeFromFirestore) {
                     unsubscribeFromFirestore();
@@ -664,7 +629,6 @@
                     unsubscribeFromApproval = null;
                 }
                 lastSharedReportId = null; 
-                updateApprovalStatusUI(null);
 
                 listBody.innerHTML = `<tr class="data-row"><td class="border p-2 text-center text-red-500" colspan="6">로그인 상태가 아닙니다. 거래 내역을 볼 수 없습니다.</td></tr>`;
                 updateSummary(0, 0); 
@@ -673,6 +637,44 @@
             setAuthLoading(false);
         }
 
+        // 사용자 설정 로드 함수
+        async function loadUserSettings() {
+            if (!userId || !db) return;
+            try {
+                const settingsRef = getUserSettingsRef(db, appId, userId);
+                const docSnap = await getDoc(settingsRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const storedShareId = data.lastSharedReportId;
+                    
+                    if (storedShareId) {
+                        lastSharedReportId = storedShareId;
+                        // 저장된 ID로 승인 상태 감시 시작
+                        checkForApprovalStatus(storedShareId); 
+                    }
+                }
+                setStatus("사용자 설정 로드 완료.");
+            } catch (error) {
+                console.error("사용자 설정 로드 오류:", error);
+                setStatus(`사용자 설정 로드 실패: ${error.message}`, true);
+            }
+        }
+
+        // 사용자 설정 저장 함수
+        async function saveLastSharedReportId(shareId) {
+            if (!userId || !db) return;
+            try {
+                const settingsRef = getUserSettingsRef(db, appId, userId);
+                await setDoc(settingsRef, { lastSharedReportId: shareId }, { merge: true });
+                if (shareId) {
+                    setStatus(`마지막 공유 ID (${shareId.substring(0, 5)}...)가 사용자 설정에 저장되었습니다.`);
+                }
+            } catch (error) {
+                console.error("공유 ID 저장 오류:", error);
+            }
+        }
+        
         async function handleAuthAction(isSignUp) {
             const email = authEmailInput.value.trim();
             const password = authPasswordInput.value;
@@ -693,7 +695,6 @@
                     await signInWithEmailAndPassword(auth, email, password);
                     setStatus("로그인 성공!");
                 }
-                // onAuthStateChanged가 나머지를 처리합니다.
 
             } catch (error) {
                 setAuthLoading(false, `인증 오류: ${authErrorToKorean(error.code)}`);
@@ -754,8 +755,6 @@
         }
         
         // --- 사이드바 및 목록 필터링 함수 ---
-
-        // 월별로 데이터를 필터링하고 UI를 업데이트하는 함수
         function filterAndRenderTransactions(monthFilter) {
             currentMonthFilter = monthFilter;
             const sortOrder = sortOrderSelect.value; // 정렬 순서 가져오기
@@ -819,7 +818,7 @@
 
             summaryMonthYearEl.textContent = `${year}년 ${month}월`;
         }
-        function renderMonthExplorer() { /* ... 기존과 동일 ... */ 
+        function renderMonthExplorer() { 
             monthExplorerList.innerHTML = '';
 
             if (allTransactions.length === 0) {
@@ -864,7 +863,7 @@
                 });
             });
         }
-        function renderTransactionList(transactions) { /* ... 기존과 동일 ... */
+        function renderTransactionList(transactions) { 
              listBody.innerHTML = '';
             
             if (transactions.length === 0) {
@@ -880,7 +879,6 @@
 
                 const row = document.createElement('tr');
                 row.className = `data-row hover:bg-blue-100 ${rowClass}`;
-                // 정렬을 변경했으므로 index 대신 고유한 ID를 사용하지 않음 (순번은 오름차순/내림차순에 따라 달라짐)
                 const displayNo = transactions.indexOf(tx) + 1; 
                 row.innerHTML = `
                     <td class="border p-1 text-center">${displayNo}</td>
@@ -904,14 +902,14 @@
         }
 
         // --- CRUD Operations ---
-        function resetForm() { /* ... 기존과 동일 ... */
+        function resetForm() { 
             amountInput.value = '';
             memoInput.value = '';
             typeSelect.value = 'expense';
             if (methodSelect) methodSelect.value = '현금'; 
             setStatus("입력 필드를 초기화했습니다.");
         }
-        async function saveTransaction() { /* ... 기존과 동일 ... */
+        async function saveTransaction() { 
             if (!userId || !db) {
                 setStatus('인증되지 않은 사용자입니다. 기록 등록 불가.', true);
                 return;
@@ -962,7 +960,7 @@
                 setStatus(`거래 등록 실패: ${error.message}`, true);
             }
         }
-        async function deleteTransaction(docId) { /* ... 기존과 동일 ... */
+        async function deleteTransaction(docId) { 
             if (!userId || !db) {
                 setStatus('인증되지 않은 사용자입니다. 삭제 불가.', true);
                 return;
@@ -980,10 +978,7 @@
             }
         }
 
-        // --- NEW FEATURE: Report Generation (삭제됨) ---
-        // generateReport 함수는 버튼 삭제로 인해 더 이상 사용되지 않음
-
-        // --- NEW FEATURE: Excel (CSV) Export (생략) ---
+        // --- Excel (CSV) Export (생략) ---
         function exportToCsv() {
              // ... (기존과 동일)
              if (!userId) {
@@ -1034,7 +1029,6 @@
          */
         function checkForApprovalStatus(shareId) {
             if (!db || !shareId) {
-                updateApprovalStatusUI(null);
                 return;
             }
 
@@ -1045,8 +1039,7 @@
 
             // [사용자 요청 경로에 리스너 설정]
             const approvalDocRef = doc(db, `artifacts/${appId}/public/data/messages`, shareId);
-            lastSharedReportId = shareId; // ID를 전역에 저장
-            updateApprovalStatusUI('PENDING', shareId); // 초기 상태 업데이트
+            lastSharedReportId = shareId; // 전역 ID 업데이트
             
             setStatus(`승인 상태 감시 시작: ${shareId.substring(0, 8)}... (컬렉션: messages)`);
 
@@ -1057,20 +1050,19 @@
                     const comment = data.content || ''; // message.content
                     const type = data.type || '';
                     
-                    updateApprovalStatusUI(status, shareId, comment); // 항상 UI 업데이트 (작은 박스)
+                    setStatus(`공유 ID ${shareId.substring(0, 8)}... 상태 업데이트: ${status}`);
 
                     // 부모님 승인 또는 메시지 도착 시 전체 화면 모달 띄우기
                     if (type === 'approval_comment') {
                         showApprovalNotificationModal(status, shareId, comment, data.senderId);
-                        // 모달을 띄웠으므로 작은 박스는 잠시 숨김
-                        approvalStatusBox.classList.add('hidden');
                     }
 
                 } else {
-                    // 문서가 삭제됨 (자녀가 확인 버튼을 눌러서 삭제했거나, 부모가 실수로 삭제)
+                    // 문서가 삭제됨 
                     if (lastSharedReportId === shareId) {
-                        updateApprovalStatusUI('NONE');
+                        // lastSharedReportId가 일치할 때만 NONE 처리하여 재시작 방지
                         lastSharedReportId = null;
+                        saveLastSharedReportId(null); // 설정에서도 삭제
                         if (unsubscribeFromApproval) {
                             unsubscribeFromApproval();
                             unsubscribeFromApproval = null;
@@ -1081,39 +1073,10 @@
             }, (error) => {
                 console.error("승인 상태 로드 오류:", error);
                 setStatus('승인 상태 실시간 로드 실패.', true);
-                updateApprovalStatusUI('ERROR', shareId, error.message);
             });
         }
         
-        function updateApprovalStatusUI(status, id = lastSharedReportId, comment = '') {
-            approvalStatusBox.classList.remove('hidden');
-            approvalStatusId.textContent = id ? `공유 ID: ${id.substring(0, 8)}...` : '';
-            
-            const statusMap = {
-                'APPROVED': { msg: '✅ 승인됨!', color: '#22C55E', text: 'text-green-700' }, 
-                'REJECTED': { msg: '❌ 반려됨', color: '#EF4444', text: 'text-red-700' },   
-                'PENDING': { msg: '대기 중...', color: '#F59E0B', text: 'text-yellow-700' },  
-                'ERROR': { msg: '로드 오류', color: '#6B7280', text: 'text-gray-700' },
-                'NONE': { msg: '최근 공유된 보고서 없음', color: '#D3D3D3', text: 'text-gray-700' }
-            };
-
-            const current = statusMap[status] || statusMap['NONE'];
-
-            approvalIndicator.style.backgroundColor = current.color;
-            approvalStatusMessage.className = `text-sm font-bold ${current.text}`;
-            
-            let message = current.msg;
-            if (comment) {
-                message += ` (의견: ${comment.substring(0, 30)}${comment.length > 30 ? '...' : ''})`;
-            }
-            approvalStatusMessage.textContent = message;
-
-            if (status === 'NONE') {
-                approvalStatusBox.classList.add('hidden');
-            }
-        }
-
-        // [NEW] 모달 표시 함수
+        // [NEW] 모달 표시 함수 (작은 UI를 업데이트하는 함수는 삭제됨)
         function showApprovalNotificationModal(status, shareId, comment, senderId) {
             approvalNotificationModal.classList.remove('hidden');
             modalShareIdDisplay.textContent = shareId.substring(0, 8) + '...';
@@ -1137,10 +1100,10 @@
             modalTitleBar.className = `classic-title-bar text-sm mb-4 text-center ${titleClass}`;
             modalConfirmButton.textContent = `확인 및 기록 정리 (ID: ${shareId.substring(0, 5)}...)`;
             
-            setStatus(`부모님 메시지 도착! (ID: ${shareId.substring(0, 5)}...)`);
+            setStatus(`부모님 메시지 도착! (ID: ${shareId.substring(0, 5)}...) - 모달 표시`);
         }
 
-        // [NEW] 확인 버튼 클릭 시 공유 문서 및 메시지 문서 모두 삭제 함수
+        // 확인 버튼 클릭 시 공유 문서 및 메시지 문서 모두 삭제 함수
         async function handleApprovalConfirmAndDelete() {
             if (!lastSharedReportId || !db || !userId) {
                 setStatus('오류: 삭제할 공유 ID가 유효하지 않습니다.', true);
@@ -1160,13 +1123,15 @@
                 const reportDocRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareIdToDelete);
                 await deleteDoc(reportDocRef);
 
-                // 3. 상태 정리
+                // 3. 사용자 설정에서 기록 삭제
+                await saveLastSharedReportId(null); 
+
+                // 4. 상태 정리 (onSnapshot 핸들러가 자동으로 정리하므로 전역 변수만 정리)
                 if (unsubscribeFromApproval) {
                     unsubscribeFromApproval();
                     unsubscribeFromApproval = null;
                 }
                 lastSharedReportId = null;
-                updateApprovalStatusUI('NONE');
                 approvalNotificationModal.classList.add('hidden');
                 
                 setStatus(`공유 기록 (ID: ${shareIdToDelete.substring(0, 5)}...)이 성공적으로 삭제/정리되었습니다.`);
@@ -1174,7 +1139,6 @@
             } catch (error) {
                 setStatus(`기록 정리 실패: ${error.message}`, true);
                 approvalNotificationModal.classList.add('hidden');
-                updateApprovalStatusUI('ERROR', shareIdToDelete, error.message); 
             }
         }
 
@@ -1202,7 +1166,6 @@
                 unsubscribeFromApproval();
             }
             lastSharedReportId = null;
-            updateApprovalStatusUI('NONE');
         }
 
         // 새롭게 추가된 메시지 전송 시뮬레이션 핸들러
@@ -1262,14 +1225,16 @@
                 const publicReportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
                 await setDoc(publicReportRef, shareData);
 
-                // 2. 승인 상태 문서 초기화 (messages 컬렉션) - (리스너가 작동하도록 빈 문서 생성)
-                // approvalStatus: 'PENDING'은 부모가 응답했을 때만 필요함. type 'approval_comment'만 감시
-                const initialApprovalData = { sharedAt: new Date().toISOString(), isPending: true };
+                // 2. 승인 상태 문서 초기화 (messages 컬렉션) - (리스너가 작동하도록 문서 생성)
+                const initialApprovalData = { sharedAt: new Date().toISOString(), isPending: true, sharedBy: userId };
                 const approvalDocRef = doc(db, `artifacts/${appId}/public/data/messages`, shareId);
                 await setDoc(approvalDocRef, initialApprovalData);
                 
                 // 3. 승인 상태 리스너 연결
                 checkForApprovalStatus(shareId); // 즉시 리스너를 연결하여 상태 감시 시작
+                
+                // 4. 사용자 설정에 마지막 공유 ID 저장
+                await saveLastSharedReportId(shareId);
 
 
                 // 요청하신 도메인(nmate.kr)과 shareId를 포함한 링크 생성
@@ -1309,7 +1274,7 @@
         
         let calendarCurrentDate = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1); 
 
-        const toggleCalendar = (event) => { /* ... 기존과 동일 ... */
+        const toggleCalendar = (event) => { 
             if (!userId) {
                 setStatus('로그인 후 날짜를 선택할 수 있습니다.', true);
                 return;
@@ -1328,7 +1293,7 @@
             }
         };
 
-        function renderCalendar(date) { /* ... 기존과 동일 ... */
+        function renderCalendar(date) { 
             const year = date.getFullYear();
             const month = date.getMonth(); 
             const today = TODAY; 
@@ -1375,7 +1340,7 @@
             calendarDays.innerHTML = tableHtml;
         }
 
-        function selectDate(e) { /* ... 기존과 동일 ... */
+        function selectDate(e) { 
             const daySpan = e.target.closest('[data-day]');
             if (!daySpan || !daySpan.classList.contains('cursor-pointer')) return;
 
@@ -1390,7 +1355,7 @@
             customCalendar.classList.add('hidden');
         }
 
-        function handleMonthChange(delta, e) { /* ... 기존과 동일 ... */
+        function handleMonthChange(delta, e) { 
             if (e) e.stopPropagation();
             calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + delta);
             renderCalendar(calendarCurrentDate);
@@ -1448,20 +1413,10 @@
             document.getElementById('share-submit-button').addEventListener('click', generateShareLink);
             document.getElementById('modal-close-button').addEventListener('click', () => shareModal.classList.add('hidden'));
             
-            // [NEW] 승인 상태 재확인 버튼 리스너
-            checkApprovalBtn.addEventListener('click', () => {
-                if (lastSharedReportId) {
-                    checkForApprovalStatus(lastSharedReportId);
-                    setStatus(`승인 상태를 다시 확인합니다. ID: ${lastSharedReportId.substring(0, 8)}...`);
-                } else {
-                    setStatus("최근 공유된 보고서가 없어 상태를 확인할 수 없습니다.", true);
-                }
-            });
-            
-            // [NEW] 정렬 변경 리스너 (값이 바뀔 때마다 목록 업데이트)
+            // 정렬 변경 리스너 (값이 바뀔 때마다 목록 업데이트)
             if (sortOrderSelect) sortOrderSelect.addEventListener('change', () => filterAndRenderTransactions(currentMonthFilter));
 
-            // [NEW] 알림 모달 확인 버튼 리스너
+            // 알림 모달 확인 버튼 리스너
             if (modalConfirmButton) modalConfirmButton.addEventListener('click', handleApprovalConfirmAndDelete);
 
 
@@ -1473,7 +1428,7 @@
             });
             approvalNotificationModal.addEventListener('click', (e) => {
                 if (e.target === approvalNotificationModal) {
-                    // 배경 클릭으로는 모달이 닫히지 않도록 수정 (강제 확인 유도)
+                    // 배경 클릭으로는 모달이 닫히지 않도록 유지 (강제 확인 유도)
                 }
             });
         });
