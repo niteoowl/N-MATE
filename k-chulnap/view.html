@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자녀 용돈기입장 공유 보고서 (읽기 전용)</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 폰트 및 기본 설정 */
+        body {
+            font-family: 'Dotum', 'Gulim', sans-serif;
+            background-color: #EFEFEF; 
+            font-size: 13px;
+        }
+        /* 2000년대 스타일 3D 버튼 */
+        .classic-button {
+            border: 1px solid #000;
+            border-color: #DFDFDF #808080 #808080 #DFDFDF;
+            background-color: #D3D3D3;
+            box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
+            user-select: none;
+        }
+        /* 헤더 그라데이션 */
+        .classic-header-gradient {
+            background: linear-gradient(to bottom, #A0C4E6 0%, #2B5876 100%);
+            color: white;
+            text-shadow: 1px 1px #000000;
+        }
+        /* 프레임/그룹 박스 */
+        .classic-frame {
+            border: 1px solid #808080;
+            padding: 4px;
+            background-color: #F0F0F0;
+        }
+        /* 타이틀 바 (파란색) */
+        .classic-title-bar {
+            background-color: #0000AA;
+            color: white;
+            padding: 2px 8px;
+            font-weight: bold;
+        }
+        /* 로딩 스피너 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 데이터 행 높이 고정 */
+        .data-row td { height: 28px; }
+        /* 테이블 헤더 스타일 */
+        #report-table thead th { border: 1px solid #808080; padding: 4px; }
+        #report-table tbody td { border: 1px solid #D3D3D3; padding: 4px; }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col"> 
+    <!-- 전체 컨테이너 -->
+    <div class="classic-frame min-h-screen flex flex-col p-2"> 
+        
+        <!-- 1. 헤더 (타이틀 및 로고) -->
+        <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-1 flex-shrink-0">
+            <div class="flex items-center">
+                <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-12 w-12 mr-3 object-contain" onerror="this.style.display='none'">
+                <span>자녀 용돈기입장 공유 보고서 (읽기 전용)</span>
+            </div>
+            <div class="text-sm font-normal flex items-center">
+                <span id="report-info">공유 ID: 로드 중...</span>
+            </div>
+        </header>
+
+        <!-- 2. 메인 보고서 영역 -->
+        <main class="flex-grow bg-[#F0F0F0] p-4 border border-[#BDBDBD] flex flex-col">
+            <div class="classic-title-bar text-sm mb-3 flex-shrink-0 flex justify-between items-center">
+                <span id="report-title">[월간 재정 기록 보고서] - <span id="report-month-year"></span></span>
+                <span id="share-status" class="text-xs font-normal bg-yellow-400 text-black px-2 py-0.5 border border-black">읽기 전용</span>
+            </div>
+
+            <!-- 로딩 및 오류 메시지 -->
+            <div id="loading-view" class="flex flex-col items-center justify-center flex-grow p-10">
+                <div class="loading-spinner"></div>
+                <p class="mt-4 text-gray-700 font-bold">공유 보고서 데이터 로드 중...</p>
+            </div>
+            
+            <div id="error-view" class="hidden classic-frame p-6 bg-red-100 border-red-800 text-red-800 text-center flex-grow">
+                <p class="text-lg font-bold mb-3">🚨 오류 발생 또는 공유 ID가 유효하지 않습니다 🚨</p>
+                <p id="error-message" class="text-sm">URL을 확인하거나 자녀에게 다시 공유를 요청하세요.</p>
+            </div>
+
+            <!-- 보고서 내용 (데이터 로드 성공 시 표시) -->
+            <div id="report-content" class="hidden flex flex-col flex-grow">
+                
+                <!-- 집계 요약 -->
+                <div class="classic-frame bg-white p-3 mb-4 border border-[#808080] flex-shrink-0">
+                    <div class="classic-title-bar text-xs mb-1 bg-green-700">
+                        [월간 재정 집계 요약]
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 text-center p-2 bg-[#D3D3D3]">
+                        <div class="classic-frame p-2 bg-green-50">
+                            <div class="text-xs text-gray-600 font-bold">총 수입액 (+)</div>
+                            <div class="text-lg font-extrabold text-green-700" id="summary-income">￦ 0</div>
+                        </div>
+                        <div class="classic-frame p-2 bg-red-50">
+                            <div class="text-xs text-gray-600 font-bold">총 지출액 (-)</div>
+                            <div class="text-lg font-extrabold text-red-700" id="summary-expense">￦ 0</div>
+                        </div>
+                        <div class="classic-frame p-2 bg-yellow-50">
+                            <div class="text-xs text-gray-600 font-bold">순 잔액</div>
+                            <div class="text-lg font-extrabold text-blue-700" id="summary-balance">￦ 0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 상세 내역 표 -->
+                <div class="flex flex-col flex-grow">
+                    <div class="classic-title-bar text-xs mb-1 bg-blue-700">
+                        [상세 거래 내역]
+                    </div>
+                    <div class="border border-[#808080] bg-white overflow-auto flex-grow">
+                        <table class="w-full text-sm" id="report-table">
+                            <thead class="bg-[#BDBDBD] text-black sticky top-0">
+                                <tr>
+                                    <th class="w-[10%]">No.</th>
+                                    <th class="w-[20%]">날짜</th>
+                                    <th class="w-[15%]">수단</th>
+                                    <th class="w-[45%]">내용</th>
+                                    <th class="w-[10%]">금액 (원)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-list-body">
+                                <!-- 거래 데이터가 여기에 삽입됩니다 -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-[#DFDFDF] font-bold">
+                                    <td class="border p-1 text-right" colspan="4">월 합계 잔액:</td>
+                                    <td class="border p-1 text-right text-green-800" id="monthly-net-balance-footer">0</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        </main>
+
+        <!-- 시스템 상태 메시지 -->
+        <div class="mt-4 text-xs p-1 classic-frame bg-white border border-[#BDBDBD] shadow-inner flex-shrink-0" id="status-message">
+            [시스템 상태]: 준비 중...
+        </div>
+        <div class="mt-2 text-xs text-center text-gray-600">
+            * 이 보고서는 자녀가 특정 시점에 공유한 읽기 전용 데이터입니다.
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        setLogLevel('Debug');
+
+        // --- Firebase/Auth/Global Setup ---
+        // 환경 변수를 사용하거나, 없을 경우 기본값으로 설정
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+
+        // UI Elements
+        const statusElement = document.getElementById('status-message');
+        const loadingView = document.getElementById('loading-view');
+        const errorView = document.getElementById('error-view');
+        const errorMessageEl = document.getElementById('error-message');
+        const reportContent = document.getElementById('report-content');
+        const reportTitleEl = document.getElementById('report-month-year');
+        const reportInfoEl = document.getElementById('report-info');
+        
+        // Summary Elements
+        const incomeEl = document.getElementById('summary-income');
+        const expenseEl = document.getElementById('summary-expense');
+        const netBalanceEl = document.getElementById('summary-balance');
+        const footerNetBalanceEl = document.getElementById('monthly-net-balance-footer');
+        const listBody = document.getElementById('transaction-list-body');
+
+
+        // Helper for Currency Formatting
+        const formatCurrency = (amount) => {
+            if (typeof amount !== 'number') return '￦ 0';
+            const sign = amount < 0 ? '￦ -' : '￦ ';
+            return sign + Math.abs(amount).toLocaleString('ko-KR');
+        };
+
+        // Helper for Status Messages
+        const setStatus = (message, isError = false) => {
+            statusElement.innerHTML = `[시스템 상태]: ${isError ? '오류: ' : ''}${message}`;
+            if (isError) {
+                statusElement.classList.add('error-status');
+                console.error(message);
+            } else {
+                statusElement.classList.remove('error-status');
+                console.log(message);
+            }
+        };
+
+        // --- Initialization and Auth ---
+        async function initFirebase() {
+            try {
+                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
+                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다.", true);
+                    return;
+                }
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // 익명 또는 커스텀 토큰으로 인증 시도 (읽기 전용 권한 획득)
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    setStatus("초기 인증 토큰으로 읽기 권한 획득.");
+                } else {
+                    await signInAnonymously(auth);
+                    setStatus("익명 로그인으로 읽기 권한 획득.");
+                }
+
+                // 인증이 완료되면 보고서 로드 시작
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        userId = user.uid;
+                        loadSharedReport();
+                    } else {
+                        showError("인증에 실패하여 보고서를 로드할 수 없습니다.");
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase 초기화 오류:", error);
+                showError(`Firebase 초기화 실패. (${error.message})`);
+            }
+        }
+        
+        function showError(message) {
+            loadingView.classList.add('hidden');
+            reportContent.classList.add('hidden');
+            errorView.classList.remove('hidden');
+            errorMessageEl.textContent = message;
+            setStatus(message, true);
+        }
+
+        // --- Main Logic: Load Shared Report ---
+
+        // URL에서 shareId를 가져오는 함수
+        function getShareIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('shareId');
+        }
+
+        async function loadSharedReport() {
+            const shareId = getShareIdFromUrl();
+
+            if (!shareId) {
+                reportInfoEl.textContent = "공유 ID 없음";
+                showError("URL에 유효한 'shareId' 매개변수가 포함되어 있지 않습니다.");
+                return;
+            }
+            
+            reportInfoEl.textContent = `공유 ID: ${shareId.substring(0, 8)}...`;
+
+            try {
+                // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId}
+                const docRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const reportData = docSnap.data();
+                    renderReport(reportData, shareId);
+                    setStatus("공유 보고서 로드 성공.");
+                } else {
+                    showError(`해당 ID (${shareId.substring(0, 8)}...)에 해당하는 공유 보고서가 존재하지 않습니다.`);
+                }
+
+            } catch (error) {
+                console.error("공유 보고서 로드 오류:", error);
+                showError(`데이터베이스 접근 오류: ${error.message}`);
+            }
+        }
+
+        // --- Report Rendering ---
+
+        function renderReport(data, shareId) {
+            loadingView.classList.add('hidden');
+            reportContent.classList.remove('hidden');
+
+            const month = data.month || '알 수 없는 월';
+            const year = month.substring(0, 4);
+            const monthPart = month.substring(5, 7);
+            const reportMonthName = `${year}년 ${monthPart}월`;
+            
+            reportTitleEl.textContent = reportMonthName;
+
+            // 1. 요약 정보 업데이트
+            const summary = data.summary || { income: 0, expense: 0, netBalance: 0 };
+            
+            incomeEl.textContent = formatCurrency(summary.income);
+            expenseEl.textContent = formatCurrency(summary.expense);
+            netBalanceEl.textContent = formatCurrency(summary.netBalance);
+            footerNetBalanceEl.textContent = summary.netBalance.toLocaleString('ko-KR');
+            
+            // 2. 상세 거래 내역 업데이트
+            listBody.innerHTML = '';
+            const transactions = data.transactions || [];
+            
+            if (transactions.length === 0) {
+                listBody.innerHTML = `<tr class="data-row"><td colspan="5" class="p-4 text-center text-gray-500">등록된 거래 내역이 없습니다.</td></tr>`;
+                return;
+            }
+
+            // 날짜 순서로 정렬 (원래 보고서와 동일하게 최신순)
+            transactions.sort((a, b) => {
+                if (a.date === b.date) {
+                    return b.timestamp - a.timestamp; 
+                }
+                return b.date.localeCompare(a.date); 
+            });
+
+            transactions.forEach((tx, index) => {
+                const isIncome = tx.amount > 0;
+                const rowClass = isIncome ? 'bg-green-50' : '';
+                const amountClass = isIncome ? 'text-green-600' : 'text-red-600';
+                const displayAmount = Math.abs(tx.amount).toLocaleString('ko-KR');
+
+                const row = document.createElement('tr');
+                row.className = `data-row hover:bg-gray-100 ${rowClass}`;
+                row.innerHTML = `
+                    <td class="text-center">${transactions.length - index}</td>
+                    <td class="text-center">${tx.date}</td>
+                    <td class="text-center">${tx.method}</td>
+                    <td class="px-2">${tx.memo}</td>
+                    <td class="text-right ${amountClass} font-bold pr-2">${isIncome ? '+' : ''}${displayAmount}</td>
+                `;
+                listBody.appendChild(row);
+            });
+        }
+
+        // --- Event Listeners and Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initFirebase();
+        });
+    </script>
+</body>
+</html>
