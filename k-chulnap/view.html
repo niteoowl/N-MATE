@@ -28,7 +28,11 @@
         .classic-button:disabled {
             color: #808080;
         }
-
+        /* 액션 버튼 호버 효과를 시각적으로 강조 */
+        .classic-button:hover:not(:disabled) {
+            background-color: #EAEAEA;
+        }
+        
         /* 헤더 그라데이션 */
         .classic-header-gradient {
             background: linear-gradient(to bottom, #A0C4E6 0%, #2B5876 100%);
@@ -156,20 +160,26 @@
                     </div>
                 </div>
 
-                <!-- 3. 승인/확인 영역 (메시지 기능 추가) -->
+                <!-- 3. 승인/확인 영역 (승인/반려 기능) -->
                 <div id="approval-section" class="mt-4 classic-frame bg-white p-3 border border-[#808080] flex-shrink-0 text-center">
                     <div id="approval-status-display" class="font-bold text-base mb-2 text-gray-700">
-                        보고서 확인 후, 아래 버튼을 눌러 승인해주세요.
+                        보고서 확인 후, 아래 버튼을 눌러 승인/반려해주세요.
                     </div>
                     
                     <!-- 부모님 코멘트 입력 영역 -->
-                    <textarea id="approval-comment" class="w-full classic-frame p-2 mb-3 text-sm resize-y" rows="3" placeholder="자녀에게 전달할 승인 메시지나 간단한 코멘트를 남겨주세요 (선택 사항)"></textarea>
+                    <textarea id="approval-comment" class="w-full classic-frame p-2 mb-3 text-sm resize-y" rows="3" placeholder="자녀에게 전달할 승인/반려 메시지나 간단한 코멘트를 남겨주세요. (반려 시 코멘트 권장)"></textarea>
 
-                    <button id="approve-button" class="classic-button text-base px-6 py-2 w-full max-w-xs mx-auto disabled:opacity-50">
-                        ✅ 용돈기입장 확인 및 승인
-                    </button>
+                    <!-- 액션 버튼 그룹 -->
+                    <div class="flex justify-center space-x-4">
+                        <button id="reject-button" class="classic-button text-base px-6 py-2 flex-1 max-w-[180px] disabled:opacity-50 hover:bg-red-200">
+                            ❌ 반려 (수정 요청)
+                        </button>
+                        <button id="approve-button" class="classic-button text-base px-6 py-2 flex-1 max-w-[180px] disabled:opacity-50 hover:bg-green-200">
+                            ✅ 확인 및 승인
+                        </button>
+                    </div>
 
-                    <!-- 저장된 승인 메시지 표시 영역 (승인 완료 시 표시) -->
+                    <!-- 저장된 승인/반려 메시지 표시 영역 (액션 완료 시 표시) -->
                     <div id="saved-approval-message" class="hidden mt-3 p-3 classic-frame bg-yellow-100 text-left text-sm whitespace-pre-wrap">
                         <!-- 저장된 메시지가 여기에 표시됩니다 -->
                     </div>
@@ -192,7 +202,8 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         // Auth 관련 함수: signInAnonymously를 추가합니다.
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // updateDoc 사용을 위해 updateDoc을 추가하고 addDoc, collection은 메시지 시스템 제거로 인해 더 이상 필요하지 않습니다.
+        import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
 
@@ -232,6 +243,7 @@
         const reportTitleEl = document.getElementById('report-month-year');
         const reportInfoEl = document.getElementById('report-info');
         const approveButton = document.getElementById('approve-button');
+        const rejectButton = document.getElementById('reject-button'); // 새로 추가됨
         const approvalStatusDisplay = document.getElementById('approval-status-display');
         const approvalCommentInput = document.getElementById('approval-comment'); 
         const savedApprovalMessageEl = document.getElementById('saved-approval-message'); 
@@ -339,80 +351,86 @@
             }
         }
 
-        // --- Approval Logic (Updated to use auth UID) ---
+        // --- Action Logic (승인/반려 통합) ---
 
         /**
-         * 부모가 보고서를 승인하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
+         * 부모가 보고서를 승인하거나 반려하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
+         * @param {string} action - 'Approved' 또는 'Rejected'
          */
-        async function approveReport() {
+        async function handleReportAction(action) {
             const shareId = getShareIdFromUrl();
             if (!shareId || !db || !auth.currentUser) {
-                setStatus("승인에 필요한 공유 ID, 데이터베이스 연결 또는 인증 정보가 없습니다.", true);
+                setStatus("액션 처리에 필요한 정보가 없습니다.", true);
                 return;
             }
             
-            // 익명 로그인된 UID 사용
             const parentUserId = auth.currentUser.uid;
-            
-            // 코멘트 캡처
             const comment = approvalCommentInput.value.trim();
-            const defaultComment = '확인했습니다.';
+            
+            // 반려 시 코멘트 필수 요구 (선택 사항으로 변경)
+            // if (action === 'Rejected' && !comment) {
+            //     setStatus("반려할 경우, 자녀에게 전달할 사유(코멘트)를 반드시 작성해주세요.", true);
+            //     return; 
+            // }
+
+            const actionText = action === 'Approved' ? '승인' : '반려';
+            const actionSymbol = action === 'Approved' ? '✅' : '❌';
+            const defaultComment = action === 'Approved' ? '확인했습니다.' : '수정 후 다시 공유해 주세요.';
             const commentToSave = comment || defaultComment;
 
-            // 승인 버튼/입력 비활성화 및 로딩 표시
+            // Determine the button to update
+            const targetButton = action === 'Approved' ? approveButton : rejectButton;
+            const otherButton = action === 'Approved' ? rejectButton : approveButton;
+
+            // Disable buttons and show loading
             approveButton.disabled = true;
+            rejectButton.disabled = true;
             approvalCommentInput.disabled = true; 
-            approveButton.textContent = '처리 중...';
-            setStatus("보고서 승인 정보를 데이터베이스에 기록하는 중...");
+            targetButton.textContent = '처리 중...';
+            setStatus(`보고서 ${actionText} 정보를 데이터베이스에 기록하는 중...`);
             
             try {
                 const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
 
-                // 1. sharedReports 문서 업데이트
+                // 1. sharedReports 문서 업데이트 (messages 컬렉션 기록 제거)
                 await updateDoc(reportRef, {
-                    status: 'Approved',
+                    status: action, // 'Approved' or 'Rejected'
                     approvedBy: parentUserId, // 익명 로그인 UID 기록
                     approvedAt: new Date().getTime(),
                     parentComment: commentToSave
                 });
 
-                // 2. 'messages' 컬렉션에 별도로 메시지 기록
-                const messageCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
-                await addDoc(messageCollectionRef, {
-                    senderId: parentUserId, 
-                    shareId: shareId,
-                    type: 'approval_comment',
-                    timestamp: new Date().getTime(),
-                    content: commentToSave
-                });
-
                 // 성공 메시지 및 UI 업데이트
                 const now = new Date().toLocaleString('ko-KR');
-                const approvalMessage = `🎉 승인 완료: ${now}에 확인되었습니다.`;
-                approvalStatusDisplay.textContent = approvalMessage;
-                approvalStatusDisplay.classList.remove('text-gray-700');
-                approvalStatusDisplay.classList.add('text-green-700');
-                approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true; 
-
+                const completionMessage = `🎉 ${actionText} 완료: ${now}에 처리되었습니다.`;
+                approvalStatusDisplay.textContent = completionMessage;
+                approvalStatusDisplay.classList.remove('text-gray-700', 'text-green-700', 'text-red-700');
+                approvalStatusDisplay.classList.add(action === 'Approved' ? 'text-green-700' : 'text-red-700');
+                
+                targetButton.textContent = `${actionSymbol} ${actionText} 완료됨`;
+                targetButton.disabled = true; 
+                otherButton.style.display = 'none'; // 다른 버튼 숨기기
+                
                 // 저장된 코멘트 표시
-                savedApprovalMessageEl.innerHTML = `<strong>부모님 코멘트:</strong><br>${commentToSave}`;
+                savedApprovalMessageEl.innerHTML = `<strong>부모님 ${actionText} 코멘트:</strong><br>${commentToSave}`;
                 savedApprovalMessageEl.classList.remove('hidden');
 
-                setStatus(approvalMessage);
+                setStatus(completionMessage);
 
             } catch (error) {
-                // 에러 발생 시 버튼/입력 다시 활성화
+                // 에러 발생 시 버튼/입력 다시 활성화 및 UI 복구
                 approveButton.disabled = false;
+                rejectButton.disabled = false;
                 approvalCommentInput.disabled = false; 
-                approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
-
-                setStatus(`승인 실패: ${error.message}. Firestore 보안 규칙을 확인하세요.`, true);
+                approveButton.textContent = '✅ 확인 및 승인';
+                rejectButton.textContent = '❌ 반려 (수정 요청)';
+                
+                setStatus(`${actionText} 실패: ${error.message}. Firestore 보안 규칙을 확인하세요.`, true);
             }
         }
 
 
-        // --- Report Rendering (Updated to display comment) ---
+        // --- Report Rendering (Updated to display Rejected status) ---
 
         function renderReport(data, shareId) {
             loadingView.classList.add('hidden');
@@ -425,30 +443,40 @@
             
             reportTitleEl.textContent = reportMonthName;
             
-            // 1. 승인 상태 확인 및 UI 업데이트
-            if (data.status === 'Approved') {
+            // 1. 승인/반려 상태 확인 및 UI 업데이트
+            if (data.status === 'Approved' || data.status === 'Rejected') {
+                const actionText = data.status === 'Approved' ? '승인' : '반려';
+                const actionColor = data.status === 'Approved' ? 'text-green-700' : 'text-red-700';
+                const actionSymbol = data.status === 'Approved' ? '🎉' : '❌';
+                
                 const approvedAtDate = new Date(data.approvedAt).toLocaleString('ko-KR');
                 const parentComment = data.parentComment || '코멘트 없음';
 
-                approvalStatusDisplay.textContent = `🎉 승인 완료: ${approvedAtDate}에 확인되었습니다.`;
-                approvalStatusDisplay.classList.remove('text-gray-700');
-                approvalStatusDisplay.classList.add('text-green-700');
+                approvalStatusDisplay.textContent = `${actionSymbol} ${actionText} 완료: ${approvedAtDate}에 처리되었습니다.`;
+                approvalStatusDisplay.classList.remove('text-gray-700', 'text-green-700', 'text-red-700');
+                approvalStatusDisplay.classList.add(actionColor);
                 
-                approveButton.textContent = '✅ 승인 완료됨';
-                approveButton.disabled = true; // 영구 비활성화
-                approvalCommentInput.disabled = true; // 코멘트 입력 비활성화
+                // 버튼 숨기기 및 입력 비활성화
+                approveButton.style.display = 'none';
+                rejectButton.style.display = 'none';
+
+                approvalCommentInput.disabled = true; 
                 
                 // 저장된 코멘트 표시
-                savedApprovalMessageEl.innerHTML = `<strong>부모님 코멘트:</strong><br>${parentComment}`;
+                savedApprovalMessageEl.innerHTML = `<strong>부모님 ${actionText} 코멘트:</strong><br>${parentComment}`;
                 savedApprovalMessageEl.classList.remove('hidden');
                 
             } else {
-                 approvalStatusDisplay.textContent = '보고서 확인 후, 아래 버튼을 눌러 승인해주세요.';
+                 approvalStatusDisplay.textContent = '보고서 확인 후, 아래 버튼을 눌러 승인/반려해주세요.';
                  approvalStatusDisplay.classList.add('text-gray-700');
                  
-                 approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
+                 // 버튼 보이기 및 입력 활성화
+                 approveButton.style.display = 'flex'; // flex-1이 적용되도록 flex로 변경
+                 rejectButton.style.display = 'flex';
+                 
                  approveButton.disabled = false;
-                 approvalCommentInput.disabled = false; // 입력 활성화
+                 rejectButton.disabled = false;
+                 approvalCommentInput.disabled = false; 
                  
                  savedApprovalMessageEl.classList.add('hidden'); // 메시지 영역 숨김
             }
@@ -501,7 +529,9 @@
         // --- Event Listeners and Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             initFirebase();
-            approveButton.addEventListener('click', approveReport);
+            // 승인/반려 액션에 대한 이벤트 리스너 연결
+            approveButton.addEventListener('click', () => handleReportAction('Approved'));
+            rejectButton.addEventListener('click', () => handleReportAction('Rejected'));
         });
     </script>
 </body>
