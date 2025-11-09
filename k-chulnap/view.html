@@ -190,8 +190,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        // addDoc, collection 함수를 새로 import 합니다.
+        // Auth 관련 함수: signInAnonymously를 추가합니다.
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, addDoc, collection, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
@@ -221,7 +221,7 @@
         
         let app;
         let db;
-        let auth; // Auth instance is initialized but not used for sign-in, only for future reference.
+        let auth; 
 
         // UI Elements
         const statusElement = document.getElementById('status-message');
@@ -233,8 +233,8 @@
         const reportInfoEl = document.getElementById('report-info');
         const approveButton = document.getElementById('approve-button');
         const approvalStatusDisplay = document.getElementById('approval-status-display');
-        const approvalCommentInput = document.getElementById('approval-comment'); // NEW
-        const savedApprovalMessageEl = document.getElementById('saved-approval-message'); // NEW
+        const approvalCommentInput = document.getElementById('approval-comment'); 
+        const savedApprovalMessageEl = document.getElementById('saved-approval-message'); 
         
         // Summary Elements
         const incomeEl = document.getElementById('summary-income');
@@ -263,7 +263,7 @@
             }
         };
 
-        // --- Initialization and Data Load ---
+        // --- Initialization and Data Load (익명 인증 추가) ---
         async function initFirebase() {
             try {
                 // 1. Firebase Config 유효성 확인
@@ -275,15 +275,18 @@
                 // 2. Firebase App과 Firestore 초기화
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app); // Get auth instance
+                auth = getAuth(app); 
 
-                // 3. (중요 수정) 인증 단계 건너뛰고 바로 데이터 로드
-                setStatus("Firebase 초기화 성공. 공용 보고서 데이터 로드를 시도합니다.");
+                // 3. 인증 단계: 익명 로그인
+                setStatus("Firebase 초기화 성공. 부모님 확인을 위해 익명 로그인 중...");
+                await signInAnonymously(auth);
+
+                setStatus("익명 로그인 성공. 공유 보고서 로드를 시작합니다.");
                 loadSharedReport();
                 
             } catch (error) {
-                console.error("Firebase 초기화 오류:", error);
-                showError(`Firebase 초기화 실패. (${error.message})`);
+                console.error("Firebase 초기화 또는 익명 로그인 오류:", error);
+                showError(`Firebase 초기화 또는 익명 로그인 실패. (${error.message})`);
             }
         }
         
@@ -318,7 +321,7 @@
                 // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId}
                 const docRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
                 
-                // Firestore 데이터 로드 (인증 없이)
+                // Firestore 데이터 로드
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -336,17 +339,20 @@
             }
         }
 
-        // --- Approval Logic (Updated to include comment) ---
+        // --- Approval Logic (Updated to use auth UID) ---
 
         /**
          * 부모가 보고서를 승인하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
          */
         async function approveReport() {
             const shareId = getShareIdFromUrl();
-            if (!shareId || !db) {
-                setStatus("승인에 필요한 공유 ID 또는 데이터베이스 연결이 없습니다.", true);
+            if (!shareId || !db || !auth.currentUser) {
+                setStatus("승인에 필요한 공유 ID, 데이터베이스 연결 또는 인증 정보가 없습니다.", true);
                 return;
             }
+            
+            // 익명 로그인된 UID 사용
+            const parentUserId = auth.currentUser.uid;
             
             // 코멘트 캡처
             const comment = approvalCommentInput.value.trim();
@@ -355,28 +361,25 @@
 
             // 승인 버튼/입력 비활성화 및 로딩 표시
             approveButton.disabled = true;
-            approvalCommentInput.disabled = true; // 코멘트 입력 비활성화
+            approvalCommentInput.disabled = true; 
             approveButton.textContent = '처리 중...';
             setStatus("보고서 승인 정보를 데이터베이스에 기록하는 중...");
             
             try {
-                // 임시 사용자 ID를 생성합니다. (실제 인증이 없으므로)
-                const parentUserId = crypto.randomUUID(); 
                 const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
 
-                // 1. sharedReports 문서 업데이트 (승인 상태 및 코멘트 저장)
-                // 코멘트는 UI 표시를 위해 이 문서에 유지합니다.
+                // 1. sharedReports 문서 업데이트
                 await updateDoc(reportRef, {
                     status: 'Approved',
-                    approvedBy: parentUserId,
+                    approvedBy: parentUserId, // 익명 로그인 UID 기록
                     approvedAt: new Date().getTime(),
-                    parentComment: commentToSave // UI 표시를 위해 저장
+                    parentComment: commentToSave
                 });
 
-                // 2. (NEW) 요청하신 'messages' 컬렉션에 별도로 메시지 기록
+                // 2. 'messages' 컬렉션에 별도로 메시지 기록
                 const messageCollectionRef = collection(db, `artifacts/${appId}/public/data/messages`);
                 await addDoc(messageCollectionRef, {
-                    senderId: parentUserId, // 임시 부모 ID
+                    senderId: parentUserId, 
                     shareId: shareId,
                     type: 'approval_comment',
                     timestamp: new Date().getTime(),
@@ -399,10 +402,12 @@
                 setStatus(approvalMessage);
 
             } catch (error) {
-                setStatus(`승인 실패: ${error.message}. Firestore 쓰기 권한을 확인하세요.`, true);
+                // 에러 발생 시 버튼/입력 다시 활성화
                 approveButton.disabled = false;
-                approvalCommentInput.disabled = false; // 에러 발생 시 입력 다시 활성화
+                approvalCommentInput.disabled = false; 
                 approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
+
+                setStatus(`승인 실패: ${error.message}. Firestore 보안 규칙을 확인하세요.`, true);
             }
         }
 
