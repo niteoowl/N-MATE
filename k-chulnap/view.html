@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자녀 용돈기입장 공유 보고서 (읽기 전용)</title>
+    <title>[부모확인용] K-출납부</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -70,7 +70,7 @@
         <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-1 flex-shrink-0">
             <div class="flex items-center">
                 <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-12 w-12 mr-3 object-contain" onerror="this.style.display='none'">
-                <span>자녀 용돈기입장 공유 보고서 (읽기 전용)</span>
+                <span>K-출납부</span>
             </div>
             <div class="text-sm font-normal flex items-center">
                 <span id="report-info">공유 ID: 로드 중...</span>
@@ -162,7 +162,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
@@ -189,12 +189,10 @@
 
         // appId는 환경 변수를 우선 사용하고, 없으면 firebaseConfig의 projectId를 사용합니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // initialAuthToken 변수는 더 이상 사용되지 않습니다.
         
         let app;
         let db;
-        let auth;
-        let userId = null;
 
         // UI Elements
         const statusElement = document.getElementById('status-message');
@@ -232,42 +230,24 @@
             }
         };
 
-        // --- Initialization and Auth ---
+        // --- Initialization and Data Load ---
         async function initFirebase() {
             try {
-                // Firebase Config가 유효한지 최종 확인
+                // 1. Firebase Config 유효성 확인
                 if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
                     setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다. (설정 객체 비어있음)", true);
                     return;
                 }
+                
+                // 2. Firebase App과 Firestore 초기화
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
-                auth = getAuth(app);
 
-                // 익명 또는 커스텀 토큰으로 인증 시도 (읽기 전용 권한 획득)
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                    setStatus("초기 인증 토큰으로 읽기 권한 획득.");
-                } else {
-                    await signInAnonymously(auth);
-                    setStatus("익명 로그인으로 읽기 권한 획득.");
-                }
-
-                // 인증이 완료되면 보고서 로드 시작
-                onAuthStateChanged(auth, user => {
-                    if (user) {
-                        userId = user.uid;
-                        loadSharedReport();
-                    } else {
-                        // 익명 로그인 실패 시 이리로 오지 않도록, signInAnonymously 성공 여부를 확인해야 함.
-                        // onAuthStateChanged는 초기 로드 시 한 번은 실행되므로, 여기서 loadSharedReport를 호출하는 것이 안전함.
-                        // 다만, 익명 로그인에 실패하면 user는 null이 될 수 있으므로, Firebase 규칙이 익명 로그인을 허용해야 함.
-                        if (!userId) {
-                            showError("인증에 실패하여 보고서를 로드할 수 없습니다. (권한 오류)");
-                        }
-                    }
-                });
-
+                // 3. (중요 수정) 인증 단계 건너뛰고 바로 데이터 로드
+                // Firestore 규칙에서 'allow read: if true'로 설정했으므로 인증 불필요
+                setStatus("Firebase 초기화 성공. 공용 보고서 데이터 로드를 시도합니다.");
+                loadSharedReport();
+                
             } catch (error) {
                 console.error("Firebase 초기화 오류:", error);
                 showError(`Firebase 초기화 실패. (${error.message})`);
@@ -304,6 +284,8 @@
             try {
                 // 공용 데이터 경로: artifacts/{appId}/public/data/sharedReports/{shareId}
                 const docRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                
+                // Firestore 데이터 로드 (인증 없이)
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
@@ -311,12 +293,13 @@
                     renderReport(reportData, shareId);
                     setStatus("공유 보고서 로드 성공.");
                 } else {
-                    showError(`해당 ID (${shareId.substring(0, 8)}...)에 해당하는 공유 보고서가 존재하지 않습니다.`);
+                    showError(`해당 ID (${shareId.substring(0, 8)}...)에 해당하는 공유 보고서가 존재하지 않습니다. URL을 확인하세요.`);
                 }
 
             } catch (error) {
                 console.error("공유 보고서 로드 오류:", error);
-                showError(`데이터베이스 접근 오류: ${error.message}`);
+                // Firestore 규칙 오류가 발생하면 (Permission denied)가 뜰 것입니다.
+                showError(`데이터베이스 접근 오류. (FireStore 권한 또는 네트워크 문제): ${error.message}`);
             }
         }
 
