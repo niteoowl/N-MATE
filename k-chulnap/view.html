@@ -168,9 +168,27 @@
         setLogLevel('Debug');
 
         // --- Firebase/Auth/Global Setup ---
-        // 환경 변수를 사용하거나, 없을 경우 기본값으로 설정
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        
+        // 사용자가 제공한 Firebase 구성 (환경 변수가 없을 경우 사용될 대체 구성)
+        const providedFirebaseConfig = {
+            apiKey: "AIzaSyC2iRkFZUYZsVIbGzXcCLY1t4eBcfzvwzg",
+            authDomain: "mateplay-a.firebaseapp.com",
+            projectId: "mateplay-a",
+            storageBucket: "mateplay-a.firebasestorage.app",
+            messagingSenderId: "828604405793",
+            appId: "1:828604405793:web:aaaa2020fcc44c7d1cab60",
+            measurementId: "G-SHSQRWSLJL"
+        };
+        
+        // 환경 변수에서 구성을 로드
+        const envFirebaseConfigString = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const envFirebaseConfig = JSON.parse(envFirebaseConfigString);
+
+        // 환경 변수를 먼저 사용하고, 없으면 제공된 설정을 사용
+        const firebaseConfig = Object.keys(envFirebaseConfig).length > 0 ? envFirebaseConfig : providedFirebaseConfig;
+
+        // appId는 환경 변수를 우선 사용하고, 없으면 firebaseConfig의 projectId를 사용합니다.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
         
         let app;
@@ -217,8 +235,9 @@
         // --- Initialization and Auth ---
         async function initFirebase() {
             try {
-                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) {
-                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다.", true);
+                // Firebase Config가 유효한지 최종 확인
+                if (!firebaseConfig || Object.keys(firebaseConfig).length === 0 || !firebaseConfig.apiKey) {
+                    setStatus("Firebase 설정이 올바르지 않아 초기화할 수 없습니다. (설정 객체 비어있음)", true);
                     return;
                 }
                 app = initializeApp(firebaseConfig);
@@ -240,7 +259,12 @@
                         userId = user.uid;
                         loadSharedReport();
                     } else {
-                        showError("인증에 실패하여 보고서를 로드할 수 없습니다.");
+                        // 익명 로그인 실패 시 이리로 오지 않도록, signInAnonymously 성공 여부를 확인해야 함.
+                        // onAuthStateChanged는 초기 로드 시 한 번은 실행되므로, 여기서 loadSharedReport를 호출하는 것이 안전함.
+                        // 다만, 익명 로그인에 실패하면 user는 null이 될 수 있으므로, Firebase 규칙이 익명 로그인을 허용해야 함.
+                        if (!userId) {
+                            showError("인증에 실패하여 보고서를 로드할 수 없습니다. (권한 오류)");
+                        }
                     }
                 });
 
