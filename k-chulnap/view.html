@@ -243,7 +243,7 @@
         const reportTitleEl = document.getElementById('report-month-year');
         const reportInfoEl = document.getElementById('report-info');
         const approveButton = document.getElementById('approve-button');
-        const rejectButton = document.getElementById('reject-button'); // 새로 추가됨
+        const rejectButton = document.getElementById('reject-button'); 
         const approvalStatusDisplay = document.getElementById('approval-status-display');
         const approvalCommentInput = document.getElementById('approval-comment'); 
         const savedApprovalMessageEl = document.getElementById('saved-approval-message'); 
@@ -355,24 +355,20 @@
 
         /**
          * 부모가 보고서를 승인하거나 반려하고 Firestore 문서에 상태와 코멘트를 업데이트합니다.
+         * 이 함수는 요청하신 대로 'sharedReports' 문서에 직접 업데이트합니다.
          * @param {string} action - 'Approved' 또는 'Rejected'
          */
         async function handleReportAction(action) {
             const shareId = getShareIdFromUrl();
             if (!shareId || !db || !auth.currentUser) {
-                setStatus("액션 처리에 필요한 정보가 없습니다.", true);
+                setStatus("액션 처리에 필요한 정보가 없습니다. (ID 또는 인증)", true);
                 return;
             }
             
+            // 익명 로그인 UID를 부모님 ID로 사용
             const parentUserId = auth.currentUser.uid;
             const comment = approvalCommentInput.value.trim();
             
-            // 반려 시 코멘트 필수 요구 (선택 사항으로 변경)
-            // if (action === 'Rejected' && !comment) {
-            //     setStatus("반려할 경우, 자녀에게 전달할 사유(코멘트)를 반드시 작성해주세요.", true);
-            //     return; 
-            // }
-
             const actionText = action === 'Approved' ? '승인' : '반려';
             const actionSymbol = action === 'Approved' ? '✅' : '❌';
             const defaultComment = action === 'Approved' ? '확인했습니다.' : '수정 후 다시 공유해 주세요.';
@@ -390,16 +386,23 @@
             setStatus(`보고서 ${actionText} 정보를 데이터베이스에 기록하는 중...`);
             
             try {
-                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+                // /artifacts/{appId}/public/data/sharedReports/{shareId} 문서에 직접 업데이트합니다.
+                const reportPath = `artifacts/${appId}/public/data/sharedReports/${shareId}`;
+                const reportRef = doc(db, reportPath);
 
-                // 1. sharedReports 문서 업데이트 (messages 컬렉션 기록 제거)
-                await updateDoc(reportRef, {
+                const updatePayload = {
                     status: action, // 'Approved' or 'Rejected'
                     approvedBy: parentUserId, // 익명 로그인 UID 기록
                     approvedAt: new Date().getTime(),
                     parentComment: commentToSave
-                });
+                };
 
+                // ★★★ 디버깅용 로그 추가 ★★★
+                console.log(`[Firestore WRITE ATTEMPT] Target Path: ${reportPath}`);
+                console.log('[Firestore WRITE ATTEMPT] Payload:', updatePayload);
+                
+                await updateDoc(reportRef, updatePayload);
+                
                 // 성공 메시지 및 UI 업데이트
                 const now = new Date().toLocaleString('ko-KR');
                 const completionMessage = `🎉 ${actionText} 완료: ${now}에 처리되었습니다.`;
