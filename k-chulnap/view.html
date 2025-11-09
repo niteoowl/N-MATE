@@ -3,343 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[부모용] K-출납부</title>
-    <!-- Tailwind CSS 로드 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* 폰트 및 기본 설정 */
-        body {
-            font-family: 'Dotum', 'Gulim', sans-serif;
-            background-color: #EFEFEF; 
-            font-size: 13px;
-        }
-        /* 2000년대 스타일 3D 버튼 */
-        .classic-button {
-            border: 1px solid #000;
-            border-color: #DFDFDF #808080 #808080 #DFDFDF;
-            background-color: #D3D3D3;
-            box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
-            user-select: none;
-        }
-        /* 깊게 파인 입력 필드/영역 (여기에선 readonly display) */
-        .classic-output-area {
-            border: 1px solid #808080;
-            background-color: white;
-            padding: 4px;
-            box-shadow: 1px 1px 0px #FFFFFF inset;
-            min-height: 50px;
-        }
-        /* 헤더 그라데이션 */
-        .classic-header-gradient {
-            background: linear-gradient(to bottom, #A0C4E6 0%, #2B5876 100%);
-            color: white;
-            text-shadow: 1px 1px #000000;
-        }
-        /* 프레임/그룹 박스 */
-        .classic-frame {
-            border: 1px solid #808080;
-            padding: 4px;
-            background-color: #F0F0F0;
-        }
-        /* 타이틀 바 (파란색) */
-        .classic-title-bar {
-            background-color: #0000AA;
-            color: white;
-            padding: 2px 8px;
-            font-weight: bold;
-        }
-        /* 테이블 스타일 */
-        .report-table th, .report-table td {
-            border: 1px solid #808080;
-            padding: 4px;
-        }
-        .report-table th {
-            background-color: #BDBDBD;
-        }
-        .report-table {
-            border-collapse: collapse;
-        }
-        /* 로딩 스피너 */
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-
-<body class="min-h-screen flex flex-col"> 
-    <!-- 전체 컨테이너 -->
-    <div class="classic-frame min-h-screen flex flex-col p-2 max-w-4xl mx-auto w-full"> 
-        
-        <!-- 1. 헤더 (타이틀 및 로고) -->
-        <header class="classic-header-gradient p-3 text-lg font-bold flex justify-between items-center mb-2 flex-shrink-0">
-            <div class="flex items-center">
-                <img src="https://i.postimg.cc/Z5p1HfXG/image01-Photoroom.png" alt="시스템 로고" class="h-10 w-10 mr-3 object-contain" onerror="this.style.display='none'">
-                <span>K-출납부</span>
-            </div>
-            <div class="text-sm font-normal" id="share-info">
-                공유 보고서 ID: <span id="share-id-display">로드 중...</span>
-            </div>
-        </header>
-
-        <!-- 2. 메인 보고서 영역 -->
-        <main class="flex-grow bg-[#F0F0F0] p-4 border border-[#BDBDBD] flex flex-col">
-            <div class="classic-title-bar text-sm mb-3 flex-shrink-0">
-                [자녀의 월간 용돈기입장 보고서] - <span id="report-month-display"></span>
-            </div>
-
-            <!-- 로딩/에러 메시지 -->
-            <div id="loading-status" class="classic-output-area text-center p-8 bg-yellow-50">
-                <div class="loading-spinner mx-auto mb-2"></div>
-                <p class="font-bold text-gray-700">보고서 데이터를 로드하는 중입니다...</p>
-                <p class="text-xs mt-1 text-gray-500">잠시만 기다려주세요.</p>
-            </div>
-
-            <!-- 보고서 콘텐츠 (로드 완료 시 표시) -->
-            <div id="report-content" class="hidden flex flex-col space-y-4">
-                
-                <!-- 재정 집계 현황 -->
-                <div class="classic-frame bg-white p-3 border border-[#BDBDBD] flex-shrink-0">
-                    <h2 class="text-sm font-bold mb-2 text-blue-700">▶ 월간 요약 현황</h2>
-                    <div class="grid grid-cols-3 gap-3 text-center p-2 bg-[#D3D3D3] text-black">
-                        <div class="classic-output-area p-2 bg-green-50">
-                            <div class="text-xs text-gray-600 font-bold">총 수입액 (+)</div>
-                            <div class="text-lg font-extrabold text-green-700" id="view-total-income">￦ 0</div>
-                        </div>
-                        <div class="classic-output-area p-2 bg-red-50">
-                            <div class="text-xs text-gray-600 font-bold">총 지출액 (-)</div>
-                            <div class="text-lg font-extrabold text-red-700" id="view-total-expense">￦ 0</div>
-                        </div>
-                        <div class="classic-output-area p-2 bg-yellow-50">
-                            <div class="text-xs text-gray-600 font-bold">순 잔액</div>
-                            <div class="text-lg font-extrabold text-blue-700" id="view-net-balance">￦ 0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 상세 거래 내역 -->
-                <div class="classic-frame bg-white p-3 border border-[#BDBDBD] flex-grow flex flex-col">
-                    <h2 class="text-sm font-bold mb-2 text-blue-700">▶ 상세 거래 내역</h2>
-                    <div class="overflow-auto flex-grow classic-output-area p-0">
-                        <table class="report-table w-full text-sm">
-                            <thead class="bg-[#BDBDBD] text-black sticky top-0">
-                                <tr>
-                                    <th class="p-2 w-[10%]">No.</th>
-                                    <th class="p-2 w-[15%]">날짜</th>
-                                    <th class="p-2 w-[15%]">구분</th>
-                                    <th class="p-2 w-[40%]">내용</th>
-                                    <th class="p-2 w-[20%]">금액 (원)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="view-transaction-list-body">
-                                <!-- 데이터가 여기에 로드됩니다 -->
-                            </tbody>
-                            <tfoot>
-                                <tr class="bg-[#DFDFDF] font-bold">
-                                    <td class="p-2 text-right" colspan="4">월 합계 잔액:</td>
-                                    <td class="p-2 text-right text-blue-800" id="view-monthly-net-balance-footer">0</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <p id="shared-by-info" class="text-xs text-gray-600 mt-4 text-center hidden">
-                이 보고서는 <span id="shared-by-user"></span> 님이 <span id="shared-at-time"></span>에 공유하셨습니다.
-            </p>
-        </main>
-
-        <!-- 시스템 상태 메시지 -->
-        <div class="mt-4 text-xs p-1 classic-frame bg-white border border-[#BDBDBD] shadow-inner flex-shrink-0" id="status-message">
-            [시스템 상태]: 공유 ID 확인 중...
-        </div>
-
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // 디버그 로깅 활성화
-        setLogLevel('Debug');
-        
-        // --- Firebase 설정 (index.html에서 복사) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCgZL83YJIM0iXXRttTmoeyJvekBBkOhX4",
-            authDomain: "k-chulnap.firebaseapp.com",
-            projectId: "k-chulnap",
-            storageBucket: "k-chulnap.firebasestorage.app",
-            messagingSenderId: "169980642255",
-            appId: "1:169980642255:web:572c781aa6b010de6e08ba",
-            measurementId: "G-49GQLQ5HLC"
-        };
-        const appId = firebaseConfig.projectId; // k-chulnap
-        
-        let db;
-        
-        // UI Elements
-        const statusElement = document.getElementById('status-message');
-        const loadingStatus = document.getElementById('loading-status');
-        const reportContent = document.getElementById('report-content');
-        const shareIdDisplay = document.getElementById('share-id-display');
-        const reportMonthDisplay = document.getElementById('report-month-display');
-
-        // Summary Elements
-        const incomeEl = document.getElementById('view-total-income');
-        const expenseEl = document.getElementById('view-total-expense');
-        const netBalanceEl = document.getElementById('view-net-balance');
-        const footerNetBalanceEl = document.getElementById('view-monthly-net-balance-footer');
-        const listBody = document.getElementById('view-transaction-list-body');
-        const sharedByInfo = document.getElementById('shared-by-info');
-        const sharedByUser = document.getElementById('shared-by-user');
-        const sharedAtTime = document.getElementById('shared-at-time');
-
-        // Helper for Currency Formatting
-        const formatCurrency = (amount) => {
-            if (typeof amount !== 'number') return '￦ 0';
-            const sign = amount < 0 ? '￦ -' : '￦ ';
-            return sign + Math.abs(amount).toLocaleString('ko-KR');
-        };
-        
-        // Helper for Status Messages
-        const setStatus = (message, isError = false) => {
-            statusElement.innerHTML = `[시스템 상태]: ${isError ? '오류: ' : ''}${message}`;
-            if (isError) {
-                statusElement.classList.add('error-status');
-                console.error(message);
-            } else {
-                statusElement.classList.remove('error-status');
-                console.log(message);
-            }
-        };
-
-        // --- Core Logic ---
-
-        function initFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                setStatus("Firebase 초기화 완료. 공유 ID 확인을 시작합니다.");
-            } catch (error) {
-                setStatus(`Firebase 초기화 실패: ${error.message}`, true);
-            }
-        }
-
-        function getShareIdFromUrl() {
-            const params = new URLSearchParams(window.location.search);
-            return params.get('shareId');
-        }
-
-        async function loadReport(shareId) {
-            if (!db || !shareId) {
-                loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 유효한 공유 ID가 URL에 포함되어 있지 않습니다.</p>';
-                return;
-            }
-
-            shareIdDisplay.textContent = shareId.substring(0, 8) + '...';
-            setStatus(`공유 ID (${shareId.substring(0, 5)}...)로 보고서를 로드하는 중...`);
-
-            try {
-                // 공용 컬렉션 경로
-                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
-                const docSnap = await getDoc(reportRef);
-
-                if (docSnap.exists()) {
-                    const reportData = docSnap.data();
-                    renderReport(reportData);
-                    setStatus("보고서 로드 성공. 아래 내용을 확인하세요.");
-                } else {
-                    loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 해당 ID에 해당하는 공유 보고서를 찾을 수 없습니다. (ID 만료 또는 삭제)</p>';
-                }
-            } catch (error) {
-                console.error("보고서 로드 오류:", error);
-                loadingStatus.innerHTML = `<p class="font-bold text-red-700">🚨 보고서 로드 중 심각한 오류 발생: ${error.message}</p>`;
-                setStatus(`보고서 로드 실패: ${error.message}`, true);
-            }
-        }
-
-        function renderReport(data) {
-            // 1. 로딩 상태 숨기기, 콘텐츠 표시
-            loadingStatus.classList.add('hidden');
-            reportContent.classList.remove('hidden');
-
-            // 2. 제목 및 공유 정보 업데이트
-            const [year, month] = data.month.split('-');
-            reportMonthDisplay.textContent = `${year}년 ${month}월`;
-            
-            const sharedDate = new Date(data.createdAt).toLocaleString('ko-KR');
-            sharedByUser.textContent = data.sharedBy.substring(0, 8) + '...';
-            sharedAtTime.textContent = sharedDate;
-            sharedByInfo.classList.remove('hidden');
-
-            // 3. 요약 정보 업데이트
-            const { income, expense, netBalance } = data.summary;
-            incomeEl.textContent = formatCurrency(income);
-            expenseEl.textContent = formatCurrency(expense);
-            netBalanceEl.textContent = formatCurrency(netBalance);
-            footerNetBalanceEl.textContent = netBalance.toLocaleString('ko-KR');
-
-            // 4. 상세 거래 내역 업데이트
-            renderTransactions(data.transactions);
-        }
-        
-        function renderTransactions(transactions) {
-            listBody.innerHTML = '';
-            
-            if (!transactions || transactions.length === 0) {
-                listBody.innerHTML = `<tr><td class="p-2 text-center text-gray-500" colspan="5">등록된 거래 내역이 없습니다.</td></tr>`;
-                return;
-            }
-            
-            // 날짜 기준 최신순으로 정렬 (timestamp 기준도 좋지만, 여기서는 저장된 배열 순서대로 일단 사용)
-            // 공유 시 index.html에서 이미 최신순으로 정렬된 데이터를 보냈을 것으로 가정하고 역순으로 No.를 매김.
-            
-            transactions.forEach((tx, index) => {
-                const isIncome = tx.amount > 0;
-                const rowClass = isIncome ? 'bg-green-50' : 'bg-red-50';
-                const amountClass = isIncome ? 'text-green-700' : 'text-red-700';
-                const displayAmount = Math.abs(tx.amount).toLocaleString('ko-KR');
-
-                const row = document.createElement('tr');
-                row.className = `text-xs ${rowClass}`;
-                row.innerHTML = `
-                    <td class="text-center">${transactions.length - index}</td>
-                    <td class="text-center">${tx.date.substring(5)}</td>
-                    <td class="text-center">${isIncome ? '수입 (+)' : '지출 (-)'}</td>
-                    <td>${tx.memo} (${tx.method})</td>
-                    <td class="text-right font-bold ${amountClass}">${isIncome ? '+' : '-'}${displayAmount}</td>
-                `;
-                listBody.appendChild(row);
-            });
-        }
-
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            initFirebase();
-            const shareId = getShareIdFromUrl();
-            if (shareId) {
-                loadReport(shareId);
-            } else {
-                loadingStatus.innerHTML = '<p class="font-bold text-red-700">🚨 오류: 공유 링크가 올바르지 않습니다. (shareId 누락)</p>';
-                shareIdDisplay.textContent = 'N/A';
-            }
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>[부모확인용] K-출납부</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -358,6 +21,14 @@
             box-shadow: 1px 1px 0px #F0F0F0 inset, -1px -1px 0px #A0A0A0 inset;
             user-select: none;
         }
+        .classic-button:active:not(:disabled) {
+            border-color: #808080 #DFDFDF #DFDFDF #808080;
+            box-shadow: -1px -1px 0px #F0F0F0 inset, 1px 1px 0px #A0A0A0 inset;
+        }
+        .classic-button:disabled {
+            color: #808080;
+        }
+
         /* 헤더 그라데이션 */
         .classic-header-gradient {
             background: linear-gradient(to bottom, #A0C4E6 0%, #2B5876 100%);
@@ -484,6 +155,17 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- 3. 승인/확인 영역 -->
+                <div id="approval-section" class="mt-4 classic-frame bg-white p-3 border border-[#808080] flex-shrink-0 text-center">
+                    <div id="approval-status-display" class="font-bold text-base mb-2 text-gray-700">
+                        보고서 확인 후, 아래 버튼을 눌러 승인해주세요.
+                    </div>
+                    <button id="approve-button" class="classic-button text-base px-6 py-2 w-full max-w-xs mx-auto disabled:opacity-50">
+                        ✅ 용돈기입장 확인 및 승인
+                    </button>
+                </div>
+
             </div>
             
         </main>
@@ -500,7 +182,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         setLogLevel('Debug');
 
@@ -526,10 +208,10 @@
 
         // appId는 환경 변수를 우선 사용하고, 없으면 firebaseConfig의 projectId를 사용합니다.
         const appId = typeof __app_id !== 'undefined' ? __app_id : firebaseConfig.projectId;
-        // initialAuthToken 변수는 더 이상 사용되지 않습니다.
         
         let app;
         let db;
+        let auth; // Auth instance is initialized but not used for sign-in, only for future reference.
 
         // UI Elements
         const statusElement = document.getElementById('status-message');
@@ -539,6 +221,8 @@
         const reportContent = document.getElementById('report-content');
         const reportTitleEl = document.getElementById('report-month-year');
         const reportInfoEl = document.getElementById('report-info');
+        const approveButton = document.getElementById('approve-button');
+        const approvalStatusDisplay = document.getElementById('approval-status-display');
         
         // Summary Elements
         const incomeEl = document.getElementById('summary-income');
@@ -579,9 +263,9 @@
                 // 2. Firebase App과 Firestore 초기화
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
+                auth = getAuth(app); // Get auth instance
 
                 // 3. (중요 수정) 인증 단계 건너뛰고 바로 데이터 로드
-                // Firestore 규칙에서 'allow read: if true'로 설정했으므로 인증 불필요
                 setStatus("Firebase 초기화 성공. 공용 보고서 데이터 로드를 시도합니다.");
                 loadSharedReport();
                 
@@ -640,6 +324,53 @@
             }
         }
 
+        // --- Approval Logic ---
+
+        /**
+         * 부모가 보고서를 승인하고 Firestore 문서에 상태를 업데이트합니다.
+         */
+        async function approveReport() {
+            const shareId = getShareIdFromUrl();
+            if (!shareId || !db) {
+                setStatus("승인에 필요한 공유 ID 또는 데이터베이스 연결이 없습니다.", true);
+                return;
+            }
+
+            // 승인 버튼 비활성화 및 로딩 표시
+            approveButton.disabled = true;
+            approveButton.textContent = '처리 중...';
+            setStatus("보고서 승인 정보를 데이터베이스에 기록하는 중...");
+            
+            try {
+                // 임시 사용자 ID를 생성합니다. (실제 인증이 없으므로)
+                const parentUserId = crypto.randomUUID(); 
+                const reportRef = doc(db, `artifacts/${appId}/public/data/sharedReports`, shareId);
+
+                await updateDoc(reportRef, {
+                    status: 'Approved',
+                    approvedBy: parentUserId,
+                    approvedAt: new Date().getTime()
+                });
+
+                // 성공 메시지 및 UI 업데이트
+                const now = new Date().toLocaleString('ko-KR');
+                const approvalMessage = `🎉 승인 완료: ${now}에 확인되었습니다.`;
+                approvalStatusDisplay.textContent = approvalMessage;
+                approvalStatusDisplay.classList.remove('text-gray-700');
+                approvalStatusDisplay.classList.add('text-green-700');
+                approveButton.textContent = '✅ 승인 완료됨';
+                approveButton.disabled = true; // 영구 비활성화
+
+                setStatus(approvalMessage);
+
+            } catch (error) {
+                setStatus(`승인 실패: ${error.message}. Firestore 쓰기 권한을 확인하세요.`, true);
+                approveButton.disabled = false;
+                approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
+            }
+        }
+
+
         // --- Report Rendering ---
 
         function renderReport(data, shareId) {
@@ -652,8 +383,24 @@
             const reportMonthName = `${year}년 ${monthPart}월`;
             
             reportTitleEl.textContent = reportMonthName;
+            
+            // 1. 승인 상태 확인 및 UI 업데이트
+            if (data.status === 'Approved') {
+                const approvedAtDate = new Date(data.approvedAt).toLocaleString('ko-KR');
+                approvalStatusDisplay.textContent = `🎉 승인 완료: ${approvedAtDate}에 확인되었습니다.`;
+                approvalStatusDisplay.classList.remove('text-gray-700');
+                approvalStatusDisplay.classList.add('text-green-700');
+                approveButton.textContent = '✅ 승인 완료됨';
+                approveButton.disabled = true;
+            } else {
+                 approvalStatusDisplay.textContent = '보고서 확인 후, 아래 버튼을 눌러 승인해주세요.';
+                 approvalStatusDisplay.classList.add('text-gray-700');
+                 approveButton.textContent = '✅ 용돈기입장 확인 및 승인';
+                 approveButton.disabled = false;
+            }
 
-            // 1. 요약 정보 업데이트
+
+            // 2. 요약 정보 업데이트
             const summary = data.summary || { income: 0, expense: 0, netBalance: 0 };
             
             incomeEl.textContent = formatCurrency(summary.income);
@@ -661,7 +408,7 @@
             netBalanceEl.textContent = formatCurrency(summary.netBalance);
             footerNetBalanceEl.textContent = summary.netBalance.toLocaleString('ko-KR');
             
-            // 2. 상세 거래 내역 업데이트
+            // 3. 상세 거래 내역 업데이트
             listBody.innerHTML = '';
             const transactions = data.transactions || [];
             
@@ -700,6 +447,7 @@
         // --- Event Listeners and Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
             initFirebase();
+            approveButton.addEventListener('click', approveReport);
         });
     </script>
 </body>
