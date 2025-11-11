@@ -1,0 +1,334 @@
+<!doctype html>
+
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>금딸 도전 — 하루씩, 한걸음씩</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8;--accent-2:#34d399}
+    *{box-sizing:border-box;font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#071023 0%, #07172a 60%);color:#e6eef6}
+    .wrap{max-width:900px;margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:16px}
+    h1{margin:0;font-size:28px;letter-spacing:-0.5px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:18px;margin-top:18px;box-shadow:0 6px 24px rgba(2,6,23,0.6);}
+    .big{display:flex;gap:20px;align-items:center}
+    .counter{width:180px;height:180px;border-radius:12px;background:rgba(255,255,255,0.02);display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .days{font-size:44px;font-weight:700}
+    .label{color:var(--muted);font-size:13px;margin-top:6px}
+    .actions{display:flex;flex-direction:column;gap:10px}
+    button{background:var(--accent);border:0;padding:12px 16px;border-radius:10px;color:#042027;font-weight:700;cursor:pointer}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted);font-weight:600}
+    .danger{background:#ef4444;color:white}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .benefit{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px}
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+    input[type=text]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit}
+    .log{margin-top:12px;background:rgba(255,255,255,0.01);padding:12px;border-radius:10px;max-height:200px;overflow:auto}
+    .log-item{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.02)}
+    .topbar{display:flex;justify-content:space-between;align-items:center}
+    .hint{font-size:13px;color:var(--muted)}
+    .progress-bar{height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .progress{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+    .center{display:flex;flex-direction:column;align-items:center}
+    .confetti-canvas{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:999}
+    @media(max-width:780px){.big{flex-direction:column}.counter{width:140px;height:140px}}
+  </style>
+</head>
+<body>
+  <canvas id="confetti" class="confetti-canvas"></canvas>
+  <div class="wrap">
+    <header>
+      <div style="width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:800;color:#042027">금</div>
+      <div>
+        <h1>금딸 도전 — 하루씩, 한걸음씩</h1>
+        <div class="hint">오늘부터 다시 시작해도 괜찮아 — 한 번에 한 날을 쌓자.</div>
+      </div>
+    </header><div class="card">
+  <div class="topbar">
+    <div class="small muted">지속시간은 로컬(내 브라우저)에 저장됩니다. 브라우저 데이터 삭제 시 초기화됩니다.</div>
+    <div class="small muted">마지막 업데이트: <span id="lastUpdate">-</span></div>
+  </div>
+
+  <div class="big" style="margin-top:10px">
+    <div class="counter center">
+      <div class="days" id="daysDisplay">0</div>
+      <div class="label">연속 일수</div>
+      <div style="width:120px;margin-top:10px" class="progress-bar"><div id="progress" class="progress"></div></div>
+    </div>
+
+    <div class="actions">
+      <button id="startBtn">시작할게! (지금부터 카운트)</button>
+      <button class="ghost" id="remindBtn">알림 허용 요청</button>
+      <button class="ghost" id="addSlip">실수했어요 (다시 시작)</button>
+      <button class="ghost" id="addNote">오늘의 각오 메모</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+    <div style="flex:1;min-width:260px">
+      <h3 style="margin:0 0 8px 0">금딸 좋은 점</h3>
+      <div class="benefits" id="benefitList">
+        <div class="benefit">여드름 개선 가능성 증가</div>
+        <div class="benefit">정신력/집중력 향상</div>
+        <div class="benefit">에너지와 활력 상승</div>
+        <div class="benefit">탈모 걱정 감소 (생활습관 영향)</div>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <input id="newBenefit" type="text" placeholder="좋은 점 추가하기 (예: 피부 개선)" />
+        <button id="addBenefitBtn" class="ghost">추가</button>
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:260px">
+      <h3 style="margin:0 0 8px 0">오늘의 목표 & 기록</h3>
+      <div class="small muted">각오를 적어두고, 실수했을 때 솔직히 기록하세요. 다시 시작하는 건 약점이 아니라 재도전입니다.</div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <input id="noteInput" type="text" placeholder="오늘의 각오를 적어보세요" />
+        <button id="saveNote" class="ghost">저장</button>
+      </div>
+      <div class="log" id="logs"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="muted small">Tip: 브라우저의 로컬스토리지에 저장됩니다. 폰에서 바로 쓰려면 이 파일을 폰으로 옮겨 열어보세요.</div>
+      <div><button id="exportBtn" class="ghost">기록 내보내기 (텍스트)</button></div>
+    </div>
+  </footer>
+</div>
+
+<div class="card">
+  <h3 style="margin:0 0 8px 0">동기부여 메시지 모음</h3>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="ghost" data-msg="너는 해낼 수 있어! 하루면 충분해.">너는 해낼 수 있어!</button>
+    <button class="ghost" data-msg="이건 너를 위한 투자야. 오늘을 버텨!">이건 투자야</button>
+    <button class="ghost" data-msg="작은 승리가 큰 변화를 만든다.">작은 승리</button>
+    <button class="ghost" data-msg="실수하면 기록하고 다시 일어나자.">실수? 다시</button>
+  </div>
+  <div style="margin-top:12px" class="muted small">원하면 메시지를 커스텀할 수 있어요. 알림과 함께 쓴다면 동기부여 효과가 더 큽니다.</div>
+</div>
+
+  </div>  <script>
+    // storage keys
+    const KEY = 'noFap_v1';
+
+    const defaultState = { startedAt: null, streak: 0, lastSlip: null, notes: [], benefits: [], logs: [] };
+
+    function load() {
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : defaultState;
+    }
+    function save(state) { localStorage.setItem(KEY, JSON.stringify(state)); updateUI(); }
+
+    let state = load();
+
+    // UI elems
+    const daysDisplay = document.getElementById('daysDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const remindBtn = document.getElementById('remindBtn');
+    const addSlip = document.getElementById('addSlip');
+    const addNote = document.getElementById('addNote');
+    const logsEl = document.getElementById('logs');
+    const noteInput = document.getElementById('noteInput');
+    const saveNote = document.getElementById('saveNote');
+    const benefitList = document.getElementById('benefitList');
+    const newBenefit = document.getElementById('newBenefit');
+    const addBenefitBtn = document.getElementById('addBenefitBtn');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const progress = document.getElementById('progress');
+    const exportBtn = document.getElementById('exportBtn');
+
+    function updateUI(){
+      state = load();
+      const now = Date.now();
+      lastUpdate.textContent = new Date(now).toLocaleString();
+
+      // compute days
+      let days = 0;
+      if (state.startedAt) {
+        const elapsed = now - state.startedAt;
+        days = Math.floor(elapsed / (1000*60*60*24));
+      }
+      daysDisplay.textContent = state.streak + days;
+
+      // progress inside current day
+      if (state.startedAt) {
+        const msInDay = 1000*60*60*24;
+        const elapsed = (now - state.startedAt) % msInDay;
+        const pct = Math.min(100, Math.round((elapsed / msInDay)*100));
+        progress.style.width = pct + '%';
+      } else { progress.style.width = '0%'; }
+
+      // logs
+      logsEl.innerHTML = '';
+      (state.logs || []).slice().reverse().forEach(it => {
+        const d = document.createElement('div'); d.className='log-item';
+        d.innerHTML = `<strong>${it.type}</strong> — ${new Date(it.time).toLocaleString()}<div style='color:var(--muted);margin-top:4px'>${it.text||''}</div>`;
+        logsEl.appendChild(d);
+      });
+
+      // benefits
+      benefitList.innerHTML = '';
+      const defaults = ['여드름 개선 가능성 증가','정신력/집중력 향상','에너지와 활력 상승','탈모 걱정 감소'];
+      const combined = Array.from(new Set([...(state.benefits||[]), ...defaults]));
+      combined.forEach(b => { const div = document.createElement('div'); div.className='benefit'; div.textContent = b; benefitList.appendChild(div); });
+
+      // update start button
+      startBtn.textContent = state.startedAt ? '진행중 — 계속 유지' : '시작할게! (지금부터 카운트)';
+
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }
+
+    function startNow(){
+      const now = Date.now();
+      if (!state.startedAt) {
+        state.startedAt = now;
+        state.logs = state.logs || [];
+        state.logs.push({type:'시작', time: now, text: '새로운 도전 시작!'});
+        save(state);
+        toast('시작! 24시간을 버텨보자.');
+      } else {
+        toast('이미 진행중이에요 — 계속하세요.');
+      }
+    }
+
+    function recordSlip(){
+      const now = Date.now();
+      state.lastSlip = now;
+      state.streak = 0;
+      state.startedAt = null;
+      state.logs = state.logs || [];
+      state.logs.push({type:'실수(리셋)', time: now, text: prompt('한마디 남겨둘래요? (설명, 이유 등)') || ''});
+      save(state);
+      confettiBurst();
+      toast('실수 기록됨 — 다시 시작하면 됩니다. 포기하지 마세요.');
+    }
+
+    function saveNoteFunc(){
+      const txt = noteInput.value.trim();
+      if(!txt) return toast('메모를 입력하세요.');
+      state.notes = state.notes || []; state.notes.push({time:Date.now(), text:txt});
+      state.logs = state.logs || []; state.logs.push({type:'각오', time:Date.now(), text:txt});
+      noteInput.value=''; save(state); toast('각오 저장됨 — 힘내요!');
+    }
+
+    // benefit add
+    addBenefitBtn.addEventListener('click', ()=>{
+      const v = newBenefit.value.trim(); if(!v) return; state.benefits = state.benefits || []; state.benefits.push(v); newBenefit.value=''; save(state); toast('추가됨: '+v);
+    });
+
+    // export
+    exportBtn.addEventListener('click', ()=>{
+      const txt = JSON.stringify(state, null, 2);
+      const blob = new Blob([txt], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = '금딸_기록.txt'; a.click(); URL.revokeObjectURL(url);
+      toast('기록이 텍스트 파일로 저장되었습니다.');
+    });
+
+    // notification
+    remindBtn.addEventListener('click', async ()=>{
+      if (!('Notification' in window)) return alert('이 브라우저는 알림을 지원하지 않습니다.');
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') toast('알림 허용됨 — 매일 동기부여 알림을 받을 수 있어요.');
+      else toast('알림 거부됨 — 대신 페이지의 팝업을 사용하세요.');
+    });
+
+    // start/stop
+    startBtn.addEventListener('click', ()=>{
+      if (!state.startedAt){ startNow(); }
+      else { // allow user to mark a full day completed
+        const now = Date.now();
+        const msInDay = 1000*60*60*24;
+        if (now - state.startedAt >= msInDay) {
+          state.streak = (state.streak || 0) + 1; // increment streak
+          state.startedAt = state.startedAt + msInDay * Math.floor((now - state.startedAt)/msInDay); // move start forward by whole days
+          state.logs = state.logs || [];
+          state.logs.push({type:'완료(24h)', time: now, text: '하루 성공! 연속 +1'});
+          save(state);
+          confettiBurst();
+          if (Notification.permission === 'granted') new Notification('하루 달성!', {body:'하루를 버텼어요 — 계속 가봅시다!'});
+        } else {
+          const remain = Math.ceil((msInDay - (now - state.startedAt))/1000);
+          toast('아직 24시간이 안 지났습니다. 남은 초: '+remain);
+        }
+      }
+    });
+
+    addSlip.addEventListener('click', ()=>{ if (confirm('실수했나요? 기록하고 리셋할게요. 계속 진행하시겠어요?')) recordSlip(); });
+
+    saveNote.addEventListener('click', saveNoteFunc);
+
+    // messages
+    document.querySelectorAll('[data-msg]').forEach(b=>b.addEventListener('click', ()=>{ const m=b.dataset.msg; if (Notification.permission==='granted') new Notification('동기부여', {body:m}); alert(m);}));
+
+    // periodic update
+    setInterval(()=>{
+      // on each day boundary: if startedAt exists and at least 24h passed since last increment, auto-increment streak when page is open
+      const now = Date.now();
+      if (state.startedAt) {
+        const msInDay = 1000*60*60*24;
+        const fullDays = Math.floor((now - state.startedAt) / msInDay);
+        if (fullDays > 0) {
+          // add to streak
+          state.streak = (state.streak || 0) + fullDays;
+          // advance startAt by fullDays
+          state.startedAt = state.startedAt + fullDays*msInDay;
+          state.logs = state.logs || [];
+          state.logs.push({type:'자동완료', time: now, text: `${fullDays}일 자동 추가됨`});
+          if (Notification.permission === 'granted') new Notification('연속 갱신', {body:`${fullDays}일 추가되어 연속 ${state.streak}일이 되었습니다.`});
+          save(state);
+        }
+      }
+      updateUI();
+    }, 5000);
+
+    // toast
+    function toast(txt){
+      const d = document.createElement('div'); d.textContent = txt; d.style.position='fixed'; d.style.right='18px'; d.style.bottom='18px'; d.style.background='rgba(2,6,23,0.9)'; d.style.padding='12px 16px'; d.style.borderRadius='10px'; d.style.boxShadow='0 8px 30px rgba(2,6,23,0.7)'; d.style.zIndex=9999; document.body.appendChild(d);
+      setTimeout(()=>{ d.style.transition='opacity 400ms'; d.style.opacity='0'; setTimeout(()=>d.remove(),600); },2200);
+    }
+
+    // simple confetti
+    function confettiBurst(){
+      const canvas = document.getElementById('confetti'); const ctx = canvas.getContext('2d'); canvas.width = innerWidth; canvas.height = innerHeight;
+      const pieces = [];
+      for(let i=0;i<80;i++){ pieces.push({x:Math.random()*canvas.width, y:-20- Math.random()*200, vx:(Math.random()-0.5)*6, vy:Math.random()*6+2, r:Math.random()*6+3, rot:Math.random()*6, color:['#ff7b7b','#ffd86b','#7af0c7','#7cc0ff'][Math.floor(Math.random()*4)]}); }
+      let t=0;
+      function frame(){ ctx.clearRect(0,0,canvas.width,canvas.height); t++; pieces.forEach(p=>{ p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.rot += 0.1; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle = p.color; ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*1.6); ctx.restore(); }); if (t<120) requestAnimationFrame(frame); else { ctx.clearRect(0,0,canvas.width,canvas.height); } }
+      frame();
+    }
+
+    // on load
+    window.addEventListener('load', ()=>{
+      updateUI();
+      // if enough time passed while closed - compute and update
+      const now = Date.now();
+      if (state.startedAt) {
+        const msInDay = 1000*60*60*24;
+        const fullDays = Math.floor((now - state.startedAt) / msInDay);
+        if (fullDays > 0) {
+          state.streak = (state.streak || 0) + fullDays;
+          state.startedAt = state.startedAt + fullDays*msInDay;
+          state.logs = state.logs || []; state.logs.push({type:'재방문 자동완료', time: now, text: `${fullDays}일 자동 추가`});
+          save(state);
+        }
+      }
+    });
+
+    // friendly keyboard shortcuts
+    window.addEventListener('keydown', (e)=>{
+      if (e.key==='s') startNow();
+      if (e.key==='l') recordSlip();
+    });
+
+    // initialize if empty
+    if (!localStorage.getItem(KEY)) { localStorage.setItem(KEY, JSON.stringify(defaultState)); state = defaultState; }
+
+  </script></body>
+</html>
