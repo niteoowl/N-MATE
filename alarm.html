@@ -1,0 +1,253 @@
+<!doctype html>
+
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>브라우저 알람(Notifications) 테스트 페이지 — 여러 형식</title>
+  <style>
+    body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial;line-height:1.5;padding:24px;background:#f6f8fb}
+    .card{background:white;border-radius:12px;box-shadow:0 6px 20px rgba(22,28,37,0.08);padding:16px;margin-bottom:16px}
+    h1{margin:0 0 8px;font-size:20px}
+    label{display:block;margin:8px 0 4px;font-weight:600}
+    input,select,textarea,button{font-size:14px;padding:8px;border-radius:8px;border:1px solid #e3e7ee}
+    button{cursor:pointer}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .small{font-size:13px;color:#666}
+    #scheduledList{margin-top:8px}
+    .kbd{background:#eef2ff;padding:2px 6px;border-radius:6px;font-family:monospace}
+    footer{margin-top:24px;font-size:13px;color:#666}
+    .muted{color:#777}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>브라우저 알람(Notifications) — 여러 형식 테스트</h1>
+    <p class="small">이 페이지는 Notification API와 Service Worker를 이용해 다양한 알림(아이콘, 이미지, 액션, 업데이트, 예약 등)을 테스트하도록 설계되었습니다.<br>테스트하려면 <span class="kbd">이 파일을 HTTPS로 서빙하거나</span> 또는 <span class="kbd">localhost</span>에서 열어야 합니다. (권한/Service Worker 동작 제한 때문)</p>
+  </div>  <div class="card" id="permCard">
+    <label>알림 권한 상태</label>
+    <div class="row">
+      <div id="permissionStatus" class="muted">불러오는 중...</div>
+      <button id="requestPerm">권한 요청</button>
+      <button id="revokeNote">(브라우저 설정에서 취소해주세요)</button>
+    </div>
+    <p class="small">권한 상태는 브라우저 설정에서 직접 변경 가능합니다. 일부 브라우저는 페이지에서 권한을 완전히 취소할 수 없습니다.</p>
+  </div>  <div class="card">
+    <label>기본 알림 만들기</label>
+    <input id="title" placeholder="제목" value="안녕하세요! 알림 테스트" />
+    <input id="body" placeholder="본문" value="여기는 본문 내용입니다. 간단한 예제." />
+    <div class="row" style="margin-top:8px">
+      <button id="basicNotify">기본 알림</button>
+      <button id="iconNotify">아이콘 포함</button>
+      <button id="imageNotify">이미지 포함(큰 이미지)</button>
+      <button id="silentNotify">사운드 없음(silent)</button>
+    </div>
+  </div>  <div class="card">
+    <label>Service Worker를 이용한 고급 알림 (액션, 업데이트, 태그)</label>
+    <div class="row">
+      <button id="swActions">액션 포함 알림(서비스워커)</button>
+      <button id="swTagReplace">같은 tag로 교체(업데이트)</button>
+      <button id="swProgress">진행 상태 모사(업데이트 반복)</button>
+    </div>
+    <p class="small">액션(버튼)은 서비스 워커에서만 신뢰성 있게 동작합니다. 알림 클릭/액션은 콘솔에 로그됩니다.</p>
+  </div>  <div class="card">
+    <label>예약 알림 (simple scheduler)</label>
+    <div class="row">
+      <input id="delaySec" type="number" min="1" value="5" style="width:120px" />
+      <button id="scheduleBtn">예약 등록</button>
+      <button id="cancelAllSchedules">모두 취소</button>
+    </div>
+    <div id="scheduledList" class="small"></div>
+  </div>  <div class="card">
+    <label>권한 / 디버그 로그</label>
+    <pre id="log" style="height:140px;overflow:auto;background:#f3f6ff;padding:8px;border-radius:8px"></pre>
+  </div>  <footer class="muted">작성자: 자동 생성 — 다양한 옵션을 로컬/HTTPS에서 테스트하세요.</footer><script>
+// --- 유틸리티 ---
+const logEl = document.getElementById('log');
+function log(...args){
+  const t = new Date().toLocaleTimeString();
+  logEl.textContent += `[${t}] ` + args.map(a=>typeof a==='object'?JSON.stringify(a):a).join(' ') + '\n';
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+// 상태 표시
+const permEl = document.getElementById('permissionStatus');
+function updatePerm(){
+  const p = Notification.permission;
+  permEl.textContent = p;
+  log('Permission:', p);
+}
+updatePerm();
+
+// 권한 요청
+document.getElementById('requestPerm').addEventListener('click', async ()=>{
+  try{
+    const p = await Notification.requestPermission();
+    updatePerm();
+  }catch(e){log('권한 요청 에러', e)}
+});
+
+// 기본 알림 생성 함수 (페이지 컨텍스트)
+function showNotificationPage(opts){
+  if(Notification.permission !== 'granted') { log('권한 없음. 알림 권한을 먼저 허용하세요.'); return; }
+  const title = opts.title||'알림';
+  const n = new Notification(title, opts);
+  n.onclick = e=>{ window.focus(); log('알림 클릭:', title); n.close(); };
+  n.onshow = ()=>log('알림 보임:', title);
+  n.onclose = ()=>log('알림 닫힘:', title);
+  n.onerror = e=>log('알림 에러', e);
+  return n;
+}
+
+// 버튼 바인딩 - 기본/아이콘/이미지
+const titleInput = document.getElementById('title');
+const bodyInput = document.getElementById('body');
+
+document.getElementById('basicNotify').addEventListener('click', ()=>{
+  showNotificationPage({body: bodyInput.value, tag: 'basic-' + Date.now()});
+});
+
+document.getElementById('iconNotify').addEventListener('click', ()=>{
+  showNotificationPage({body: bodyInput.value, icon: 'https://via.placeholder.com/128x128.png?text=ICON', badge: 'https://via.placeholder.com/64x64.png?text=B', tag:'icon-' + Date.now()});
+});
+
+document.getElementById('imageNotify').addEventListener('click', ()=>{
+  showNotificationPage({body: bodyInput.value, image: 'https://via.placeholder.com/600x240.png?text=BIG+IMAGE', icon: 'https://via.placeholder.com/96', tag:'img-' + Date.now()});
+});
+
+document.getElementById('silentNotify').addEventListener('click', ()=>{
+  showNotificationPage({body: bodyInput.value, silent: true, tag:'silent-' + Date.now()});
+});
+
+// --- Service Worker 동적 등록 ---
+// 주의: SW는 HTTPS 혹은 localhost에서만 등록됩니다.
+let swReg = null;
+async function registerSW(){
+  if('serviceWorker' in navigator){
+    const swCode = `self.addEventListener('install', e=>self.skipWaiting());
+self.addEventListener('activate', e=>e.waitUntil(self.clients.claim()));
+self.addEventListener('notificationclick', function(e){
+  const action = e.action;
+  e.notification.close();
+  // 클라이언트와 통신하려면 focus 혹은 openWindow를 사용
+  e.waitUntil((async ()=>{
+    const all = await clients.matchAll({type:'window'});
+    if(all[0]) all[0].focus();
+    // 액션 처리 로그를 보여주기 위해 메시지를 보냄
+    for(const c of all) c.postMessage({type:'notification-action',action,tag:e.notification.tag,data:e.notification.data});
+  })());
+});
+self.addEventListener('message', function(e){
+  // 메시지로 명령 처리 가능
+  if(e.data && e.data.cmd === 'show'){
+    const opts = e.data.opts || {};
+    self.registration.showNotification(opts.title||'SW 알림', opts).catch(err=>{});
+  }
+});
+`;
+    try{
+      const blob = new Blob([swCode], {type:'application/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      swReg = await navigator.serviceWorker.register(swUrl);
+      log('Service Worker 등록 성공');
+      // 메시지 수신 처리
+      navigator.serviceWorker.addEventListener('message', ev=>{
+        log('SW -> 페이지 메시지:', ev.data);
+      });
+    }catch(e){ log('SW 등록 실패:', e); }
+  } else log('Service Worker 미지원');
+}
+registerSW();
+
+// SW로 알림 요청 (showNotification은 SW에서 action을 지원)
+async function notifyViaSW(opts){
+  if(!swReg){ log('SW 미등록: 등록 시도'); await registerSW(); }
+  if(!swReg) { log('SW 등록 실패, 사용할 수 없음'); return; }
+  try{
+    // postMessage로 SW에게 전달 — SW는 self.registration.showNotification을 사용
+    swReg.active.postMessage({cmd:'show', opts});
+    log('SW에 알림 요청 전송', opts);
+  }catch(e){ log('SW 알림 전송 실패', e); }
+}
+
+// SW 관련 버튼
+document.getElementById('swActions').addEventListener('click', async ()=>{
+  if(Notification.permission !== 'granted'){ log('권한이 필요합니다.'); return; }
+  // 액션은 service worker에서 정의해야 작동하는 브라우저가 많음
+  await notifyViaSW({
+    title: '액션 포함 알림',
+    body: '버튼(답장/삭제)을 눌러보세요.',
+    tag: 'actions-test',
+    data: {foo:'bar'},
+    actions: [
+      {action:'reply',title:'답장'},
+      {action:'dismiss',title:'무시'}
+    ]
+  });
+});
+
+// 같은 tag로 교체 (replace)
+document.getElementById('swTagReplace').addEventListener('click', async ()=>{
+  if(Notification.permission !== 'granted'){ log('권한이 필요합니다.'); return; }
+  const now = new Date().toLocaleTimeString();
+  await notifyViaSW({title: '업데이트 알림', body: '업데이트 시각: '+now, tag: 'replace-tag'});
+});
+
+// 진행 상태 모사: 일정 시간마다 같은 tag로 업데이트
+let progressTimer = null;
+document.getElementById('swProgress').addEventListener('click', async ()=>{
+  if(Notification.permission !== 'granted'){ log('권한이 필요합니다.'); return; }
+  let i=0;
+  if(progressTimer) { clearInterval(progressTimer); progressTimer=null; log('진행모사 중단'); return; }
+  progressTimer = setInterval(()=>{
+    i+=10; if(i>100) i=0;
+    notifyViaSW({title:'다운로드 중', body:`진행 ${i}%`, tag:'progress-tag', data:{progress:i}});
+    log('진행 알림 전송', i+'%');
+  }, 1200);
+});
+
+// 예약 스케줄 (페이지 기반 setTimeout)
+const scheduled = new Map();
+document.getElementById('scheduleBtn').addEventListener('click', ()=>{
+  const s = parseInt(document.getElementById('delaySec').value||'5',10);
+  const id = 'sch-' + Date.now();
+  const t = setTimeout(()=>{
+    showNotificationPage({title:'예약 알림', body:`${s}초 후 실행된 알림`, tag:id});
+    scheduled.delete(id);
+    renderScheduled();
+  }, s*1000);
+  scheduled.set(id, {timeout:t, seconds:s, at: Date.now()+s*1000});
+  renderScheduled();
+  log('예약 등록:', id, s+'초');
+});
+
+document.getElementById('cancelAllSchedules').addEventListener('click', ()=>{
+  for(const [k,v] of scheduled.entries()) clearTimeout(v.timeout);
+  scheduled.clear(); renderScheduled(); log('모든 예약 취소');
+});
+
+function renderScheduled(){
+  const out = [];
+  for(const [k,v] of scheduled.entries()){
+    out.push(`<div>${k} — 실행시각: ${new Date(v.at).toLocaleTimeString()} (<span class=small>${Math.ceil((v.at-Date.now())/1000)}s 남음</span>)</div>`);
+  }
+  document.getElementById('scheduledList').innerHTML = out.join('') || '<span class="small">등록된 예약이 없습니다</span>';
+}
+
+// 페이지가 로드될 때 권한 초기화
+if(Notification && Notification.permission) updatePerm();
+
+// 페이지로 오는 SW 메시지 처리 (이미 등록 시)
+navigator.serviceWorker.addEventListener('message', ev=>{
+  const d = ev.data;
+  if(d && d.type === 'notification-action'){
+    log('사용자가 알림에서 액션을 수행함:', d.action, d.tag, d.data);
+  }
+});
+
+// 디버그: 페이지가 포그라운드로 올 때 권한 다시 체크
+window.addEventListener('focus', ()=>updatePerm());
+
+log('페이지 로드 완료 — 알림 기능을 테스트하세요.');
+</script></body>
+</html>
