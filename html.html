@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고성능 전체 화면 앱</title>
+    <!-- Tailwind CSS CDN을 로드하여 빠르고 반응성이 뛰어난 스타일을 적용합니다. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본적으로 전체 화면(뷰포트)을 덮도록 설정합니다. */
+        #app-container {
+            min-height: 100vh; /* 뷰포트 높이 100% */
+            width: 100vw;    /* 뷰포트 너비 100% */
+            transition: background-color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 스크롤바가 생기지 않도록 body의 마진을 제거합니다. */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* 가로 스크롤 방지 */
+        }
+    </style>
+    <script>
+        // Tailwind CSS 구성을 정의합니다.
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-dark': '#1f2937',
+                        'secondary-dark': '#374151',
+                        'accent': '#3b82f6',
+                        'text-light': '#f9fafb',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-primary-dark">
+
+    <div id="app-container" class="flex flex-col items-center justify-center p-4 sm:p-8 bg-primary-dark text-text-light">
+        
+        <!-- 메인 애플리케이션 카드 -->
+        <div class="w-full max-w-4xl p-6 sm:p-10 bg-secondary-dark rounded-xl shadow-2xl transition-all duration-300">
+            
+            <header class="mb-8 text-center">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-accent mb-2">
+                    초고속 웹 애플리케이션 프레임워크
+                </h1>
+                <p class="text-lg text-gray-400">
+                    3000줄 이상의 로직을 위한 최적화된 단일 파일 환경
+                </p>
+            </header>
+
+            <!-- 기능 및 상태 표시 영역 -->
+            <section class="mb-8 p-6 bg-primary-dark rounded-lg">
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                    <div id="status-display" class="text-xl font-semibold flex items-center space-x-2">
+                        <span id="status-icon" class="text-red-400">●</span>
+                        <span id="status-text">상태: 비활성</span>
+                    </div>
+
+                    <button id="toggle-button" 
+                            class="px-6 py-3 bg-accent hover:bg-blue-600 text-white font-bold rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 w-full sm:w-auto">
+                        기능 활성화/비활성화
+                    </button>
+                </div>
+            </section>
+
+            <!-- 로직 입력 영역 (3000줄 이상의 코드를 위한 공간) -->
+            <section class="space-y-4">
+                <h2 class="text-2xl font-bold text-text-light border-b border-gray-600 pb-2">
+                    핵심 애플리케이션 로직 영역
+                </h2>
+                <div class="text-gray-400 text-sm p-4 bg-primary-dark rounded-lg border border-gray-700">
+                    여기에 사용자의 복잡한 3000줄 이상의 JavaScript 로직이 들어갑니다.
+                    <br>DOM과의 상호작용은 최소화하고, 데이터 처리 로직은 순수 함수로 구성하는 것이 성능에 유리합니다.
+                </div>
+
+                <textarea id="dummy-data-storage" class="hidden" rows="1">
+                <!-- 
+                    성능 테스트 및 3000줄 이상의 코드 볼륨을 시뮬레이션하기 위한 더미 데이터/주석 블록입니다.
+                    실제 애플리케이션에서는 이 영역에 복잡한 데이터 구조나 함수 정의가 위치할 수 있습니다.
+                -->
+                <!-- ---------------------------------------------------------------------------------- -->
+                <!-- 3000줄 시뮬레이션을 위한 더미 주석 블록 (1/300) -->
+                /* const processBatch1 = (data) => { return data.map(item => ({ id: item.id * 2, value: item.value + 10 })); };
+                const calculateMetricsA = (list) => { let total = 0; for (const item of list) { total += item.value; } return total; };
+                const normalizeDataPoint = (point) => { return Math.log(point) / Math.PI; }; 
+                */
+                <!-- ---------------------------------------------------------------------------------- -->
+                <!-- 3000줄 시뮬레이션을 위한 더미 주석 블록 (2/300) -->
+                /*
+                // 사용자 인증 모듈 함수 정의
+                function validateToken(token) { return token.length === 64 && token.startsWith('user_'); }
+                // 데이터 캐싱 로직
+                const cache = new Map();
+                function getCachedData(key, fetcher) { 
+                    if (cache.has(key)) return cache.get(key); 
+                    const data = fetcher(key); cache.set(key, data); return data;
+                }
+                */
+                <!-- ---------------------------------------------------------------------------------- -->
+                <!-- 3000줄 시뮬레이션을 위한 더미 주석 블록 (3/300) -->
+                /* // 복잡한 재귀 알고리즘 구현
+                function fibonacci(n, memo = {}) {
+                    if (n <= 1) return n;
+                    if (memo[n]) return memo[n];
+                    memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo);
+                    return memo[n];
+                }
+                */
+                <!-- (중략) 더 많은 더미 주석/코드를 여기에 추가하여 3000줄을 채울 수 있습니다. -->
+                <!-- ---------------------------------------------------------------------------------- -->
+                </textarea>
+                
+            </section>
+        </div>
+
+        <footer class="mt-8 text-sm text-gray-500">
+            단일 파일, 전체 뷰포트, 고성능 설계.
+        </footer>
+    </div>
+
+    <script>
+        // Firebase 관련 전역 변수 설정 (사용하지 않더라도 구조 유지를 위해 정의)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        
+        // 중요: 이 부분에 실제 3000줄의 애플리케이션 JavaScript 로직을 넣으시면 됩니다.
+
+        let isActive = false; // 애플리케이션 상태 변수
+
+        const appContainer = document.getElementById('app-container');
+        const toggleButton = document.getElementById('toggle-button');
+        const statusIcon = document.getElementById('status-icon');
+        const statusText = document.getElementById('status-text');
+
+        /**
+         * 상태를 토글하고 UI를 업데이트하는 함수
+         * 이 함수는 복잡한 로직을 수행하는 부분을 시뮬레이션합니다.
+         */
+        function toggleAppState() {
+            // 1. 상태 업데이트
+            isActive = !isActive;
+
+            // 2. UI 업데이트 (최소한의 DOM 조작)
+            if (isActive) {
+                statusIcon.className = "text-green-400";
+                statusText.textContent = "상태: 활성 (로직 실행 중...)";
+                toggleButton.textContent = "기능 비활성화";
+                appContainer.classList.remove('bg-primary-dark');
+                appContainer.classList.add('bg-gray-800'); // 배경색 변경으로 활성 상태 시각화
+            } else {
+                statusIcon.className = "text-red-400";
+                statusText.textContent = "상태: 비활성";
+                toggleButton.textContent = "기능 활성화/비활성화";
+                appContainer.classList.remove('bg-gray-800');
+                appContainer.classList.add('bg-primary-dark');
+            }
+
+            // 3. 고성능 로직 호출 (시뮬레이션)
+            if (isActive) {
+                runHighPerformanceLogic();
+            }
+        }
+        
+        /**
+         * 3000줄 규모의 애플리케이션에서 발생할 수 있는 데이터 처리 로직을 시뮬레이션합니다.
+         * 실제로는 Web Worker를 사용하여 메인 스레드 부하를 줄여야 합니다.
+         */
+        function runHighPerformanceLogic() {
+            console.log("--- 고성능 로직 실행 시뮬레이션 시작 ---");
+            
+            // 더미 데이터/로직을 100만 번 반복하는 루프를 시뮬레이션
+            let sum = 0;
+            const startTime = performance.now();
+            
+            // 실제 애플리케이션의 핵심 로직이 여기에 들어갑니다.
+            // 3000줄의 코드가 아무리 많아도, 결국 실행 시간에 중요한 것은 반복 횟수와 복잡도입니다.
+            // 아래 루프는 일반적인 복잡한 계산을 시뮬레이션합니다.
+            for (let i = 0; i < 1000000; i++) {
+                // 간단한 수학 연산 시뮬레이션
+                sum += Math.sqrt(i) * Math.sin(i / 1000) / 2; 
+            }
+
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+
+            if (isActive) {
+                // 이 메시지 박스는 사용자에게 피드백을 주기 위해 custom Modal을 대체하는 용도로 사용됩니다.
+                console.log(`[시뮬레이션 완료] 연산 시간: ${duration} ms, 최종 합계 (더미): ${sum.toFixed(0)}`);
+            }
+            
+            console.log("--- 고성능 로직 실행 시뮬레이션 종료 ---");
+        }
+
+        // 이벤트 리스너 설정
+        toggleButton.addEventListener('click', toggleAppState);
+
+        // 초기 로드 시점의 콘솔 로깅
+        window.onload = function() {
+            console.log("애플리케이션 로드 완료: 전체 뷰포트 모드 활성화됨.");
+            // 3000줄 볼륨 시뮬레이션을 위해 더미 데이터를 불러오는 코드는 주석 처리합니다.
+            // const dummyData = document.getElementById('dummy-data-storage').value;
+            // console.log(`로드된 더미 코드 길이: ${dummyData.length} 자`);
+        };
+
+        // 경고/확인 대화 상자 사용 금지 규정 준수 (custom modal 사용)
+        function showCustomAlert(message) {
+            // 실제 배포 환경에서는 여기에 사용자 정의 모달 UI 로직이 들어가야 합니다.
+            console.warn("경고/알림: " + message);
+        }
+    </script>
+</body>
+</html>
