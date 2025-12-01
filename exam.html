@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>최종 시험지 에디터 (인쇄 완벽 호환)</title>
+    <title>시험지 에디터 (링크/파일 통합)</title>
     
     <!-- KoPub World 서체 (CDN) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
 
     <style>
         /* =========================================
-           1. 에디터 UI (화면에서만 보임)
+           1. 에디터 UI (화면용)
            ========================================= */
         :root {
             --editor-bg: #2d3436;
@@ -65,8 +65,8 @@
             width: 210mm; min-height: 297mm;
             background: white;
             padding: 0; 
-            margin: 0 auto; /* 화면상 중앙 정렬 */
-            box-shadow: 0 0 15px rgba(0,0,0,0.1); /* 화면상 그림자 */
+            margin: 0 auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
             font-family: 'KoPub Batang', serif;
             color: #111;
             line-height: 1.6;
@@ -125,10 +125,10 @@
             margin-bottom: 10px; word-break: keep-all;
         }
 
-        /* [박스 스타일 통일] 지문[T] = 보기[VIEW] : 흰색 배경 + 검정 테두리 */
+        /* [박스 스타일 통일] 지문[T] = 보기[VIEW] */
         .common-box {
-            border: 1px solid #000;  /* 진한 테두리 */
-            background-color: #fff;  /* 흰색 배경 */
+            border: 1px solid #000;
+            background-color: #fff;
             padding: 12px;
             margin: 10px 0;
             font-size: 9.8pt;
@@ -136,16 +136,12 @@
             position: relative;
         }
         
-        /* 보기 내부 제목 (<보 기>) */
         .box-title {
             text-align: center; font-family: 'KoPub Dotum'; font-size: 9pt;
             font-weight: bold; display: block; margin-bottom: 6px;
         }
 
-        /* 보기 항목 (ㄱ,ㄴ,ㄷ) */
         .view-item { margin-left: 5px; margin-bottom: 4px; }
-
-        /* 선택지 */
         .choices { list-style: none; padding: 0; margin: 10px 0 0 0; font-size: 10pt; }
         .choices li { padding-left: 5px; margin-bottom: 4px; }
 
@@ -153,12 +149,10 @@
         .q-image-area { text-align: center; margin: 15px 0; }
         .q-image-area img { max-width: 98%; border: 1px solid #eee; }
 
-        /* 기타 요소 (출처, 빈칸, 수식) */
         .ref { display: block; text-align: right; font-size: 8pt; color: #888; margin-top: 5px; }
         .blank { display: inline-block; width: 40px; border-bottom: 1px solid #000; }
         .math { font-family: 'Times New Roman', serif; font-style: italic; }
 
-        /* 푸터 (쪽번호) */
         .exam-footer {
             margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee;
             text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666;
@@ -170,10 +164,10 @@
 
     <!-- 상단 툴바 -->
     <div class="toolbar">
-        <div class="brand">📑 Exam Editor v2</div>
+        <div class="brand">📑 Exam Editor v3 (Link Support)</div>
         <div class="toolbar-right">
             <button class="btn-file">
-                🖼️ 이미지 파일 선택 (다중)
+                🖼️ PC 파일 선택 (선택사항)
                 <input type="file" id="imgInput" multiple accept="image/*" onchange="handleFiles(this.files)">
             </button>
             <span id="fileCount" style="font-size:12px; color:#555; margin-right:10px;">0개</span>
@@ -184,84 +178,70 @@
 
     <!-- 작업 공간 -->
     <div class="workspace">
-        <!-- 에디터 -->
         <div class="editor-pane">
             <div class="editor-info">
-                <b>[TITLE]</b>제목 <b>[SUB]</b>오른쪽텍스트 <b>[SEP]</b>문제분리<br>
-                <b>[Q]</b>발문 <b>[T]</b>/<b>[VIEW]</b>박스 <b>[ITEM]</b>항목 <b>[O]</b>/<b>[I]</b>선택지<br>
-                <b>[IMAGE_LIST]</b> 문제번호:파일명 <b>[/IMAGE_LIST]</b>
+                <b>[IMAGE_LIST]</b>에 파일명 또는 <b>이미지 주소(https://...)</b> 입력 가능<br>
+                예: 1 : my_file.jpg (PC파일) / 2 : https://site.com/img.png (링크)
             </div>
             <textarea id="codeInput" spellcheck="false">
 [TITLE] 2025학년도 1학기 기말고사 [/TITLE]
 [SUB] 2학년 1반 | 국어 영역 <br> <b>배점 : 100점</b> [/SUB]
 
-[Q] 다음 글을 읽고 물음에 답하시오. [/Q]
-
-[T]
-(가) 우리는 매일 수많은 정보를 접하며 살아간다. 정보의 홍수 속에서 필요한 정보를 선별하는 능력은 현대인의 필수 소양이다.
-(나) 정보를 비판적으로 수용하지 않으면 가짜 뉴스에 속기 쉽다. 따라서 출처를 확인하고 내용을 검증하는 태도가 필요하다.
-[/T]
-
-[Q] 윗글 (가), (나)의 공통된 주제로 가장 적절한 것은? [/Q]
-
+[Q] 다음 그림이 나타내는 것은? (PC 파일 예시) [/Q]
 [O]
-[I]① 정보 생산자의 윤리[/I]
-[I]② 미디어의 오락적 기능[/I]
-[I]③ 정보 리터러시의 중요성[/I]
-[I]④ 디지털 격차의 해소 방안[/I]
-[I]⑤ 전통 매체의 쇠퇴 원인[/I]
+[I]① 사과[/I]
+[I]② 바나나[/I]
+[I]③ 포도[/I]
+[I]④ 수박[/I]
+[I]⑤ 복숭아[/I]
 [/O]
 
 [SEP]
 
-[Q] 다음 [VIEW]의 설명을 모두 만족하는 개념은? [/Q]
-
-[VIEW]
-<보 기>
-[ITEM] ㄱ. 데이터를 표(Table) 형태로 저장한다. [/ITEM]
-[ITEM] ㄴ. SQL이라는 언어를 사용하여 조작한다. [/ITEM]
-[ITEM] ㄷ. 오라클, MySQL 등이 대표적이다. [/ITEM]
-[/VIEW]
-
+[Q] 다음 웹 이미지를 보고 물음에 답하시오. (링크 예시) [/Q]
+[T]
+아래 이미지는 KoPub 서체의 예시이다.
+[/T]
 [O]
-[I]① NoSQL[/I]
-[I]② RDBMS[/I]
-[I]③ File System[/I]
-[I]④ Blockchain[/I]
-[I]⑤ Cloud Computing[/I]
+[I]① 돋움체[/I]
+[I]② 바탕체[/I]
+[I]③ 고딕체[/I]
+[I]④ 궁서체[/I]
+[I]⑤ 굴림체[/I]
 [/O]
 
 [IMAGE_LIST]
-2 : my_graph.png
+1 : apple.jpg
+2 : https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT-Regular.woff2
 [/IMAGE_LIST]
+
+<!-- 
+※ 주의: 'apple.jpg'는 상단 [PC 파일 선택]으로 불러와야 보입니다.
+※ 2번 문제는 예시 링크(폰트파일) 대신 실제 이미지 주소(jpg, png)를 넣으세요.
+-->
 </textarea>
         </div>
 
-        <!-- 미리보기 -->
         <div class="preview-pane">
             <div class="exam-sheet">
-                <!-- 헤더 -->
                 <div class="exam-header">
-                    <div class="h-title">제목을 입력하세요</div>
-                    <div class="h-info">오른쪽 텍스트</div>
+                    <div class="h-title">제목</div>
+                    <div class="h-info">정보</div>
                 </div>
-                <!-- 본문 -->
                 <div class="exam-body" id="examContent">
                     <div style="text-align:center; padding-top:100px; color:#ccc;">
-                        왼쪽 에디터에서 [변환하기]를 눌러주세요.
+                        [변환하기]를 누르면 결과가 표시됩니다.
                     </div>
                 </div>
-                <!-- 푸터 -->
                 <div class="exam-footer">1 / 1</div>
             </div>
         </div>
     </div>
 
-    <!-- 스크립트 -->
     <script>
         const imageAssets = {};
 
-        // 이미지 파일 로드
+        // PC 파일 로드
         function handleFiles(files) {
             document.getElementById('fileCount').innerText = `${files.length}개`;
             for (let file of files) {
@@ -269,26 +249,24 @@
             }
         }
 
-        // 변환 로직
+        // 렌더링
         function renderExam() {
             let raw = document.getElementById('codeInput').value;
             const contentDiv = document.getElementById('examContent');
 
-            // 1. 헤더 (TITLE, SUB) 처리
+            // 1. 헤더 처리
             const titleMatch = raw.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/);
             if(titleMatch) {
                 document.querySelector('.h-title').innerText = titleMatch[1].trim();
                 raw = raw.replace(titleMatch[0], '');
             }
-
             const subMatch = raw.match(/\[SUB\]([\s\S]*?)\[\/SUB\]/);
             if(subMatch) {
-                // HTML 태그(br, b 등) 허용을 위해 innerHTML 사용
                 document.querySelector('.h-info').innerHTML = subMatch[1].trim();
                 raw = raw.replace(subMatch[0], '');
             }
 
-            // 2. 이미지 매핑 처리
+            // 2. 이미지 매핑 (URL + Local File 통합)
             const imgMapping = {};
             const imgListMatch = raw.match(/\[IMAGE_LIST\]([\s\S]*?)\[\/IMAGE_LIST\]/);
             if (imgListMatch) {
@@ -296,13 +274,15 @@
                 lines.forEach(line => {
                     const parts = line.split(':');
                     if (parts.length >= 2) {
-                        imgMapping[parts[0].trim()] = parts[1].trim();
+                        const qIdx = parts[0].trim();
+                        const val = parts.slice(1).join(':').trim(); // url에 콜론이 있을 수 있으므로 join
+                        imgMapping[qIdx] = val;
                     }
                 });
                 raw = raw.replace(imgListMatch[0], '');
             }
 
-            // 3. 문제 분리 및 HTML 생성
+            // 3. HTML 생성
             const questions = raw.split('[SEP]');
             let finalHtml = "";
             let qCounter = 0;
@@ -316,11 +296,8 @@
 
                 // 태그 변환
                 text = text.replace(/\[Q\]([\s\S]*?)\[\/Q\]/g, '<div class="q-text">$1</div>');
-                
-                // [T]와 [VIEW]를 동일한 스타일(.common-box)로 통합 (요청사항 반영)
                 text = text.replace(/\[T\]([\s\S]*?)\[\/T\]/g, '<div class="common-box">$1</div>');
                 text = text.replace(/\[VIEW\]([\s\S]*?)\[\/VIEW\]/g, '<div class="common-box">$1</div>');
-                
                 text = text.replace(/\[ITEM\]([\s\S]*?)\[\/ITEM\]/g, '<div class="view-item">· $1</div>');
                 text = text.replace(/\[O\]([\s\S]*?)\[\/O\]/g, '<ul class="choices">$1</ul>');
                 text = text.replace(/\[I\]([\s\S]*?)\[\/I\]/g, '<li>$1</li>');
@@ -328,10 +305,30 @@
                 text = text.replace(/\[BLANK\]/g, '<span class="blank"></span>');
                 text = text.replace(/\[MATH\]([\s\S]*?)\[\/MATH\]/g, '<span class="math">$1</span>');
 
-                // 이미지 삽입
+                // 이미지 로직 (URL vs Local)
                 let imgTag = "";
-                if(imgMapping[qCounter] && imageAssets[imgMapping[qCounter]]) {
-                    imgTag = `<div class="q-image-area"><img src="${imageAssets[imgMapping[qCounter]]}"></div>`;
+                const imgSource = imgMapping[qCounter];
+                
+                if (imgSource) {
+                    let finalSrc = "";
+                    
+                    // 1) 웹 링크인지 확인 (http, https, data 로 시작)
+                    if (imgSource.match(/^(http|https|data):/)) {
+                        finalSrc = imgSource;
+                    }
+                    // 2) 로컬 파일인지 확인
+                    else if (imageAssets[imgSource]) {
+                        finalSrc = imageAssets[imgSource];
+                    }
+
+                    if (finalSrc) {
+                        imgTag = `<div class="q-image-area"><img src="${finalSrc}" alt="Q${qCounter}"></div>`;
+                    } else {
+                        // 소스는 있는데 파일을 못 찾은 경우
+                        if(!imgSource.match(/^(http|https)/)) {
+                            imgTag = `<div style="color:red; font-size:11px; text-align:center;">⚠️ 파일 미선택: ${imgSource}</div>`;
+                        }
+                    }
                 }
 
                 finalHtml += `
@@ -348,7 +345,6 @@
             contentDiv.innerHTML = finalHtml;
         }
 
-        // 페이지 로드 시 자동 실행
         window.onload = renderExam;
     </script>
 </body>
