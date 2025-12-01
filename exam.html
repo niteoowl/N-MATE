@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최종 시험지 에디터 (인쇄 완벽 호환)</title>
+    
+    <!-- KoPub World 서체 (CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
+
+    <style>
+        /* =========================================
+           1. 에디터 UI (화면에서만 보임)
+           ========================================= */
+        :root {
+            --editor-bg: #2d3436;
+            --editor-text: #dfe6e9;
+            --accent-color: #1a3c6e; /* 인쇄용 네이비 */
+        }
+
+        body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
+
+        /* 툴바 */
+        .toolbar {
+            background: #fff; padding: 10px 20px; border-bottom: 1px solid #ccc;
+            display: flex; justify-content: space-between; align-items: center; height: 60px; box-sizing: border-box;
+        }
+        .brand { font-family: 'KoPub Dotum'; font-weight: bold; font-size: 1.1rem; color: #333; }
+        .toolbar-right { display: flex; gap: 10px; align-items: center; }
+
+        /* 버튼 스타일 */
+        button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-family: 'KoPub Dotum'; font-weight: bold; transition: 0.2s; }
+        .btn-file { background-color: #00b894; color: white; position: relative; overflow: hidden; }
+        .btn-file input { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
+        .btn-run { background-color: var(--accent-color); color: white; }
+        .btn-run:hover { background-color: #122b50; }
+        .btn-print { background-color: #636e72; color: white; }
+
+        /* 작업 영역 (좌:에디터 / 우:미리보기) */
+        .workspace { display: flex; flex: 1; height: calc(100vh - 60px); }
+        
+        .editor-pane { width: 40%; background: var(--editor-bg); display: flex; flex-direction: column; border-right: 1px solid #555; }
+        .editor-info { padding: 10px; background: #222; color: #aaa; font-size: 0.85rem; font-family: sans-serif; border-bottom: 1px solid #444; line-height: 1.4; }
+        textarea#codeInput {
+            flex: 1; width: 100%; background: transparent; color: #f1f2f6; border: none;
+            padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none;
+        }
+
+        .preview-pane { width: 60%; background: #ecf0f1; overflow-y: auto; padding: 40px 0; display: flex; justify-content: center; }
+
+        /* =========================================
+           2. 인쇄 & 미리보기 스타일 (시험지 본체)
+           ========================================= */
+        @media print {
+            .toolbar, .editor-pane { display: none !important; }
+            .workspace, .preview-pane { display: block; width: 100%; height: auto; overflow: visible; padding: 0; background: white; }
+            body { overflow: visible; height: auto; background: white; }
+            .exam-sheet { box-shadow: none !important; margin: 0 !important; }
+        }
+
+        @page { size: A4 portrait; margin: 15mm; }
+
+        /* A4 종이 레이아웃 */
+        .exam-sheet {
+            width: 210mm; min-height: 297mm;
+            background: white;
+            padding: 0; 
+            margin: 0 auto; /* 화면상 중앙 정렬 */
+            box-shadow: 0 0 15px rgba(0,0,0,0.1); /* 화면상 그림자 */
+            font-family: 'KoPub Batang', serif;
+            color: #111;
+            line-height: 1.6;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* [헤더] 제목 및 오른쪽 텍스트 */
+        .exam-header {
+            font-family: 'KoPub Dotum', sans-serif;
+            border-top: 4px solid var(--accent-color);
+            border-bottom: 1px solid #aaa;
+            padding: 12px 5px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .h-title { 
+            font-size: 16pt; font-weight: 800; color: var(--accent-color); 
+            letter-spacing: -1px; width: 65%;
+        }
+        .h-info { 
+            font-size: 10pt; color: #444; text-align: right; width: 35%;
+            line-height: 1.4;
+        }
+
+        /* [본문] 2단 구성 */
+        .exam-body {
+            column-count: 2;
+            column-gap: 12mm;
+            column-rule: 0.5px solid #ddd;
+            text-align: justify;
+            min-height: 800px;
+        }
+
+        /* [문제] Flexbox 레이아웃 */
+        .q-item {
+            display: flex; gap: 8px; margin-bottom: 30px;
+            break-inside: avoid; page-break-inside: avoid;
+        }
+        
+        /* 문제 번호 */
+        .q-num {
+            flex-shrink: 0; width: 28px;
+            font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900;
+            color: var(--accent-color); text-align: right;
+            line-height: 1.2; padding-top: 2px;
+        }
+
+        /* 문제 내용 */
+        .q-content { flex-grow: 1; }
+
+        /* 발문 */
+        .q-text {
+            font-family: 'KoPub Dotum'; font-weight: bold; font-size: 11pt;
+            margin-bottom: 10px; word-break: keep-all;
+        }
+
+        /* [박스 스타일 통일] 지문[T] = 보기[VIEW] : 흰색 배경 + 검정 테두리 */
+        .common-box {
+            border: 1px solid #000;  /* 진한 테두리 */
+            background-color: #fff;  /* 흰색 배경 */
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 9.8pt;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        /* 보기 내부 제목 (<보 기>) */
+        .box-title {
+            text-align: center; font-family: 'KoPub Dotum'; font-size: 9pt;
+            font-weight: bold; display: block; margin-bottom: 6px;
+        }
+
+        /* 보기 항목 (ㄱ,ㄴ,ㄷ) */
+        .view-item { margin-left: 5px; margin-bottom: 4px; }
+
+        /* 선택지 */
+        .choices { list-style: none; padding: 0; margin: 10px 0 0 0; font-size: 10pt; }
+        .choices li { padding-left: 5px; margin-bottom: 4px; }
+
+        /* 이미지 영역 */
+        .q-image-area { text-align: center; margin: 15px 0; }
+        .q-image-area img { max-width: 98%; border: 1px solid #eee; }
+
+        /* 기타 요소 (출처, 빈칸, 수식) */
+        .ref { display: block; text-align: right; font-size: 8pt; color: #888; margin-top: 5px; }
+        .blank { display: inline-block; width: 40px; border-bottom: 1px solid #000; }
+        .math { font-family: 'Times New Roman', serif; font-style: italic; }
+
+        /* 푸터 (쪽번호) */
+        .exam-footer {
+            margin-top: 40px; padding-top: 15px; border-top: 1px solid #eee;
+            text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666;
+            break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 상단 툴바 -->
+    <div class="toolbar">
+        <div class="brand">📑 Exam Editor v2</div>
+        <div class="toolbar-right">
+            <button class="btn-file">
+                🖼️ 이미지 파일 선택 (다중)
+                <input type="file" id="imgInput" multiple accept="image/*" onchange="handleFiles(this.files)">
+            </button>
+            <span id="fileCount" style="font-size:12px; color:#555; margin-right:10px;">0개</span>
+            <button class="btn-run" onclick="renderExam()">🔄 변환하기</button>
+            <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+        </div>
+    </div>
+
+    <!-- 작업 공간 -->
+    <div class="workspace">
+        <!-- 에디터 -->
+        <div class="editor-pane">
+            <div class="editor-info">
+                <b>[TITLE]</b>제목 <b>[SUB]</b>오른쪽텍스트 <b>[SEP]</b>문제분리<br>
+                <b>[Q]</b>발문 <b>[T]</b>/<b>[VIEW]</b>박스 <b>[ITEM]</b>항목 <b>[O]</b>/<b>[I]</b>선택지<br>
+                <b>[IMAGE_LIST]</b> 문제번호:파일명 <b>[/IMAGE_LIST]</b>
+            </div>
+            <textarea id="codeInput" spellcheck="false">
+[TITLE] 2025학년도 1학기 기말고사 [/TITLE]
+[SUB] 2학년 1반 | 국어 영역 <br> <b>배점 : 100점</b> [/SUB]
+
+[Q] 다음 글을 읽고 물음에 답하시오. [/Q]
+
+[T]
+(가) 우리는 매일 수많은 정보를 접하며 살아간다. 정보의 홍수 속에서 필요한 정보를 선별하는 능력은 현대인의 필수 소양이다.
+(나) 정보를 비판적으로 수용하지 않으면 가짜 뉴스에 속기 쉽다. 따라서 출처를 확인하고 내용을 검증하는 태도가 필요하다.
+[/T]
+
+[Q] 윗글 (가), (나)의 공통된 주제로 가장 적절한 것은? [/Q]
+
+[O]
+[I]① 정보 생산자의 윤리[/I]
+[I]② 미디어의 오락적 기능[/I]
+[I]③ 정보 리터러시의 중요성[/I]
+[I]④ 디지털 격차의 해소 방안[/I]
+[I]⑤ 전통 매체의 쇠퇴 원인[/I]
+[/O]
+
+[SEP]
+
+[Q] 다음 [VIEW]의 설명을 모두 만족하는 개념은? [/Q]
+
+[VIEW]
+<보 기>
+[ITEM] ㄱ. 데이터를 표(Table) 형태로 저장한다. [/ITEM]
+[ITEM] ㄴ. SQL이라는 언어를 사용하여 조작한다. [/ITEM]
+[ITEM] ㄷ. 오라클, MySQL 등이 대표적이다. [/ITEM]
+[/VIEW]
+
+[O]
+[I]① NoSQL[/I]
+[I]② RDBMS[/I]
+[I]③ File System[/I]
+[I]④ Blockchain[/I]
+[I]⑤ Cloud Computing[/I]
+[/O]
+
+[IMAGE_LIST]
+2 : my_graph.png
+[/IMAGE_LIST]
+</textarea>
+        </div>
+
+        <!-- 미리보기 -->
+        <div class="preview-pane">
+            <div class="exam-sheet">
+                <!-- 헤더 -->
+                <div class="exam-header">
+                    <div class="h-title">제목을 입력하세요</div>
+                    <div class="h-info">오른쪽 텍스트</div>
+                </div>
+                <!-- 본문 -->
+                <div class="exam-body" id="examContent">
+                    <div style="text-align:center; padding-top:100px; color:#ccc;">
+                        왼쪽 에디터에서 [변환하기]를 눌러주세요.
+                    </div>
+                </div>
+                <!-- 푸터 -->
+                <div class="exam-footer">1 / 1</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 -->
+    <script>
+        const imageAssets = {};
+
+        // 이미지 파일 로드
+        function handleFiles(files) {
+            document.getElementById('fileCount').innerText = `${files.length}개`;
+            for (let file of files) {
+                imageAssets[file.name] = URL.createObjectURL(file);
+            }
+        }
+
+        // 변환 로직
+        function renderExam() {
+            let raw = document.getElementById('codeInput').value;
+            const contentDiv = document.getElementById('examContent');
+
+            // 1. 헤더 (TITLE, SUB) 처리
+            const titleMatch = raw.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/);
+            if(titleMatch) {
+                document.querySelector('.h-title').innerText = titleMatch[1].trim();
+                raw = raw.replace(titleMatch[0], '');
+            }
+
+            const subMatch = raw.match(/\[SUB\]([\s\S]*?)\[\/SUB\]/);
+            if(subMatch) {
+                // HTML 태그(br, b 등) 허용을 위해 innerHTML 사용
+                document.querySelector('.h-info').innerHTML = subMatch[1].trim();
+                raw = raw.replace(subMatch[0], '');
+            }
+
+            // 2. 이미지 매핑 처리
+            const imgMapping = {};
+            const imgListMatch = raw.match(/\[IMAGE_LIST\]([\s\S]*?)\[\/IMAGE_LIST\]/);
+            if (imgListMatch) {
+                const lines = imgListMatch[1].trim().split('\n');
+                lines.forEach(line => {
+                    const parts = line.split(':');
+                    if (parts.length >= 2) {
+                        imgMapping[parts[0].trim()] = parts[1].trim();
+                    }
+                });
+                raw = raw.replace(imgListMatch[0], '');
+            }
+
+            // 3. 문제 분리 및 HTML 생성
+            const questions = raw.split('[SEP]');
+            let finalHtml = "";
+            let qCounter = 0;
+
+            questions.forEach((qBlock) => {
+                let text = qBlock.trim();
+                if(!text) return;
+                
+                qCounter++;
+                let qNum = String(qCounter).padStart(2, '0');
+
+                // 태그 변환
+                text = text.replace(/\[Q\]([\s\S]*?)\[\/Q\]/g, '<div class="q-text">$1</div>');
+                
+                // [T]와 [VIEW]를 동일한 스타일(.common-box)로 통합 (요청사항 반영)
+                text = text.replace(/\[T\]([\s\S]*?)\[\/T\]/g, '<div class="common-box">$1</div>');
+                text = text.replace(/\[VIEW\]([\s\S]*?)\[\/VIEW\]/g, '<div class="common-box">$1</div>');
+                
+                text = text.replace(/\[ITEM\]([\s\S]*?)\[\/ITEM\]/g, '<div class="view-item">· $1</div>');
+                text = text.replace(/\[O\]([\s\S]*?)\[\/O\]/g, '<ul class="choices">$1</ul>');
+                text = text.replace(/\[I\]([\s\S]*?)\[\/I\]/g, '<li>$1</li>');
+                text = text.replace(/\[R\]([\s\S]*?)\[\/R\]/g, '<span class="ref">$1</span>');
+                text = text.replace(/\[BLANK\]/g, '<span class="blank"></span>');
+                text = text.replace(/\[MATH\]([\s\S]*?)\[\/MATH\]/g, '<span class="math">$1</span>');
+
+                // 이미지 삽입
+                let imgTag = "";
+                if(imgMapping[qCounter] && imageAssets[imgMapping[qCounter]]) {
+                    imgTag = `<div class="q-image-area"><img src="${imageAssets[imgMapping[qCounter]]}"></div>`;
+                }
+
+                finalHtml += `
+                    <div class="q-item">
+                        <div class="q-num">${qNum}</div>
+                        <div class="q-content">
+                            ${text}
+                            ${imgTag}
+                        </div>
+                    </div>
+                `;
+            });
+
+            contentDiv.innerHTML = finalHtml;
+        }
+
+        // 페이지 로드 시 자동 실행
+        window.onload = renderExam;
+    </script>
+</body>
+</html>
