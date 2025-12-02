@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (인쇄 최적화판)</title>
+    <title>시험지 에디터 (A4 꽉찬 인쇄용)</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
     <style>
         /* =========================================
-           1. 기본 설정
+           1. 기본 설정 (화면용)
            ========================================= */
         :root { --editor-bg: #2d3436; --accent-color: #1a3c6e; }
         body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; } /* 인쇄 시 배경색 강제 적용 */
 
         /* 툴바 */
         .toolbar { background: #fff; padding: 10px 20px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; height: 60px; }
@@ -32,24 +32,22 @@
         .preview-pane { width: 65%; background: #ecf0f1; overflow-y: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; }
 
         /* =========================================
-           2. 시험지 레이아웃 (화면용)
+           2. 시험지 레이아웃 (화면 미리보기용)
            ========================================= */
         .page-container {
             width: 210mm; min-height: 297mm; background: white; 
-            padding: 0 8mm; /* 화면상 여백 */
+            padding: 0 10mm; /* 화면에서는 보기 좋게 안쪽 여백 줌 */
             box-shadow: 0 0 15px rgba(0,0,0,0.1); margin-bottom: 20px; 
             font-family: 'KoPub Batang', serif; color: #111; line-height: 1.5;
             break-after: always; position: relative;
         }
 
         /* =========================================
-           [핵심 수정] 3. 인쇄 레이아웃 (인쇄 최적화)
+           [핵심 수정] 3. 인쇄 레이아웃 (A4 꽉 채움)
            ========================================= */
         @media print {
-            /* UI 요소 숨김 */
             .toolbar, .editor-pane { display: none !important; }
             
-            /* Body 및 컨테이너 초기화 */
             html, body { 
                 width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; 
                 background: white; overflow: visible; display: block; 
@@ -59,38 +57,39 @@
                 padding: 0; margin: 0; background: white; overflow: visible; 
             }
 
-            /* 페이지 컨테이너: 고정 폭(210mm) 대신 100% 사용 */
+            /* @page 설정: 프린터 여백을 여기서 제어하여 내용을 꽉 채움 */
+            @page { 
+                size: A4; 
+                margin: 10mm; /* 종이 테두리 안전 여백 10mm (최소화) */
+            }
+
             .page-container { 
-                width: 100% !important;
-                height: 100vh !important; /* 페이지 높이 강제 (푸터 위치 고정용) */
-                min-height: 297mm; 
+                width: 100% !important; /* A4 너비 100% 사용 */
+                height: auto !important;
+                min-height: 277mm; /* 297 - 20(마진) */
                 box-shadow: none !important; 
                 margin: 0 !important; 
-                /* 좌우 여백을 10mm로 주어 프린터 잘림 방지 및 꽉 찬 느낌 */
-                padding: 0 10mm !important; 
-                page-break-after: always;
+                padding: 0 !important; /* 내부 패딩 제거 (이게 있으면 내용이 좁아짐) */
+                border: none !important;
                 break-after: page;
             }
 
-            /* 다단 설정: 너비를 100%로 강제하여 빈 공간 제거 */
+            .exam-header {
+                width: 100% !important; /* 헤더도 꽉 차게 */
+            }
+
             .exam-body-content { 
                 column-count: 2 !important; 
-                column-gap: 8mm !important; /* 단 간격 조정 */
+                column-gap: 10mm !important; /* 단 간격 10mm로 확보 (너무 좁으면 답답함) */
                 column-rule: 0.5px solid #ccc !important; 
-                height: auto !important;
                 width: 100% !important;
                 display: block;
+                text-align: justify; /* 양쪽 정렬로 텍스트 끝 맞춤 */
             }
 
-            /* 하단 푸터 위치 미세 조정 */
             .exam-footer {
-                bottom: 15mm !important; /* 인쇄 시 잘리지 않도록 조금 위로 */
-            }
-
-            /* 브라우저 기본 머리말/꼬리말 제거 및 용지 설정 */
-            @page { 
-                size: A4; 
-                margin: 0; /* 브라우저 마진 0으로 하고 내부 padding으로 조절 */
+                bottom: 0 !important; /* 푸터 위치 */
+                position: fixed;
             }
         }
 
@@ -99,7 +98,7 @@
         .h-info { font-size: 10pt; color: #444; text-align: right; width: 35%; line-height: 1.4; }
 
         .exam-body-content { 
-            column-count: 2; column-gap: 7mm; 
+            column-count: 2; column-gap: 8mm; 
             column-rule: 0.5px solid #ddd; text-align: justify; height: 900px; overflow: hidden; 
         }
         .exam-footer { position: absolute; bottom: 12mm; left: 0; width: 100%; text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666; }
@@ -107,7 +106,7 @@
         /* =========================================
            4. 문제 내용 스타일
            ========================================= */
-        .question-block-wrapper { margin-bottom: 20px; break-inside: avoid; width: 100%; }
+        .question-block-wrapper { margin-bottom: 20px; break-inside: avoid; width: 100%; display: inline-block; /* 인쇄 시 잘림 방지 */ }
         .layout-row { display: flex; align-items: flex-start; width: 100%; margin-bottom: 6px; }
 
         .col-num {
@@ -126,7 +125,7 @@
 
         .col-content {
             flex-grow: 1;
-            width: calc(100% - 58px); 
+            width: calc(100% - 58px); /* 남은 공간 꽉 채우기 */
             font-size: 11pt; color: #000;
         }
 
@@ -146,7 +145,7 @@
             width: 100%; border-collapse: collapse; margin: 5px 0 15px 0;
             font-family: 'KoPub Dotum'; font-size: 9.5pt; table-layout: fixed;
         }
-        table.custom-table th, table.custom-table td { border: 1px solid #000; padding: 6px 4px; text-align: center; word-break: break-all; }
+        table.custom-table th, table.custom-table td { border: 1px solid #000; padding: 6px 4px; text-align: center; word-break: keep-all; }
         table.custom-table th { background-color: #f7f7f7; font-weight: bold; }
 
         .subjective-line { display: block; width: 100%; border-bottom: 1px solid #000; margin: 25px 0 10px 0; }
@@ -155,7 +154,7 @@
         .q-image-area { display: block; text-align: center; margin: 10px 0; width: 100%; }
         .q-image-area img { max-width: 100%; border: 1px solid #eee; }
 
-        #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0 8mm; }
+        #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0 10mm; }
         #measurementDiv .question-block-wrapper { width: 48%; display: inline-block; vertical-align: top; }
 
     </style>
@@ -185,7 +184,7 @@
 [TITLE] 2025학년도 1학기 기말고사 [/TITLE]
 [SUB] 2학년 국어 | 배점 : 100점 [/SUB]
 
-[GUIDE] [1~2] 다음 글을 읽고 물음에 답하시오. [/GUIDE]
+[GUIDE] [01~02] 다음 글을 읽고 물음에 답하시오. [/GUIDE]
 [T]
 (가) 현대 사회에서 정보의 홍수는... 
 (나) 이에 대해 전문가들은...
@@ -230,7 +229,7 @@
 
     <script>
         const imageAssets = {};
-        const PAGE_CONTENT_HEIGHT_PX = 900; 
+        const PAGE_CONTENT_HEIGHT_PX = 950; // 인쇄 시 한 페이지에 들어갈 적정 높이 (픽셀 단위 추정치)
 
         function handleFiles(files) {
             document.getElementById('fileCount').innerText = `${files.length}개`;
