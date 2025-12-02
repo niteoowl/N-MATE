@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (가이드 수정 & 인쇄선 오류 해결)</title>
+    <title>시험지 에디터 (보기/밑줄 기능 추가)</title>
     
     <!-- 폰트 로드 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
@@ -24,6 +24,25 @@
         .font-dotum { font-family: 'KoPub Dotum', sans-serif !important; }
         .font-batang { font-family: 'KoPub Batang', serif !important; }
 
+        /* [추가] 밑줄 스타일 */
+        .u-text { 
+            text-decoration: underline; 
+            text-underline-position: under; 
+            text-decoration-thickness: 1px; 
+            text-underline-offset: 2px;
+        }
+        
+        /* [추가] 빈칸 밑줄 스타일 (__(A)__ 형태) */
+        .u-blank-inline { 
+            display: inline-block; 
+            border-bottom: 1px solid #000; 
+            text-align: center; 
+            min-width: 30px; 
+            padding: 0 5px; 
+            font-family: 'KoPub Dotum';
+            font-weight: bold;
+        }
+
         /* 툴바 */
         .toolbar { background: #fff; padding: 5px 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; height: 60px; gap: 10px; }
         .toolbar-group { display: flex; gap: 5px; align-items: center; border-right: 1px solid #ddd; padding-right: 10px; }
@@ -41,7 +60,7 @@
         .preview-pane { width: 65%; background: #555; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
         /* =========================================
-           2. 시험지 레이아웃 (화면 & 인쇄 공통)
+           2. 시험지 레이아웃
            ========================================= */
         .page-container {
             width: 210mm; min-height: 297mm; background: white; 
@@ -52,7 +71,6 @@
             break-after: always; position: relative; overflow: hidden;
         }
 
-        /* 헤더 스타일 */
         .exam-header {
             width: 100%;
             border-top: 4px solid var(--accent-color);
@@ -65,16 +83,13 @@
         .h-title { font-size: 16pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1px; width: 70%; }
         .h-info { font-size: 10pt; color: #444; text-align: right; width: 30%; font-weight: bold; }
 
-        /* 본문 콘텐츠 (인쇄 시 구분선 제어 핵심) */
         .exam-body-content { 
             width: 100%;
-            padding: 0 7mm; /* 본문 좌우 여백 */
+            padding: 0 7mm; 
             column-count: 2; 
             column-gap: 8mm; 
             column-rule: 0.5px solid #ccc; 
             text-align: justify; 
-            
-            /* 화면상 높이 */
             height: 940px; 
             overflow: hidden; 
         }
@@ -85,7 +100,7 @@
         }
 
         /* =========================================
-           3. 인쇄 전용 설정
+           3. 인쇄 설정
            ========================================= */
         @media print {
             .toolbar, .editor-pane { display: none !important; }
@@ -101,61 +116,51 @@
                 break-after: page; page-break-after: always;
             }
             
-            /* [수정] 인쇄 시 구분선이 바닥을 뚫지 않도록 높이 강제 고정 */
             .exam-body-content { 
                 display: block; 
                 column-fill: auto; 
-                height: 250mm !important; /* A4 높이(297) - 헤더/푸터 영역(약 47) 고려 */
+                height: 250mm !important; 
                 max-height: 250mm !important;
-                overflow: hidden; /* 넘치는 선 잘라내기 */
+                overflow: hidden; 
             }
             .exam-footer { bottom: 10mm !important; }
         }
 
         /* =========================================
-           4. 문제 컴포넌트 & [수정된 가이드 스타일]
+           4. 문제 컴포넌트
            ========================================= */
         .question-block-wrapper { margin-bottom: 15px; break-inside: avoid; width: 100%; display: inline-block; }
         
-        /* [수정] 가이드(발문) 전용 스타일 - 문제 형식과 분리 */
         .guide-box {
-            width: 100%;
-            margin-bottom: 8px; /* 아래 간격 최소화 */
-            padding-bottom: 5px;
-            font-family: 'KoPub Dotum';
-            font-size: 11pt;
-            font-weight: bold;
-            color: #222;
-            border-bottom: 2px solid #eee; /* 가벼운 구분선 */
-            line-height: 1.3;
+            width: 100%; margin-bottom: 8px; padding-bottom: 5px;
+            font-family: 'KoPub Dotum'; font-size: 11pt; font-weight: bold; color: #222;
+            border-bottom: 2px solid #eee; line-height: 1.3;
         }
-        .guide-num {
-            color: var(--accent-color);
-            font-weight: 900;
-            margin-right: 6px;
-            font-size: 12pt;
-        }
+        .guide-num { color: var(--accent-color); font-weight: 900; margin-right: 6px; font-size: 12pt; }
 
-        /* 일반 문제 행 */
         .layout-row { display: flex; align-items: flex-start; width: 100%; margin-bottom: 5px; }
         
         .col-num {
-            flex-shrink: 0; 
-            width: 50px; /* 가이드는 따로 빠졌으므로 일반 번호칸은 다시 컴팩트하게 */
-            text-align: right; 
-            padding-right: 8px; 
-            font-family: 'KoPub Dotum'; 
-            font-size: 14pt; 
-            font-weight: 900; 
-            color: var(--accent-color); 
-            line-height: 1.2; 
-            letter-spacing: -0.5px;
+            flex-shrink: 0; width: 50px; text-align: right; padding-right: 8px; 
+            font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900; 
+            color: var(--accent-color); line-height: 1.2; letter-spacing: -0.5px;
         }
         .col-content { flex-grow: 1; width: calc(100% - 50px); font-size: 10.5pt; color: #000; }
 
         .q-text { font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 6px; line-height: 1.4; word-break: keep-all; }
 
         .common-box { width: 100%; border: 1px solid #000; padding: 8px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; }
+
+        /* [추가] 보기 박스 스타일 */
+        .bogi-box { 
+            width: 100%; border: 1px solid #000; padding: 5px 10px 10px 10px; 
+            font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; 
+            position: relative;
+        }
+        .bogi-title {
+            text-align: center; font-family: 'KoPub Dotum'; font-weight: bold; 
+            margin-bottom: 5px; display: block;
+        }
 
         .choices { list-style: none; padding: 0; margin: 0; width: 100%; font-family: 'KoPub Dotum'; font-size: 10.2pt; }
         .choices li { margin-bottom: 3px; padding-left: 10px; text-indent: -10px; margin-left: 5px; }
@@ -174,18 +179,22 @@
 
     <div class="toolbar">
         <div class="toolbar-group">
-            <span style="font-weight:bold; color:var(--accent-color);">글꼴:</span>
-            <button onclick="changeGlobalFont('batang')">전체 바탕</button>
-            <button onclick="changeGlobalFont('dotum')">전체 돋음</button>
+            <span style="font-weight:bold; color:var(--accent-color);">꾸미기:</span>
+            <button onclick="wrapSelection('U')" title="밑줄">
+                <span class="material-symbols-outlined" style="font-size:16px;">format_underlined</span> 밑줄
+            </button>
+            <button onclick="wrapSelection('DOTUM')" title="돋음체">
+                <span class="material-symbols-outlined" style="font-size:16px;">format_bold</span> 돋음
+            </button>
         </div>
         
         <div class="toolbar-group">
-            <span style="font-weight:bold; color:var(--accent-color);">부분:</span>
-            <button onclick="wrapSelection('DOTUM')" title="선택 부분 돋음체">
-                <span class="material-symbols-outlined" style="font-size:16px;">format_bold</span> 선택 돋음
+            <span style="font-weight:bold; color:var(--accent-color);">박스:</span>
+            <button onclick="insertTag('BOGI')">
+                <span class="material-symbols-outlined" style="font-size:16px;">wysiwyg</span> 보기
             </button>
-            <button onclick="wrapSelection('BATANG')" title="선택 부분 바탕체">
-                <span class="material-symbols-outlined" style="font-size:16px;">serif</span> 선택 바탕
+            <button onclick="insertTag('T')">
+                <span class="material-symbols-outlined" style="font-size:16px;">article</span> 지문
             </button>
         </div>
 
@@ -216,28 +225,29 @@
 [GUIDE] [01~02] 다음 글을 읽고 물음에 답하시오. [/GUIDE]
 [T]
 (가) 현대 사회에서 [DOTUM]정보의 홍수[/DOTUM]는 심각한 문제다.
-(나) 이에 대해 전문가는...
+(나) [U]이 문장은 밑줄이 그어집니다.[/U]
 [/T]
 [Q] (가)의 핵심 내용으로 적절한 것은? [/Q]
+[BOGI]
+ㄱ. 정보는 기하급수적으로 늘어난다.
+ㄴ. [U]기술 발전[/U]은 필수적이다.
+[/BOGI]
 [O]
-[I]① 정보는 기하급수적으로 늘어난다.[/I]
-[I]② [DOTUM]기술 발전[/DOTUM]은 필수적이다.[/I]
-[I]③ 현대 사회는 정보화 사회이다.[/I]
-[I]④ 데이터 처리가 중요하다.[/I]
-[I]⑤ 기술 발전은 가속화된다.[/I]
+[I]① ㄱ[/I]
+[I]② ㄴ[/I]
+[I]③ ㄱ, ㄴ[/I]
 [/O]
 
 [SEP]
 
-[Q] [DOTUM]윗글[/DOTUM]을 참고하여 아래 표를 완성하시오. [/Q]
-[TABLE]
-구분 | (가) 관점 | (나) 관점
-긍정적 | 정보 접근성 | 문제 해결력
-부정적 | 정보 과부하 | 신뢰성 하락
-[/TABLE]
+[Q] 다음 빈칸 __A__와 __(B)__에 들어갈 말은? [/Q]
+[T]
+인공지능은 데이터를 통해 스스로 __학습__한다.
+이것을 __( 머신 러닝 )__이라고 부른다.
+[/T]
 [O]
-[I]① 창의성[/I]
-[I]② 효율성[/I]
+[I]① 창의성, 딥러닝[/I]
+[I]② 효율성, 지도학습[/I]
 [/O]
 
 [SEP]
@@ -258,43 +268,41 @@
 
     <script>
         const imageAssets = {};
-        const PAGE_CONTENT_HEIGHT_PX = 920; // 인쇄 넘침 방지를 위해 약간 줄임
-        let globalFontMode = 'batang'; 
+        const PAGE_CONTENT_HEIGHT_PX = 920; 
 
-        function changeGlobalFont(mode) {
-            globalFontMode = mode;
-            const root = document.documentElement;
-            if (mode === 'dotum') {
-                root.style.setProperty('--main-font', "'KoPub Dotum', sans-serif");
-            } else {
-                root.style.setProperty('--main-font', "'KoPub Batang', serif");
-            }
-            renderExam(); 
-        }
-
+        // 1. 선택 영역 감싸기 (밑줄, 돋음 등)
         function wrapSelection(tagType) {
             const textarea = document.getElementById('codeInput');
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
-            
+            const text = textarea.value;
+
             if (start === end) {
                 alert("텍스트를 드래그해서 선택해주세요.");
                 return;
             }
 
-            const text = textarea.value;
-            const selectedText = text.substring(start, end);
-            const before = text.substring(0, start);
-            const after = text.substring(end);
-
-            const replacement = `[${tagType}]${selectedText}[/${tagType}]`;
+            const replacement = `[${tagType}]${text.substring(start, end)}[/${tagType}]`;
+            textarea.value = text.substring(0, start) + replacement + text.substring(end);
             
-            textarea.value = before + replacement + after;
             textarea.selectionStart = start + replacement.length;
             textarea.selectionEnd = start + replacement.length;
             textarea.focus();
-
             renderExam(); 
+        }
+
+        // 2. 태그 삽입 (지문, 보기 등)
+        function insertTag(tagType) {
+            const textarea = document.getElementById('codeInput');
+            const pos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            let content = '';
+            if(tagType === 'BOGI') content = `\n[BOGI]\n내용을 입력하세요\n[/BOGI]\n`;
+            else if(tagType === 'T') content = `\n[T]\n내용을 입력하세요\n[/T]\n`;
+            
+            textarea.value = text.substring(0, pos) + content + text.substring(pos);
+            renderExam();
         }
 
         function handleFiles(files) {
@@ -382,10 +390,23 @@
                 let passageHtml = '';
                 let mainBodyHtml = qBlock;
 
+                // [문법 파싱 순서 중요]
+
+                // 1. 밑줄 빈칸 변환 (__(...)__ -> 밑줄박스)
+                // 정규식: __ 로 감싸진 내용 (Greedy 하지 않게)
+                mainBodyHtml = mainBodyHtml.replace(/__([\s\S]*?)__/g, '<span class="u-blank-inline">$1</span>');
+
+                // 2. 일반 태그 (밑줄, 돋음 등)
+                mainBodyHtml = mainBodyHtml.replace(/\[U\]([\s\S]*?)\[\/U\]/g, '<span class="u-text">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[DOTUM\]([\s\S]*?)\[\/DOTUM\]/g, '<span class="font-dotum">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[BATANG\]([\s\S]*?)\[\/BATANG\]/g, '<span class="font-batang">$1</span>');
 
-                // [수정] GUIDE: 일반 Row가 아닌 별도의 박스(div)로 생성
+                // 3. 보기 박스 (BOGI)
+                mainBodyHtml = mainBodyHtml.replace(/\[BOGI\]([\s\S]*?)\[\/BOGI\]/g, (match, content) => {
+                    return `<div class="bogi-box"><span class="bogi-title">&lt; 보 기 &gt;</span>${content}</div>`;
+                });
+
+                // 4. GUIDE
                 if (mainBodyHtml.includes('[GUIDE]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[GUIDE\]([\s\S]*?)\[\/GUIDE\]/g, (match, content) => {
                         const rangeMatch = content.match(/\[\s*(\d+)\s*~\s*(\d+)\s*\](.*)/);
@@ -395,7 +416,6 @@
                             numPart = `${padNum(rangeMatch[1])}~${padNum(rangeMatch[2])}`;
                             textPart = rangeMatch[3].trim();
                         }
-                        // 별도 형식으로 리턴
                         guideHtml = `
                             <div class="guide-box">
                                 <span class="guide-num">${numPart}</span> ${textPart}
@@ -405,6 +425,7 @@
                     });
                 }
 
+                // 5. 지문 박스 (T)
                 if (mainBodyHtml.includes('[T]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[T\]([\s\S]*?)\[\/T\]/g, (match, content) => {
                         passageHtml += createRowHtml('', `<div class="common-box">${content}</div>`);
@@ -412,6 +433,7 @@
                     });
                 }
 
+                // 6. 표 (TABLE)
                 mainBodyHtml = mainBodyHtml.replace(/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g, function(match, content) {
                     let rows = content.trim().split('\n');
                     let tableHtml = '<table class="custom-table">';
