@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (이미지 링크 추가)</title>
+    <title>시험지 에디터 (줄바꿈 완벽 수정)</title>
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
@@ -23,11 +23,9 @@
         .font-dotum { font-family: 'KoPub Dotum', sans-serif !important; }
         .font-batang { font-family: 'KoPub Batang', serif !important; }
 
-        /* 스타일 클래스 */
         .u-text { text-decoration: underline; text-underline-position: under; text-decoration-thickness: 1px; text-underline-offset: 2px; }
         .u-blank-inline { display: inline-block; border-bottom: 1px solid #000; text-align: center; min-width: 30px; padding: 0 5px; font-family: 'KoPub Dotum'; font-weight: bold; }
 
-        /* [추가] 인라인 이미지 스타일 */
         .inline-img-box { display: block; text-align: center; margin: 10px 0; }
         .inline-img-box img { max-width: 98%; height: auto; border: 1px solid #eee; }
 
@@ -74,9 +72,6 @@
         }
         .exam-footer { position: absolute; bottom: 10mm; left: 0; width: 100%; text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666; }
 
-        /* =========================================
-           3. 인쇄 설정
-           ========================================= */
         @media print {
             .toolbar, .editor-pane { display: none !important; }
             body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
@@ -92,9 +87,6 @@
             .exam-footer { bottom: 10mm !important; }
         }
 
-        /* =========================================
-           4. 컴포넌트 스타일
-           ========================================= */
         .question-block-wrapper { margin-bottom: 15px; break-inside: avoid; width: 100%; display: inline-block; }
         
         .guide-box {
@@ -188,6 +180,8 @@
 [BOGI]
 ㄱ. 정보는 기하급수적으로 늘어난다.
 ㄴ. [U]기술 발전[/U]은 필수적이다.
+(줄바꿈 테스트)
+이 줄은 다음 줄에 나와야 합니다.
 [/BOGI]
 [O]
 [I]① ㄱ[/I]
@@ -200,7 +194,8 @@
 [Q] 다음 빈칸 __A__와 __(B)__에 들어갈 말은? [/Q]
 [T]
 인공지능은 데이터를 통해 스스로 __학습__한다.
-이것을 __( 머신 러닝 )__이라고 부른다.
+이 줄도 줄바꿈이
+잘 되어야 합니다.
 [/T]
 [O]
 [I]① 창의성, 딥러닝[/I]
@@ -227,7 +222,6 @@
         const imageAssets = {};
         const PAGE_CONTENT_HEIGHT_PX = 920; 
 
-        // 1. 선택 영역 감싸기 (밑줄, 돋음 등)
         function wrapSelection(tagType) {
             const textarea = document.getElementById('codeInput');
             const start = textarea.selectionStart;
@@ -248,7 +242,6 @@
             renderExam(); 
         }
 
-        // 2. 태그 삽입 (지문, 보기)
         function insertTag(tagType) {
             const textarea = document.getElementById('codeInput');
             const pos = textarea.selectionStart;
@@ -262,7 +255,6 @@
             renderExam();
         }
 
-        // 3. 이미지 링크 삽입 (Prompt)
         function insertImgLink() {
             const url = prompt("이미지 주소(URL)를 입력하세요:");
             if(url) {
@@ -360,8 +352,7 @@
                 let passageHtml = '';
                 let mainBodyHtml = qBlock;
 
-                // [파싱 순서]
-                // 1. 인라인 이미지 (NEW)
+                // 1. 인라인 이미지
                 mainBodyHtml = mainBodyHtml.replace(/\[IMG\]([\s\S]*?)\[\/IMG\]/g, '<div class="inline-img-box"><img src="$1" alt="Image"></div>');
 
                 // 2. 밑줄 빈칸
@@ -372,9 +363,11 @@
                 mainBodyHtml = mainBodyHtml.replace(/\[DOTUM\]([\s\S]*?)\[\/DOTUM\]/g, '<span class="font-dotum">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[BATANG\]([\s\S]*?)\[\/BATANG\]/g, '<span class="font-batang">$1</span>');
 
-                // 4. 보기 박스 (BOGI)
+                // 4. [수정] 보기 박스 (BOGI) - 줄바꿈 처리 (\n -> <br>)
                 mainBodyHtml = mainBodyHtml.replace(/\[BOGI\]([\s\S]*?)\[\/BOGI\]/g, (match, content) => {
-                    return `<div class="bogi-box"><span class="bogi-title">&lt; 보 기 &gt;</span>${content}</div>`;
+                    // 핵심 수정: trim 후 \n을 <br>로 치환
+                    let formatted = content.trim().replace(/\n/g, '<br>');
+                    return `<div class="bogi-box"><span class="bogi-title">&lt; 보 기 &gt;</span>${formatted}</div>`;
                 });
 
                 // 5. GUIDE
@@ -396,10 +389,12 @@
                     });
                 }
 
-                // 6. 지문 (T)
+                // 6. [수정] 지문 (T) - 줄바꿈 처리
                 if (mainBodyHtml.includes('[T]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[T\]([\s\S]*?)\[\/T\]/g, (match, content) => {
-                        passageHtml += createRowHtml('', `<div class="common-box">${content}</div>`);
+                        // 핵심 수정: \n을 <br>로 치환
+                        let formatted = content.trim().replace(/\n/g, '<br>');
+                        passageHtml += createRowHtml('', `<div class="common-box">${formatted}</div>`);
                         return '';
                     });
                 }
