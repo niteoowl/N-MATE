@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 V4 (인쇄 최적화)</title>
+    <title>시험지 에디터 (링크/파일 통합)</title>
     
     <!-- KoPub World 서체 (CDN) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
+    <!-- Google Fonts Material Symbols CDN 추가 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
     <style>
         /* =========================================
@@ -15,335 +17,388 @@
         :root {
             --editor-bg: #2d3436;
             --editor-text: #dfe6e9;
-            --accent-color: #1a3c6e;
+            --accent-color: #1a3c6e; /* 인쇄용 네이비 */
         }
 
         body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
 
+        /* 툴바 */
         .toolbar {
             background: #fff; padding: 10px 20px; border-bottom: 1px solid #ccc;
             display: flex; justify-content: space-between; align-items: center; height: 60px; box-sizing: border-box;
-            z-index: 999;
         }
-        .brand { font-family: 'KoPub Dotum'; font-weight: bold; font-size: 1.1rem; color: #333; }
+        .brand { 
+            height: 40px; 
+            width: auto; 
+        }
         .toolbar-right { display: flex; gap: 10px; align-items: center; }
 
-        button { padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-family: 'KoPub Dotum'; font-weight: bold; transition: 0.2s; }
+        /* 버튼 스타일 */
+        button { 
+            padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; 
+            font-family: 'KoPub Dotum', 'Material Symbols Outlined', sans-serif; font-weight: bold; 
+            transition: 0.2s; display: flex; align-items: center; gap: 5px;
+        }
+        /* Material Symbols 아이콘 기본 스타일 */
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+
         .btn-file { background-color: #00b894; color: white; position: relative; overflow: hidden; }
         .btn-file input { position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
         .btn-run { background-color: var(--accent-color); color: white; }
         .btn-run:hover { background-color: #122b50; }
         .btn-print { background-color: #636e72; color: white; }
 
-        /* 작업 영역 */
+        /* 작업 영역 (좌:에디터 / 우:미리보기) */
         .workspace { display: flex; flex: 1; height: calc(100vh - 60px); }
+        
         .editor-pane { width: 40%; background: var(--editor-bg); display: flex; flex-direction: column; border-right: 1px solid #555; }
-        .editor-info { padding: 10px; background: #222; color: #aaa; font-size: 0.8rem; font-family: sans-serif; border-bottom: 1px solid #444; line-height: 1.4; }
+        .editor-info { padding: 10px; background: #222; color: #aaa; font-size: 0.85rem; font-family: sans-serif; border-bottom: 1px solid #444; line-height: 1.4; }
         textarea#codeInput {
             flex: 1; width: 100%; background: transparent; color: #f1f2f6; border: none;
             padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none;
         }
 
-        .preview-pane { 
-            width: 60%; background: #555; /* 미리보기 배경 어둡게 */
-            overflow-y: auto; padding: 30px; 
-            display: flex; justify-content: center;
-        }
+        .preview-pane { width: 60%; background: #ecf0f1; overflow-y: auto; padding: 40px 0; display: flex; flex-direction: column; align-items: center; }
 
         /* =========================================
-           2. 인쇄 & 미리보기 스타일 (가장 중요)
+           2. 인쇄 & 미리보기 스타일 (시험지 본체)
            ========================================= */
-        @media print {
-            .toolbar, .editor-pane { display: none !important; }
-            .workspace, .preview-pane { display: block; width: 100%; height: auto; overflow: visible; padding: 0; background: white; margin: 0; }
-            body { overflow: visible; height: auto; background: white; margin: 0; padding: 0; }
-            
-            /* 인쇄 시 브라우저 강제 여백 제거 (날짜/제목 삭제됨) */
-            @page { 
-                size: A4 portrait; 
-                margin: 0;  
-            }
-            .exam-sheet {
-                box-shadow: none !important;
-                margin: 0 !important;
-                page-break-after: always; /* 여러 장일 경우 */
-            }
-        }
-
-        /* A4 종이 레이아웃 */
-        .exam-sheet {
-            /* A4 사이즈 + 내부 여백 직접 지정 */
-            width: 210mm; 
-            /* min-height를 줘서 내용이 적어도 A4 한 장 높이를 차지하게 함 */
-            min-height: 297mm; 
-            padding: 15mm 15mm 15mm 15mm; /* 여기가 실제 여백 */
-            
+        
+        /* A4 용지 컨테이너 (미리보기 용) */
+        .page-container {
+            width: 210mm; /* A4 너비 */
+            min-height: 297mm; /* A4 높이 */
             background: white;
-            margin: 0 auto 30px auto; /* 미리보기에서 아래쪽 간격 */
-            box-sizing: border-box; /* 패딩 포함 크기 계산 */
-            box-shadow: 0 0 10px rgba(0,0,0,0.5); /* 미리보기 그림자 */
-            
+            padding: 0 15mm; /* 인쇄 마진 확보 */
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px; /* 페이지 간격 */
+            box-sizing: border-box;
             font-family: 'KoPub Batang', serif;
             color: #111;
-            line-height: 1.6;
-            -webkit-print-color-adjust: exact;
-            position: relative;
+            line-height: 1.5; /* 행간 축소 (1.6 -> 1.5) */
+            break-after: always; /* 인쇄 시 페이지 나누기 */
+        }
+        
+        /* 인쇄 시 스타일 */
+        @media print {
+            .toolbar, .editor-pane { display: none !important; }
+            .workspace, .preview-pane { 
+                display: block; width: 100vw; height: auto; overflow: visible; padding: 0; background: white; margin: 0; 
+            }
+            body { overflow: visible; height: auto; background: white; width: 100vw; }
+            .page-container { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 100% !important; 
+                min-height: 100vh;
+                padding: 0 15mm; /* 인쇄 마진 확보 */
+            }
+            .exam-body-content {
+                height: auto !important; /* 인쇄 시 높이 제한 해제 */
+                min-height: auto !important;
+            }
+            @page { margin: 0; }
         }
 
-        /* [헤더] */
+        /* [헤더] 제목 및 오른쪽 텍스트 */
         .exam-header {
             font-family: 'KoPub Dotum', sans-serif;
             border-top: 4px solid var(--accent-color);
             border-bottom: 1px solid #aaa;
             padding: 12px 5px;
-            margin-bottom: 20px;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            height: 60px; /* 헤더 높이 고정 */
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
         }
-        .h-title { font-size: 16pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1px; width: 65%; }
-        .h-info { font-size: 10pt; color: #444; text-align: right; width: 35%; line-height: 1.4; }
+        .h-title { 
+            font-size: 16pt; font-weight: 800; color: var(--accent-color); 
+            letter-spacing: -1px; width: 65%;
+        }
+        .h-info { 
+            font-size: 10pt; color: #444; text-align: right; width: 35%;
+            line-height: 1.4;
+        }
 
-        /* [본문 2단 구성] - 핵심 수정 사항 */
-        .exam-body {
+        /* [본문] 2단 구성 컨테이너 */
+        .exam-body-content {
             column-count: 2;
             column-gap: 12mm;
             column-rule: 0.5px solid #ddd;
-            
-            /* 중요: 높이를 강제로 지정해야 column-fill: auto가 먹혀서 왼쪽부터 채워짐 */
-            /* 헤더(약 80px) + 푸터(약 50px) + 여백 제외한 높이 */
-            height: 240mm; 
-            column-fill: auto; /* 왼쪽 단 다 채우고 오른쪽으로 감 */
-            
             text-align: justify;
+            /* 미리보기에서 페이지 나누기를 위한 고정 높이 (JS에서 사용) */
+            height: 900px; /* A4 용지의 헤더/푸터/패딩 제외 안전 영역 (약 238mm) */
+            overflow: hidden; /* 영역을 벗어나는 내용은 숨김 */
         }
 
-        /* [문제] */
+        /* [문제] Flexbox 레이아웃 */
         .q-item {
-            display: flex; gap: 8px; margin-bottom: 25px;
-            break-inside: avoid; page-break-inside: avoid; /* 잘림 방지 */
+            display: flex; gap: 8px; margin-bottom: 20px; /* 문제 간격 축소 (30px -> 20px) */
+            break-inside: avoid; /* 중요: 문제 단위로 단이 나뉘지 않도록 함 */
         }
         
+        /* 문제 번호 */
         .q-num {
             flex-shrink: 0; width: 28px;
             font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900;
             color: var(--accent-color); text-align: right;
             line-height: 1.2; padding-top: 2px;
         }
+
+        /* 문제 내용 */
         .q-content { flex-grow: 1; }
 
         /* 발문 */
-        .q-text { font-family: 'KoPub Dotum'; font-weight: bold; font-size: 11pt; margin-bottom: 8px; word-break: keep-all; }
-
-        /* 박스 */
-        .common-box {
-            border: 1px solid #000; background-color: #fff; padding: 10px; margin: 8px 0;
-            font-size: 9.8pt; border-radius: 2px; position: relative;
+        .q-text {
+            font-family: 'KoPub Dotum'; font-weight: bold; font-size: 11pt;
+            margin-bottom: 10px; word-break: keep-all;
+            line-height: 1.4; /* 발문 행간도 약간 줄여서 가독성 높임 */
         }
-        .box-title { text-align: center; font-family: 'KoPub Dotum'; font-size: 9pt; font-weight: bold; display: block; margin-bottom: 6px; }
-        .view-item { margin-left: 5px; margin-bottom: 4px; }
 
-        /* 선택지 */
-        .choices { list-style: none; padding: 0; margin: 8px 0 0 0; font-size: 10pt; }
+        /* [박스 스타일 통일] 지문[T] = 보기[VIEW] */
+        .common-box {
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 9.8pt;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .box-title {
+            text-align: center; font-family: 'KoPub Dotum'; font-size: 9pt;
+            font-weight: bold; display: block; margin-bottom: 6px;
+        }
+
+        .view-item { margin-left: 5px; margin-bottom: 4px; }
+        .choices { list-style: none; padding: 0; margin: 10px 0 0 0; font-size: 10pt; }
         .choices li { padding-left: 5px; margin-bottom: 4px; }
 
-        /* 이미지 */
+        /* 이미지 영역 */
         .q-image-area { text-align: center; margin: 15px 0; }
         .q-image-area img { max-width: 98%; border: 1px solid #eee; }
 
-        /* 기타 */
         .ref { display: block; text-align: right; font-size: 8pt; color: #888; margin-top: 5px; }
         .blank { display: inline-block; width: 40px; border-bottom: 1px solid #000; }
         .math { font-family: 'Times New Roman', serif; font-style: italic; }
 
-        /* 페이지 강제 넘김 (빈 공간 생성) */
-        .page-break-spacer {
-            break-after: column; /* 단 넘김 */
-            height: 1px;
-            margin-bottom: 240mm; /* 강제로 다음 단으로 밀어버림 */
-        }
-        
-        /* 푸터 */
         .exam-footer {
-            position: absolute; bottom: 15mm; left: 0; width: 100%;
+            margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;
             text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666;
-            border-top: 1px solid #eee; padding-top: 10px;
+            break-inside: avoid;
         }
 
+        /* 임시 측정용 (렌더링에 사용되지 않음) */
+        #measurementDiv {
+            position: absolute; visibility: hidden; height: auto; width: 210mm; padding: 0 15mm; box-sizing: border-box;
+            font-family: 'KoPub Batang', serif; line-height: 1.5; /* 행간 통일 */
+        }
+        #measurementDiv .q-item { 
+            display: flex; gap: 8px; margin-bottom: 20px; width: 50%; /* 2단 크기 시뮬레이션 */
+            box-sizing: border-box; padding-right: 6mm; /* 컬럼 간격 시뮬레이션 */
+        }
+        #measurementDiv .q-content { flex-grow: 1; }
+        #measurementDiv .q-num { flex-shrink: 0; width: 28px; }
     </style>
 </head>
 <body>
 
+    <!-- 상단 툴바 -->
     <div class="toolbar">
-        <div class="brand">📑 Exam Editor V4 (Print Optimized)</div>
+        <img class="brand" src="https://i.postimg.cc/Nj2q8jb0/cropped-jemog-eul-iblyeoghaejuseyo-(10)-Photoroom.png" alt="Exam Editor Logo" />
         <div class="toolbar-right">
             <button class="btn-file">
-                🖼️ PC 파일 선택
+                <span class="material-symbols-outlined">image</span>
+                PC 파일 선택
                 <input type="file" id="imgInput" multiple accept="image/*" onchange="handleFiles(this.files)">
             </button>
             <span id="fileCount" style="font-size:12px; color:#555; margin-right:10px;">0개</span>
-            <button class="btn-run" onclick="renderExam()">🔄 변환하기</button>
-            <button class="btn-print" onclick="window.print()">🖨️ 인쇄하기</button>
+            <button class="btn-run" onclick="renderExam()">
+                <span class="material-symbols-outlined">refresh</span>
+                변환하기
+            </button>
+            <button class="btn-print" onclick="window.print()">
+                <span class="material-symbols-outlined">print</span>
+                인쇄하기
+            </button>
         </div>
     </div>
 
+    <!-- 작업 공간 -->
     <div class="workspace">
         <div class="editor-pane">
             <div class="editor-info">
-                <b>[PAGE]</b> 강제 페이지(단) 넘김 <br>
-                <b>[TITLE], [SUB]</b> 제목/정보 설정 <br>
-                <b>[IMAGE_LIST]</b> 하단에 작성
+                <b>[IMAGE_LIST]</b>에 파일명 또는 <b>이미지 주소(https://...)</b> 입력 가능<br>
+                예: 1 : my_file.jpg (PC파일) / 2 : https://site.com/img.png (링크)
             </div>
             <textarea id="codeInput" spellcheck="false">
 [TITLE] 2025학년도 1학기 기말고사 [/TITLE]
 [SUB] 2학년 1반 | 국어 영역 <br> <b>배점 : 100점</b> [/SUB]
 
-[Q] 1. 다음 글의 내용과 일치하지 않는 것은? [/Q]
-
+[Q] 1번 문제입니다. [/Q]
 [T]
-HTML(HyperText Markup Language)은 웹 페이지를 위한 지배적인 마크업 언어이다. HTML은 제목, 단락, 목록 등과 같은 본문을 위한 구조적 의미를 나타내는 것뿐만 아니라 링크, 인용과 그 밖의 항목으로 구조적 문서를 만들 수 있는 방법을 제공한다.
+여기에 지문을 입력하세요.
 [/T]
-
 [O]
-[I]① 웹 페이지를 만드는 언어이다.[/I]
-[I]② 구조적 문서를 만들 수 있다.[/I]
-[I]③ 링크와 인용을 사용할 수 있다.[/I]
-[I]④ 프로그래밍 언어와는 구별된다.[/I]
-[I]⑤ 인쇄물 제작에 특화되어 있다.[/I]
+[I]① 선택지 1[/I]
+[I]② 선택지 2[/I]
+[I]③ 선택지 3[/I]
+[I]④ 선택지 4[/I]
+[I]⑤ 선택지 5[/I]
 [/O]
 
 [SEP]
 
-[Q] 2. 다음 그림(링크)이 설명하는 과일은? [/Q]
-
+[Q] 2번 문제입니다. [/Q]
+[T]
+여기에 두 번째 지문을 입력합니다.
+[/T]
 [O]
-[I]① 사과[/I]
-[I]② 배[/I]
-[I]③ 포도[/I]
-[I]④ 감[/I]
-[I]⑤ 귤[/I]
-[/O]
-
-[SEP]
-
-[PAGE] <!-- 여기서 강제로 다음 단(페이지)으로 넘어갑니다 -->
-
-[Q] 3. (다음 페이지) 다음 중 CSS의 역할은? [/Q]
-
-[O]
-[I]① 문서의 구조 정의[/I]
-[I]② 문서의 스타일 및 레이아웃[/I]
-[I]③ 서버와의 통신[/I]
-[I]④ 데이터베이스 관리[/I]
-[I]⑤ 알고리즘 연산[/I]
+[I]① 선택지 1[/I]
+[I]② 선택지 2[/I]
 [/O]
 
 [IMAGE_LIST]
-2 : https://cdn-icons-png.flaticon.com/512/415/415733.png
+1 : 
+2 : 
 [/IMAGE_LIST]
+
 </textarea>
         </div>
 
         <div class="preview-pane">
-            <!-- 시험지 영역 -->
-            <div class="exam-sheet">
-                <div class="exam-header">
-                    <div class="h-title">제목</div>
-                    <div class="h-info">정보</div>
-                </div>
-                
-                <div class="exam-body" id="examContent">
-                    <div style="text-align:center; padding-top:100px; color:#ccc;">
-                        변환 버튼을 눌러주세요.
-                    </div>
-                </div>
+            <!-- 임시 측정용 DOM 요소 -->
+            <div id="measurementDiv"></div>
 
-                <div class="exam-footer">
-                    국어 영역
+            <div id="examSheetContainer" class="exam-sheet">
+                <div style="text-align:center; padding-top:100px; color:#ccc;">
+                    [변환하기]를 누르면 결과가 표시됩니다.
                 </div>
+                <!-- 페이지는 JS에 의해 여기에 동적으로 생성됩니다 -->
             </div>
         </div>
     </div>
 
     <script>
         const imageAssets = {};
+        // A4 페이지 본문 영역의 안전 높이 (px), 헤더/푸터 및 여백을 제외한 순수 문제 영역
+        const PAGE_CONTENT_HEIGHT_PX = 900; 
 
+        // PC 파일 로드
         function handleFiles(files) {
             document.getElementById('fileCount').innerText = `${files.length}개`;
             for (let file of files) {
+                if (imageAssets[file.name]) {
+                    URL.revokeObjectURL(imageAssets[file.name]);
+                }
                 imageAssets[file.name] = URL.createObjectURL(file);
             }
         }
 
+        function createPage(pageIndex, totalPages, headerHtml, footerText) {
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page-container';
+            pageDiv.setAttribute('data-page', pageIndex);
+
+            const header = document.createElement('div');
+            header.className = 'exam-header';
+            header.innerHTML = headerHtml;
+            pageDiv.appendChild(header);
+
+            const body = document.createElement('div');
+            body.className = 'exam-body-content';
+            pageDiv.appendChild(body);
+
+            const footer = document.createElement('div');
+            footer.className = 'exam-footer';
+            footer.innerText = footerText.replace('PAGE_INDEX', pageIndex).replace('TOTAL_PAGES', totalPages);
+            pageDiv.appendChild(footer);
+
+            return { pageDiv, body };
+        }
+
+        // 렌더링
         function renderExam() {
             let raw = document.getElementById('codeInput').value;
-            const contentDiv = document.getElementById('examContent');
+            const container = document.getElementById('examSheetContainer');
+            container.innerHTML = '';
+            
+            // 0. 임시 측정 컨테이너 준비
+            const measurementDiv = document.getElementById('measurementDiv');
+            measurementDiv.innerHTML = '';
+            measurementDiv.style.display = 'block';
 
-            // 헤더 처리
+            // 1. 헤더/푸터 정보 추출
             const titleMatch = raw.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/);
-            if(titleMatch) {
-                document.querySelector('.h-title').innerText = titleMatch[1].trim();
-                raw = raw.replace(titleMatch[0], '');
-            }
+            const title = titleMatch ? titleMatch[1].trim() : '시험 제목';
             const subMatch = raw.match(/\[SUB\]([\s\S]*?)\[\/SUB\]/);
-            if(subMatch) {
-                document.querySelector('.h-info').innerHTML = subMatch[1].trim();
-                raw = raw.replace(subMatch[0], '');
-            }
+            const sub = subMatch ? subMatch[1].trim() : '시험 정보';
 
-            // 이미지 매핑
+            const headerHtml = `
+                <div class="h-title">${title}</div>
+                <div class="h-info">${sub}</div>
+            `;
+            const footerTemplate = `PAGE_INDEX / TOTAL_PAGES`;
+
+            raw = raw.replace(titleMatch ? titleMatch[0] : '', '');
+            raw = raw.replace(subMatch ? subMatch[0] : '', '');
+
+
+            // 2. 이미지 매핑
             const imgMapping = {};
             const imgListMatch = raw.match(/\[IMAGE_LIST\]([\s\S]*?)\[\/IMAGE_LIST\]/);
             if (imgListMatch) {
-                const lines = imgListMatch[1].trim().split('\n');
+                const lines = imgListMatch[1].trim().split('\n').filter(line => line.trim() !== ''); // 빈 줄 제거
                 lines.forEach(line => {
                     const parts = line.split(':');
                     if (parts.length >= 2) {
-                        imgMapping[parts[0].trim()] = parts.slice(1).join(':').trim();
+                        const qIdx = parts[0].trim();
+                        const val = parts.slice(1).join(':').trim();
+                        imgMapping[qIdx] = val;
                     }
                 });
                 raw = raw.replace(imgListMatch[0], '');
             }
 
-            // PAGE 태그 처리 (임시 변환)
-            // 나중에 [SEP]로 쪼갤 때 문제가 되지 않도록 특수 문자로 치환하거나
-            // 혹은 루프 돌 때 처리. 여기서는 SEP 단위로 쪼개기 전에 PAGE를 별도 블록으로 인식시켜야 함.
-            // 가장 쉬운 방법: [PAGE]를 "<div class='page-break-spacer'></div>[SEP]" 로 치환하여 
-            // 하나의 '빈 문제'처럼 취급하되 높이를 줘서 밀어버림.
+            // 3. 질문 분해
+            const questionBlocks = raw.split('[SEP]').map(q => q.trim()).filter(q => q.length > 0);
             
-            raw = raw.replace(/\[PAGE\]/g, '[SEP][PAGE_MARKER][SEP]');
-
-            // 문제 분리
-            const questions = raw.split('[SEP]');
-            let finalHtml = "";
+            // 4. 페이지네이션
             let qCounter = 0;
+            let currentPageBody = null;
+            let pageIndex = 0;
+            const pages = [];
 
-            questions.forEach((qBlock) => {
-                let text = qBlock.trim();
-                if(!text) return;
-                
-                // 페이지 마커인 경우
-                if(text === '[PAGE_MARKER]') {
-                    finalHtml += `<div style="break-after: column; height: 1px; width: 100%;"></div>`;
-                    return;
-                }
+            // 첫 페이지 초기화
+            const firstPage = createPage(1, 1, headerHtml, footerTemplate);
+            pages.push(firstPage);
+            currentPageBody = firstPage.body;
 
+            
+            // 질문을 순회하며 페이지에 추가
+            for (let qBlock of questionBlocks) {
                 qCounter++;
-                let qNum = String(qCounter).padStart(2, '0');
-
-                // 태그 변환
-                text = text.replace(/\[Q\]([\s\S]*?)\[\/Q\]/g, '<div class="q-text">$1</div>');
-                text = text.replace(/\[T\]([\s\S]*?)\[\/T\]/g, '<div class="common-box">$1</div>');
-                text = text.replace(/\[VIEW\]([\s\S]*?)\[\/VIEW\]/g, '<div class="common-box">$1</div>');
-                text = text.replace(/\[ITEM\]([\s\S]*?)\[\/ITEM\]/g, '<div class="view-item">· $1</div>');
-                text = text.replace(/\[O\]([\s\S]*?)\[\/O\]/g, '<ul class="choices">$1</ul>');
-                text = text.replace(/\[I\]([\s\S]*?)\[\/I\]/g, '<li>$1</li>');
-                text = text.replace(/\[R\]([\s\S]*?)\[\/R\]/g, '<span class="ref">$1</span>');
-                text = text.replace(/\[BLANK\]/g, '<span class="blank"></span>');
-                text = text.replace(/\[MATH\]([\s\S]*?)\[\/MATH\]/g, '<span class="math">$1</span>');
+                const qNum = String(qCounter).padStart(2, '0');
+                
+                // 질문 HTML 생성 및 태그 변환
+                let qHtml = qBlock;
+                qHtml = qHtml.replace(/\[Q\]([\s\S]*?)\[\/Q\]/g, '<div class="q-text">$1</div>');
+                qHtml = qHtml.replace(/\[T\]([\s\S]*?)\[\/T\]/g, '<div class="common-box">$1</div>');
+                qHtml = qHtml.replace(/\[VIEW\]([\s\S]*?)\[\/VIEW\]/g, '<div class="common-box">$1</div>');
+                qHtml = qHtml.replace(/\[ITEM\]([\s\S]*?)\[\/ITEM\]/g, '<div class="view-item">· $1</div>');
+                qHtml = qHtml.replace(/\[O\]([\s\S]*?)\[\/O\]/g, '<ul class="choices">$1</ul>');
+                qHtml = qHtml.replace(/\[I\]([\s\S]*?)\[\/I\]/g, '<li>$1</li>');
+                qHtml = qHtml.replace(/\[R\]([\s\S]*?)\[\/R\]/g, '<span class="ref">$1</span>');
+                qHtml = qHtml.replace(/\[BLANK\]/g, '<span class="blank"></span>');
+                qHtml = qHtml.replace(/\[MATH\]([\s\S]*?)\[\/MATH\]/g, '<span class="math">$1</span>');
 
                 // 이미지 로직
                 let imgTag = "";
                 const imgSource = imgMapping[qCounter];
+                
                 if (imgSource) {
                     let finalSrc = "";
                     if (imgSource.match(/^(http|https|data):/)) {
@@ -353,24 +408,68 @@ HTML(HyperText Markup Language)은 웹 페이지를 위한 지배적인 마크�
                     }
 
                     if (finalSrc) {
-                        imgTag = `<div class="q-image-area"><img src="${finalSrc}"></div>`;
+                        imgTag = `<div class="q-image-area"><img src="${finalSrc}" alt="Q${qCounter}"></div>`;
+                    } else {
+                        if(!imgSource.match(/^(http|https)/)) {
+                            imgTag = `<div style="color:red; font-size:11px; text-align:center;">⚠️ 파일 미선택: ${imgSource}</div>`;
+                        }
                     }
                 }
-
-                finalHtml += `
+                
+                const finalQuestionHtml = `
                     <div class="q-item">
                         <div class="q-num">${qNum}</div>
                         <div class="q-content">
-                            ${text}
+                            ${qHtml}
                             ${imgTag}
                         </div>
                     </div>
                 `;
-            });
 
-            contentDiv.innerHTML = finalHtml;
+                // 높이 측정
+                // 1. 현재 페이지의 누적된 콘텐츠를 측정용 div에 복사
+                measurementDiv.innerHTML = currentPageBody.innerHTML;
+
+                // 2. 새 질문을 측정용 div에 추가
+                measurementDiv.innerHTML += finalQuestionHtml;
+                
+                // 3. 높이 비교
+                // offsetHeight는 실제 렌더링된 높이를 반환합니다.
+                // 컬럼 간격/문제 마진 등 때문에 정확도는 100%가 아니지만, 페이지네이션 트리거에는 충분합니다.
+                const currentHeight = measurementDiv.offsetHeight;
+                
+                if (currentHeight > PAGE_CONTENT_HEIGHT_PX) {
+                    // 현재 질문이 페이지 제한을 넘었으므로 새 페이지 시작
+                    const newPage = createPage(pages.length + 1, 1, headerHtml, footerTemplate);
+                    pages.push(newPage);
+                    currentPageBody = newPage.body;
+
+                    // 새 페이지에 질문 추가
+                    currentPageBody.innerHTML = finalQuestionHtml;
+                    measurementDiv.innerHTML = finalQuestionHtml; // 측정 div도 새 질문으로 초기화
+                } else {
+                    // 질문이 아직 맞으므로 현재 페이지에 추가
+                    currentPageBody.innerHTML += finalQuestionHtml;
+                }
+            }
+
+            // 5. 최종 렌더링
+            const totalPages = pages.length;
+            
+            pages.forEach((p, idx) => {
+                // 푸터의 총 페이지 수 업데이트
+                p.pageDiv.querySelector('.exam-footer').innerText = footerTemplate
+                    .replace('PAGE_INDEX', idx + 1)
+                    .replace('TOTAL_PAGES', totalPages);
+                
+                container.appendChild(p.pageDiv);
+            });
+            
+            // 6. 임시 측정 컨테이너 숨김
+            measurementDiv.style.display = 'none';
+
         }
-        
+
         window.onload = renderExam;
     </script>
 </body>
