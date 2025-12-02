@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (보기/밑줄 기능 추가)</title>
+    <title>시험지 에디터 (이미지 링크 추가)</title>
     
-    <!-- 폰트 로드 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
@@ -24,24 +23,13 @@
         .font-dotum { font-family: 'KoPub Dotum', sans-serif !important; }
         .font-batang { font-family: 'KoPub Batang', serif !important; }
 
-        /* [추가] 밑줄 스타일 */
-        .u-text { 
-            text-decoration: underline; 
-            text-underline-position: under; 
-            text-decoration-thickness: 1px; 
-            text-underline-offset: 2px;
-        }
-        
-        /* [추가] 빈칸 밑줄 스타일 (__(A)__ 형태) */
-        .u-blank-inline { 
-            display: inline-block; 
-            border-bottom: 1px solid #000; 
-            text-align: center; 
-            min-width: 30px; 
-            padding: 0 5px; 
-            font-family: 'KoPub Dotum';
-            font-weight: bold;
-        }
+        /* 스타일 클래스 */
+        .u-text { text-decoration: underline; text-underline-position: under; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+        .u-blank-inline { display: inline-block; border-bottom: 1px solid #000; text-align: center; min-width: 30px; padding: 0 5px; font-family: 'KoPub Dotum'; font-weight: bold; }
+
+        /* [추가] 인라인 이미지 스타일 */
+        .inline-img-box { display: block; text-align: center; margin: 10px 0; }
+        .inline-img-box img { max-width: 98%; height: auto; border: 1px solid #eee; }
 
         /* 툴바 */
         .toolbar { background: #fff; padding: 5px 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; height: 60px; gap: 10px; }
@@ -64,19 +52,15 @@
            ========================================= */
         .page-container {
             width: 210mm; min-height: 297mm; background: white; 
-            padding: 0; 
-            margin-bottom: 20px; 
+            padding: 0; margin-bottom: 20px; 
             box-shadow: 0 0 15px rgba(0,0,0,0.3);
             font-family: var(--main-font); color: #111; line-height: 1.5;
             break-after: always; position: relative; overflow: hidden;
         }
 
         .exam-header {
-            width: 100%;
-            border-top: 4px solid var(--accent-color);
-            border-bottom: 1px solid #aaa;
-            padding: 10px 10mm; 
-            margin-bottom: 15px; 
+            width: 100%; border-top: 4px solid var(--accent-color); border-bottom: 1px solid #aaa;
+            padding: 10px 10mm; margin-bottom: 15px; 
             display: flex; justify-content: space-between; align-items: flex-end;
             font-family: 'KoPub Dotum', sans-serif;
         }
@@ -84,20 +68,11 @@
         .h-info { font-size: 10pt; color: #444; text-align: right; width: 30%; font-weight: bold; }
 
         .exam-body-content { 
-            width: 100%;
-            padding: 0 7mm; 
-            column-count: 2; 
-            column-gap: 8mm; 
-            column-rule: 0.5px solid #ccc; 
-            text-align: justify; 
-            height: 940px; 
-            overflow: hidden; 
+            width: 100%; padding: 0 7mm; 
+            column-count: 2; column-gap: 8mm; column-rule: 0.5px solid #ccc; 
+            text-align: justify; height: 940px; overflow: hidden; 
         }
-
-        .exam-footer { 
-            position: absolute; bottom: 10mm; left: 0; width: 100%; 
-            text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666; 
-        }
+        .exam-footer { position: absolute; bottom: 10mm; left: 0; width: 100%; text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666; }
 
         /* =========================================
            3. 인쇄 설정
@@ -106,28 +81,19 @@
             .toolbar, .editor-pane { display: none !important; }
             body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
             .workspace, .preview-pane { display: block; padding: 0; margin: 0; background: #fff; width: 100%; height: auto; }
-            
             @page { margin: 0; size: A4; } 
-
             .page-container {
                 width: 100% !important; height: 297mm !important;
                 margin: 0 !important; padding: 0 !important;
                 box-shadow: none; border: none;
                 break-after: page; page-break-after: always;
             }
-            
-            .exam-body-content { 
-                display: block; 
-                column-fill: auto; 
-                height: 250mm !important; 
-                max-height: 250mm !important;
-                overflow: hidden; 
-            }
+            .exam-body-content { display: block; column-fill: auto; height: 250mm !important; max-height: 250mm !important; overflow: hidden; }
             .exam-footer { bottom: 10mm !important; }
         }
 
         /* =========================================
-           4. 문제 컴포넌트
+           4. 컴포넌트 스타일
            ========================================= */
         .question-block-wrapper { margin-bottom: 15px; break-inside: avoid; width: 100%; display: inline-block; }
         
@@ -139,29 +105,14 @@
         .guide-num { color: var(--accent-color); font-weight: 900; margin-right: 6px; font-size: 12pt; }
 
         .layout-row { display: flex; align-items: flex-start; width: 100%; margin-bottom: 5px; }
-        
-        .col-num {
-            flex-shrink: 0; width: 50px; text-align: right; padding-right: 8px; 
-            font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900; 
-            color: var(--accent-color); line-height: 1.2; letter-spacing: -0.5px;
-        }
+        .col-num { flex-shrink: 0; width: 50px; text-align: right; padding-right: 8px; font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900; color: var(--accent-color); line-height: 1.2; letter-spacing: -0.5px; }
         .col-content { flex-grow: 1; width: calc(100% - 50px); font-size: 10.5pt; color: #000; }
 
         .q-text { font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 6px; line-height: 1.4; word-break: keep-all; }
-
         .common-box { width: 100%; border: 1px solid #000; padding: 8px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; }
-
-        /* [추가] 보기 박스 스타일 */
-        .bogi-box { 
-            width: 100%; border: 1px solid #000; padding: 5px 10px 10px 10px; 
-            font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; 
-            position: relative;
-        }
-        .bogi-title {
-            text-align: center; font-family: 'KoPub Dotum'; font-weight: bold; 
-            margin-bottom: 5px; display: block;
-        }
-
+        .bogi-box { width: 100%; border: 1px solid #000; padding: 5px 10px 10px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; position: relative; }
+        .bogi-title { text-align: center; font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 5px; display: block; }
+        
         .choices { list-style: none; padding: 0; margin: 0; width: 100%; font-family: 'KoPub Dotum'; font-size: 10.2pt; }
         .choices li { margin-bottom: 3px; padding-left: 10px; text-indent: -10px; margin-left: 5px; }
 
@@ -171,6 +122,8 @@
 
         .subjective-line { display: block; width: 100%; border-bottom: 1px solid #000; margin: 20px 0 5px 0; }
         .blank-inline { display: inline-block; min-width: 30px; border-bottom: 1px solid #000; margin: 0 2px; }
+        .q-image-area { display: block; text-align: center; margin: 10px 0; width: 100%; }
+        .q-image-area img { max-width: 100%; border: 1px solid #eee; }
 
         #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0 7mm; column-count: 2; column-gap: 8mm; }
     </style>
@@ -189,18 +142,21 @@
         </div>
         
         <div class="toolbar-group">
-            <span style="font-weight:bold; color:var(--accent-color);">박스:</span>
+            <span style="font-weight:bold; color:var(--accent-color);">요소:</span>
             <button onclick="insertTag('BOGI')">
                 <span class="material-symbols-outlined" style="font-size:16px;">wysiwyg</span> 보기
             </button>
             <button onclick="insertTag('T')">
                 <span class="material-symbols-outlined" style="font-size:16px;">article</span> 지문
             </button>
+            <button onclick="insertImgLink()">
+                <span class="material-symbols-outlined" style="font-size:16px;">link</span> 링크
+            </button>
         </div>
 
         <div class="toolbar-group">
             <button class="btn-file">
-                <span class="material-symbols-outlined">image</span> 이미지
+                <span class="material-symbols-outlined">image</span> 파일
                 <input type="file" id="imgInput" multiple accept="image/*" onchange="handleFiles(this.files)">
             </button>
             <span id="fileCount" style="font-size:11px; color:#555;"></span>
@@ -225,6 +181,7 @@
 [GUIDE] [01~02] 다음 글을 읽고 물음에 답하시오. [/GUIDE]
 [T]
 (가) 현대 사회에서 [DOTUM]정보의 홍수[/DOTUM]는 심각한 문제다.
+[IMG]https://dummyimage.com/600x150/000/fff&text=Example+Image+URL[/IMG]
 (나) [U]이 문장은 밑줄이 그어집니다.[/U]
 [/T]
 [Q] (가)의 핵심 내용으로 적절한 것은? [/Q]
@@ -291,7 +248,7 @@
             renderExam(); 
         }
 
-        // 2. 태그 삽입 (지문, 보기 등)
+        // 2. 태그 삽입 (지문, 보기)
         function insertTag(tagType) {
             const textarea = document.getElementById('codeInput');
             const pos = textarea.selectionStart;
@@ -303,6 +260,19 @@
             
             textarea.value = text.substring(0, pos) + content + text.substring(pos);
             renderExam();
+        }
+
+        // 3. 이미지 링크 삽입 (Prompt)
+        function insertImgLink() {
+            const url = prompt("이미지 주소(URL)를 입력하세요:");
+            if(url) {
+                const textarea = document.getElementById('codeInput');
+                const pos = textarea.selectionStart;
+                const text = textarea.value;
+                const imgTag = `\n[IMG]${url}[/IMG]\n`;
+                textarea.value = text.substring(0, pos) + imgTag + text.substring(pos);
+                renderExam();
+            }
         }
 
         function handleFiles(files) {
@@ -390,23 +360,24 @@
                 let passageHtml = '';
                 let mainBodyHtml = qBlock;
 
-                // [문법 파싱 순서 중요]
+                // [파싱 순서]
+                // 1. 인라인 이미지 (NEW)
+                mainBodyHtml = mainBodyHtml.replace(/\[IMG\]([\s\S]*?)\[\/IMG\]/g, '<div class="inline-img-box"><img src="$1" alt="Image"></div>');
 
-                // 1. 밑줄 빈칸 변환 (__(...)__ -> 밑줄박스)
-                // 정규식: __ 로 감싸진 내용 (Greedy 하지 않게)
+                // 2. 밑줄 빈칸
                 mainBodyHtml = mainBodyHtml.replace(/__([\s\S]*?)__/g, '<span class="u-blank-inline">$1</span>');
 
-                // 2. 일반 태그 (밑줄, 돋음 등)
+                // 3. 일반 태그
                 mainBodyHtml = mainBodyHtml.replace(/\[U\]([\s\S]*?)\[\/U\]/g, '<span class="u-text">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[DOTUM\]([\s\S]*?)\[\/DOTUM\]/g, '<span class="font-dotum">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[BATANG\]([\s\S]*?)\[\/BATANG\]/g, '<span class="font-batang">$1</span>');
 
-                // 3. 보기 박스 (BOGI)
+                // 4. 보기 박스 (BOGI)
                 mainBodyHtml = mainBodyHtml.replace(/\[BOGI\]([\s\S]*?)\[\/BOGI\]/g, (match, content) => {
                     return `<div class="bogi-box"><span class="bogi-title">&lt; 보 기 &gt;</span>${content}</div>`;
                 });
 
-                // 4. GUIDE
+                // 5. GUIDE
                 if (mainBodyHtml.includes('[GUIDE]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[GUIDE\]([\s\S]*?)\[\/GUIDE\]/g, (match, content) => {
                         const rangeMatch = content.match(/\[\s*(\d+)\s*~\s*(\d+)\s*\](.*)/);
@@ -425,7 +396,7 @@
                     });
                 }
 
-                // 5. 지문 박스 (T)
+                // 6. 지문 (T)
                 if (mainBodyHtml.includes('[T]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[T\]([\s\S]*?)\[\/T\]/g, (match, content) => {
                         passageHtml += createRowHtml('', `<div class="common-box">${content}</div>`);
@@ -433,7 +404,7 @@
                     });
                 }
 
-                // 6. 표 (TABLE)
+                // 7. 표 (TABLE)
                 mainBodyHtml = mainBodyHtml.replace(/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g, function(match, content) {
                     let rows = content.trim().split('\n');
                     let tableHtml = '<table class="custom-table">';
