@@ -91,15 +91,25 @@
             .page-container { 
                 box-shadow: none !important; 
                 margin: 0 !important; 
-                width: 100% !important; 
-                min-height: 100vh;
+                /* width를 100% 대신 고정값으로 설정하여 인쇄 엔진이 A4 크기를 정확히 인식하도록 돕습니다. */
+                width: 210mm !important; 
+                min-height: 297mm;
                 padding: 0 15mm; /* 인쇄 마진 확보 */
             }
             .exam-body-content {
-                height: auto !important; /* 인쇄 시 높이 제한 해제 */
+                /* 인쇄 시 높이 제한 해제 */
+                height: auto !important; 
                 min-height: auto !important;
+                
+                /* 중요: 인쇄 시에도 2단 컬럼을 강제로 적용 */
+                column-count: 2 !important;
+                column-gap: 12mm !important;
+                column-rule: 0.5px solid #ddd !important;
             }
-            @page { margin: 0; }
+            @page { 
+                size: a4; /* A4 크기 명시 */
+                margin: 0; 
+            }
         }
 
         /* [헤더] 제목 및 오른쪽 텍스트 */
@@ -122,7 +132,7 @@
             line-height: 1.4;
         }
 
-        /* [본문] 2단 구성 컨테이너 */
+        /* [본문] 2단 구성 컨테이너 (화면 미리보기용) */
         .exam-body-content {
             column-count: 2;
             column-gap: 12mm;
