@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (완전밀착 & 얇은헤더)</title>
+    <title>시험지 에디터 (가이드 수정 & 인쇄선 오류 해결)</title>
     
     <!-- 폰트 로드 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
@@ -41,11 +41,10 @@
         .preview-pane { width: 65%; background: #555; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
 
         /* =========================================
-           2. 시험지 레이아웃 (완전 밀착형)
+           2. 시험지 레이아웃 (화면 & 인쇄 공통)
            ========================================= */
         .page-container {
             width: 210mm; min-height: 297mm; background: white; 
-            /* [핵심] 패딩 0으로 설정하여 모든 요소를 끝까지 붙임 */
             padding: 0; 
             margin-bottom: 20px; 
             box-shadow: 0 0 15px rgba(0,0,0,0.3);
@@ -53,30 +52,29 @@
             break-after: always; position: relative; overflow: hidden;
         }
 
-        /* 헤더: 얇은 두께(4px) 유지하되 가로 100% 꽉 채움 */
+        /* 헤더 스타일 */
         .exam-header {
             width: 100%;
             border-top: 4px solid var(--accent-color);
             border-bottom: 1px solid #aaa;
-            /* 텍스트는 너무 붙으면 안 읽히므로 내부 패딩만 살짝 줌 */
-            padding: 12px 10mm; 
-            margin-bottom: 20px; 
+            padding: 10px 10mm; 
+            margin-bottom: 15px; 
             display: flex; justify-content: space-between; align-items: flex-end;
             font-family: 'KoPub Dotum', sans-serif;
         }
         .h-title { font-size: 16pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1px; width: 70%; }
         .h-info { font-size: 10pt; color: #444; text-align: right; width: 30%; font-weight: bold; }
 
-        /* 본문: 너비 100% 사용 및 좌우 밀착 */
+        /* 본문 콘텐츠 (인쇄 시 구분선 제어 핵심) */
         .exam-body-content { 
             width: 100%;
-            /* 텍스트 가독성을 위해 최소한의 내부 여백(5mm)만 둠. 
-               완전히 0을 원하시면 padding: 0으로 바꾸시면 됩니다. */
-            padding: 0 5mm; 
+            padding: 0 7mm; /* 본문 좌우 여백 */
             column-count: 2; 
             column-gap: 8mm; 
-            column-rule: 0.5px solid #ddd; 
+            column-rule: 0.5px solid #ccc; 
             text-align: justify; 
+            
+            /* 화면상 높이 */
             height: 940px; 
             overflow: hidden; 
         }
@@ -87,40 +85,65 @@
         }
 
         /* =========================================
-           3. 인쇄 설정 (여백 제로)
+           3. 인쇄 전용 설정
            ========================================= */
         @media print {
             .toolbar, .editor-pane { display: none !important; }
             body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
             .workspace, .preview-pane { display: block; padding: 0; margin: 0; background: #fff; width: 100%; height: auto; }
             
-            /* [핵심] 브라우저 마진 0 */
             @page { margin: 0; size: A4; } 
 
             .page-container {
                 width: 100% !important; height: 297mm !important;
-                margin: 0 !important; 
-                padding: 0 !important; /* 종이 끝까지 내용 확장 */
+                margin: 0 !important; padding: 0 !important;
                 box-shadow: none; border: none;
                 break-after: page; page-break-after: always;
             }
             
-            .exam-body-content { height: auto !important; display: block; column-fill: auto; }
+            /* [수정] 인쇄 시 구분선이 바닥을 뚫지 않도록 높이 강제 고정 */
+            .exam-body-content { 
+                display: block; 
+                column-fill: auto; 
+                height: 250mm !important; /* A4 높이(297) - 헤더/푸터 영역(약 47) 고려 */
+                max-height: 250mm !important;
+                overflow: hidden; /* 넘치는 선 잘라내기 */
+            }
             .exam-footer { bottom: 10mm !important; }
         }
 
         /* =========================================
-           4. 문제 컴포넌트 (간격 넓힘 유지)
+           4. 문제 컴포넌트 & [수정된 가이드 스타일]
            ========================================= */
         .question-block-wrapper { margin-bottom: 15px; break-inside: avoid; width: 100%; display: inline-block; }
+        
+        /* [수정] 가이드(발문) 전용 스타일 - 문제 형식과 분리 */
+        .guide-box {
+            width: 100%;
+            margin-bottom: 8px; /* 아래 간격 최소화 */
+            padding-bottom: 5px;
+            font-family: 'KoPub Dotum';
+            font-size: 11pt;
+            font-weight: bold;
+            color: #222;
+            border-bottom: 2px solid #eee; /* 가벼운 구분선 */
+            line-height: 1.3;
+        }
+        .guide-num {
+            color: var(--accent-color);
+            font-weight: 900;
+            margin-right: 6px;
+            font-size: 12pt;
+        }
+
+        /* 일반 문제 행 */
         .layout-row { display: flex; align-items: flex-start; width: 100%; margin-bottom: 5px; }
         
-        /* [유지] 번호와 텍스트 사이 간격 넓힘 (70px) */
         .col-num {
             flex-shrink: 0; 
-            width: 70px; 
+            width: 50px; /* 가이드는 따로 빠졌으므로 일반 번호칸은 다시 컴팩트하게 */
             text-align: right; 
-            padding-right: 15px; 
+            padding-right: 8px; 
             font-family: 'KoPub Dotum'; 
             font-size: 14pt; 
             font-weight: 900; 
@@ -128,9 +151,8 @@
             line-height: 1.2; 
             letter-spacing: -0.5px;
         }
-        .col-content { flex-grow: 1; width: calc(100% - 70px); font-size: 10.5pt; color: #000; }
+        .col-content { flex-grow: 1; width: calc(100% - 50px); font-size: 10.5pt; color: #000; }
 
-        .guide-text { font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 5px; line-height: 1.4; }
         .q-text { font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 6px; line-height: 1.4; word-break: keep-all; }
 
         .common-box { width: 100%; border: 1px solid #000; padding: 8px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; }
@@ -145,7 +167,7 @@
         .subjective-line { display: block; width: 100%; border-bottom: 1px solid #000; margin: 20px 0 5px 0; }
         .blank-inline { display: inline-block; min-width: 30px; border-bottom: 1px solid #000; margin: 0 2px; }
 
-        #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0; column-count: 2; column-gap: 8mm; }
+        #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0 7mm; column-count: 2; column-gap: 8mm; }
     </style>
 </head>
 <body>
@@ -236,7 +258,7 @@
 
     <script>
         const imageAssets = {};
-        const PAGE_CONTENT_HEIGHT_PX = 940; 
+        const PAGE_CONTENT_HEIGHT_PX = 920; // 인쇄 넘침 방지를 위해 약간 줄임
         let globalFontMode = 'batang'; 
 
         function changeGlobalFont(mode) {
@@ -363,6 +385,7 @@
                 mainBodyHtml = mainBodyHtml.replace(/\[DOTUM\]([\s\S]*?)\[\/DOTUM\]/g, '<span class="font-dotum">$1</span>');
                 mainBodyHtml = mainBodyHtml.replace(/\[BATANG\]([\s\S]*?)\[\/BATANG\]/g, '<span class="font-batang">$1</span>');
 
+                // [수정] GUIDE: 일반 Row가 아닌 별도의 박스(div)로 생성
                 if (mainBodyHtml.includes('[GUIDE]')) {
                     mainBodyHtml = mainBodyHtml.replace(/\[GUIDE\]([\s\S]*?)\[\/GUIDE\]/g, (match, content) => {
                         const rangeMatch = content.match(/\[\s*(\d+)\s*~\s*(\d+)\s*\](.*)/);
@@ -372,7 +395,12 @@
                             numPart = `${padNum(rangeMatch[1])}~${padNum(rangeMatch[2])}`;
                             textPart = rangeMatch[3].trim();
                         }
-                        guideHtml = createRowHtml(numPart, `<div class="guide-text">${textPart}</div>`);
+                        // 별도 형식으로 리턴
+                        guideHtml = `
+                            <div class="guide-box">
+                                <span class="guide-num">${numPart}</span> ${textPart}
+                            </div>
+                        `;
                         return '';
                     });
                 }
