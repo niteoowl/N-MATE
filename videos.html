@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>구형 브라우저용 유튜브 뷰어</title>
+    <!-- Tailwind CSS CDN을 사용하여 빠르고 반응성 있는 스타일을 적용합니다. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 기본 레이아웃과 폰트 설정 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 5rem;
+            transition: padding-top 0.3s;
+        }
+
+        /* 뷰어 컨테이너 (일반 모드) */
+        #viewer-container {
+            width: 90%;
+            max-width: 800px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.5s ease-in-out;
+            margin-bottom: 2rem;
+        }
+
+        /* 전체 화면 모드 (Fullscreen Mode) 스타일 */
+        body.fullscreen-mode {
+            padding-top: 0;
+            align-items: center;
+            background-color: #111; /* 전체 화면 시 어두운 배경 */
+        }
+
+        #viewer-container.fullscreen-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            max-width: none;
+            padding: 0;
+            margin: 0;
+            z-index: 9999; /* 다른 요소 위에 표시 */
+            box-shadow: none;
+            border-radius: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #youtube-player-iframe {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            display: none; /* 기본적으로 숨김 */
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 모바일 반응성 개선 */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 2rem;
+            }
+        }
+    </style>
+</head>
+<body class="transition-colors duration-500">
+
+    <div id="viewer-container">
+        <h1 class="text-3xl font-bold mb-4 text-gray-800">유튜브 전체 화면 뷰어</h1>
+        <p class="text-sm text-gray-500 mb-6">유튜브 영상의 전체 URL (예: https://www.youtube.com/watch?v=dQw4w9WgXcQ)을 입력하세요.</p>
+        
+        <div class="space-y-4">
+            <input type="text" id="url-input" placeholder="유튜브 URL 입력" 
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="load-button" 
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-150 transform hover:scale-[1.01] shadow-md disabled:opacity-50"
+                        onclick="loadVideo()">
+                    영상 로드
+                </button>
+                <button id="fullscreen-button" 
+                        class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-150 transform hover:scale-[1.01] shadow-md disabled:opacity-50"
+                        onclick="toggleFullscreen()" disabled>
+                    전체 화면 보기 (Escape로 해제)
+                </button>
+            </div>
+        </div>
+
+        <div id="message-box" class="mt-4 p-3 text-sm rounded-lg text-red-700 bg-red-100 hidden"></div>
+
+        <div id="player-area" class="mt-6 aspect-video bg-gray-200 flex justify-center items-center rounded-lg overflow-hidden relative">
+            <div id="initial-message" class="text-gray-500 p-8 text-center">여기에 로드된 유튜브 영상이 표시됩니다.</div>
+            <div id="loading-spinner" class="spinner absolute"></div>
+            <!-- 유튜브 iframe은 여기에 동적으로 삽입됩니다. -->
+        </div>
+
+        <p id="exit-instruction" class="text-xs text-gray-400 mt-2 text-center transition-opacity duration-300 opacity-0">
+            전체 화면 모드를 해제하려면 ESC 키를 누르거나, 창을 닫으세요.
+        </p>
+    </div>
+
+    <script>
+        // 전역 변수 설정
+        let isFullscreen = false;
+        let videoId = '';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // 앱 ID는 사용하지 않지만 필수 변수 처리
+
+        // DOM 요소 가져오기
+        const urlInput = document.getElementById('url-input');
+        const playerArea = document.getElementById('player-area');
+        const fullscreenButton = document.getElementById('fullscreen-button');
+        const initialMessage = document.getElementById('initial-message');
+        const messageBox = document.getElementById('message-box');
+        const viewerContainer = document.getElementById('viewer-container');
+        const body = document.body;
+        const exitInstruction = document.getElementById('exit-instruction');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const loadButton = document.getElementById('load-button');
+
+        // 메시지 표시 함수
+        function showMessage(text, isError = false) {
+            messageBox.textContent = text;
+            messageBox.className = `mt-4 p-3 text-sm rounded-lg transition-all duration-300 ${isError ? 'text-red-700 bg-red-100' : 'text-green-700 bg-green-100'} block`;
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+                messageBox.classList.remove('block');
+            }, 5000);
+        }
+
+        // 유튜브 비디오 ID 추출 함수
+        function getYouTubeId(url) {
+            // watch?v=, v=, /embed/, /v/, /youtu.be/ 등 다양한 형식 지원
+            const regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return (match && match[1]) ? match[1] : null;
+        }
+
+        // 비디오 로드 및 플레이어 삽입
+        function loadVideo() {
+            const url = urlInput.value.trim();
+            if (!url) {
+                showMessage("유튜브 URL을 입력해주세요.", true);
+                return;
+            }
+
+            videoId = getYouTubeId(url);
+
+            if (!videoId) {
+                showMessage("유효한 유튜브 URL 형식이 아닙니다.", true);
+                return;
+            }
+            
+            // 로딩 상태 표시
+            initialMessage.style.display = 'none';
+            playerArea.classList.remove('aspect-video');
+            playerArea.style.height = '450px'; // 로딩 중 높이 확보
+            loadingSpinner.style.display = 'block';
+            loadButton.disabled = true;
+
+            // 기존 플레이어 제거
+            const existingIframe = document.getElementById('youtube-player-iframe');
+            if (existingIframe) {
+                existingIframe.remove();
+            }
+
+            // 새로운 iframe 생성
+            const iframe = document.createElement('iframe');
+            iframe.id = 'youtube-player-iframe';
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&showinfo=0&iv_load_policy=3`;
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+            iframe.allowFullscreen = true;
+            iframe.frameBorder = "0";
+            iframe.title = "YouTube video player";
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            
+            // iframe 로드 완료 시
+            iframe.onload = () => {
+                // 로딩 완료 후 로딩 스피너 숨기기 및 버튼 활성화
+                loadingSpinner.style.display = 'none';
+                loadButton.disabled = false;
+                fullscreenButton.disabled = false;
+                playerArea.classList.add('aspect-video');
+                playerArea.style.height = ''; // aspect-video로 복귀
+                showMessage("영상이 성공적으로 로드되었습니다. 전체 화면 버튼을 누르세요.");
+            };
+            
+            // iframe을 플레이어 영역에 삽입
+            playerArea.appendChild(iframe);
+            fullscreenButton.disabled = true; // 로딩 중에는 비활성화
+
+        }
+
+        // 전체 화면 모드 토글 함수 (핵심 기능)
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            
+            if (isFullscreen) {
+                // 전체 화면 모드 활성화
+                body.classList.add('fullscreen-mode');
+                viewerContainer.classList.add('fullscreen-mode');
+                fullscreenButton.textContent = '전체 화면 해제 (ESC)';
+                exitInstruction.classList.remove('opacity-0');
+                
+                // 구형 브라우저에서 스크롤을 막고 뷰포트를 꽉 채우기 위한 조치
+                document.documentElement.style.overflow = 'hidden';
+                document.body.style.overflow = 'hidden';
+
+                // iframe을 뷰포트에 맞게 조정
+                const iframe = document.getElementById('youtube-player-iframe');
+                if (iframe) {
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                }
+            } else {
+                // 전체 화면 모드 비활성화
+                body.classList.remove('fullscreen-mode');
+                viewerContainer.classList.remove('fullscreen-mode');
+                fullscreenButton.textContent = '전체 화면 보기';
+                exitInstruction.classList.add('opacity-0');
+
+                // 스크롤 복구
+                document.documentElement.style.overflow = '';
+                document.body.style.overflow = '';
+
+                // iframe 크기를 원래 컨테이너 비율로 복구 (Tailwind aspect-video)
+                const iframe = document.getElementById('youtube-player-iframe');
+                if (iframe) {
+                    // 크기가 컨테이너에 맞게 재조정되도록 스타일 제거 (CSS 클래스에 의존)
+                    iframe.style.width = '100%'; 
+                    iframe.style.height = '100%';
+                }
+            }
+        }
+        
+        // ESC 키로 전체 화면 해제 기능 추가
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && isFullscreen) {
+                toggleFullscreen();
+            }
+        });
+
+        // 초기 상태 설정
+        window.onload = () => {
+             // Firebase 관련 변수는 사용하지 않으므로 초기화만 진행합니다.
+             console.log("App Initialized. App ID:", appId);
+        };
+
+    </script>
+</body>
+</html>
