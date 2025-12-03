@@ -3,23 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>유튜브 전체화면 뷰어</title>
-    <!-- 구형 브라우저에서도 잘 작동하도록 깨끗한 CSS와 JS만 사용합니다 -->
+    <title>유튜브 전체화면 시뮬레이터 (모바일 최적화)</title>
+    <!-- YouTube 다크 모드 테마 및 모바일 친화적인 CSS -->
     <style>
-        /* CSS 변수를 이용한 다크모드 정의 */
+        /* YouTube Dark Theme Colors */
         :root {
-            --color-bg: #1e1e1e; /* 어두운 배경 */
-            --color-surface: #2d2d2d; /* 카드/입력창 배경 */
-            --color-text: #e0e0e0; /* 밝은 텍스트 */
-            --color-text-sub: #b0b0b0; /* 보조 텍스트 */
-            --color-accent: #f25f5c; /* 강조 색상 (Notion 빨간색 계열) */
-            --color-accent-hover: #e04e4b;
-            --border-radius: 8px;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --color-bg-primary: #0f0f0f; /* YouTube Main Background */
+            --color-bg-secondary: #181818; /* Card/Surface Background */
+            --color-text: #ffffff; /* Primary Text */
+            --color-text-sub: #aaaaaa; /* Subdued Text */
+            --color-accent-red: #ff0000; /* YouTube Red */
+            --color-button-bg: #303030;
+            --color-button-hover: #4a4a4a;
+            --color-success: #4CAF50;
+            --border-radius: 6px;
+            --font-family: 'Roboto', 'Noto Sans KR', sans-serif;
         }
 
         body {
-            background-color: var(--color-bg);
+            background-color: var(--color-bg-primary);
             color: var(--color-text);
             font-family: var(--font-family);
             margin: 0;
@@ -28,108 +30,108 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            transition: background-color 0.3s;
         }
 
-        /* 메인 컨테이너 - Notion 스타일 카드 */
+        /* 메인 컨테이너 - 모바일 대응 */
         .container {
             width: 90%;
-            max-width: 600px;
-            padding: 30px;
-            background: var(--color-surface);
+            max-width: 700px;
+            padding: 20px;
+            background: var(--color-bg-secondary);
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             text-align: center;
+            margin: 20px 0;
         }
 
         h1 {
             color: var(--color-text);
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             margin-bottom: 20px;
-            font-weight: 600;
+            font-weight: 700;
+        }
+
+        h2 {
+            color: var(--color-text);
+            font-size: 1.1rem;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--color-button-bg);
+            padding-bottom: 5px;
         }
 
         p {
             color: var(--color-text-sub);
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             line-height: 1.5;
+            font-size: 0.9rem;
         }
 
-        /* 입력 그룹 스타일 */
+        /* 입력 및 버튼 그룹 */
         .input-group {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .input-group.stack {
-            flex-direction: column;
+            margin-bottom: 10px;
+            align-items: stretch;
         }
 
         input[type="text"] {
             flex-grow: 1;
-            padding: 12px 15px;
-            border: 1px solid var(--color-bg);
-            background-color: var(--color-bg);
+            padding: 10px 12px;
+            border: 1px solid var(--color-button-bg);
+            background-color: var(--color-bg-primary);
             color: var(--color-text);
             border-radius: var(--border-radius);
-            font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            font-size: 0.95rem;
         }
 
         input[type="text"]:focus {
             outline: none;
-            border-color: var(--color-accent);
-            box-shadow: 0 0 0 2px rgba(242, 95, 92, 0.5);
+            border-color: var(--color-accent-red);
+            box-shadow: 0 0 0 1px var(--color-accent-red);
         }
 
         /* 버튼 스타일 */
         button {
-            padding: 12px 20px;
+            padding: 10px 15px;
             border: none;
             border-radius: var(--border-radius);
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.2s, transform 0.1s;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+            white-space: nowrap;
         }
 
-        /* 강조 버튼 (재생) */
-        .btn-primary {
-            background-color: var(--color-accent);
-            color: var(--color-bg); /* 다크모드 버튼 텍스트는 어두운 배경과 대비되게 */
+        .btn-primary { /* 재생 버튼 */
+            background-color: var(--color-accent-red);
+            color: var(--color-text);
         }
 
         .btn-primary:hover {
-            background-color: var(--color-accent-hover);
+            background-color: #cc0000;
         }
 
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-        
-        /* 보조 버튼 (검색) */
-        .btn-secondary {
-            background-color: var(--color-bg);
+        .btn-secondary { /* 검색 버튼 */
+            background-color: var(--color-button-bg);
             color: var(--color-text);
-            border: 1px solid var(--color-text-sub);
         }
 
         .btn-secondary:hover {
-            background-color: #3a3a3a;
+            background-color: var(--color-button-hover);
         }
 
         /* 전체화면 모드 스타일 */
         #fullscreen-player {
-            display: none; /* 초기에는 숨김 */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            z-index: 9999; /* 모든 것 위에 표시 */
+            z-index: 9999;
             background-color: black;
-            transition: opacity 0.3s;
         }
 
         #player-iframe {
@@ -139,92 +141,113 @@
             display: block;
         }
 
-        /* 종료 버튼 */
-        #exit-button {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            padding: 10px 15px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            z-index: 10000;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            display: none; /* 플레이어와 함께 표시/숨김 */
-        }
-
-        #exit-button:hover {
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-
-        /* 에러 메시지 스타일 */
+        /* 메시지/안내 박스 */
         #message-box {
-            color: var(--color-accent);
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: var(--border-radius);
             margin-top: 15px;
             font-weight: 500;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+        
+        #message-box p {
+            margin: 5px 0;
         }
 
-        /* 스피너 (로딩 표시) */
+        .warning-text {
+            color: var(--color-accent-red);
+            font-weight: 700;
+        }
+
+        .success-text {
+            color: var(--color-success);
+            font-weight: 700;
+        }
+        
+        /* 로딩 스피너 (스타일은 유지) */
         .loader {
-            border: 4px solid #444;
-            border-top: 4px solid var(--color-accent);
+            border: 3px solid var(--color-button-bg);
+            border-top: 3px solid var(--color-accent-red);
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
-            display: none; /* 기본 숨김 */
+            margin: auto;
+            display: none;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* 모바일 레이아웃 (768px 이하) - 반응형 유지 */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .input-group {
+                flex-direction: column; /* 작은 화면에서 세로로 쌓기 */
+                gap: 8px;
+            }
+
+            button {
+                width: 100%; /* 버튼 전체 너비 사용 */
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="container" id="main-content">
-        <h1>YouTube 전체화면 뷰어</h1>
+        <h1>YouTube 전체화면 시뮬레이터</h1>
         <p>
-            이 사이트는 구형 브라우저에서 전체화면을 시뮬레이션하고,
-            API 없이 영상을 검색/재생하기 위한 효율적인 워크플로우를 제공합니다.
+            **API 없이** 구형/모바일 브라우저에서 전체화면을 시뮬레이션하고 백그라운드 재생을 시도합니다.
         </p>
 
-        <!-- 1. 가짜 검색 기능 -->
-        <h2>1. 영상 검색 (API 우회)</h2>
+        <!-- 1. 영상 검색 (API 우회) -->
+        <h2>1. 영상 검색 (새 창)</h2>
         <div class="input-group">
-            <input type="text" id="search-query" placeholder="검색어를 입력하세요 (예: 멋진 음악)">
-            <button class="btn-secondary" onclick="openYouTubeSearch()">검색</button>
+            <input type="text" id="search-query" placeholder="검색어를 입력하세요">
+            <button class="btn-secondary" onclick="openYouTubeSearch()">YouTube 검색</button>
         </div>
-        <p style="font-size: 0.85rem; margin-bottom: 30px;">
-            **참고:** '검색' 버튼을 누르면 새 탭에서 YouTube 검색 결과가 열립니다. 거기서 원하는 영상의 주소(URL)를 복사해 오세요.
+        <p style="font-size: 0.8rem; color: var(--color-text-sub); margin-bottom: 20px;">
+            새 창에서 영상을 찾고 URL을 복사하여 아래에 붙여넣으세요.
         </p>
 
 
         <!-- 2. URL/ID 입력 및 전체 화면 재생 -->
-        <h2>2. 영상 ID 또는 URL 입력</h2>
-        <div class="input-group stack">
-            <input type="text" id="video-input" placeholder="YouTube URL 또는 ID를 입력하세요 (예: https://youtu.be/dQw4w9WgXcQ)">
+        <h2>2. 영상 재생</h2>
+        <div class="input-group">
+            <input type="text" id="video-input" placeholder="YouTube 영상 URL 또는 ID를 붙여넣으세요.">
             <button class="btn-primary" onclick="loadAndPlayVideo()">
-                <span id="play-button-text">영상 재생</span>
+                <span id="play-button-text">▶ 재생 및 전체화면 시작</span>
                 <div class="loader" id="loading-spinner"></div>
             </button>
         </div>
         
-        <div id="message-box"></div>
+        <div id="message-box">
+            <!-- 초기 메시지는 스크립트에서 설정됨 -->
+        </div>
+
     </div>
 
     <!-- 3. 전체 화면 시뮬레이션 Player -->
     <div id="fullscreen-player">
-        <!-- YouTube iFrame이 들어갈 곳 -->
+        <!-- allow="autoplay"는 모바일 백그라운드 재생 가능성을 높여줍니다. -->
         <iframe id="player-iframe" 
                 src="" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allow="autoplay; accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowfullscreen>
         </iframe>
-        
-        <button id="exit-button" onclick="exitFullscreen()">전체화면 종료</button>
     </div>
 
     <script>
@@ -234,46 +257,55 @@
         const playerIframe = document.getElementById('player-iframe');
         const videoInput = document.getElementById('video-input');
         const messageBox = document.getElementById('message-box');
-        const exitButton = document.getElementById('exit-button');
         const loadingSpinner = document.getElementById('loading-spinner');
         const playButtonText = document.getElementById('play-button-text');
 
-        // 메시지 출력 함수
-        function showMessage(msg, isError = true) {
-            messageBox.textContent = msg;
-            messageBox.style.color = isError ? 'var(--color-accent)' : 'var(--color-text-sub)';
+        // 기본 안내 메시지 (모바일 종료 방식 명확히 수정)
+        const initialMessage = `
+            <p><span class="warning-text">✅ 종료 안내:</span> PC는 **ESC 키**, 모바일은 **브라우저의 '뒤로 가기'** 버튼 또는 제스처를 사용하세요. (별도 종료 버튼 없음)</p>
+            <p><span class="warning-text">⚠️ 백그라운드 재생:</span> <span class="success-text">최대한 지원되도록 설정되었으나, 브라우저 정책에 따라 제한될 수 있습니다.</span></p>
+            <p><span class="warning-text">⚠️ 중요:</span> 플레이어 내 추천 동영상 클릭 시 새 영상은 **재생되지 않습니다.** (API 제약)</p>
+        `;
+
+        function showStatus(msg, isError = true) {
+            // 새로운 상태 메시지를 위에 잠시 표시
+            const statusHtml = isError 
+                ? `<p class="warning-text">${msg}</p>`
+                : `<p class="success-text">${msg}</p>`;
+            
+            messageBox.innerHTML = statusHtml + initialMessage;
+
+            // 3초 후 기본 안내 메시지로 복구
+            setTimeout(() => {
+                messageBox.innerHTML = initialMessage;
+            }, 3000);
         }
 
-        // 로딩 상태 토글 함수
         function toggleLoading(isLoading) {
             loadingSpinner.style.display = isLoading ? 'block' : 'none';
-            playButtonText.style.display = isLoading ? 'none' : 'block';
+            playButtonText.style.display = isLoading ? 'none' : 'inline';
         }
 
         // 1. 영상 검색 (API 우회)
         function openYouTubeSearch() {
             const query = document.getElementById('search-query').value.trim();
             if (query) {
-                // 새 탭에서 유튜브 검색 페이지를 엽니다. (가장 효율적인 API 우회 방법)
                 const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
                 window.open(searchUrl, '_blank');
             } else {
-                showMessage("검색어를 입력해주세요.", false);
+                showStatus("검색어를 입력해주세요.", false);
             }
         }
 
-        // 2. YouTube ID 추출 함수 (다양한 URL 형식 지원)
+        // 2. YouTube ID 추출 함수
         function extractVideoId(input) {
-            // URL에서 ID 추출을 시도합니다.
             const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
             const match = input.match(regex);
             
-            // 정규식 매칭이 있으면 ID 반환
             if (match && match[1]) {
                 return match[1];
             }
 
-            // 11자리 ID로만 구성된 경우를 확인
             if (input.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(input)) {
                 return input;
             }
@@ -281,57 +313,81 @@
             return null;
         }
 
-        // 3. 영상 로드 및 전체 화면 시뮬레이션
+        // 3. 전체 화면 종료 함수
+        function exitFullscreen() {
+            if (fullscreenPlayer.style.display === 'block') {
+                fullscreenPlayer.style.display = 'none';
+                mainContent.style.display = 'block';
+
+                // 재생 중이던 영상 정지
+                playerIframe.src = '';
+                
+                videoInput.focus();
+
+                showStatus("전체화면 재생이 종료되었습니다. 새로운 영상을 입력하세요.", false);
+            }
+        }
+        
+        // 4. 영상 로드 및 전체 화면 시뮬레이션
         function loadAndPlayVideo() {
             const input = videoInput.value.trim();
-            showMessage("");
             
             if (!input) {
-                showMessage("YouTube URL 또는 영상 ID를 입력해주세요.");
+                showStatus("YouTube URL 또는 영상 ID를 입력해주세요.");
                 return;
             }
 
             const videoId = extractVideoId(input);
 
             if (!videoId) {
-                showMessage("유효한 YouTube URL 또는 11자리 영상 ID가 아닙니다.");
+                showStatus("유효한 YouTube URL 또는 11자리 영상 ID가 아닙니다.");
                 return;
             }
 
             toggleLoading(true);
 
-            // 유튜브 임베드 URL 형식 (autoplay=1을 추가하여 바로 재생되게 함)
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+            // 임베드 URL: autoplay=1 (자동 재생), controls=1
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&modestbranding=1`;
 
-            // iFrame에 URL 설정
             playerIframe.src = embedUrl;
 
-            // iFrame 로드 완료를 기다리는 대신, 사용자 경험을 위해 바로 화면을 전환
-            // 구형 브라우저에서는 load 이벤트가 불안정할 수 있으므로 딜레이 후 전환
+            // 모바일/PC 뒤로 가기 종료 기능을 위해 history state를 추가
+            // 사용자가 '뒤로 가기'를 누르면 popstate 이벤트가 발생하여 exitFullscreen이 호출됨
+            history.pushState({ screen: 'fullscreen' }, 'Fullscreen Player');
+
+            // 로드 대기 후 화면 전환
             setTimeout(() => {
                 toggleLoading(false);
-                mainContent.style.display = 'none'; // 메인 콘텐츠 숨기기
-                fullscreenPlayer.style.display = 'block'; // 전체 화면 플레이어 표시
-                exitButton.style.display = 'block'; // 종료 버튼 표시
-            }, 500); // 짧은 딜레이 후 전환하여 로딩 느낌 부여
+                mainContent.style.display = 'none';
+                fullscreenPlayer.style.display = 'block';
+                playerIframe.focus(); 
+                showStatus("전체화면 재생을 시작합니다. 모바일 '뒤로 가기'로 종료하세요.", false);
+            }, 300); 
         }
 
-        // 4. 전체 화면 종료
-        function exitFullscreen() {
-            // 전체 화면 플레이어 숨기기
-            fullscreenPlayer.style.display = 'none';
-            exitButton.style.display = 'none';
-            mainContent.style.display = 'block'; // 메인 콘텐츠 다시 표시
+        // PC용 종료: ESC 키 리스너 등록
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && fullscreenPlayer.style.display === 'block') {
+                // history state를 하나 제거하여 popstate가 호출되지 않도록 방지
+                history.back(); 
+                // exitFullscreen을 직접 호출하지 않고 popstate 이벤트를 기다림
+            }
+        });
 
-            // 재생 중이던 영상 정지 (iFrame src를 비워서 정지)
-            playerIframe.src = '';
+        // 모바일용 종료: '뒤로 가기' (popstate) 리스너 등록
+        window.addEventListener('popstate', (event) => {
+            // 전체화면 상태일 때만 종료를 실행
+            if (fullscreenPlayer.style.display === 'block') {
+                exitFullscreen();
+                // popstate 이벤트 발생 후 한 번 더 history.pushState를 호출하여
+                // 사용자가 한 번 더 뒤로 가기를 눌러도 브라우저를 완전히 이탈하지 않도록 방지
+                history.pushState(null, '', location.pathname); 
+            }
+        });
 
-            showMessage("전체화면 재생이 종료되었습니다. 새로운 영상을 입력하세요.", false);
-        }
-
-        // 초기 로드 시 메시지 초기화
+        // 초기 로드 시 메시지 설정
         document.addEventListener('DOMContentLoaded', () => {
-            showMessage("다크모드 전용 뷰어입니다. URL/ID를 입력하고 재생하세요.", false);
+             messageBox.innerHTML = initialMessage;
         });
 
     </script>
