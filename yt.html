@@ -3,329 +3,336 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Full Screen Player</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    <title>유튜브 전체화면 뷰어</title>
+    <!-- 구형 브라우저에서도 잘 작동하도록 깨끗한 CSS와 JS만 사용합니다 -->
     <style>
-        /* 커스텀 스타일 및 폰트 설정 */
+        /* CSS 변수를 이용한 다크모드 정의 */
+        :root {
+            --color-bg: #1e1e1e; /* 어두운 배경 */
+            --color-surface: #2d2d2d; /* 카드/입력창 배경 */
+            --color-text: #e0e0e0; /* 밝은 텍스트 */
+            --color-text-sub: #b0b0b0; /* 보조 텍스트 */
+            --color-accent: #f25f5c; /* 강조 색상 (Notion 빨간색 계열) */
+            --color-accent-hover: #e04e4b;
+            --border-radius: 8px;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0d1117; /* Soft Dark Background */
-            color: #e5e7eb;
-        }
-        
-        /* 모든 요소에 부드러운 전환 효과 적용 */
-        .transition-all-300 {
-            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* 전체 화면 모드일 때 모달이 브라우저 전체를 채우도록 설정 */
-        #video-player-modal:fullscreen {
-            background-color: #000;
-            width: 100%;
-            height: 100%;
-            padding: 0 !important;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s;
         }
 
-        /* 전체 화면 모드에서 iframe이 화면을 가득 채우도록 스타일 정의 */
-        #video-player-modal:fullscreen #video-embed-wrapper {
-            width: 100%;
-            height: 100%;
-            cursor: grab; /* 스와이프/드래그가 가능하다는 표시 */
-            position: relative;
+        /* 메인 컨테이너 - Notion 스타일 카드 */
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--color-text);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        p {
+            color: var(--color-text-sub);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        /* 입력 그룹 스타일 */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input-group.stack {
+            flex-direction: column;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--color-bg);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 2px rgba(242, 95, 92, 0.5);
+        }
+
+        /* 버튼 스타일 */
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        /* 강조 버튼 (재생) */
+        .btn-primary {
+            background-color: var(--color-accent);
+            color: var(--color-bg); /* 다크모드 버튼 텍스트는 어두운 배경과 대비되게 */
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-accent-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
         }
         
-        /* iOS 스타일의 닫기 핸들 */
-        #video-player-modal:fullscreen #close-handle {
+        /* 보조 버튼 (검색) */
+        .btn-secondary {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            border: 1px solid var(--color-text-sub);
+        }
+
+        .btn-secondary:hover {
+            background-color: #3a3a3a;
+        }
+
+        /* 전체화면 모드 스타일 */
+        #fullscreen-player {
+            display: none; /* 초기에는 숨김 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999; /* 모든 것 위에 표시 */
+            background-color: black;
+            transition: opacity 0.3s;
+        }
+
+        #player-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
             display: block;
-            position: absolute;
-            top: 10px; /* 상단에서 약간 떨어뜨림 */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 5px;
-            background-color: rgba(255, 255, 255, 0.5); /* 반투명 흰색 */
-            border-radius: 2.5px;
-            z-index: 60; /* 비디오 위에 위치 */
         }
 
-        #video-player-modal:fullscreen #video-embed-wrapper iframe {
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* 비율 유지하며 최대화 */
+        /* 종료 버튼 */
+        #exit-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            padding: 10px 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            z-index: 10000;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            display: none; /* 플레이어와 함께 표시/숨김 */
+        }
+
+        #exit-button:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        /* 에러 메시지 스타일 */
+        #message-box {
+            color: var(--color-accent);
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        /* 스피너 (로딩 표시) */
+        .loader {
+            border: 4px solid #444;
+            border-top: 4px solid var(--color-accent);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            display: none; /* 기본 숨김 */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-blue-400 mb-2 tracking-tight">
-                몰입형 YouTube 플레이어 (ID/URL 입력)
-            </h1>
-            <p class="text-gray-400 text-sm">YouTube 영상 ID나 URL을 입력하고 전체 화면으로 감상하세요. (종료: ESC, **스와이프/스크롤 다운**)</p>
-        </header>
+    <div class="container" id="main-content">
+        <h1>YouTube 전체화면 뷰어</h1>
+        <p>
+            이 사이트는 구형 브라우저에서 전체화면을 시뮬레이션하고,
+            API 없이 영상을 검색/재생하기 위한 효율적인 워크플로우를 제공합니다.
+        </p>
 
-        <!-- Video ID Input (iOS Search Bar Look) -->
-        <div class="max-w-2xl mx-auto mb-12">
-            <div class="flex space-x-3">
-                <input
-                    type="text"
-                    id="video-id-input"
-                    placeholder="YouTube ID, youtu.be/ID 또는 youtube.com/watch?v=ID 를 입력하세요..."
-                    class="transition-all-300 flex-grow p-4 bg-gray-800 border border-gray-700 rounded-3xl text-white placeholder-gray-500 focus:ring-4 focus:ring-blue-500 focus:border-blue-500 shadow-lg"
-                    onkeydown="if(event.key === 'Enter') handlePlayButtonClick()"
-                >
-                <button
-                    id="play-button"
-                    onclick="handlePlayButtonClick()"
-                    class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-3xl shadow-xl transition-all-300 transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                    재생
-                </button>
-            </div>
-            <p id="feedback-message" class="text-sm text-red-400 mt-2 ml-4 hidden font-medium">영상 ID 또는 URL을 입력해 주세요.</p>
+        <!-- 1. 가짜 검색 기능 -->
+        <h2>1. 영상 검색 (API 우회)</h2>
+        <div class="input-group">
+            <input type="text" id="search-query" placeholder="검색어를 입력하세요 (예: 멋진 음악)">
+            <button class="btn-secondary" onclick="openYouTubeSearch()">검색</button>
+        </div>
+        <p style="font-size: 0.85rem; margin-bottom: 30px;">
+            **참고:** '검색' 버튼을 누르면 새 탭에서 YouTube 검색 결과가 열립니다. 거기서 원하는 영상의 주소(URL)를 복사해 오세요.
+        </p>
+
+
+        <!-- 2. URL/ID 입력 및 전체 화면 재생 -->
+        <h2>2. 영상 ID 또는 URL 입력</h2>
+        <div class="input-group stack">
+            <input type="text" id="video-input" placeholder="YouTube URL 또는 ID를 입력하세요 (예: https://youtu.be/dQw4w9WgXcQ)">
+            <button class="btn-primary" onclick="loadAndPlayVideo()">
+                <span id="play-button-text">영상 재생</span>
+                <div class="loader" id="loading-spinner"></div>
+            </button>
         </div>
         
-        <!-- Placeholder for results/feedback (now only used for spacing) -->
-        <div id="main-content-placeholder" class="min-h-64 flex items-center justify-center text-gray-500">
-            <p>영상 ID 또는 URL을 입력 후 '재생' 버튼을 눌러주세요.</p>
-        </div>
-
+        <div id="message-box"></div>
     </div>
 
-    <!-- Full-Screen Video Player Modal - 이 요소가 전체 화면으로 전환됩니다. -->
-    <div id="video-player-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-0 transition-all-300 opacity-0 pointer-events-none">
-        <div id="video-embed-wrapper" class="w-full h-full flex items-center justify-center">
-            <!-- Video will load here along with the close handle -->
-        </div>
+    <!-- 3. 전체 화면 시뮬레이션 Player -->
+    <div id="fullscreen-player">
+        <!-- YouTube iFrame이 들어갈 곳 -->
+        <iframe id="player-iframe" 
+                src="" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowfullscreen>
+        </iframe>
+        
+        <button id="exit-button" onclick="exitFullscreen()">전체화면 종료</button>
     </div>
 
     <script>
-        // 상수 및 전역 변수 설정
+        // 전역 변수
+        const mainContent = document.getElementById('main-content');
+        const fullscreenPlayer = document.getElementById('fullscreen-player');
+        const playerIframe = document.getElementById('player-iframe');
+        const videoInput = document.getElementById('video-input');
+        const messageBox = document.getElementById('message-box');
+        const exitButton = document.getElementById('exit-button');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const playButtonText = document.getElementById('play-button-text');
 
-        const videoIdInput = document.getElementById('video-id-input');
-        const feedbackMessage = document.getElementById('feedback-message');
-        const videoPlayerModal = document.getElementById('video-player-modal');
-        const videoEmbedWrapper = document.getElementById('video-embed-wrapper');
-        
-        // 스와이프/스크롤 감지 변수
-        let isSwiping = false;
-        let startY = 0;
-        const SWIPE_THRESHOLD = 50; // 전체 화면 종료를 위한 스와이프 거리 (픽셀)
-        
-        /**
-         * YouTube URL 또는 ID에서 11자리의 영상 ID를 추출합니다.
-         * @param {string} input - 사용자가 입력한 값 (ID 또는 URL)
-         * @returns {string | null} 유효한 영상 ID 또는 null
-         */
+        // 메시지 출력 함수
+        function showMessage(msg, isError = true) {
+            messageBox.textContent = msg;
+            messageBox.style.color = isError ? 'var(--color-accent)' : 'var(--color-text-sub)';
+        }
+
+        // 로딩 상태 토글 함수
+        function toggleLoading(isLoading) {
+            loadingSpinner.style.display = isLoading ? 'block' : 'none';
+            playButtonText.style.display = isLoading ? 'none' : 'block';
+        }
+
+        // 1. 영상 검색 (API 우회)
+        function openYouTubeSearch() {
+            const query = document.getElementById('search-query').value.trim();
+            if (query) {
+                // 새 탭에서 유튜브 검색 페이지를 엽니다. (가장 효율적인 API 우회 방법)
+                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                window.open(searchUrl, '_blank');
+            } else {
+                showMessage("검색어를 입력해주세요.", false);
+            }
+        }
+
+        // 2. YouTube ID 추출 함수 (다양한 URL 형식 지원)
         function extractVideoId(input) {
-            // 정규 표현식을 사용하여 ID를 추출
-            // 1. 순수 ID (11자)
-            if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+            // URL에서 ID 추출을 시도합니다.
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = input.match(regex);
+            
+            // 정규식 매칭이 있으면 ID 반환
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            // 11자리 ID로만 구성된 경우를 확인
+            if (input.length === 11 && /^[a-zA-Z0-9_-]{11}$/.test(input)) {
                 return input;
-            }
-
-            // 2. 표준 youtube.com/watch?v=ID 형식
-            const standardMatch = input.match(/[?&]v=([a-zA-Z0-9_-]{11})(?:&|$)/);
-            if (standardMatch && standardMatch[1]) {
-                return standardMatch[1];
-            }
-
-            // 3. 단축 URL youtu.be/ID 또는 youtube.com/embed/ID 형식
-            const shortEmbedMatch = input.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/))([a-zA-Z0-9_-]{11})/);
-            if (shortEmbedMatch && shortEmbedMatch[1]) {
-                return shortEmbedMatch[1];
             }
 
             return null;
         }
 
-        /**
-         * '재생' 버튼 클릭 시 실행됩니다.
-         */
-        function handlePlayButtonClick() {
-            const inputValue = videoIdInput.value.trim();
-            feedbackMessage.classList.add('hidden');
-
-            if (!inputValue) {
-                feedbackMessage.textContent = '영상 ID 또는 URL을 입력해 주세요.';
-                feedbackMessage.classList.remove('hidden');
+        // 3. 영상 로드 및 전체 화면 시뮬레이션
+        function loadAndPlayVideo() {
+            const input = videoInput.value.trim();
+            showMessage("");
+            
+            if (!input) {
+                showMessage("YouTube URL 또는 영상 ID를 입력해주세요.");
                 return;
             }
 
-            // URL/ID에서 영상 ID를 추출
-            const videoId = extractVideoId(inputValue);
+            const videoId = extractVideoId(input);
 
             if (!videoId) {
-                feedbackMessage.textContent = '유효한 YouTube 영상 ID 또는 URL이 아닙니다.';
-                feedbackMessage.classList.remove('hidden');
+                showMessage("유효한 YouTube URL 또는 11자리 영상 ID가 아닙니다.");
                 return;
             }
-            
-            // 영상 재생 시작
-            openVideoPlayer(videoId, 'User Provided Video');
+
+            toggleLoading(true);
+
+            // 유튜브 임베드 URL 형식 (autoplay=1을 추가하여 바로 재생되게 함)
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+
+            // iFrame에 URL 설정
+            playerIframe.src = embedUrl;
+
+            // iFrame 로드 완료를 기다리는 대신, 사용자 경험을 위해 바로 화면을 전환
+            // 구형 브라우저에서는 load 이벤트가 불안정할 수 있으므로 딜레이 후 전환
+            setTimeout(() => {
+                toggleLoading(false);
+                mainContent.style.display = 'none'; // 메인 콘텐츠 숨기기
+                fullscreenPlayer.style.display = 'block'; // 전체 화면 플레이어 표시
+                exitButton.style.display = 'block'; // 종료 버튼 표시
+            }, 500); // 짧은 딜레이 후 전환하여 로딩 느낌 부여
         }
 
-        /**
-         * 비디오 플레이어를 전체 화면 모드로 열고 영상을 로드
-         * @param {string} videoId - 재생할 유튜브 영상 ID
-         * @param {string} title - 영상 제목 (접근성을 위해)
-         */
-        function openVideoPlayer(videoId, title) {
-            // 1. 유튜브 임베드 URL: ?autoplay=1을 추가하여 바로 재생되도록 합니다.
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&fs=1`;
+        // 4. 전체 화면 종료
+        function exitFullscreen() {
+            // 전체 화면 플레이어 숨기기
+            fullscreenPlayer.style.display = 'none';
+            exitButton.style.display = 'none';
+            mainContent.style.display = 'block'; // 메인 콘텐츠 다시 표시
 
-            // close-handle을 포함하여 내부 HTML을 구성합니다.
-            videoEmbedWrapper.innerHTML = `
-                <div id="close-handle"></div> 
-                <iframe
-                    src="${embedUrl}"
-                    title="${title} 유튜브 플레이어"
-                    class="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowfullscreen
-                    style="border: none;"
-                ></iframe>
-            `;
-            
-            // 2. 모달을 표시
-            videoPlayerModal.classList.remove('opacity-0', 'pointer-events-none');
+            // 재생 중이던 영상 정지 (iFrame src를 비워서 정지)
+            playerIframe.src = '';
 
-            // 3. 웹 브라우저의 전체 화면 모드 요청
-            const element = videoPlayerModal;
-            if (element.requestFullscreen) {
-                element.requestFullscreen().catch(err => {
-                    // 전체 화면 실패 시 오류 메시지 표시 (alert 대신 콘솔에 출력)
-                    console.error(`전체 화면 모드 요청 실패: ${err.message} (${err.name}). 보안 정책에 의해 거부되었을 수 있습니다.`);
-                });
-            }
+            showMessage("전체화면 재생이 종료되었습니다. 새로운 영상을 입력하세요.", false);
         }
 
-        /**
-         * 비디오 플레이어를 닫음 (전체 화면 모드 종료 포함)
-         */
-        function closeVideoPlayer() {
-            // 1. 현재 전체 화면 모드라면 종료합니다.
-            if (document.fullscreenElement) {
-                document.exitFullscreen().catch(err => {
-                    console.error("전체 화면 종료 실패:", err);
-                });
-            }
-
-            // 2. 모달 숨기기 및 포인터 이벤트 비활성화
-            videoPlayerModal.classList.add('opacity-0', 'pointer-events-none');
-
-            // 3. iframe 내부의 콘텐츠를 제거하여 영상 재생을 중지합니다.
-            videoEmbedWrapper.innerHTML = '';
-            // 스와이프/스크롤 상태 초기화
-            videoEmbedWrapper.style.transform = 'translateY(0)';
-        }
-
-        /* ------------------ 스와이프/드래그/스크롤 전체 화면 종료 로직 ------------------ */
-
-        /**
-         * 스와이프/드래그 시작 핸들러 (마우스/터치)
-         */
-        function handleSwipeStart(event) {
-            if (!document.fullscreenElement) return; // 전체 화면이 아니면 무시
-
-            isSwiping = true;
-            // 터치 이벤트는 touches[0].clientY, 마우스 이벤트는 clientY 사용
-            startY = event.touches ? event.touches[0].clientY : event.clientY;
-            videoEmbedWrapper.style.cursor = 'grabbing'; // 드래그 중인 커서 표시
-        }
-
-        /**
-         * 스와이프/드래그 이동 핸들러 (마우스/터치)
-         */
-        function handleSwipeMove(event) {
-            if (!isSwiping || !document.fullscreenElement) return;
-
-            const currentY = event.touches ? event.touches[0].clientY : event.clientY;
-            const deltaY = currentY - startY;
-
-            // 스와이프 다운 (deltaY > 0)일 때만 처리
-            if (deltaY > 0) {
-                // 시각적인 피드백 (모달을 아래로 살짝 이동시켜 해제 임박을 알림)
-                videoEmbedWrapper.style.transform = `translateY(${deltaY}px)`;
-                
-                // 임계값을 넘으면 닫기
-                if (deltaY > SWIPE_THRESHOLD) {
-                    closeVideoPlayer();
-                    handleSwipeEnd(); // 종료 후 이벤트 리셋
-                }
-            } else {
-                // 위로 스와이프는 무시
-                 videoEmbedWrapper.style.transform = 'translateY(0)';
-            }
-        }
-
-        /**
-         * 스와이프/드래그 종료 핸들러 (마우스/터치)
-         */
-        function handleSwipeEnd() {
-            isSwiping = false;
-            videoEmbedWrapper.style.cursor = 'grab'; // 커서 복원
-            
-            // 스와이프 임계값에 도달하지 못했다면 원래 위치로 부드럽게 복원
-            if (document.fullscreenElement) {
-                videoEmbedWrapper.style.transform = 'translateY(0)'; 
-            }
-        }
-
-        /**
-         * PC 스크롤 (마우스 휠/터치패드) 이벤트 핸들러
-         */
-        function handleWheel(event) {
-            if (!document.fullscreenElement) return;
-
-            // 스크롤 다운 (deltaY가 양수)
-            if (event.deltaY > 0) {
-                // 스크롤 틱이 감지되면 (deltaY 값은 브라우저 환경마다 다름)
-                if (Math.abs(event.deltaY) > 5) {
-                    closeVideoPlayer();
-                }
-            }
-            // 스크롤이 발생할 때 iframe 내부 요소까지 스크롤되는 것을 막아 
-            // 제스처가 플레이어 닫기에만 집중되도록 합니다.
-            event.preventDefault(); 
-        }
-
-
-        // 이벤트 리스너 등록
-        function setupEventListeners() {
-            // 전체 화면 상태 변경 감지 리스너: 사용자가 ESC 키 등으로 전체 화면을 종료했을 때
-            document.addEventListener('fullscreenchange', () => {
-                if (!document.fullscreenElement) {
-                    // 영상 재생을 중지하고 모달을 숨깁니다.
-                    videoPlayerModal.classList.add('opacity-0', 'pointer-events-none');
-                    videoEmbedWrapper.innerHTML = '';
-                }
-            });
-
-            // 스와이프/드래그/스크롤 이벤트 리스너 (videoEmbedWrapper에 추가)
-            
-            // 1. 마우스 드래그 (스와이프 대체)
-            videoEmbedWrapper.addEventListener('mousedown', handleSwipeStart);
-            videoEmbedWrapper.addEventListener('mousemove', handleSwipeMove);
-            videoEmbedWrapper.addEventListener('mouseup', handleSwipeEnd);
-            videoEmbedWrapper.addEventListener('mouseleave', handleSwipeEnd);
-
-            // 2. 터치 스와이프
-            videoEmbedWrapper.addEventListener('touchstart', handleSwipeStart, { passive: true });
-            videoEmbedWrapper.addEventListener('touchmove', handleSwipeMove, { passive: false }); // passive: false로 설정하여 preventDefault를 허용합니다.
-            videoEmbedWrapper.addEventListener('touchend', handleSwipeEnd);
-            videoEmbedWrapper.addEventListener('touchcancel', handleSwipeEnd);
-            
-            // 3. PC 스크롤 (휠 이벤트)
-            videoEmbedWrapper.addEventListener('wheel', handleWheel, { passive: false });
-        }
-
-        // 초기 로드 시 이벤트 리스너 설정
-        window.onload = setupEventListeners;
+        // 초기 로드 시 메시지 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            showMessage("다크모드 전용 뷰어입니다. URL/ID를 입력하고 재생하세요.", false);
+        });
 
     </script>
 </body>
