@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YouTube Background Player</title>
+    <title>YouTube Gesture App</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
     
@@ -15,7 +15,6 @@
         button { background:none; border:none; color:#fff; cursor:pointer; }
         .material-symbols-outlined { vertical-align:middle; font-size:24px; }
         .filled { font-variation-settings:'FILL' 1; }
-        .hidden { display:none !important; }
 
         /* --- 2. 페이지 레이아웃 --- */
         .page {
@@ -29,88 +28,61 @@
         #page-search.active { transform: translate3d(0, 0, 0); }
         #page-channel { z-index: 30; }
         #page-channel.active { transform: translate3d(0, 0, 0); }
+        #page-library { z-index: 15; } /* 보관함 */
+        #page-library.active { transform: translate3d(0, 0, 0); }
 
-        /* --- 3. [핵심] 재생 페이지 & 미니 플레이어 변신 로직 --- */
+        /* --- 3. 재생 페이지 & 제스처 UI --- */
         #page-watch { 
             z-index: 50; background:#000;
             transform: translate3d(0, 100%, 0); 
-            transition: transform 0.3s cubic-bezier(0,0,0.2,1);
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
             display: flex; flex-direction: column;
+            /* 제스처 감지를 위한 터치 영역 설정 */
+            touch-action: none; 
         }
-        
-        /* 활성화 상태 (전체 화면) */
         #page-watch.active { transform: translate3d(0, 0, 0); }
 
-        /* 미니 플레이어 모드 (클래스 하나로 변신) */
+        /* 미니 플레이어 모드 */
         #page-watch.mini {
-            transform: translate3d(0, 0, 0) !important; /* 화면에 보임 */
-            top: auto !important;
-            bottom: var(--nav-h); /* 하단 바 바로 위 */
-            height: 60px; /* 높이 축소 */
-            background: #212121; /* 배경색 변경 */
-            border-top: 1px solid #333;
-            flex-direction: row; /* 가로 배치 */
-            z-index: 95; /* 하단바(100)보다는 뒤, 리스트보다는 앞 */
+            transform: translate3d(0, 0, 0) !important;
+            top: auto !important; bottom: var(--nav-h); height: 60px;
+            background: #212121; border-top: 1px solid #333;
+            flex-direction: row; z-index: 95;
         }
-
-        /* 미니 모드일 때 숨길 요소들 */
         #page-watch.mini .watch-header-bar,
         #page-watch.mini .player-actions,
-        #page-watch.mini .watch-scroll-area {
-            display: none !important;
-        }
-
-        /* 미니 모드일 때 플레이어 크기 조정 */
+        #page-watch.mini .watch-scroll-area { display: none !important; }
+        
         #page-watch.mini #player-wrapper {
-            width: 106px; /* 16:9 비율 */
-            height: 100%;
-            padding-bottom: 0;
-            flex-shrink: 0;
-            pointer-events: none; /* 미니일땐 영상 터치 안됨 (부모 클릭됨) */
-        }
-
-        /* 미니 플레이어 전용 컨트롤 (평소엔 숨김) */
-        .mini-controls {
-            display: none;
-            flex: 1;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 12px;
-            overflow: hidden;
+            width: 106px; height: 100%; padding-bottom: 0;
+            flex-shrink: 0; pointer-events: none;
         }
         #page-watch.mini .mini-controls { display: flex; }
-        
-        .mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; padding-right:10px; }
-        .mini-title { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
-        .mini-ch { font-size:11px; color:#aaa; }
 
-        /* --- 4. 헤더 및 리스트 스타일 --- */
+        .mini-controls {
+            display: none; flex: 1; align-items: center; justify-content: space-between;
+            padding: 0 12px; overflow: hidden;
+        }
+        .mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; padding-right:10px; }
+        .mini-title { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+        /* --- 4. 공통 UI 컴포넌트 --- */
         .fixed-header {
             position: absolute; top: 0; left: 0; width: 100%; height: var(--header-h);
             display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
             background: rgba(15,15,15,0.98); border-bottom: 1px solid #222; z-index: 100;
         }
-        .fixed-chips {
-            position: absolute; top: var(--header-h); left: 0; width: 100%; height: var(--chips-h);
-            background: var(--bg); z-index: 90;
-            display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto;
-            border-bottom: 1px solid #222;
-        }
-        .fixed-chips::-webkit-scrollbar { display: none; }
-        .search-box-wrapper {
-            flex:1; background:#121212; height:36px; border-radius:18px; 
-            display:flex; align-items:center; padding:0 10px; margin: 0 10px;
-        }
-        .search-box-wrapper input { width:100%; background:transparent; border:none; outline:none; color:#fff; font-size:16px; }
-
         .scroll-content {
             position: absolute; left: 0; width: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
         }
+        /* 홈 영역 */
+        .fixed-chips {
+            position: absolute; top: var(--header-h); left: 0; width: 100%; height: var(--chips-h);
+            background: var(--bg); z-index: 90; display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto;
+        }
         #list-home { top: calc(var(--header-h) + var(--chips-h)); height: calc(100% - var(--header-h) - var(--chips-h) - var(--nav-h)); }
-        #list-search { top: var(--header-h); height: calc(100% - var(--header-h)); }
-        #channel-scroll-area { top: 50px; height: calc(100% - 50px); }
-        .watch-scroll-area { flex: 1; overflow-y: auto; padding: 12px; }
-
+        
+        /* 비디오 아이템 */
         .video-item { margin-bottom:15px; cursor:pointer; }
         .thumb-box { width:100%; position:relative; background:#222; height:0; padding-bottom:56.25%; }
         .thumb-box img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
@@ -121,28 +93,43 @@
         .v-tit { font-size:14px; font-weight:500; line-height:1.3; margin-bottom:3px; max-height:36px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
         .v-meta { font-size:12px; color:#aaa; }
 
-        .load-more-btn {
-            width: 90%; margin: 20px auto; display: block;
-            padding: 12px; background: #222; color: #fff;
-            border-radius: 20px; font-size: 14px; font-weight: 500; text-align: center;
-        }
-
+        /* 플레이어 */
         .player-container {
             width:100%; background:#000; position:relative; height:0; padding-bottom:56.25%; flex-shrink: 0;
-            transition: width 0.3s; /* 부드러운 크기 변화 */
+            transition: all 0.3s;
         }
         #yt-player { position:absolute; top:0; left:0; width:100%; height:100%; }
         .player-container.css-fullscreen {
             position:fixed !important; top:0; left:0; width:100% !important; height:100% !important;
             padding-bottom:0 !important; z-index:9999;
         }
-        
+        .player-actions {
+            display:flex; justify-content:space-around; align-items:center;
+            padding:12px; background:#1e1e1e; border-bottom:1px solid #333; flex-shrink: 0;
+        }
+        .action-btn { display:flex; flex-direction:column; align-items:center; font-size:11px; color:#fff; gap:4px; }
+
+        /* 하단바 */
         .btm-nav {
             position:absolute; bottom:0; left:0; width:100%; height:var(--nav-h);
             background:#0f0f0f; border-top:1px solid #222; display:flex; justify-content:space-around; align-items:center; z-index:100;
         }
         .nav-icon { text-align:center; color:#fff; opacity:0.6; font-size:10px; }
         .nav-icon.active { opacity:1; }
+
+        /* 모달 (재생목록 추가) */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.7); z-index: 200; display:none;
+            justify-content: center; align-items: center;
+        }
+        .modal-box {
+            background: #212121; width: 80%; max-width: 300px; padding: 20px; border-radius: 12px;
+        }
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .playlist-row { padding: 10px; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .new-pl-input { width: 100%; background: #333; border: none; padding: 10px; color: #fff; border-radius: 4px; margin-top: 10px; }
+
         .loader { text-align:center; padding:20px; color:#aaa; font-size:13px; }
     </style>
 </head>
@@ -160,7 +147,7 @@
             <div style="display:flex; gap:15px;">
                 <span class="material-symbols-outlined">cast</span>
                 <span class="material-symbols-outlined">notifications</span>
-                <button onclick="goToSearch()"><span class="material-symbols-outlined">search</span></button>
+                <button onclick="openSearch()"><span class="material-symbols-outlined">search</span></button>
             </div>
         </header>
         <div class="fixed-chips">
@@ -169,11 +156,13 @@
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">게임</div>
         </div>
         <div id="list-home" class="scroll-content"></div>
+        <!-- 하단바 -->
         <nav class="btm-nav">
             <div class="nav-icon active" onclick="goHomeForce()"><span class="material-symbols-outlined filled">home</span><br>홈</div>
             <div class="nav-icon"><span class="material-symbols-outlined">slow_motion_video</span><br>Shorts</div>
             <div class="nav-icon"><span class="material-symbols-outlined" style="font-size:32px;">add_circle</span></div>
             <div class="nav-icon"><span class="material-symbols-outlined">subscriptions</span><br>구독</div>
+            <div class="nav-icon" onclick="openLibrary()"><span class="material-symbols-outlined">video_library</span><br>보관함</div>
         </nav>
     </div>
 
@@ -181,42 +170,37 @@
     <div id="page-search" class="page">
         <div class="fixed-header">
             <button onclick="window.history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
-            <div class="search-box-wrapper">
-                <input type="text" id="inp-query" placeholder="YouTube 검색" onkeypress="if(event.key==='Enter') doSearch(true)">
-            </div>
+            <input type="text" id="inp-query" placeholder="YouTube 검색" style="flex:1; background:#121212; border:none; color:#fff; padding:8px 15px; border-radius:20px; margin:0 10px;" onkeypress="if(event.key==='Enter') doSearch(true)">
             <button onclick="doSearch(true)"><span class="material-symbols-outlined">search</span></button>
         </div>
-        <div id="list-search" class="scroll-content"></div>
+        <div id="list-search" class="scroll-content" style="top:48px; height:calc(100% - 48px);"></div>
     </div>
 
-    <!-- [3] 채널 -->
-    <div id="page-channel" class="page">
-        <div class="channel-nav-bar">
-            <button onclick="window.history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
-            <div style="flex:1;"></div>
-            <span class="material-symbols-outlined">more_vert</span>
-        </div>
-        <div id="channel-scroll-area" class="scroll-content">
-            <div style="background:#222; padding:30px 0 10px; display:flex; flex-direction:column; align-items:center;">
-                <img id="ch-img" src="" style="width:64px; height:64px; border-radius:50%; margin-bottom:8px;">
-                <div id="ch-name" style="font-size:18px; font-weight:700;"></div>
-                <div id="ch-sub" style="font-size:12px; color:#aaa; margin-bottom:10px;"></div>
-                <button style="background:#fff; color:#000; padding:5px 20px; border-radius:20px; font-size:13px; font-weight:600;">구독</button>
+    <!-- [3] 보관함 (재생목록) -->
+    <div id="page-library" class="page">
+        <header class="fixed-header">
+            <div style="font-size:18px; font-weight:700;">보관함 (Local)</div>
+            <div style="display:flex; gap:15px;">
+                <span class="material-symbols-outlined">search</span>
+                <span class="material-symbols-outlined">more_vert</span>
             </div>
-            <div style="border-bottom:1px solid #333; display:flex; margin-top:10px;">
-                 <div style="flex:1; text-align:center; padding:10px; border-bottom:2px solid #fff; font-weight:bold;">동영상</div>
-                 <div style="flex:1; text-align:center; padding:10px; color:#aaa;">정보</div>
-            </div>
-            <div id="list-channel" style="padding-top:10px;"></div>
+        </header>
+        <div class="scroll-content" style="top:48px; height:calc(100% - 98px); padding:12px;">
+            <div style="font-size:14px; font-weight:bold; margin-bottom:10px;">내 재생목록</div>
+            <div id="library-list"></div>
         </div>
+        <nav class="btm-nav">
+            <div class="nav-icon" onclick="goHomeForce()"><span class="material-symbols-outlined">home</span><br>홈</div>
+            <div class="nav-icon"><span class="material-symbols-outlined">slow_motion_video</span><br>Shorts</div>
+            <div class="nav-icon"><span class="material-symbols-outlined" style="font-size:32px;">add_circle</span></div>
+            <div class="nav-icon"><span class="material-symbols-outlined">subscriptions</span><br>구독</div>
+            <div class="nav-icon active"><span class="material-symbols-outlined filled">video_library</span><br>보관함</div>
+        </nav>
     </div>
 
-    <!-- [4] 재생 (미니 플레이어 통합) -->
-    <!-- 미니 상태일 때 클릭하면 전체화면으로 복귀 -->
+    <!-- [4] 재생 (Swipe Gestures) -->
     <div id="page-watch" class="page" onclick="restorePlayer()">
-        <!-- 상단 닫기 바 -->
         <div class="watch-header-bar" style="height:50px; display:flex; align-items:center; padding:0 10px; background:#000; flex-shrink:0;">
-            <!-- 내리기 버튼 (미니 플레이어 전환) -->
             <button onclick="minimizePlayer(event)"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>
         </div>
         
@@ -224,144 +208,115 @@
             <div id="yt-player"></div>
         </div>
 
-        <!-- 미니 플레이어용 컨트롤 (미니일 때만 보임) -->
         <div class="mini-controls">
             <div class="mini-info">
                 <div id="mini-title" class="mini-title">제목</div>
-                <div id="mini-ch" class="mini-ch">채널명</div>
+                <div style="font-size:11px; color:#aaa;" id="mini-ch">채널</div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button onclick="togglePlay(event)"><span id="mini-play-icon" class="material-symbols-outlined">pause</span></button>
-                <button onclick="closePlayer(event)"><span class="material-symbols-outlined">close</span></button>
-            </div>
+            <button onclick="togglePlay(event)"><span id="mini-play-icon" class="material-symbols-outlined">pause</span></button>
+            <button onclick="closePlayer(event)"><span class="material-symbols-outlined">close</span></button>
         </div>
 
         <div class="player-actions">
-            <span style="font-size:12px; color:#aaa;">영상 원본 비율</span>
-            <button onclick="toggleCssFullscreen(event)" style="background:#333; padding:5px 10px; border-radius:4px; font-size:12px; display:flex; align-items:center; gap:5px;">
-                <span class="material-symbols-outlined" style="font-size:18px;">crop_free</span> 화면 채우기
-            </button>
+            <div class="action-btn" onclick="openPlaylistModal()">
+                <span class="material-symbols-outlined">playlist_add</span> 저장
+            </div>
+            <div class="action-btn" onclick="toggleCssFullscreen(event)">
+                <span class="material-symbols-outlined">crop_free</span> 화면 채우기
+            </div>
+            <div class="action-btn"><span class="material-symbols-outlined">thumb_up</span> 1.2만</div>
+            <div class="action-btn"><span class="material-symbols-outlined">share</span> 공유</div>
         </div>
 
-        <div class="watch-scroll-area" id="watch-scroll-area">
+        <div class="watch-scroll-area" id="watch-scroll-area" style="flex:1; overflow-y:auto; padding:12px; touch-action: pan-y;">
             <h3 id="wp-title" style="font-size:16px; margin-bottom:5px;"></h3>
             <div id="wp-meta" style="font-size:12px; color:#aaa; margin-bottom:15px;"></div>
             
             <div style="display:flex; align-items:center; border-top:1px solid #222; border-bottom:1px solid #222; padding:10px 0; margin-bottom:20px;">
-                <div class="v-pf" onclick="goToChannelFromWatch(event)"><img id="wp-ch-img" src=""></div>
-                <div style="flex:1;">
+                <div class="v-pf"><img id="wp-ch-img" src=""></div>
+                <div style="flex:1; margin-left:10px;">
                     <div id="wp-ch-name" style="font-weight:700; font-size:14px;"></div>
                 </div>
                 <button style="background:#fff; color:#000; padding:5px 15px; border-radius:15px; font-size:12px; font-weight:600;">구독</button>
             </div>
 
-            <div style="font-size:14px; font-weight:700; margin-bottom:10px;">이 채널의 다른 동영상</div>
+            <div style="font-size:14px; font-weight:700; margin-bottom:10px;">추천 동영상</div>
             <div id="list-watch-related"></div>
+        </div>
+    </div>
+
+    <!-- 재생목록 모달 -->
+    <div id="playlist-modal" class="modal-overlay" onclick="if(event.target===this) closePlaylistModal()">
+        <div class="modal-box">
+            <div class="modal-title">재생목록에 저장</div>
+            <div id="modal-list"></div>
+            <div style="margin-top:15px; border-top:1px solid #333; padding-top:10px;">
+                <input type="text" id="new-pl-name" class="new-pl-input" placeholder="새 재생목록 이름">
+                <div style="text-align:right; margin-top:10px;">
+                    <button style="color:#3ea6ff; font-weight:bold;" onclick="createNewPlaylist()">만들기</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const API_KEY = 'AIzaSyD9gpmEbUyP9h9Rm3nayK7PLYek5Ja7B38';
         let player;
-        let channelCache = {}; 
+        
+        // 데이터 캐싱 (로컬스토리지 연동을 위한 메모리 객체)
+        let videoCache = JSON.parse(localStorage.getItem('yt_video_cache')) || {};
+        let playlists = JSON.parse(localStorage.getItem('yt_playlists')) || {};
+        let currentVideo = null; // 현재 재생중인 비디오 정보
 
         let state = {
             home: { token: '', container: 'list-home' },
             search: { token: '', container: 'list-search', query: '' },
-            channel: { token: '', container: 'list-channel', id: '', uploadsId: '' },
-            watch: { token: '', container: 'list-watch-related', id: '', uploadsId: '' }
+            watch: { token: '', container: 'list-watch-related', id: '' }
         };
+
+        // 제스처 변수
+        let touchStartY = 0;
+        let touchEndY = 0;
 
         window.onload = function() {
             history.replaceState({page: 'home'}, '', '');
             loadVideos('popular', true);
+            
+            // 제스처 리스너 등록
+            const wp = document.getElementById('page-watch');
+            wp.addEventListener('touchstart', e => {
+                touchStartY = e.changedTouches[0].screenY;
+            }, {passive: true});
+            
+            wp.addEventListener('touchend', e => {
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipeGesture();
+            }, {passive: true});
         };
 
-        // 뒤로가기 동작 제어
-        window.onpopstate = function(event) {
-            const st = event.state || {page: 'home'};
-            const watchPage = document.getElementById('page-watch');
-            
-            // 미니 플레이어 상태라면 뒤로가기 시 앱 종료 방지 등을 처리할 수 있으나
-            // 여기서는 단순하게 페이지 전환 로직만 처리
-            
-            document.querySelectorAll('.page').forEach(p => {
-                if(p.id !== 'page-watch') p.classList.remove('active');
-            });
-
-            // 플레이어 처리
-            if(st.page === 'watch') {
-                watchPage.classList.remove('mini'); // 미니 해제하고 전체화면
-                watchPage.classList.add('active');
-            } else {
-                // 홈/검색 등으로 갈 때: 재생 중이면 미니플레이어로 전환
-                if(watchPage.classList.contains('active')) {
-                    minimizePlayer(); // 영상 안끄고 줄이기
-                }
-                
-                if(st.page === 'search') document.getElementById('page-search').classList.add('active');
-                if(st.page === 'channel') document.getElementById('page-channel').classList.add('active');
-                if(st.page === 'home') document.getElementById('page-home').classList.add('active');
-            }
-        };
-
-        // --- 플레이어 제어 (백그라운드/미니) ---
-
-        // 플레이어 최소화 (미니모드)
-        function minimizePlayer(e) {
-            if(e) e.stopPropagation();
+        function handleSwipeGesture() {
+            const diff = touchEndY - touchStartY;
             const wp = document.getElementById('page-watch');
-            if(wp.classList.contains('active')) {
-                wp.classList.add('mini');
-                // 히스토리 관리: 현재 URL이 #watch라면 뒤로가기 한번 해줌 (URL 정리)
-                if(location.hash === '#watch') {
-                    history.back();
-                }
-            }
-        }
-
-        // 플레이어 복원 (전체화면)
-        function restorePlayer() {
-            const wp = document.getElementById('page-watch');
+            const scrollArea = document.getElementById('watch-scroll-area');
+            
+            // 미니 플레이어일 때: 위로 쓸면 -> 복원
             if(wp.classList.contains('mini')) {
-                wp.classList.remove('mini');
-                wp.classList.add('active');
-                history.pushState({page: 'watch'}, '', '#watch');
+                if(diff < -50) restorePlayer(); 
+            } 
+            // 전체 화면일 때: 
+            else {
+                // 스크롤이 맨 위에 있을 때만 아래로 쓸면 -> 미니화
+                if(scrollArea.scrollTop <= 0 && diff > 100) {
+                    minimizePlayer();
+                }
             }
         }
 
-        // 플레이어 완전 종료
-        function closePlayer(e) {
-            if(e) e.stopPropagation();
-            const wp = document.getElementById('page-watch');
-            wp.classList.remove('active');
-            wp.classList.remove('mini');
-            if(player && player.stopVideo) player.stopVideo();
-        }
-
-        // 재생/일시정지 토글 (미니모드용)
-        function togglePlay(e) {
-            if(e) e.stopPropagation();
-            if(!player) return;
-            const state = player.getPlayerState();
-            if(state === 1) player.pauseVideo();
-            else player.playVideo();
-        }
-        
-        // 플레이어 상태 변화 감지 (아이콘 변경)
-        function onPlayerStateChange(event) {
-            const btn = document.getElementById('mini-play-icon');
-            if(event.data === 1) btn.innerText = 'pause';
-            else btn.innerText = 'play_arrow';
-        }
-
-        // --- 기존 로직들 ---
-
+        /* --- API 및 로직 --- */
         async function loadVideos(type, isNew = false) {
             let config;
             if(type === 'popular') config = state.home;
             else if(type === 'search') config = state.search;
-            else if(type === 'channel') config = state.channel;
             else if(type === 'related') config = state.watch;
 
             const listDiv = document.getElementById(config.container);
@@ -369,35 +324,17 @@
             if(isNew) {
                 config.token = '';
                 listDiv.innerHTML = '<div class="loader">로딩 중...</div>';
-                listDiv.scrollTop = 0; 
-            } else {
-                const btn = document.getElementById('btn-load-' + type);
-                if(btn) btn.remove();
             }
 
             const baseUrl = `https://www.googleapis.com/youtube/v3`;
             const tokenPart = config.token ? `&pageToken=${config.token}` : '';
             let url = '';
 
-            if(type === 'popular') {
-                url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=10&regionCode=KR&key=${API_KEY}${tokenPart}`;
-            } else if(type === 'search') {
-                url = `${baseUrl}/search?part=snippet&q=${config.query}&type=video&maxResults=10&key=${API_KEY}${tokenPart}`;
-            } else if(type === 'channel' || type === 'related') {
-                if(!config.uploadsId) {
-                    if(channelCache[config.id] && channelCache[config.id].uploadsId) {
-                        config.uploadsId = channelCache[config.id].uploadsId;
-                    } else {
-                        try {
-                            const chRes = await fetch(`${baseUrl}/channels?part=contentDetails&id=${config.id}&key=${API_KEY}`);
-                            const chData = await chRes.json();
-                            config.uploadsId = chData.items[0].contentDetails.relatedPlaylists.uploads;
-                            if(!channelCache[config.id]) channelCache[config.id] = {};
-                            channelCache[config.id].uploadsId = config.uploadsId;
-                        } catch(e) { return; }
-                    }
-                }
-                url = `${baseUrl}/playlistItems?part=snippet&playlistId=${config.uploadsId}&maxResults=50&key=${API_KEY}${tokenPart}`;
+            if(type === 'popular') url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=10&regionCode=KR&key=${API_KEY}${tokenPart}`;
+            else if(type === 'search') url = `${baseUrl}/search?part=snippet&q=${config.query}&type=video&maxResults=10&key=${API_KEY}${tokenPart}`;
+            else if(type === 'related') {
+                // API 절약: 같은 채널 영상 불러오기
+                 url = `${baseUrl}/search?part=snippet&channelId=${config.id}&order=date&type=video&maxResults=20&key=${API_KEY}${tokenPart}`;
             }
 
             try {
@@ -405,66 +342,48 @@
                 const data = await res.json();
                 
                 if(isNew) listDiv.innerHTML = '';
-
-                if(!data.items || data.items.length === 0) {
-                    listDiv.innerHTML += '<div style="padding:20px; text-align:center; color:#555;">영상이 없습니다.</div>';
-                    return;
-                }
-
                 config.token = data.nextPageToken || '';
 
-                const uncachedChIds = [];
-                data.items.forEach(i => {
-                    const cid = i.snippet.channelId;
-                    if(!channelCache[cid] || !channelCache[cid].thumb) uncachedChIds.push(cid);
-                });
-
-                if(uncachedChIds.length > 0) {
-                    const uniqueIds = [...new Set(uncachedChIds)].join(',');
-                    const chRes = await fetch(`${baseUrl}/channels?part=snippet&id=${uniqueIds}&key=${API_KEY}`);
-                    const chData = await chRes.json();
-                    if(chData.items) {
-                        chData.items.forEach(c => {
-                            if(!channelCache[c.id]) channelCache[c.id] = {};
-                            channelCache[c.id].thumb = c.snippet.thumbnails.default.url;
-                        });
-                    }
-                }
-
                 renderItems(data.items, listDiv, type);
-
-                if(config.token) {
+                
+                // Load More 버튼 (무한스크롤 대용)
+                if(config.token && !document.getElementById('btn-load-'+type)) {
                     const btn = document.createElement('div');
-                    btn.id = 'btn-load-' + type;
-                    btn.className = 'load-more-btn';
-                    btn.innerHTML = '🔽 더 보기 (50개 로드)';
-                    btn.onclick = () => loadVideos(type, false);
+                    btn.id = 'btn-load-'+type;
+                    btn.style.cssText = "padding:15px; text-align:center; color:#aaa; font-size:12px;";
+                    btn.innerText = "더 불러오기...";
+                    btn.onclick = () => { btn.remove(); loadVideos(type, false); };
                     listDiv.appendChild(btn);
                 }
-            } catch(e) { listDiv.innerHTML += '<div class="loader">오류</div>'; }
+            } catch(e) { 
+                listDiv.innerHTML = '<div style="padding:20px;text-align:center;">API 한도 초과 또는 오류</div>';
+            }
         }
 
         function renderItems(items, container, type) {
             items.forEach(item => {
                 const s = item.snippet;
-                let vidId;
-                if(type === 'popular') vidId = item.id;
-                else if(type === 'search') vidId = item.id.videoId;
-                else if(type === 'channel' || type === 'related') vidId = s.resourceId.videoId;
+                let vidId = (type==='popular') ? item.id : (item.id.videoId || item.id);
+                if(!vidId || typeof vidId !== 'string') return;
 
-                if(!vidId) return;
-
-                const chImg = (channelCache[s.channelId] && channelCache[s.channelId].thumb) ? channelCache[s.channelId].thumb : 'https://via.placeholder.com/36';
+                const thumb = s.thumbnails.medium.url;
                 
+                // 캐시 저장
+                videoCache[vidId] = {
+                    id: vidId, title: s.title, channel: s.channelTitle, thumb: thumb, 
+                    desc: s.description, date: s.publishedAt
+                };
+                localStorage.setItem('yt_video_cache', JSON.stringify(videoCache));
+
                 const div = document.createElement('div');
                 div.className = 'video-item';
                 div.innerHTML = `
-                    <div class="thumb-box" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}', event)">
-                        <img src="${s.thumbnails.high ? s.thumbnails.high.url : s.thumbnails.medium.url}">
+                    <div class="thumb-box" onclick="openWatch('${vidId}')">
+                        <img src="${thumb}">
                     </div>
                     <div class="v-info">
-                        <div class="v-pf" onclick="openChannel('${s.channelId}', event)"><img src="${chImg}"></div>
-                        <div class="v-txt" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}', event)">
+                        <div class="v-pf"><img src="https://ui-avatars.com/api/?name=${s.channelTitle}&background=random"></div>
+                        <div class="v-txt" onclick="openWatch('${vidId}')">
                             <div class="v-tit">${s.title}</div>
                             <div class="v-meta">${s.channelTitle} • ${timeAgo(s.publishedAt)}</div>
                         </div>
@@ -474,59 +393,29 @@
             });
         }
 
-        function goToSearch() {
-            document.getElementById('page-search').classList.add('active');
-            history.pushState({page: 'search'}, '', '#search');
-            setTimeout(() => document.getElementById('inp-query').focus(), 300);
-        }
-
-        function doSearch(isNew) {
-            const q = document.getElementById('inp-query').value;
-            if(!q) return;
-            document.getElementById('inp-query').blur();
-            state.search.query = q;
-            loadVideos('search', true);
-        }
-
-        async function openChannel(chId, e) {
-            if(e) e.stopPropagation();
-            state.channel.id = chId;
-            state.channel.uploadsId = '';
-            
-            document.getElementById('page-channel').classList.add('active');
-            history.pushState({page: 'channel'}, '', '#channel');
-            
-            document.getElementById('ch-name').innerText = '...';
-            const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${chId}&key=${API_KEY}`);
-            const data = await res.json();
-            const info = data.items[0];
-            
-            document.getElementById('ch-name').innerText = info.snippet.title;
-            document.getElementById('ch-sub').innerText = `구독자 ${formatNum(info.statistics.subscriberCount)}명`;
-            document.getElementById('ch-img').src = info.snippet.thumbnails.medium.url;
-
-            loadVideos('channel', true);
-        }
-
-        function openWatch(vidId, title, chId, chName, chImg, e) {
-            if(e) e.stopPropagation();
+        function openWatch(vidId) {
+            // 캐시에서 정보 로드
+            const info = videoCache[vidId];
+            currentVideo = info;
             
             const wp = document.getElementById('page-watch');
             wp.classList.remove('mini');
             wp.classList.add('active');
             history.pushState({page: 'watch'}, '', '#watch');
 
-            title = unescapeHtml(title);
-            chName = unescapeHtml(chName);
-
-            // 정보 업데이트
-            document.getElementById('wp-title').innerText = title;
-            document.getElementById('wp-ch-name').innerText = chName;
-            document.getElementById('wp-ch-img').src = chImg;
-            
-            // 미니 플레이어용 정보 업데이트
-            document.getElementById('mini-title').innerText = title;
-            document.getElementById('mini-ch').innerText = chName;
+            if(info) {
+                document.getElementById('wp-title').innerText = info.title;
+                document.getElementById('wp-ch-name').innerText = info.channel;
+                document.getElementById('wp-ch-img').src = `https://ui-avatars.com/api/?name=${info.channel}&background=random`;
+                document.getElementById('wp-meta').innerText = timeAgo(info.date);
+                
+                document.getElementById('mini-title').innerText = info.title;
+                document.getElementById('mini-ch').innerText = info.channel;
+                
+                // 관련 영상 로드 (API 절약을 위해 채널 ID가 없으면 생략하거나 기존꺼 사용)
+                // 여기서는 API 호출 최소화를 위해 기존 리스트 유지하거나 필요시만 호출
+                // state.watch.id = ... (채널ID가 캐시에 없으면 생략)
+            }
 
             if(player && player.loadVideoById) {
                 player.loadVideoById(vidId);
@@ -536,52 +425,172 @@
                     playerVars: { 'playsinline': 1, 'controls': 1, 'fs':0, 'rel':0 },
                     events: { 
                         'onReady': (e) => { player = e.target; e.target.playVideo(); },
-                        'onStateChange': onPlayerStateChange // 상태 변화 감지 연결
+                        'onStateChange': (e) => {
+                            const icon = document.getElementById('mini-play-icon');
+                            icon.innerText = (e.data === 1) ? 'pause' : 'play_arrow';
+                        }
                     }
                 });
             }
+        }
 
-            document.getElementById('watch-scroll-area').scrollTop = 0;
-            state.watch.id = chId; 
-            state.watch.uploadsId = ''; 
-            loadVideos('related', true);
+        /* --- 재생목록 (Playlist) 기능 --- */
+        function openLibrary() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-library').classList.add('active');
+            
+            const list = document.getElementById('library-list');
+            list.innerHTML = '';
+            
+            if(Object.keys(playlists).length === 0) {
+                list.innerHTML = '<div style="color:#777; padding:20px;">생성된 재생목록이 없습니다.</div>';
+                return;
+            }
+
+            for(let name in playlists) {
+                const vids = playlists[name];
+                const count = vids.length;
+                const firstVid = vids[0] ? videoCache[vids[0]] : null;
+                const thumb = firstVid ? firstVid.thumb : 'https://via.placeholder.com/120x90?text=Empty';
+
+                const row = document.createElement('div');
+                row.style.cssText = "display:flex; margin-bottom:15px; cursor:pointer;";
+                row.onclick = () => playPlaylist(name);
+                row.innerHTML = `
+                    <div style="width:120px; height:68px; background:#333; margin-right:10px; position:relative;">
+                        <img src="${thumb}" style="width:100%; height:100%; object-fit:cover;">
+                        <div style="position:absolute; right:0; bottom:0; background:rgba(0,0,0,0.8); padding:2px 5px; font-size:11px;">${count}개</div>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:15px; font-weight:bold; margin-bottom:4px;">${name}</div>
+                        <div style="font-size:12px; color:#aaa;">사용자 재생목록</div>
+                    </div>
+                `;
+                list.appendChild(row);
+            }
+        }
+
+        function playPlaylist(name) {
+            const vids = playlists[name];
+            if(vids && vids.length > 0) {
+                openWatch(vids[0]); // 첫 번째 영상 재생
+                // 실제로는 playlist 기능으로 이어 재생해야 하지만 여기선 첫 영상만
+            }
+        }
+
+        function openPlaylistModal() {
+            if(!currentVideo) return;
+            document.getElementById('playlist-modal').style.display = 'flex';
+            renderModalList();
+        }
+        function closePlaylistModal() {
+            document.getElementById('playlist-modal').style.display = 'none';
+        }
+
+        function renderModalList() {
+            const div = document.getElementById('modal-list');
+            div.innerHTML = '';
+            for(let name in playlists) {
+                const row = document.createElement('div');
+                row.className = 'playlist-row';
+                row.innerHTML = `<span class="material-symbols-outlined">playlist_add</span> ${name}`;
+                row.onclick = () => addToPlaylist(name);
+                div.appendChild(row);
+            }
+        }
+
+        function createNewPlaylist() {
+            const name = document.getElementById('new-pl-name').value;
+            if(!name) return;
+            if(!playlists[name]) {
+                playlists[name] = [];
+                localStorage.setItem('yt_playlists', JSON.stringify(playlists));
+                renderModalList();
+                document.getElementById('new-pl-name').value = '';
+            }
+        }
+
+        function addToPlaylist(name) {
+            if(!currentVideo) return;
+            if(!playlists[name].includes(currentVideo.id)) {
+                playlists[name].push(currentVideo.id);
+                localStorage.setItem('yt_playlists', JSON.stringify(playlists));
+                alert(`[${name}]에 추가되었습니다.`);
+            } else {
+                alert('이미 추가된 영상입니다.');
+            }
+            closePlaylistModal();
+        }
+
+        /* --- UI 제어 --- */
+        function toggleCssFullscreen(e) {
+            if(e) e.stopPropagation();
+            const wrapper = document.getElementById('player-wrapper');
+            // 토글 로직 수정 (켜져있으면 끄고, 꺼져있으면 킴)
+            if(wrapper.classList.contains('css-fullscreen')) {
+                wrapper.classList.remove('css-fullscreen');
+            } else {
+                wrapper.classList.add('css-fullscreen');
+            }
+        }
+
+        function minimizePlayer(e) {
+            if(e) e.stopPropagation();
+            const wp = document.getElementById('page-watch');
+            wp.classList.add('mini');
+            document.getElementById('player-wrapper').classList.remove('css-fullscreen'); // 미니 전환 시 전체화면 해제
+        }
+
+        function restorePlayer() {
+            const wp = document.getElementById('page-watch');
+            if(wp.classList.contains('mini')) {
+                wp.classList.remove('mini');
+            }
+        }
+        
+        function closePlayer(e) {
+            if(e) e.stopPropagation();
+            const wp = document.getElementById('page-watch');
+            wp.classList.remove('active');
+            wp.classList.remove('mini');
+            if(player) player.stopVideo();
+        }
+        
+        function togglePlay(e) {
+            if(e) e.stopPropagation();
+            if(!player) return;
+            (player.getPlayerState() === 1) ? player.pauseVideo() : player.playVideo();
         }
 
         function goHomeForce() {
-            history.pushState({page: 'home'}, '', ' ');
+            const wp = document.getElementById('page-watch');
+            if(wp.classList.contains('active')) minimizePlayer();
+            
             document.querySelectorAll('.page').forEach(p => {
                 if(p.id !== 'page-watch') p.classList.remove('active');
             });
             document.getElementById('page-home').classList.add('active');
-            
-            // 홈으로 갈 때 재생 중이면 미니플레이어로 전환
-            const wp = document.getElementById('page-watch');
-            if(wp.classList.contains('active')) {
-                minimizePlayer();
-            }
         }
 
-        function toggleCssFullscreen(e) {
-            if(e) e.stopPropagation();
-            document.getElementById('player-wrapper').classList.toggle('css-fullscreen');
+        function openSearch() {
+            document.getElementById('page-search').classList.add('active');
+            setTimeout(() => document.getElementById('inp-query').focus(), 300);
+        }
+        function doSearch(isNew) {
+            const q = document.getElementById('inp-query').value;
+            if(!q) return;
+            document.getElementById('inp-query').blur();
+            state.search.query = q;
+            loadVideos('search', true);
         }
 
-        function goToChannelFromWatch(e) {
-            if(e) e.stopPropagation();
-            minimizePlayer();
-            setTimeout(() => openChannel(state.watch.id || ''), 100);
-        }
-
-        function escapeHtml(t) { return t.replace(/'/g, "\\'"); }
-        function unescapeHtml(t) { return t.replace(/\\'/g, "'").replace(/&quot;/g, '"'); }
+        // 유틸
         function timeAgo(date) {
             const diff = (new Date() - new Date(date))/1000;
-            if(diff<86400) return '방금 전';
+            if(diff<86400) return '오늘';
             if(diff<2592000) return Math.floor(diff/86400)+'일 전';
-            if(diff<31536000) return Math.floor(diff/2592000)+'개월 전';
             return Math.floor(diff/31536000)+'년 전';
         }
-        function formatNum(n) { return n>10000 ? Math.floor(n/10000)+'만' : n; }
     </script>
 </body>
 </html>
