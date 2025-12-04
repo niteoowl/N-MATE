@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YouTube Optimized App</title>
+    <title>YouTube Background Player</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
     
     <style>
-        /* --- 1. 기본 설정 (Fixed Header 스타일 유지) --- */
+        /* --- 1. 기본 설정 --- */
         :root { --bg: #0f0f0f; --header-h: 48px; --chips-h: 48px; --nav-h: 50px; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Roboto', sans-serif; -webkit-tap-highlight-color:transparent; }
         body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; width:100vw; }
@@ -29,15 +29,62 @@
         #page-search.active { transform: translate3d(0, 0, 0); }
         #page-channel { z-index: 30; }
         #page-channel.active { transform: translate3d(0, 0, 0); }
+
+        /* --- 3. [핵심] 재생 페이지 & 미니 플레이어 변신 로직 --- */
         #page-watch { 
             z-index: 50; background:#000;
             transform: translate3d(0, 100%, 0); 
             transition: transform 0.3s cubic-bezier(0,0,0.2,1);
             display: flex; flex-direction: column;
         }
+        
+        /* 활성화 상태 (전체 화면) */
         #page-watch.active { transform: translate3d(0, 0, 0); }
 
-        /* --- 3. 헤더 고정 스타일 --- */
+        /* 미니 플레이어 모드 (클래스 하나로 변신) */
+        #page-watch.mini {
+            transform: translate3d(0, 0, 0) !important; /* 화면에 보임 */
+            top: auto !important;
+            bottom: var(--nav-h); /* 하단 바 바로 위 */
+            height: 60px; /* 높이 축소 */
+            background: #212121; /* 배경색 변경 */
+            border-top: 1px solid #333;
+            flex-direction: row; /* 가로 배치 */
+            z-index: 95; /* 하단바(100)보다는 뒤, 리스트보다는 앞 */
+        }
+
+        /* 미니 모드일 때 숨길 요소들 */
+        #page-watch.mini .watch-header-bar,
+        #page-watch.mini .player-actions,
+        #page-watch.mini .watch-scroll-area {
+            display: none !important;
+        }
+
+        /* 미니 모드일 때 플레이어 크기 조정 */
+        #page-watch.mini #player-wrapper {
+            width: 106px; /* 16:9 비율 */
+            height: 100%;
+            padding-bottom: 0;
+            flex-shrink: 0;
+            pointer-events: none; /* 미니일땐 영상 터치 안됨 (부모 클릭됨) */
+        }
+
+        /* 미니 플레이어 전용 컨트롤 (평소엔 숨김) */
+        .mini-controls {
+            display: none;
+            flex: 1;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 12px;
+            overflow: hidden;
+        }
+        #page-watch.mini .mini-controls { display: flex; }
+        
+        .mini-info { flex:1; display:flex; flex-direction:column; overflow:hidden; padding-right:10px; }
+        .mini-title { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+        .mini-ch { font-size:11px; color:#aaa; }
+
+        /* --- 4. 헤더 및 리스트 스타일 --- */
         .fixed-header {
             position: absolute; top: 0; left: 0; width: 100%; height: var(--header-h);
             display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
@@ -50,31 +97,20 @@
             border-bottom: 1px solid #222;
         }
         .fixed-chips::-webkit-scrollbar { display: none; }
-
         .search-box-wrapper {
             flex:1; background:#121212; height:36px; border-radius:18px; 
             display:flex; align-items:center; padding:0 10px; margin: 0 10px;
         }
         .search-box-wrapper input { width:100%; background:transparent; border:none; outline:none; color:#fff; font-size:16px; }
 
-        .channel-nav-bar {
-            position: absolute; top: 0; left: 0; width: 100%; height: 50px;
-            display: flex; align-items: center; padding: 0 10px; 
-            background: rgba(15,15,15, 0.95); z-index: 100;
-            border-bottom: 1px solid #222;
-        }
-
-        /* --- 4. 스크롤 영역 --- */
         .scroll-content {
-            position: absolute; left: 0; width: 100%; overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            position: absolute; left: 0; width: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch;
         }
         #list-home { top: calc(var(--header-h) + var(--chips-h)); height: calc(100% - var(--header-h) - var(--chips-h) - var(--nav-h)); }
         #list-search { top: var(--header-h); height: calc(100% - var(--header-h)); }
         #channel-scroll-area { top: 50px; height: calc(100% - 50px); }
         .watch-scroll-area { flex: 1; overflow-y: auto; padding: 12px; }
 
-        /* --- 5. 아이템 스타일 --- */
         .video-item { margin-bottom:15px; cursor:pointer; }
         .thumb-box { width:100%; position:relative; background:#222; height:0; padding-bottom:56.25%; }
         .thumb-box img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
@@ -90,22 +126,17 @@
             padding: 12px; background: #222; color: #fff;
             border-radius: 20px; font-size: 14px; font-weight: 500; text-align: center;
         }
-        .load-more-btn:active { background: #333; }
 
         .player-container {
             width:100%; background:#000; position:relative; height:0; padding-bottom:56.25%; flex-shrink: 0;
-            transition: all 0.3s;
+            transition: width 0.3s; /* 부드러운 크기 변화 */
         }
         #yt-player { position:absolute; top:0; left:0; width:100%; height:100%; }
         .player-container.css-fullscreen {
             position:fixed !important; top:0; left:0; width:100% !important; height:100% !important;
             padding-bottom:0 !important; z-index:9999;
         }
-        .player-actions {
-            display:flex; justify-content:space-between; align-items:center;
-            padding:8px 12px; background:#1e1e1e; border-bottom:1px solid #333; flex-shrink: 0;
-        }
-
+        
         .btm-nav {
             position:absolute; bottom:0; left:0; width:100%; height:var(--nav-h);
             background:#0f0f0f; border-top:1px solid #222; display:flex; justify-content:space-around; align-items:center; z-index:100;
@@ -136,7 +167,6 @@
             <div style="background:#fff; color:#000; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">전체</div>
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">음악</div>
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">게임</div>
-            <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">라이브</div>
         </div>
         <div id="list-home" class="scroll-content"></div>
         <nav class="btm-nav">
@@ -181,33 +211,50 @@
         </div>
     </div>
 
-    <!-- [4] 재생 -->
-    <div id="page-watch" class="page">
-        <div style="height:50px; display:flex; align-items:center; padding:0 10px; background:#000; flex-shrink:0;">
-            <button onclick="window.history.back()"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>
+    <!-- [4] 재생 (미니 플레이어 통합) -->
+    <!-- 미니 상태일 때 클릭하면 전체화면으로 복귀 -->
+    <div id="page-watch" class="page" onclick="restorePlayer()">
+        <!-- 상단 닫기 바 -->
+        <div class="watch-header-bar" style="height:50px; display:flex; align-items:center; padding:0 10px; background:#000; flex-shrink:0;">
+            <!-- 내리기 버튼 (미니 플레이어 전환) -->
+            <button onclick="minimizePlayer(event)"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>
         </div>
+        
         <div id="player-wrapper" class="player-container">
             <div id="yt-player"></div>
         </div>
+
+        <!-- 미니 플레이어용 컨트롤 (미니일 때만 보임) -->
+        <div class="mini-controls">
+            <div class="mini-info">
+                <div id="mini-title" class="mini-title">제목</div>
+                <div id="mini-ch" class="mini-ch">채널명</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button onclick="togglePlay(event)"><span id="mini-play-icon" class="material-symbols-outlined">pause</span></button>
+                <button onclick="closePlayer(event)"><span class="material-symbols-outlined">close</span></button>
+            </div>
+        </div>
+
         <div class="player-actions">
             <span style="font-size:12px; color:#aaa;">영상 원본 비율</span>
-            <button onclick="toggleCssFullscreen()" style="background:#333; padding:5px 10px; border-radius:4px; font-size:12px; display:flex; align-items:center; gap:5px;">
+            <button onclick="toggleCssFullscreen(event)" style="background:#333; padding:5px 10px; border-radius:4px; font-size:12px; display:flex; align-items:center; gap:5px;">
                 <span class="material-symbols-outlined" style="font-size:18px;">crop_free</span> 화면 채우기
             </button>
         </div>
+
         <div class="watch-scroll-area" id="watch-scroll-area">
             <h3 id="wp-title" style="font-size:16px; margin-bottom:5px;"></h3>
             <div id="wp-meta" style="font-size:12px; color:#aaa; margin-bottom:15px;"></div>
             
             <div style="display:flex; align-items:center; border-top:1px solid #222; border-bottom:1px solid #222; padding:10px 0; margin-bottom:20px;">
-                <div class="v-pf" onclick="goToChannelFromWatch()"><img id="wp-ch-img" src=""></div>
+                <div class="v-pf" onclick="goToChannelFromWatch(event)"><img id="wp-ch-img" src=""></div>
                 <div style="flex:1;">
                     <div id="wp-ch-name" style="font-weight:700; font-size:14px;"></div>
                 </div>
                 <button style="background:#fff; color:#000; padding:5px 15px; border-radius:15px; font-size:12px; font-weight:600;">구독</button>
             </div>
 
-            <!-- 여기서 추천 동영상이 '해당 채널의 영상'으로 뜹니다 -->
             <div style="font-size:14px; font-weight:700; margin-bottom:10px;">이 채널의 다른 동영상</div>
             <div id="list-watch-related"></div>
         </div>
@@ -216,15 +263,13 @@
     <script>
         const API_KEY = 'AIzaSyD9gpmEbUyP9h9Rm3nayK7PLYek5Ja7B38';
         let player;
-        
-        // 채널 정보를 캐싱하여 반복 호출 방지
         let channelCache = {}; 
 
         let state = {
             home: { token: '', container: 'list-home' },
             search: { token: '', container: 'list-search', query: '' },
-            channel: { token: '', container: 'list-channel', id: '', uploadsId: '' }, // uploadsId 추가
-            watch: { token: '', container: 'list-watch-related', id: '', uploadsId: '' } // id(channelId) 저장
+            channel: { token: '', container: 'list-channel', id: '', uploadsId: '' },
+            watch: { token: '', container: 'list-watch-related', id: '', uploadsId: '' }
         };
 
         window.onload = function() {
@@ -232,24 +277,88 @@
             loadVideos('popular', true);
         };
 
+        // 뒤로가기 동작 제어
         window.onpopstate = function(event) {
             const st = event.state || {page: 'home'};
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('player-wrapper').classList.remove('css-fullscreen');
+            const watchPage = document.getElementById('page-watch');
             
-            if(st.page === 'watch') document.getElementById('page-watch').classList.add('active');
-            else {
-                if(player && player.pauseVideo) player.pauseVideo();
+            // 미니 플레이어 상태라면 뒤로가기 시 앱 종료 방지 등을 처리할 수 있으나
+            // 여기서는 단순하게 페이지 전환 로직만 처리
+            
+            document.querySelectorAll('.page').forEach(p => {
+                if(p.id !== 'page-watch') p.classList.remove('active');
+            });
+
+            // 플레이어 처리
+            if(st.page === 'watch') {
+                watchPage.classList.remove('mini'); // 미니 해제하고 전체화면
+                watchPage.classList.add('active');
+            } else {
+                // 홈/검색 등으로 갈 때: 재생 중이면 미니플레이어로 전환
+                if(watchPage.classList.contains('active')) {
+                    minimizePlayer(); // 영상 안끄고 줄이기
+                }
+                
                 if(st.page === 'search') document.getElementById('page-search').classList.add('active');
                 if(st.page === 'channel') document.getElementById('page-channel').classList.add('active');
                 if(st.page === 'home') document.getElementById('page-home').classList.add('active');
             }
         };
 
-        /* === API 최적화 로딩 함수 === */
+        // --- 플레이어 제어 (백그라운드/미니) ---
+
+        // 플레이어 최소화 (미니모드)
+        function minimizePlayer(e) {
+            if(e) e.stopPropagation();
+            const wp = document.getElementById('page-watch');
+            if(wp.classList.contains('active')) {
+                wp.classList.add('mini');
+                // 히스토리 관리: 현재 URL이 #watch라면 뒤로가기 한번 해줌 (URL 정리)
+                if(location.hash === '#watch') {
+                    history.back();
+                }
+            }
+        }
+
+        // 플레이어 복원 (전체화면)
+        function restorePlayer() {
+            const wp = document.getElementById('page-watch');
+            if(wp.classList.contains('mini')) {
+                wp.classList.remove('mini');
+                wp.classList.add('active');
+                history.pushState({page: 'watch'}, '', '#watch');
+            }
+        }
+
+        // 플레이어 완전 종료
+        function closePlayer(e) {
+            if(e) e.stopPropagation();
+            const wp = document.getElementById('page-watch');
+            wp.classList.remove('active');
+            wp.classList.remove('mini');
+            if(player && player.stopVideo) player.stopVideo();
+        }
+
+        // 재생/일시정지 토글 (미니모드용)
+        function togglePlay(e) {
+            if(e) e.stopPropagation();
+            if(!player) return;
+            const state = player.getPlayerState();
+            if(state === 1) player.pauseVideo();
+            else player.playVideo();
+        }
+        
+        // 플레이어 상태 변화 감지 (아이콘 변경)
+        function onPlayerStateChange(event) {
+            const btn = document.getElementById('mini-play-icon');
+            if(event.data === 1) btn.innerText = 'pause';
+            else btn.innerText = 'play_arrow';
+        }
+
+        // --- 기존 로직들 ---
+
         async function loadVideos(type, isNew = false) {
             let config;
-            
             if(type === 'popular') config = state.home;
             else if(type === 'search') config = state.search;
             else if(type === 'channel') config = state.channel;
@@ -270,41 +379,24 @@
             const tokenPart = config.token ? `&pageToken=${config.token}` : '';
             let url = '';
 
-            // 1. 인기 영상 (비용 1)
             if(type === 'popular') {
                 url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=10&regionCode=KR&key=${API_KEY}${tokenPart}`;
-            
-            // 2. 검색 (비용 100) - 어쩔 수 없음
             } else if(type === 'search') {
                 url = `${baseUrl}/search?part=snippet&q=${config.query}&type=video&maxResults=10&key=${API_KEY}${tokenPart}`;
-            
-            // 3. 채널 영상 & 추천 영상 (비용 최적화: 100 -> 1)
-            // Search API 대신 PlaylistItems API를 사용합니다.
             } else if(type === 'channel' || type === 'related') {
-                // (1) 업로드 목록 ID가 없으면 가져옴
                 if(!config.uploadsId) {
-                    // 캐시에 있으면 사용
                     if(channelCache[config.id] && channelCache[config.id].uploadsId) {
                         config.uploadsId = channelCache[config.id].uploadsId;
                     } else {
-                        // 없으면 Channels API 호출 (비용 1)
                         try {
                             const chRes = await fetch(`${baseUrl}/channels?part=contentDetails&id=${config.id}&key=${API_KEY}`);
                             const chData = await chRes.json();
                             config.uploadsId = chData.items[0].contentDetails.relatedPlaylists.uploads;
-                            
-                            // 캐시 저장
                             if(!channelCache[config.id]) channelCache[config.id] = {};
                             channelCache[config.id].uploadsId = config.uploadsId;
-                        } catch(e) {
-                            console.error("채널 정보 로드 실패", e);
-                            return;
-                        }
+                        } catch(e) { return; }
                     }
                 }
-                
-                // (2) PlaylistItems 호출 (비용 1) - 한 번에 50개 호출 (요청사항 반영)
-                // maxResults=50 으로 설정하여 최대한 많이 불러옴
                 url = `${baseUrl}/playlistItems?part=snippet&playlistId=${config.uploadsId}&maxResults=50&key=${API_KEY}${tokenPart}`;
             }
 
@@ -321,24 +413,14 @@
 
                 config.token = data.nextPageToken || '';
 
-                // API 별 ID 위치가 다름
-                // Videos API: id (string or object)
-                // Search API: id.videoId
-                // PlaylistItems API: snippet.resourceId.videoId
-                
-                // 프로필 사진을 위해 채널 ID 수집 (이미 캐시된건 제외)
                 const uncachedChIds = [];
                 data.items.forEach(i => {
                     const cid = i.snippet.channelId;
-                    if(!channelCache[cid] || !channelCache[cid].thumb) {
-                        uncachedChIds.push(cid);
-                    }
+                    if(!channelCache[cid] || !channelCache[cid].thumb) uncachedChIds.push(cid);
                 });
 
-                // 필요한 경우에만 Channels API 호출 (프로필 사진용)
                 if(uncachedChIds.length > 0) {
                     const uniqueIds = [...new Set(uncachedChIds)].join(',');
-                    // 한 번에 최대 50개까지 가능하므로 잘라서 호출하는게 좋으나 여기선 단순화
                     const chRes = await fetch(`${baseUrl}/channels?part=snippet&id=${uniqueIds}&key=${API_KEY}`);
                     const chData = await chRes.json();
                     if(chData.items) {
@@ -359,36 +441,30 @@
                     btn.onclick = () => loadVideos(type, false);
                     listDiv.appendChild(btn);
                 }
-
-            } catch(e) {
-                console.error(e);
-                listDiv.innerHTML += '<div class="loader">오류 발생 (API 한도 등)</div>';
-            }
+            } catch(e) { listDiv.innerHTML += '<div class="loader">오류</div>'; }
         }
 
         function renderItems(items, container, type) {
             items.forEach(item => {
                 const s = item.snippet;
                 let vidId;
-
-                // API 종류에 따른 ID 추출
                 if(type === 'popular') vidId = item.id;
                 else if(type === 'search') vidId = item.id.videoId;
                 else if(type === 'channel' || type === 'related') vidId = s.resourceId.videoId;
 
-                if(!vidId) return; // 재생목록 등은 스킵
+                if(!vidId) return;
 
                 const chImg = (channelCache[s.channelId] && channelCache[s.channelId].thumb) ? channelCache[s.channelId].thumb : 'https://via.placeholder.com/36';
                 
                 const div = document.createElement('div');
                 div.className = 'video-item';
                 div.innerHTML = `
-                    <div class="thumb-box" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}')">
+                    <div class="thumb-box" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}', event)">
                         <img src="${s.thumbnails.high ? s.thumbnails.high.url : s.thumbnails.medium.url}">
                     </div>
                     <div class="v-info">
-                        <div class="v-pf" onclick="openChannel('${s.channelId}')"><img src="${chImg}"></div>
-                        <div class="v-txt" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}')">
+                        <div class="v-pf" onclick="openChannel('${s.channelId}', event)"><img src="${chImg}"></div>
+                        <div class="v-txt" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}', event)">
                             <div class="v-tit">${s.title}</div>
                             <div class="v-meta">${s.channelTitle} • ${timeAgo(s.publishedAt)}</div>
                         </div>
@@ -412,16 +488,15 @@
             loadVideos('search', true);
         }
 
-        async function openChannel(chId) {
+        async function openChannel(chId, e) {
+            if(e) e.stopPropagation();
             state.channel.id = chId;
-            state.channel.uploadsId = ''; // 초기화
+            state.channel.uploadsId = '';
             
             document.getElementById('page-channel').classList.add('active');
             history.pushState({page: 'channel'}, '', '#channel');
             
             document.getElementById('ch-name').innerText = '...';
-            
-            // 채널 정보 로드 (비용 1)
             const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${chId}&key=${API_KEY}`);
             const data = await res.json();
             const info = data.items[0];
@@ -430,20 +505,28 @@
             document.getElementById('ch-sub').innerText = `구독자 ${formatNum(info.statistics.subscriberCount)}명`;
             document.getElementById('ch-img').src = info.snippet.thumbnails.medium.url;
 
-            // 채널 영상 로드 (최적화된 방식)
             loadVideos('channel', true);
         }
 
-        function openWatch(vidId, title, chId, chName, chImg) {
-            document.getElementById('page-watch').classList.add('active');
+        function openWatch(vidId, title, chId, chName, chImg, e) {
+            if(e) e.stopPropagation();
+            
+            const wp = document.getElementById('page-watch');
+            wp.classList.remove('mini');
+            wp.classList.add('active');
             history.pushState({page: 'watch'}, '', '#watch');
 
             title = unescapeHtml(title);
             chName = unescapeHtml(chName);
 
+            // 정보 업데이트
             document.getElementById('wp-title').innerText = title;
             document.getElementById('wp-ch-name').innerText = chName;
             document.getElementById('wp-ch-img').src = chImg;
+            
+            // 미니 플레이어용 정보 업데이트
+            document.getElementById('mini-title').innerText = title;
+            document.getElementById('mini-ch').innerText = chName;
 
             if(player && player.loadVideoById) {
                 player.loadVideoById(vidId);
@@ -451,31 +534,41 @@
                 new YT.Player('yt-player', {
                     height: '100%', width: '100%', videoId: vidId,
                     playerVars: { 'playsinline': 1, 'controls': 1, 'fs':0, 'rel':0 },
-                    events: { 'onReady': (e) => { player = e.target; e.target.playVideo(); } }
+                    events: { 
+                        'onReady': (e) => { player = e.target; e.target.playVideo(); },
+                        'onStateChange': onPlayerStateChange // 상태 변화 감지 연결
+                    }
                 });
             }
 
             document.getElementById('watch-scroll-area').scrollTop = 0;
-            
-            // [중요] 해당 채널의 영상을 추천 동영상으로 설정
             state.watch.id = chId; 
-            state.watch.uploadsId = ''; // 초기화
+            state.watch.uploadsId = ''; 
             loadVideos('related', true);
         }
 
         function goHomeForce() {
             history.pushState({page: 'home'}, '', ' ');
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => {
+                if(p.id !== 'page-watch') p.classList.remove('active');
+            });
             document.getElementById('page-home').classList.add('active');
-            if(player && player.pauseVideo) player.pauseVideo();
+            
+            // 홈으로 갈 때 재생 중이면 미니플레이어로 전환
+            const wp = document.getElementById('page-watch');
+            if(wp.classList.contains('active')) {
+                minimizePlayer();
+            }
         }
 
-        function toggleCssFullscreen() {
+        function toggleCssFullscreen(e) {
+            if(e) e.stopPropagation();
             document.getElementById('player-wrapper').classList.toggle('css-fullscreen');
         }
 
-        function goToChannelFromWatch() {
-            window.history.back();
+        function goToChannelFromWatch(e) {
+            if(e) e.stopPropagation();
+            minimizePlayer();
             setTimeout(() => openChannel(state.watch.id || ''), 100);
         }
 
