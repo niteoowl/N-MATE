@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>YouTube App (Fixed Header)</title>
+    <title>YouTube Optimized App</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0" />
     
     <style>
-        /* --- 1. 기본 설정 --- */
-        :root { 
-            --bg: #0f0f0f; 
-            --header-h: 48px; 
-            --chips-h: 48px; /* 카테고리 칩 높이 */
-            --nav-h: 50px; 
-        }
+        /* --- 1. 기본 설정 (Fixed Header 스타일 유지) --- */
+        :root { --bg: #0f0f0f; --header-h: 48px; --chips-h: 48px; --nav-h: 50px; }
         * { margin:0; padding:0; box-sizing:border-box; font-family:'Roboto', sans-serif; -webkit-tap-highlight-color:transparent; }
         body { background:var(--bg); color:#fff; overflow:hidden; height:100vh; width:100vw; }
         button { background:none; border:none; color:#fff; cursor:pointer; }
@@ -22,22 +17,18 @@
         .filled { font-variation-settings:'FILL' 1; }
         .hidden { display:none !important; }
 
-        /* --- 2. 페이지 레이아웃 (스크롤 방지) --- */
+        /* --- 2. 페이지 레이아웃 --- */
         .page {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: var(--bg);
-            /* 핵심: 페이지 자체는 스크롤 안됨. 내부 영역만 스크롤 */
-            overflow: hidden; 
+            background: var(--bg); overflow: hidden; 
             transform: translate3d(100%, 0, 0); transition: transform 0.25s ease-out;
             z-index: 10;
         }
-        
         #page-home { transform: translate3d(0, 0, 0); z-index: 5; }
         #page-search { z-index: 20; }
         #page-search.active { transform: translate3d(0, 0, 0); }
         #page-channel { z-index: 30; }
         #page-channel.active { transform: translate3d(0, 0, 0); }
-        
         #page-watch { 
             z-index: 50; background:#000;
             transform: translate3d(0, 100%, 0); 
@@ -46,33 +37,26 @@
         }
         #page-watch.active { transform: translate3d(0, 0, 0); }
 
-        /* --- 3. 고정 헤더 스타일 --- */
-        /* 공통 헤더 속성: 절대 위치로 상단 고정 */
+        /* --- 3. 헤더 고정 스타일 --- */
         .fixed-header {
             position: absolute; top: 0; left: 0; width: 100%; height: var(--header-h);
             display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
-            background: rgba(15,15,15,0.98); border-bottom: 1px solid #222; 
-            z-index: 100; /* 내용물보다 위에 */
+            background: rgba(15,15,15,0.98); border-bottom: 1px solid #222; z-index: 100;
         }
-
-        /* 홈: 카테고리 칩 (헤더 바로 아래 고정) */
         .fixed-chips {
             position: absolute; top: var(--header-h); left: 0; width: 100%; height: var(--chips-h);
             background: var(--bg); z-index: 90;
             display: flex; gap: 8px; padding: 8px 12px; overflow-x: auto;
             border-bottom: 1px solid #222;
         }
-        /* 칩 스크롤바 숨김 */
         .fixed-chips::-webkit-scrollbar { display: none; }
 
-        /* 검색: 검색바 */
         .search-box-wrapper {
             flex:1; background:#121212; height:36px; border-radius:18px; 
             display:flex; align-items:center; padding:0 10px; margin: 0 10px;
         }
         .search-box-wrapper input { width:100%; background:transparent; border:none; outline:none; color:#fff; font-size:16px; }
 
-        /* 채널: 상단 내비 */
         .channel-nav-bar {
             position: absolute; top: 0; left: 0; width: 100%; height: 50px;
             display: flex; align-items: center; padding: 0 10px; 
@@ -80,37 +64,17 @@
             border-bottom: 1px solid #222;
         }
 
-        /* --- 4. 스크롤 가능한 컨텐츠 영역 --- */
+        /* --- 4. 스크롤 영역 --- */
         .scroll-content {
-            position: absolute; left: 0; width: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+            position: absolute; left: 0; width: 100%; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
+        #list-home { top: calc(var(--header-h) + var(--chips-h)); height: calc(100% - var(--header-h) - var(--chips-h) - var(--nav-h)); }
+        #list-search { top: var(--header-h); height: calc(100% - var(--header-h)); }
+        #channel-scroll-area { top: 50px; height: calc(100% - 50px); }
+        .watch-scroll-area { flex: 1; overflow-y: auto; padding: 12px; }
 
-        /* 홈 리스트: 헤더+칩 높이만큼 띄우고, 하단바만큼 공간 확보 */
-        #list-home {
-            top: calc(var(--header-h) + var(--chips-h));
-            height: calc(100% - var(--header-h) - var(--chips-h) - var(--nav-h));
-        }
-
-        /* 검색 리스트: 헤더 높이만큼 띄움 */
-        #list-search {
-            top: var(--header-h);
-            height: calc(100% - var(--header-h)); /* 하단바 가려도 됨 or 뺄셈 */
-        }
-
-        /* 채널 리스트: 헤더 높이만큼 띄움 */
-        #channel-scroll-area {
-            top: 50px;
-            height: calc(100% - 50px);
-        }
-
-        /* 재생 화면 스크롤 영역 */
-        .watch-scroll-area {
-            flex: 1; overflow-y: auto; padding: 12px;
-        }
-
-        /* --- 5. 컴포넌트 스타일 --- */
+        /* --- 5. 아이템 스타일 --- */
         .video-item { margin-bottom:15px; cursor:pointer; }
         .thumb-box { width:100%; position:relative; background:#222; height:0; padding-bottom:56.25%; }
         .thumb-box img { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
@@ -128,7 +92,6 @@
         }
         .load-more-btn:active { background: #333; }
 
-        /* 플레이어 */
         .player-container {
             width:100%; background:#000; position:relative; height:0; padding-bottom:56.25%; flex-shrink: 0;
             transition: all 0.3s;
@@ -143,14 +106,12 @@
             padding:8px 12px; background:#1e1e1e; border-bottom:1px solid #333; flex-shrink: 0;
         }
 
-        /* 하단바 */
         .btm-nav {
             position:absolute; bottom:0; left:0; width:100%; height:var(--nav-h);
             background:#0f0f0f; border-top:1px solid #222; display:flex; justify-content:space-around; align-items:center; z-index:100;
         }
         .nav-icon { text-align:center; color:#fff; opacity:0.6; font-size:10px; }
         .nav-icon.active { opacity:1; }
-
         .loader { text-align:center; padding:20px; color:#aaa; font-size:13px; }
     </style>
 </head>
@@ -158,9 +119,8 @@
 
     <script src="https://www.youtube.com/iframe_api"></script>
 
-    <!-- [1] 홈 페이지 -->
+    <!-- [1] 홈 -->
     <div id="page-home" class="page">
-        <!-- 고정 헤더 -->
         <header class="fixed-header">
             <div style="display:flex; align-items:center; gap:5px;" onclick="goHomeForce()">
                 <span class="material-symbols-outlined filled" style="color:red; font-size:28px;">play_circle</span>
@@ -172,21 +132,13 @@
                 <button onclick="goToSearch()"><span class="material-symbols-outlined">search</span></button>
             </div>
         </header>
-        
-        <!-- 고정 칩 (헤더 바로 아래) -->
         <div class="fixed-chips">
             <div style="background:#fff; color:#000; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">전체</div>
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">음악</div>
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">게임</div>
             <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">라이브</div>
-            <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">뉴스</div>
-            <div style="background:#222; color:#fff; padding:6px 12px; border-radius:8px; font-size:13px; flex-shrink:0;">요리</div>
         </div>
-
-        <!-- 스크롤 되는 리스트 영역 -->
         <div id="list-home" class="scroll-content"></div>
-        
-        <!-- 하단바 -->
         <nav class="btm-nav">
             <div class="nav-icon active" onclick="goHomeForce()"><span class="material-symbols-outlined filled">home</span><br>홈</div>
             <div class="nav-icon"><span class="material-symbols-outlined">slow_motion_video</span><br>Shorts</div>
@@ -195,9 +147,8 @@
         </nav>
     </div>
 
-    <!-- [2] 검색 페이지 -->
+    <!-- [2] 검색 -->
     <div id="page-search" class="page">
-        <!-- 고정 검색바 -->
         <div class="fixed-header">
             <button onclick="window.history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
             <div class="search-box-wrapper">
@@ -205,21 +156,16 @@
             </div>
             <button onclick="doSearch(true)"><span class="material-symbols-outlined">search</span></button>
         </div>
-        
-        <!-- 스크롤 리스트 -->
         <div id="list-search" class="scroll-content"></div>
     </div>
 
-    <!-- [3] 채널 페이지 -->
+    <!-- [3] 채널 -->
     <div id="page-channel" class="page">
-        <!-- 고정 상단바 -->
         <div class="channel-nav-bar">
             <button onclick="window.history.back()"><span class="material-symbols-outlined">arrow_back</span></button>
             <div style="flex:1;"></div>
             <span class="material-symbols-outlined">more_vert</span>
         </div>
-        
-        <!-- 스크롤 컨텐츠 -->
         <div id="channel-scroll-area" class="scroll-content">
             <div style="background:#222; padding:30px 0 10px; display:flex; flex-direction:column; align-items:center;">
                 <img id="ch-img" src="" style="width:64px; height:64px; border-radius:50%; margin-bottom:8px;">
@@ -231,32 +177,24 @@
                  <div style="flex:1; text-align:center; padding:10px; border-bottom:2px solid #fff; font-weight:bold;">동영상</div>
                  <div style="flex:1; text-align:center; padding:10px; color:#aaa;">정보</div>
             </div>
-            <!-- 채널 비디오 리스트 -->
             <div id="list-channel" style="padding-top:10px;"></div>
         </div>
     </div>
 
-    <!-- [4] 재생 페이지 -->
+    <!-- [4] 재생 -->
     <div id="page-watch" class="page">
-        <!-- 고정 닫기바 -->
         <div style="height:50px; display:flex; align-items:center; padding:0 10px; background:#000; flex-shrink:0;">
             <button onclick="window.history.back()"><span class="material-symbols-outlined">keyboard_arrow_down</span></button>
         </div>
-        
-        <!-- 고정 플레이어 -->
         <div id="player-wrapper" class="player-container">
             <div id="yt-player"></div>
         </div>
-
-        <!-- 고정 액션바 -->
         <div class="player-actions">
             <span style="font-size:12px; color:#aaa;">영상 원본 비율</span>
             <button onclick="toggleCssFullscreen()" style="background:#333; padding:5px 10px; border-radius:4px; font-size:12px; display:flex; align-items:center; gap:5px;">
                 <span class="material-symbols-outlined" style="font-size:18px;">crop_free</span> 화면 채우기
             </button>
         </div>
-
-        <!-- 스크롤 되는 정보 및 추천영역 -->
         <div class="watch-scroll-area" id="watch-scroll-area">
             <h3 id="wp-title" style="font-size:16px; margin-bottom:5px;"></h3>
             <div id="wp-meta" style="font-size:12px; color:#aaa; margin-bottom:15px;"></div>
@@ -269,7 +207,8 @@
                 <button style="background:#fff; color:#000; padding:5px 15px; border-radius:15px; font-size:12px; font-weight:600;">구독</button>
             </div>
 
-            <div style="font-size:14px; font-weight:700; margin-bottom:10px;">추천 동영상</div>
+            <!-- 여기서 추천 동영상이 '해당 채널의 영상'으로 뜹니다 -->
+            <div style="font-size:14px; font-weight:700; margin-bottom:10px;">이 채널의 다른 동영상</div>
             <div id="list-watch-related"></div>
         </div>
     </div>
@@ -278,11 +217,14 @@
         const API_KEY = 'AIzaSyD9gpmEbUyP9h9Rm3nayK7PLYek5Ja7B38';
         let player;
         
+        // 채널 정보를 캐싱하여 반복 호출 방지
+        let channelCache = {}; 
+
         let state = {
             home: { token: '', container: 'list-home' },
             search: { token: '', container: 'list-search', query: '' },
-            channel: { token: '', container: 'list-channel', id: '' },
-            watch: { token: '', container: 'list-watch-related' }
+            channel: { token: '', container: 'list-channel', id: '', uploadsId: '' }, // uploadsId 추가
+            watch: { token: '', container: 'list-watch-related', id: '', uploadsId: '' } // id(channelId) 저장
         };
 
         window.onload = function() {
@@ -304,9 +246,9 @@
             }
         };
 
+        /* === API 최적화 로딩 함수 === */
         async function loadVideos(type, isNew = false) {
             let config;
-            let url = '';
             
             if(type === 'popular') config = state.home;
             else if(type === 'search') config = state.search;
@@ -318,7 +260,6 @@
             if(isNew) {
                 config.token = '';
                 listDiv.innerHTML = '<div class="loader">로딩 중...</div>';
-                // 리스트 스크롤 맨 위로 초기화
                 listDiv.scrollTop = 0; 
             } else {
                 const btn = document.getElementById('btn-load-' + type);
@@ -326,17 +267,45 @@
             }
 
             const baseUrl = `https://www.googleapis.com/youtube/v3`;
-            const max = 10;
             const tokenPart = config.token ? `&pageToken=${config.token}` : '';
+            let url = '';
 
+            // 1. 인기 영상 (비용 1)
             if(type === 'popular') {
-                url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=${max}&regionCode=KR&key=${API_KEY}${tokenPart}`;
+                url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=10&regionCode=KR&key=${API_KEY}${tokenPart}`;
+            
+            // 2. 검색 (비용 100) - 어쩔 수 없음
             } else if(type === 'search') {
-                url = `${baseUrl}/search?part=snippet&q=${config.query}&type=video&maxResults=${max}&key=${API_KEY}${tokenPart}`;
-            } else if(type === 'channel') {
-                url = `${baseUrl}/search?part=snippet&channelId=${config.id}&order=date&type=video&maxResults=${max}&key=${API_KEY}${tokenPart}`;
-            } else if(type === 'related') {
-                url = `${baseUrl}/videos?part=snippet,statistics&chart=mostPopular&maxResults=${max}&regionCode=KR&key=${API_KEY}${tokenPart}`;
+                url = `${baseUrl}/search?part=snippet&q=${config.query}&type=video&maxResults=10&key=${API_KEY}${tokenPart}`;
+            
+            // 3. 채널 영상 & 추천 영상 (비용 최적화: 100 -> 1)
+            // Search API 대신 PlaylistItems API를 사용합니다.
+            } else if(type === 'channel' || type === 'related') {
+                // (1) 업로드 목록 ID가 없으면 가져옴
+                if(!config.uploadsId) {
+                    // 캐시에 있으면 사용
+                    if(channelCache[config.id] && channelCache[config.id].uploadsId) {
+                        config.uploadsId = channelCache[config.id].uploadsId;
+                    } else {
+                        // 없으면 Channels API 호출 (비용 1)
+                        try {
+                            const chRes = await fetch(`${baseUrl}/channels?part=contentDetails&id=${config.id}&key=${API_KEY}`);
+                            const chData = await chRes.json();
+                            config.uploadsId = chData.items[0].contentDetails.relatedPlaylists.uploads;
+                            
+                            // 캐시 저장
+                            if(!channelCache[config.id]) channelCache[config.id] = {};
+                            channelCache[config.id].uploadsId = config.uploadsId;
+                        } catch(e) {
+                            console.error("채널 정보 로드 실패", e);
+                            return;
+                        }
+                    }
+                }
+                
+                // (2) PlaylistItems 호출 (비용 1) - 한 번에 50개 호출 (요청사항 반영)
+                // maxResults=50 으로 설정하여 최대한 많이 불러옴
+                url = `${baseUrl}/playlistItems?part=snippet&playlistId=${config.uploadsId}&maxResults=50&key=${API_KEY}${tokenPart}`;
             }
 
             try {
@@ -346,46 +315,76 @@
                 if(isNew) listDiv.innerHTML = '';
 
                 if(!data.items || data.items.length === 0) {
-                    listDiv.innerHTML += '<div style="padding:20px; text-align:center; color:#555;">더 이상 영상이 없습니다.</div>';
+                    listDiv.innerHTML += '<div style="padding:20px; text-align:center; color:#555;">영상이 없습니다.</div>';
                     return;
                 }
 
                 config.token = data.nextPageToken || '';
 
-                const chIds = [...new Set(data.items.map(i => i.snippet.channelId))].join(',');
-                const chRes = await fetch(`${baseUrl}/channels?part=snippet&id=${chIds}&key=${API_KEY}`);
-                const chData = await chRes.json();
-                const chMap = {};
-                if(chData.items) chData.items.forEach(c => chMap[c.id] = c.snippet.thumbnails.default.url);
+                // API 별 ID 위치가 다름
+                // Videos API: id (string or object)
+                // Search API: id.videoId
+                // PlaylistItems API: snippet.resourceId.videoId
+                
+                // 프로필 사진을 위해 채널 ID 수집 (이미 캐시된건 제외)
+                const uncachedChIds = [];
+                data.items.forEach(i => {
+                    const cid = i.snippet.channelId;
+                    if(!channelCache[cid] || !channelCache[cid].thumb) {
+                        uncachedChIds.push(cid);
+                    }
+                });
 
-                renderItems(data.items, listDiv, chMap);
+                // 필요한 경우에만 Channels API 호출 (프로필 사진용)
+                if(uncachedChIds.length > 0) {
+                    const uniqueIds = [...new Set(uncachedChIds)].join(',');
+                    // 한 번에 최대 50개까지 가능하므로 잘라서 호출하는게 좋으나 여기선 단순화
+                    const chRes = await fetch(`${baseUrl}/channels?part=snippet&id=${uniqueIds}&key=${API_KEY}`);
+                    const chData = await chRes.json();
+                    if(chData.items) {
+                        chData.items.forEach(c => {
+                            if(!channelCache[c.id]) channelCache[c.id] = {};
+                            channelCache[c.id].thumb = c.snippet.thumbnails.default.url;
+                        });
+                    }
+                }
+
+                renderItems(data.items, listDiv, type);
 
                 if(config.token) {
                     const btn = document.createElement('div');
                     btn.id = 'btn-load-' + type;
                     btn.className = 'load-more-btn';
-                    btn.innerHTML = '🔽 더 보기 (Load More)';
+                    btn.innerHTML = '🔽 더 보기 (50개 로드)';
                     btn.onclick = () => loadVideos(type, false);
                     listDiv.appendChild(btn);
                 }
 
             } catch(e) {
                 console.error(e);
-                listDiv.innerHTML += '<div class="loader">오류 발생 (API 한도 초과 등)</div>';
+                listDiv.innerHTML += '<div class="loader">오류 발생 (API 한도 등)</div>';
             }
         }
 
-        function renderItems(items, container, chMap) {
+        function renderItems(items, container, type) {
             items.forEach(item => {
                 const s = item.snippet;
-                const vidId = item.id.videoId || item.id;
-                const chImg = chMap[s.channelId] || 'https://via.placeholder.com/36';
+                let vidId;
+
+                // API 종류에 따른 ID 추출
+                if(type === 'popular') vidId = item.id;
+                else if(type === 'search') vidId = item.id.videoId;
+                else if(type === 'channel' || type === 'related') vidId = s.resourceId.videoId;
+
+                if(!vidId) return; // 재생목록 등은 스킵
+
+                const chImg = (channelCache[s.channelId] && channelCache[s.channelId].thumb) ? channelCache[s.channelId].thumb : 'https://via.placeholder.com/36';
                 
                 const div = document.createElement('div');
                 div.className = 'video-item';
                 div.innerHTML = `
                     <div class="thumb-box" onclick="openWatch('${vidId}', '${escapeHtml(s.title)}', '${s.channelId}', '${escapeHtml(s.channelTitle)}', '${chImg}')">
-                        <img src="${s.thumbnails.high.url}">
+                        <img src="${s.thumbnails.high ? s.thumbnails.high.url : s.thumbnails.medium.url}">
                     </div>
                     <div class="v-info">
                         <div class="v-pf" onclick="openChannel('${s.channelId}')"><img src="${chImg}"></div>
@@ -415,10 +414,14 @@
 
         async function openChannel(chId) {
             state.channel.id = chId;
+            state.channel.uploadsId = ''; // 초기화
+            
             document.getElementById('page-channel').classList.add('active');
             history.pushState({page: 'channel'}, '', '#channel');
             
             document.getElementById('ch-name').innerText = '...';
+            
+            // 채널 정보 로드 (비용 1)
             const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${chId}&key=${API_KEY}`);
             const data = await res.json();
             const info = data.items[0];
@@ -427,6 +430,7 @@
             document.getElementById('ch-sub').innerText = `구독자 ${formatNum(info.statistics.subscriberCount)}명`;
             document.getElementById('ch-img').src = info.snippet.thumbnails.medium.url;
 
+            // 채널 영상 로드 (최적화된 방식)
             loadVideos('channel', true);
         }
 
@@ -452,6 +456,10 @@
             }
 
             document.getElementById('watch-scroll-area').scrollTop = 0;
+            
+            // [중요] 해당 채널의 영상을 추천 동영상으로 설정
+            state.watch.id = chId; 
+            state.watch.uploadsId = ''; // 초기화
             loadVideos('related', true);
         }
 
@@ -468,7 +476,7 @@
 
         function goToChannelFromWatch() {
             window.history.back();
-            setTimeout(() => openChannel(state.channel.id || ''), 100);
+            setTimeout(() => openChannel(state.watch.id || ''), 100);
         }
 
         function escapeHtml(t) { return t.replace(/'/g, "\\'"); }
