@@ -108,10 +108,10 @@
 
         /* --- CRITICAL PRINT STYLES --- */
         @media print {
-            /* 브라우저 기본 헤더/푸터(날짜, 제목 등) 제거 */
+            /* 브라우저 기본 헤더/푸터 강제 제거 */
             @page { 
                 size: A4; 
-                margin: 0; 
+                margin: 0 !important; 
             }
             
             html, body { 
@@ -126,7 +126,7 @@
             /* UI 요소 완전 숨김 */
             .toolbar, .editor-pane, #toggle-btn, .modal-overlay, .modal { display: none !important; }
             
-            .workspace { display: block !important; margin: 0 !important; padding: 0 !important; }
+            .workspace { display: block !important; margin: 0 !important; padding: 0 !important; border: none !important; }
             .preview-pane { 
                 display: block !important; 
                 padding: 0 !important; 
@@ -134,24 +134,30 @@
                 background: #fff !important; 
                 overflow: visible !important;
                 width: 100% !important;
+                min-width: 100% !important;
             }
 
-            /* 페이지 겹침 방지 및 강제 분할 */
+            /* 페이지 레이아웃 고정 (A4 전체 화면 채우기) */
             .page-container {
                 position: relative !important; 
                 margin: 0 !important; 
-                padding: 15mm !important; /* 물리적인 여백 설정 */
+                padding: 20mm !important; /* 인쇄 시 실제 여백 확보 */
                 box-shadow: none !important; 
                 border: none !important; 
                 width: 210mm !important; 
-                height: 297mm !important; /* A4 정확한 높이 */
+                height: 297mm !important; 
                 page-break-after: always !important; 
                 break-after: page !important;
                 display: flex !important;
                 overflow: hidden !important;
             }
 
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* 배경색 및 폰트 렌더링 강제 적용 */
+            * { 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                color-adjust: exact !important;
+            }
         }
 
         /* Modal */
