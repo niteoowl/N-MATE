@@ -13,9 +13,7 @@
             --accent-color: #1a3c6e;
             --main-font: 'KoPub Batang', serif;
             --sub-font: 'KoPub Dotum', sans-serif;
-            --retro-red: #cc0000;
-            --retro-blue: #0033cc;
-            --retro-yellow: #ffde00;
+            --table-border: #d1d5db;
         }
 
         body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
@@ -78,59 +76,7 @@
             page-break-after: always;
         }
 
-        /* --- 2000s KOREAN EXAM COVER (MINIMAL RETRO) --- */
-        .cover-page {
-            justify-content: center; align-items: center; text-align: center; padding: 0;
-            overflow: hidden; border: none;
-        }
-        
-        .cover-page.style-classic { 
-            background: linear-gradient(135deg, #e60000 0%, #8b0000 100%);
-            color: white;
-            position: relative;
-        }
-
-        .k-retro-wrapper {
-            width: 100%; height: 100%; 
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-            padding: 15mm 10mm; position: relative;
-            z-index: 2;
-        }
-
-        /* Title Box (No Shadow) */
-        .k-title-box {
-            position: relative;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        
-        .k-main-title-3d { 
-            font-family: 'KoPub Batang', serif;
-            font-size: 85pt; font-weight: 900; 
-            line-height: 1.1; margin-bottom: 0; word-break: keep-all; 
-            letter-spacing: -4px;
-            
-            /* Remove 3D effect and shadows, use flat gradient or solid color */
-            background: linear-gradient(to bottom, #4facfe 0%, #0033cc 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            /* Filter and shadows removed as requested */
-            filter: none; 
-        }
-
-        .k-motto {
-            font-family: 'KoPub Batang', serif;
-            font-size: 26pt; font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 50px;
-            display: inline-block;
-            padding-bottom: 10px;
-            /* Text shadow removed for clean look */
-            text-shadow: none;
-            letter-spacing: -0.5px;
-        }
-
-        /* --- Normal Page Styles --- */
+        /* Normal Page Header */
         .exam-header {
             width: 100%; border-top: 5px solid var(--accent-color); border-bottom: 1.5px solid #000;
             padding: 15px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
@@ -141,11 +87,39 @@
 
         .exam-body { column-count: 2; column-gap: 12mm; column-rule: 0.5px solid #eee; flex: 1; }
 
+        /* Question Elements */
         .q-block { margin-bottom: 18px; break-inside: avoid; display: flex; flex-direction: row; align-items: flex-start; }
         .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 11pt; width: 28px; flex-shrink: 0; margin-top: 2px; }
         .q-content { flex: 1; display: flex; flex-direction: column; }
         .q-text { font-family: var(--sub-font); font-weight: bold; font-size: 10.5pt; margin-bottom: 4px; word-break: keep-all; line-break: anywhere; line-height: 1.4; color: #222; }
         .q-answer-line { border-bottom: 1px solid #000; height: 1.2em; width: 95%; margin-top: 2px; }
+
+        /* --- IMPROVED ANSWER KEY STYLES --- */
+        .answer-key-page { padding: 15mm; }
+        .answer-container { display: flex; flex-direction: column; gap: 20px; }
+        .answer-section { break-inside: avoid; margin-bottom: 10px; }
+        .answer-section-title { 
+            font-family: var(--sub-font); font-size: 12pt; font-weight: 900; 
+            color: #fff; background: var(--accent-color); padding: 4px 12px;
+            margin-bottom: 8px; display: inline-block; border-radius: 4px;
+        }
+        
+        .answer-table { 
+            width: 100%; border-collapse: collapse; font-family: var(--sub-font); 
+            font-size: 9.5pt; table-layout: fixed; border: 1px solid var(--table-border);
+        }
+        .answer-table th, .answer-table td { 
+            border: 1px solid var(--table-border); padding: 6px 8px; text-align: left;
+        }
+        .answer-table th { background: #f3f4f6; font-weight: 800; color: #374151; width: 40px; text-align: center; }
+        .answer-table tr:nth-child(even) { background-color: #f9fafb; }
+        
+        /* 다단 레이아웃을 위한 그리드 */
+        .answer-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
 
         .instr-tag { display: inline-block; background: #000; color: #fff; font-family: var(--sub-font); font-size: 8pt; padding: 2px 8px; font-weight: bold; margin-bottom: 5px; }
         .instr-text { font-family: var(--sub-font); font-size: 10pt; font-weight: bold; margin-bottom: 20px; color: #333; }
@@ -167,7 +141,7 @@
         @media print {
             .toolbar, .editor-pane, #toggle-btn { display: none !important; }
             body { background: #fff; overflow: visible; }
-            .preview-pane { display: block; padding: 0; margin: 0; background: #fff; }
+            .preview-pane { display: block; padding: 0 !important; margin: 0 !important; background: #fff; width: 100%; }
             .page-container { margin: 0; box-shadow: none; border: none; width: 210mm; }
             @page { size: A4; margin: 0; }
         }
@@ -179,7 +153,6 @@
     <div class="toolbar-group">
         <div class="logo">BOCABLE</div>
         <button onclick="openInputModal()"><span class="material-symbols-outlined">add_box</span>데이터 입력</button>
-        <button onclick="openCoverModal()"><span class="material-symbols-outlined">menu_book</span>표지 설정</button>
         <select id="test-mode" onchange="updatePreview()">
             <option value="en-ko">영 → 한</option>
             <option value="ko-en">한 → 영</option>
@@ -188,6 +161,10 @@
         <button onclick="shuffleWords()"><span class="material-symbols-outlined">shuffle</span>섞기</button>
     </div>
     <div class="toolbar-group">
+        <div style="display: flex; align-items: center; gap: 5px; margin-right: 15px;">
+            <input type="checkbox" id="include-answers" onchange="updatePreview()" checked>
+            <label for="include-answers" style="font-size: 12px; font-family: var(--sub-font); cursor: pointer;">답지 포함</label>
+        </div>
         <button class="btn-primary" onclick="window.print()"><span class="material-symbols-outlined">print</span>인쇄 / PDF</button>
     </div>
 </div>
@@ -208,25 +185,11 @@
 <div class="modal-overlay" id="overlay" onclick="closeModals()"></div>
 <div id="input-modal" class="modal">
     <h3>단어 데이터 입력</h3>
-    <textarea id="modal-textarea" style="width:100%; height:250px; margin-bottom:15px;" placeholder="[COVER]&#10;[DAY 01]&#10;apple,사과"></textarea>
+    <textarea id="modal-textarea" style="width:100%; height:250px; margin-bottom:15px;" placeholder="[DAY 01]&#10;apple,사과&#10;banana,바나나"></textarea>
     <div style="display: flex; gap: 10px;">
         <button class="btn-primary" style="flex: 1;" onclick="processInput()">생성</button>
         <button style="flex: 1;" onclick="closeModals()">취소</button>
     </div>
-</div>
-
-<!-- Cover Settings Modal -->
-<div id="cover-modal" class="modal">
-    <h3>표지 디자인 설정</h3>
-    <div class="modal-field">
-        <label>메인 제목</label>
-        <input type="text" id="cover-title-input" oninput="applyCoverSettings()">
-    </div>
-    <div class="modal-field">
-        <label>좌우명/모토</label>
-        <input type="text" id="cover-motto-input" oninput="applyCoverSettings()">
-    </div>
-    <button class="btn-primary" style="width:100%;" onclick="closeModals()">적용 완료</button>
 </div>
 
 <script>
@@ -235,27 +198,27 @@
     const editorPane = document.getElementById('editor-pane');
     const toggleBtn = document.getElementById('toggle-btn');
     const testMode = document.getElementById('test-mode');
+    const includeAnswers = document.getElementById('include-answers');
 
     let examData = {
-        mainTitle: "英單語 暗記",
-        motto: "英語 征복은 英單語 暗記에 있다",
-        coverStyle: "style-classic",
+        mainTitle: "VOCABULARY TEST",
         content: [
-            { type: "cover" },
             { type: "page", title: "DAY 01" },
-            { en: "propose", ko: "[동] 1. 제안하다 2. 청혼하다 3. (이론 등을) 제시하다" },
-            { en: "accomplish", ko: "성취하다, 완수하다, 해내다" },
-            { en: "significant", ko: "상당한, 중요한, 의미심장한" },
-            { en: "perspective", ko: "관점, 시각, 원근법" },
-            { type: "page", title: "DAY 02" },
+            { en: "propose", ko: "제안하다, 청혼하다" },
+            { en: "accomplish", ko: "성취하다, 완수하다" },
+            { en: "significant", ko: "상당한, 중요한" },
+            { en: "perspective", ko: "관점, 시각" },
             { en: "alternative", ko: "대안, 대체 가능한" },
-            { en: "sustainable", ko: "지속가능한, 견딜 수 있는" }
+            { en: "sustainable", ko: "지속가능한" },
+            { type: "page", title: "DAY 02" },
+            { en: "analyze", ko: "분석하다" },
+            { en: "consistent", ko: "일관된" },
+            { en: "evaluate", ko: "평가하다" }
         ]
     };
 
     window.onload = () => {
         codeInput.value = JSON.stringify(examData, null, 4);
-        syncCoverModal();
         updatePreview();
     };
 
@@ -264,35 +227,26 @@
             const data = JSON.parse(codeInput.value);
             const mode = testMode.value;
             previewArea.innerHTML = '';
+            
             let currentPageContainer = null;
             let currentBody = null;
             let qCount = 0;
-
-            let instrMsg = "제시된 영어 단어의 정확한 한국어 의미를 기입하십시오.";
-            if (mode === "ko-en") instrMsg = "제시된 의미에 적합한 영어 단어를 정확한 철자로 기입하십시오.";
-            if (mode === "mixed") instrMsg = "제시된 단어의 정확한 의미 또는 영어 철자를 기입하십시오.";
+            
+            // For Answer Key grouping
+            const answerGroups = [];
+            let currentGroup = null;
 
             data.content.forEach((item) => {
-                if (item.type === "cover") {
-                    const cover = document.createElement('div');
-                    cover.className = `page-container cover-page ${data.coverStyle || 'style-classic'}`;
-                    cover.innerHTML = `
-                        <div class="k-retro-wrapper">
-                            <div class="k-title-box">
-                                <div class="k-motto">${data.motto || '英語 征服은 英單語 暗記에 있다'}</div>
-                                <div class="k-main-title-3d">${data.mainTitle || '제목 없음'}</div>
-                            </div>
-                        </div>
-                    `;
-                    previewArea.appendChild(cover);
-                    return;
-                }
-
                 if (item.type === "page" || !currentPageContainer) {
                     qCount = 0;
                     currentPageContainer = document.createElement('div');
                     currentPageContainer.className = 'page-container';
                     const subTitle = item.type === "page" ? item.title : "Untitled";
+                    
+                    let instrMsg = "제시된 영어 단어의 정확한 한국어 의미를 기입하십시오.";
+                    if (mode === "ko-en") instrMsg = "제시된 의미에 적합한 영어 단어를 기입하십시오.";
+                    if (mode === "mixed") instrMsg = "제시된 단어의 의미 또는 영어 철자를 기입하십시오.";
+
                     currentPageContainer.innerHTML = `
                         <div class="exam-header">
                             <div class="h-title">${data.mainTitle} <span style="font-size:14pt; opacity:0.6; font-weight:normal;">| ${subTitle}</span></div>
@@ -301,50 +255,80 @@
                         <div class="instr-tag">INSTRUCTIONS</div>
                         <div class="instr-text">${instrMsg}</div>
                         <div class="exam-body"></div>
-                        <div class="exam-footer">OFFICIAL PERFORMANCE ASSESSMENT &copy; BOCABLE 2025</div>
+                        <div class="exam-footer">VOCABULARY PERFORMANCE TEST &copy; BOCABLE</div>
                     `;
                     previewArea.appendChild(currentPageContainer);
                     currentBody = currentPageContainer.querySelector('.exam-body');
+                    
+                    // Answer Key Grouping
+                    currentGroup = { title: subTitle, items: [] };
+                    answerGroups.push(currentGroup);
                 }
 
                 if (item.en && item.ko) {
                     qCount++;
-                    let displayQ = (mode === "en-ko") ? item.en : (mode === "ko-en") ? item.ko : (Math.random() > 0.5 ? item.en : item.ko);
+                    let qText = mode === "en-ko" ? item.en : (mode === "ko-en" ? item.ko : (Math.random() > 0.5 ? item.en : item.ko));
+                    let aText = qText === item.en ? item.ko : item.en;
+                    
                     const block = document.createElement('div');
                     block.className = 'q-block';
                     block.innerHTML = `
                         <div class="q-num">${qCount}.</div>
                         <div class="q-content">
-                            <div class="q-text">${displayQ}</div>
+                            <div class="q-text">${qText}</div>
                             <div class="q-answer-line"></div>
                         </div>
                     `;
                     currentBody.appendChild(block);
+                    currentGroup.items.push({ num: qCount, ans: aText });
                 }
             });
-        } catch (e) {}
+
+            // --- IMPROVED ANSWER KEY GENERATION ---
+            if (includeAnswers.checked && answerGroups.length > 0) {
+                const ansPage = document.createElement('div');
+                ansPage.className = 'page-container answer-key-page';
+                
+                let ansHTML = `
+                    <div class="exam-header">
+                        <div class="h-title">ANSWER KEY <span style="font-size:14pt; opacity:0.6; font-weight:normal;">| 정답표</span></div>
+                    </div>
+                    <div class="answer-container">
+                        <div class="answer-grid-layout">
+                `;
+                
+                answerGroups.forEach(group => {
+                    if(group.items.length === 0) return;
+                    
+                    ansHTML += `
+                        <div class="answer-section">
+                            <div class="answer-section-title">${group.title}</div>
+                            <table class="answer-table">
+                                ${group.items.map(i => `
+                                    <tr>
+                                        <th>${i.num}</th>
+                                        <td>${i.ans}</td>
+                                    </tr>
+                                `).join('')}
+                            </table>
+                        </div>
+                    `;
+                });
+                
+                ansHTML += `
+                        </div>
+                    </div>
+                    <div class="exam-footer" style="margin-top: auto;">이 페이지는 정답 확인용입니다. &copy; BOCABLE</div>
+                `;
+                ansPage.innerHTML = ansHTML;
+                previewArea.appendChild(ansPage);
+            }
+
+        } catch (e) { console.error(e); }
     }
 
-    // Modal Control
     function openInputModal() { document.getElementById('overlay').style.display = 'block'; document.getElementById('input-modal').style.display = 'block'; }
-    function openCoverModal() { 
-        syncCoverModal();
-        document.getElementById('overlay').style.display = 'block'; 
-        document.getElementById('cover-modal').style.display = 'block'; 
-    }
     function closeModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
-
-    function syncCoverModal() {
-        document.getElementById('cover-title-input').value = examData.mainTitle || '';
-        document.getElementById('cover-motto-input').value = examData.motto || '';
-    }
-
-    function applyCoverSettings() {
-        examData.mainTitle = document.getElementById('cover-title-input').value;
-        examData.motto = document.getElementById('cover-motto-input').value;
-        codeInput.value = JSON.stringify(examData, null, 4);
-        updatePreview();
-    }
 
     function processInput() {
         const text = document.getElementById('modal-textarea').value.trim();
@@ -354,10 +338,9 @@
         lines.forEach(line => {
             const t = line.trim();
             if(!t) return;
-            if(t.toUpperCase() === '[COVER]') newContent.push({ type: "cover" });
-            else if(t.startsWith('[') && t.endsWith(']')) newContent.push({ type: "page", title: t.slice(1, -1) });
+            if(t.startsWith('[') && t.endsWith(']')) newContent.push({ type: "page", title: t.slice(1, -1) });
             else {
-                const parts = t.includes(',') ? t.split(',') : t.split('=');
+                const parts = t.includes(',') ? t.split(',') : (t.includes('=') ? t.split('=') : []);
                 if(parts.length >= 2) newContent.push({ en: parts[0].trim(), ko: parts[1].trim() });
             }
         });
@@ -385,7 +368,7 @@
             let result = [];
             let temp = [];
             data.content.forEach(item => {
-                if(item.type === "page" || item.type === "cover") {
+                if(item.type === "page") {
                     if(temp.length > 0) result.push(...temp.sort(() => Math.random() - 0.5));
                     result.push(item);
                     temp = [];
@@ -398,6 +381,5 @@
         } catch(e) {}
     }
 </script>
-
 </body>
 </html>
