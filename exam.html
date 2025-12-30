@@ -13,6 +13,9 @@
             --accent-color: #1a3c6e;
             --main-font: 'KoPub Batang', serif;
             --sub-font: 'KoPub Dotum', sans-serif;
+            --retro-red: #cc0000;
+            --retro-blue: #0033cc;
+            --retro-yellow: #ffde00;
         }
 
         body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
@@ -75,40 +78,59 @@
             page-break-after: always;
         }
 
-        /* --- IMPROVED COVER STYLES --- */
+        /* --- 2000s KOREAN EXAM COVER (MINIMAL RETRO) --- */
         .cover-page {
-            justify-content: space-between; align-items: center; text-align: center; padding: 30mm 15mm;
-            border: 2px solid #000;
+            justify-content: center; align-items: center; text-align: center; padding: 0;
+            overflow: hidden; border: none;
         }
         
-        /* Cover Style: Classic */
-        .cover-page.style-classic { border: 15px double var(--accent-color); }
-        /* Cover Style: Modern */
-        .cover-page.style-modern { border: none; background: linear-gradient(135deg, #fdfdfd 0%, #f0f4f8 100%); }
-        .cover-page.style-modern::before { content:''; position:absolute; top:0; left:0; width:100%; height:40px; background: var(--accent-color); }
-        /* Cover Style: Minimal */
-        .cover-page.style-minimal { border: 1px solid #eee; }
-
-        .cover-top { display: flex; flex-direction: column; align-items: center; width: 100%; }
-        .cover-badge { 
-            background: var(--accent-color); color: #fff; padding: 5px 15px; font-family: var(--sub-font); 
-            font-size: 12pt; font-weight: bold; margin-bottom: 30px; border-radius: 50px;
+        .cover-page.style-classic { 
+            background: linear-gradient(135deg, #e60000 0%, #8b0000 100%);
+            color: white;
+            position: relative;
         }
-        .cover-main-title { font-family: var(--sub-font); font-size: 48pt; font-weight: 900; color: #111; line-height: 1.1; margin-bottom: 10px; word-break: keep-all; }
-        .cover-sub-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 300; color: #555; width: 60%; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 50px; }
+
+        .k-retro-wrapper {
+            width: 100%; height: 100%; 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            padding: 15mm 10mm; position: relative;
+            z-index: 2;
+        }
+
+        /* Title Box (No Shadow) */
+        .k-title-box {
+            position: relative;
+            display: flex; flex-direction: column; align-items: center;
+        }
         
-        .cover-middle { width: 100%; }
-        .info-grid { 
-            display: inline-grid; grid-template-columns: 100px 1fr; gap: 10px; text-align: left; 
-            font-family: var(--sub-font); font-size: 14pt; background: #f9f9f9; padding: 30px; border-radius: 10px;
+        .k-main-title-3d { 
+            font-family: 'KoPub Batang', serif;
+            font-size: 85pt; font-weight: 900; 
+            line-height: 1.1; margin-bottom: 0; word-break: keep-all; 
+            letter-spacing: -4px;
+            
+            /* Remove 3D effect and shadows, use flat gradient or solid color */
+            background: linear-gradient(to bottom, #4facfe 0%, #0033cc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Filter and shadows removed as requested */
+            filter: none; 
         }
-        .info-label { font-weight: bold; color: var(--accent-color); }
 
-        .cover-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .brand-logo { font-family: var(--sub-font); font-weight: 900; font-size: 24pt; color: var(--accent-color); letter-spacing: 2px; }
-        .brand-tagline { font-family: var(--sub-font); font-size: 10pt; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .k-motto {
+            font-family: 'KoPub Batang', serif;
+            font-size: 26pt; font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 50px;
+            display: inline-block;
+            padding-bottom: 10px;
+            /* Text shadow removed for clean look */
+            text-shadow: none;
+            letter-spacing: -0.5px;
+        }
 
-        /* Normal Page Styles */
+        /* --- Normal Page Styles --- */
         .exam-header {
             width: 100%; border-top: 5px solid var(--accent-color); border-bottom: 1.5px solid #000;
             padding: 15px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
@@ -119,7 +141,6 @@
 
         .exam-body { column-count: 2; column-gap: 12mm; column-rule: 0.5px solid #eee; flex: 1; }
 
-        /* Question Elements */
         .q-block { margin-bottom: 18px; break-inside: avoid; display: flex; flex-direction: row; align-items: flex-start; }
         .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 11pt; width: 28px; flex-shrink: 0; margin-top: 2px; }
         .q-content { flex: 1; display: flex; flex-direction: column; }
@@ -198,24 +219,12 @@
 <div id="cover-modal" class="modal">
     <h3>표지 디자인 설정</h3>
     <div class="modal-field">
-        <label>표지 스타일</label>
-        <select id="cover-style-select" onchange="applyCoverSettings()">
-            <option value="style-classic">Classic (이중 테두리)</option>
-            <option value="style-modern">Modern (상단 컬러바)</option>
-            <option value="style-minimal">Minimal (깔끔한 선)</option>
-        </select>
-    </div>
-    <div class="modal-field">
         <label>메인 제목</label>
         <input type="text" id="cover-title-input" oninput="applyCoverSettings()">
     </div>
     <div class="modal-field">
-        <label>부제목</label>
-        <input type="text" id="cover-subtitle-input" oninput="applyCoverSettings()">
-    </div>
-    <div class="modal-field">
-        <label>제작자/기관명</label>
-        <input type="text" id="cover-author-input" oninput="applyCoverSettings()">
+        <label>좌우명/모토</label>
+        <input type="text" id="cover-motto-input" oninput="applyCoverSettings()">
     </div>
     <button class="btn-primary" style="width:100%;" onclick="closeModals()">적용 완료</button>
 </div>
@@ -228,10 +237,8 @@
     const testMode = document.getElementById('test-mode');
 
     let examData = {
-        mainTitle: "VOCABULARY WORKBOOK",
-        subtitle: "Essential Words for High School Students",
-        author: "BOCABLE ACADEMY",
-        date: "2025 Winter Edition",
+        mainTitle: "英單語 暗記",
+        motto: "英語 征복은 英單語 暗記에 있다",
         coverStyle: "style-classic",
         content: [
             { type: "cover" },
@@ -270,24 +277,11 @@
                     const cover = document.createElement('div');
                     cover.className = `page-container cover-page ${data.coverStyle || 'style-classic'}`;
                     cover.innerHTML = `
-                        <div class="cover-top">
-                            <div class="cover-badge">SPECIAL EDITION</div>
-                            <div class="cover-main-title">${data.mainTitle || '제목 없음'}</div>
-                            <div class="cover-sub-title">${data.subtitle || ''}</div>
-                        </div>
-                        <div class="cover-middle">
-                            <div class="info-grid">
-                                <div class="info-label">Scope</div>
-                                <div>${data.content.filter(i=>i.type==='page').map(i=>i.title).join(', ') || '전범위'}</div>
-                                <div class="info-label">Date</div>
-                                <div>${data.date || '2025-12-30'}</div>
-                                <div class="info-label">Author</div>
-                                <div>${data.author || 'BOCABLE'}</div>
+                        <div class="k-retro-wrapper">
+                            <div class="k-title-box">
+                                <div class="k-motto">${data.motto || '英語 征服은 英單語 暗記에 있다'}</div>
+                                <div class="k-main-title-3d">${data.mainTitle || '제목 없음'}</div>
                             </div>
-                        </div>
-                        <div class="cover-bottom">
-                            <div class="brand-logo">B O C A B L E</div>
-                            <div class="brand-tagline">Made by BOCABLE</div>
                         </div>
                     `;
                     previewArea.appendChild(cover);
@@ -341,17 +335,13 @@
     function closeModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
 
     function syncCoverModal() {
-        document.getElementById('cover-style-select').value = examData.coverStyle;
-        document.getElementById('cover-title-input').value = examData.mainTitle;
-        document.getElementById('cover-subtitle-input').value = examData.subtitle;
-        document.getElementById('cover-author-input').value = examData.author;
+        document.getElementById('cover-title-input').value = examData.mainTitle || '';
+        document.getElementById('cover-motto-input').value = examData.motto || '';
     }
 
     function applyCoverSettings() {
-        examData.coverStyle = document.getElementById('cover-style-select').value;
         examData.mainTitle = document.getElementById('cover-title-input').value;
-        examData.subtitle = document.getElementById('cover-subtitle-input').value;
-        examData.author = document.getElementById('cover-author-input').value;
+        examData.motto = document.getElementById('cover-motto-input').value;
         codeInput.value = JSON.stringify(examData, null, 4);
         updatePreview();
     }
