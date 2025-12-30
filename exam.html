@@ -3,470 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>시험지 에디터 (줄바꿈 완벽 수정)</title>
-    
+    <title>BOCABLE Exam Editor</title>
+    <!-- KoPub Fonts & Material Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
     <style>
-        /* =========================================
-           1. 기본 설정
-           ========================================= */
-        :root { 
-            --editor-bg: #2d3436; 
-            --accent-color: #1a3c6e; 
+        :root {
+            --editor-bg: #1e1e1e;
+            --accent-color: #1a3c6e;
             --main-font: 'KoPub Batang', serif;
+            --sub-font: 'KoPub Dotum', sans-serif;
         }
+
         body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
         * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
 
-        .font-dotum { font-family: 'KoPub Dotum', sans-serif !important; }
-        .font-batang { font-family: 'KoPub Batang', serif !important; }
+        /* Toolbar */
+        .toolbar { 
+            background: #fff; padding: 0 20px; border-bottom: 1px solid #ccc; 
+            display: flex; justify-content: space-between; align-items: center; 
+            height: 60px; min-height: 60px; z-index: 100;
+        }
+        .toolbar-group { display: flex; gap: 8px; align-items: center; }
+        .logo { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 1.1rem; margin-right: 15px; white-space: nowrap; }
 
-        .u-text { text-decoration: underline; text-underline-position: under; text-decoration-thickness: 1px; text-underline-offset: 2px; }
-        .u-blank-inline { display: inline-block; border-bottom: 1px solid #000; text-align: center; min-width: 30px; padding: 0 5px; font-family: 'KoPub Dotum'; font-weight: bold; }
-
-        .inline-img-box { display: block; text-align: center; margin: 10px 0; }
-        .inline-img-box img { max-width: 98%; height: auto; border: 1px solid #eee; }
-
-        /* 툴바 */
-        .toolbar { background: #fff; padding: 5px 15px; border-bottom: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; height: 60px; gap: 10px; }
-        .toolbar-group { display: flex; gap: 5px; align-items: center; border-right: 1px solid #ddd; padding-right: 10px; }
-        .toolbar-group:last-child { border-right: none; }
-        
-        button { padding: 6px 10px; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
-        button:hover { background: #e9ecef; }
+        select, button { 
+            padding: 8px 12px; border: 1px solid #ccc; background: #fff; border-radius: 4px; 
+            cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; 
+            font-family: var(--sub-font); transition: all 0.2s;
+        }
+        button:hover { background: #f0f0f0; }
         .btn-primary { background-color: var(--accent-color); color: white; border: none; }
-        .btn-primary:hover { background-color: #132d52; }
+        .btn-primary:hover { background-color: #0f2a50; }
 
-        .workspace { display: flex; flex: 1; height: calc(100vh - 60px); }
-        .editor-pane { width: 35%; background: var(--editor-bg); display: flex; flex-direction: column; border-right: 1px solid #555; }
-        textarea#codeInput { flex: 1; width: 100%; background: transparent; color: #f1f2f6; border: none; padding: 20px; font-family: 'Consolas', monospace; font-size: 14px; line-height: 1.6; resize: none; outline: none; }
+        /* Workspace Layout */
+        .workspace { display: flex; flex: 1; height: calc(100vh - 60px); position: relative; }
         
-        .preview-pane { width: 65%; background: #555; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        /* Editor Pane */
+        .editor-pane { 
+            width: 30%; background: var(--editor-bg); display: flex; flex-direction: column; 
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+        }
+        .editor-pane.collapsed { width: 0; }
+        
+        textarea#codeInput { 
+            flex: 1; width: 100%; background: transparent; color: #d4d4d4; border: none; 
+            padding: 20px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; 
+            line-height: 1.6; resize: none; outline: none; min-width: 300px;
+        }
 
-        /* =========================================
-           2. 시험지 레이아웃
-           ========================================= */
+        /* Toggle Button */
+        #toggle-btn {
+            position: absolute; left: 30%; top: 50%; transform: translate(-50%, -50%);
+            z-index: 150; width: 20px; height: 60px; background: #fff; border: 1px solid #ccc;
+            border-radius: 0 6px 6px 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+        }
+        .editor-pane.collapsed + #toggle-btn { left: 0; }
+
+        /* Preview Pane */
+        .preview-pane { 
+            flex: 1; background: #525659; overflow-y: auto; padding: 30px; 
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        /* Paper Styles (A4) */
         .page-container {
-            width: 210mm; min-height: 297mm; background: white; 
-            padding: 0; margin-bottom: 20px; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
-            font-family: var(--main-font); color: #111; line-height: 1.5;
-            break-after: always; position: relative; overflow: hidden;
+            width: 210mm; min-height: 297mm; background: white; padding: 15mm; margin-bottom: 25px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.4); font-family: var(--main-font); color: #111; 
+            position: relative; display: flex; flex-direction: column;
+            page-break-after: always;
         }
 
+        /* --- IMPROVED COVER STYLES --- */
+        .cover-page {
+            justify-content: space-between; align-items: center; text-align: center; padding: 30mm 15mm;
+            border: 2px solid #000;
+        }
+        
+        /* Cover Style: Classic */
+        .cover-page.style-classic { border: 15px double var(--accent-color); }
+        /* Cover Style: Modern */
+        .cover-page.style-modern { border: none; background: linear-gradient(135deg, #fdfdfd 0%, #f0f4f8 100%); }
+        .cover-page.style-modern::before { content:''; position:absolute; top:0; left:0; width:100%; height:40px; background: var(--accent-color); }
+        /* Cover Style: Minimal */
+        .cover-page.style-minimal { border: 1px solid #eee; }
+
+        .cover-top { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        .cover-badge { 
+            background: var(--accent-color); color: #fff; padding: 5px 15px; font-family: var(--sub-font); 
+            font-size: 12pt; font-weight: bold; margin-bottom: 30px; border-radius: 50px;
+        }
+        .cover-main-title { font-family: var(--sub-font); font-size: 48pt; font-weight: 900; color: #111; line-height: 1.1; margin-bottom: 10px; word-break: keep-all; }
+        .cover-sub-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 300; color: #555; width: 60%; border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 50px; }
+        
+        .cover-middle { width: 100%; }
+        .info-grid { 
+            display: inline-grid; grid-template-columns: 100px 1fr; gap: 10px; text-align: left; 
+            font-family: var(--sub-font); font-size: 14pt; background: #f9f9f9; padding: 30px; border-radius: 10px;
+        }
+        .info-label { font-weight: bold; color: var(--accent-color); }
+
+        .cover-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .brand-logo { font-family: var(--sub-font); font-weight: 900; font-size: 24pt; color: var(--accent-color); letter-spacing: 2px; }
+        .brand-tagline { font-family: var(--sub-font); font-size: 10pt; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Normal Page Styles */
         .exam-header {
-            width: 100%; border-top: 4px solid var(--accent-color); border-bottom: 1px solid #aaa;
-            padding: 10px 10mm; margin-bottom: 15px; 
-            display: flex; justify-content: space-between; align-items: flex-end;
-            font-family: 'KoPub Dotum', sans-serif;
+            width: 100%; border-top: 5px solid var(--accent-color); border-bottom: 1.5px solid #000;
+            padding: 15px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
         }
-        .h-title { font-size: 16pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1px; width: 70%; }
-        .h-info { font-size: 10pt; color: #444; text-align: right; width: 30%; font-weight: bold; }
+        .h-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1.2px; }
+        .h-info { font-family: var(--sub-font); font-size: 10pt; text-align: right; line-height: 1.6; }
+        .h-info b { display: inline-block; width: 100px; background: #f2f2f2; text-align: center; margin-left: 5px; border: 1px solid #ccc; font-weight: 900; height: 24px; vertical-align: middle; }
 
-        .exam-body-content { 
-            width: 100%; padding: 0 7mm; 
-            column-count: 2; column-gap: 8mm; column-rule: 0.5px solid #ccc; 
-            text-align: justify; height: 940px; overflow: hidden; 
+        .exam-body { column-count: 2; column-gap: 12mm; column-rule: 0.5px solid #eee; flex: 1; }
+
+        /* Question Elements */
+        .q-block { margin-bottom: 18px; break-inside: avoid; display: flex; flex-direction: row; align-items: flex-start; }
+        .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 11pt; width: 28px; flex-shrink: 0; margin-top: 2px; }
+        .q-content { flex: 1; display: flex; flex-direction: column; }
+        .q-text { font-family: var(--sub-font); font-weight: bold; font-size: 10.5pt; margin-bottom: 4px; word-break: keep-all; line-break: anywhere; line-height: 1.4; color: #222; }
+        .q-answer-line { border-bottom: 1px solid #000; height: 1.2em; width: 95%; margin-top: 2px; }
+
+        .instr-tag { display: inline-block; background: #000; color: #fff; font-family: var(--sub-font); font-size: 8pt; padding: 2px 8px; font-weight: bold; margin-bottom: 5px; }
+        .instr-text { font-family: var(--sub-font); font-size: 10pt; font-weight: bold; margin-bottom: 20px; color: #333; }
+        .exam-footer { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-family: var(--sub-font); font-size: 8pt; color: #aaa; }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 199; display: none; }
+        .modal { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #fff; width: 500px; padding: 30px; border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 200; display: none;
+            font-family: var(--sub-font);
         }
-        .exam-footer { position: absolute; bottom: 10mm; left: 0; width: 100%; text-align: center; font-family: 'KoPub Dotum'; font-size: 10pt; color: #666; }
+        .modal h3 { margin-top: 0; color: var(--accent-color); }
+        .modal-field { margin-bottom: 15px; }
+        .modal-field label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+        .modal-field input, .modal-field select, .modal-field textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: var(--sub-font); }
 
         @media print {
-            .toolbar, .editor-pane { display: none !important; }
-            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
-            .workspace, .preview-pane { display: block; padding: 0; margin: 0; background: #fff; width: 100%; height: auto; }
-            @page { margin: 0; size: A4; } 
-            .page-container {
-                width: 100% !important; height: 297mm !important;
-                margin: 0 !important; padding: 0 !important;
-                box-shadow: none; border: none;
-                break-after: page; page-break-after: always;
-            }
-            .exam-body-content { display: block; column-fill: auto; height: 250mm !important; max-height: 250mm !important; overflow: hidden; }
-            .exam-footer { bottom: 10mm !important; }
+            .toolbar, .editor-pane, #toggle-btn { display: none !important; }
+            body { background: #fff; overflow: visible; }
+            .preview-pane { display: block; padding: 0; margin: 0; background: #fff; }
+            .page-container { margin: 0; box-shadow: none; border: none; width: 210mm; }
+            @page { size: A4; margin: 0; }
         }
-
-        .question-block-wrapper { margin-bottom: 15px; break-inside: avoid; width: 100%; display: inline-block; }
-        
-        .guide-box {
-            width: 100%; margin-bottom: 8px; padding-bottom: 5px;
-            font-family: 'KoPub Dotum'; font-size: 11pt; font-weight: bold; color: #222;
-            border-bottom: 2px solid #eee; line-height: 1.3;
-        }
-        .guide-num { color: var(--accent-color); font-weight: 900; margin-right: 6px; font-size: 12pt; }
-
-        .layout-row { display: flex; align-items: flex-start; width: 100%; margin-bottom: 5px; }
-        .col-num { flex-shrink: 0; width: 50px; text-align: right; padding-right: 8px; font-family: 'KoPub Dotum'; font-size: 14pt; font-weight: 900; color: var(--accent-color); line-height: 1.2; letter-spacing: -0.5px; }
-        .col-content { flex-grow: 1; width: calc(100% - 50px); font-size: 10.5pt; color: #000; }
-
-        .q-text { font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 6px; line-height: 1.4; word-break: keep-all; }
-        .common-box { width: 100%; border: 1px solid #000; padding: 8px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; }
-        .bogi-box { width: 100%; border: 1px solid #000; padding: 5px 10px 10px 10px; font-size: 9.5pt; text-align: justify; margin-bottom: 8px; line-height: 1.6; position: relative; }
-        .bogi-title { text-align: center; font-family: 'KoPub Dotum'; font-weight: bold; margin-bottom: 5px; display: block; }
-        
-        .choices { list-style: none; padding: 0; margin: 0; width: 100%; font-family: 'KoPub Dotum'; font-size: 10.2pt; }
-        .choices li { margin-bottom: 3px; padding-left: 10px; text-indent: -10px; margin-left: 5px; }
-
-        table.custom-table { width: 100%; border-collapse: collapse; margin: 5px 0 15px 0; font-family: 'KoPub Dotum'; font-size: 9pt; table-layout: fixed; }
-        table.custom-table th, table.custom-table td { border: 1px solid #333; padding: 5px; text-align: center; }
-        table.custom-table th { background-color: #f7f7f7; font-weight: bold; }
-
-        .subjective-line { display: block; width: 100%; border-bottom: 1px solid #000; margin: 20px 0 5px 0; }
-        .blank-inline { display: inline-block; min-width: 30px; border-bottom: 1px solid #000; margin: 0 2px; }
-        .q-image-area { display: block; text-align: center; margin: 10px 0; width: 100%; }
-        .q-image-area img { max-width: 100%; border: 1px solid #eee; }
-
-        #measurementDiv { position: absolute; visibility: hidden; width: 210mm; padding: 0 7mm; column-count: 2; column-gap: 8mm; }
     </style>
 </head>
 <body>
 
-    <div class="toolbar">
-        <div class="toolbar-group">
-            <span style="font-weight:bold; color:var(--accent-color);">꾸미기:</span>
-            <button onclick="wrapSelection('U')" title="밑줄">
-                <span class="material-symbols-outlined" style="font-size:16px;">format_underlined</span> 밑줄
-            </button>
-            <button onclick="wrapSelection('DOTUM')" title="돋음체">
-                <span class="material-symbols-outlined" style="font-size:16px;">format_bold</span> 돋음
-            </button>
-        </div>
-        
-        <div class="toolbar-group">
-            <span style="font-weight:bold; color:var(--accent-color);">요소:</span>
-            <button onclick="insertTag('BOGI')">
-                <span class="material-symbols-outlined" style="font-size:16px;">wysiwyg</span> 보기
-            </button>
-            <button onclick="insertTag('T')">
-                <span class="material-symbols-outlined" style="font-size:16px;">article</span> 지문
-            </button>
-            <button onclick="insertImgLink()">
-                <span class="material-symbols-outlined" style="font-size:16px;">link</span> 링크
-            </button>
-        </div>
+<div class="toolbar">
+    <div class="toolbar-group">
+        <div class="logo">BOCABLE</div>
+        <button onclick="openInputModal()"><span class="material-symbols-outlined">add_box</span>데이터 입력</button>
+        <button onclick="openCoverModal()"><span class="material-symbols-outlined">menu_book</span>표지 설정</button>
+        <select id="test-mode" onchange="updatePreview()">
+            <option value="en-ko">영 → 한</option>
+            <option value="ko-en">한 → 영</option>
+            <option value="mixed">무작위 혼합</option>
+        </select>
+        <button onclick="shuffleWords()"><span class="material-symbols-outlined">shuffle</span>섞기</button>
+    </div>
+    <div class="toolbar-group">
+        <button class="btn-primary" onclick="window.print()"><span class="material-symbols-outlined">print</span>인쇄 / PDF</button>
+    </div>
+</div>
 
-        <div class="toolbar-group">
-            <button class="btn-file">
-                <span class="material-symbols-outlined">image</span> 파일
-                <input type="file" id="imgInput" multiple accept="image/*" onchange="handleFiles(this.files)">
-            </button>
-            <span id="fileCount" style="font-size:11px; color:#555;"></span>
-        </div>
-
-        <div class="toolbar-group">
-            <button class="btn-primary" onclick="renderExam()">
-                <span class="material-symbols-outlined">refresh</span> 적용
-            </button>
-            <button onclick="window.print()">
-                <span class="material-symbols-outlined">print</span> 인쇄
-            </button>
-        </div>
+<div class="workspace">
+    <div class="editor-pane" id="editor-pane">
+        <textarea id="codeInput" oninput="updatePreview()" spellcheck="false"></textarea>
     </div>
 
-    <div class="workspace">
-        <div class="editor-pane">
-            <textarea id="codeInput" spellcheck="false" placeholder="내용을 입력하세요...">
-[TITLE] 2025학년도 1학기 기말고사 [/TITLE]
-[SUB] 2학년 국어 | 배점 : 100점 [/SUB]
-
-[GUIDE] [01~02] 다음 글을 읽고 물음에 답하시오. [/GUIDE]
-[T]
-(가) 현대 사회에서 [DOTUM]정보의 홍수[/DOTUM]는 심각한 문제다.
-[IMG]https://dummyimage.com/600x150/000/fff&text=Example+Image+URL[/IMG]
-(나) [U]이 문장은 밑줄이 그어집니다.[/U]
-[/T]
-[Q] (가)의 핵심 내용으로 적절한 것은? [/Q]
-[BOGI]
-ㄱ. 정보는 기하급수적으로 늘어난다.
-ㄴ. [U]기술 발전[/U]은 필수적이다.
-(줄바꿈 테스트)
-이 줄은 다음 줄에 나와야 합니다.
-[/BOGI]
-[O]
-[I]① ㄱ[/I]
-[I]② ㄴ[/I]
-[I]③ ㄱ, ㄴ[/I]
-[/O]
-
-[SEP]
-
-[Q] 다음 빈칸 __A__와 __(B)__에 들어갈 말은? [/Q]
-[T]
-인공지능은 데이터를 통해 스스로 __학습__한다.
-이 줄도 줄바꿈이
-잘 되어야 합니다.
-[/T]
-[O]
-[I]① 창의성, 딥러닝[/I]
-[I]② 효율성, 지도학습[/I]
-[/O]
-
-[SEP]
-
-[Q] 다음 빈칸을 채우시오. [/Q]
-[T]
-그는 집에 가자마자 _______을 열었다.
-[/T]
-정답 : [LINE]
-</textarea>
-        </div>
-
-        <div class="preview-pane">
-            <div id="measurementDiv"></div>
-            <div id="examSheetContainer"></div>
-        </div>
+    <div id="toggle-btn" onclick="toggleEditor()">
+        <span class="material-symbols-outlined" id="toggle-icon">chevron_left</span>
     </div>
 
-    <script>
-        const imageAssets = {};
-        const PAGE_CONTENT_HEIGHT_PX = 920; 
+    <div class="preview-pane" id="preview-area"></div>
+</div>
 
-        function wrapSelection(tagType) {
-            const textarea = document.getElementById('codeInput');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const text = textarea.value;
+<!-- Input Modal -->
+<div class="modal-overlay" id="overlay" onclick="closeModals()"></div>
+<div id="input-modal" class="modal">
+    <h3>단어 데이터 입력</h3>
+    <textarea id="modal-textarea" style="width:100%; height:250px; margin-bottom:15px;" placeholder="[COVER]&#10;[DAY 01]&#10;apple,사과"></textarea>
+    <div style="display: flex; gap: 10px;">
+        <button class="btn-primary" style="flex: 1;" onclick="processInput()">생성</button>
+        <button style="flex: 1;" onclick="closeModals()">취소</button>
+    </div>
+</div>
 
-            if (start === end) {
-                alert("텍스트를 드래그해서 선택해주세요.");
-                return;
-            }
+<!-- Cover Settings Modal -->
+<div id="cover-modal" class="modal">
+    <h3>표지 디자인 설정</h3>
+    <div class="modal-field">
+        <label>표지 스타일</label>
+        <select id="cover-style-select" onchange="applyCoverSettings()">
+            <option value="style-classic">Classic (이중 테두리)</option>
+            <option value="style-modern">Modern (상단 컬러바)</option>
+            <option value="style-minimal">Minimal (깔끔한 선)</option>
+        </select>
+    </div>
+    <div class="modal-field">
+        <label>메인 제목</label>
+        <input type="text" id="cover-title-input" oninput="applyCoverSettings()">
+    </div>
+    <div class="modal-field">
+        <label>부제목</label>
+        <input type="text" id="cover-subtitle-input" oninput="applyCoverSettings()">
+    </div>
+    <div class="modal-field">
+        <label>제작자/기관명</label>
+        <input type="text" id="cover-author-input" oninput="applyCoverSettings()">
+    </div>
+    <button class="btn-primary" style="width:100%;" onclick="closeModals()">적용 완료</button>
+</div>
 
-            const replacement = `[${tagType}]${text.substring(start, end)}[/${tagType}]`;
-            textarea.value = text.substring(0, start) + replacement + text.substring(end);
-            
-            textarea.selectionStart = start + replacement.length;
-            textarea.selectionEnd = start + replacement.length;
-            textarea.focus();
-            renderExam(); 
-        }
+<script>
+    const codeInput = document.getElementById('codeInput');
+    const previewArea = document.getElementById('preview-area');
+    const editorPane = document.getElementById('editor-pane');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const testMode = document.getElementById('test-mode');
 
-        function insertTag(tagType) {
-            const textarea = document.getElementById('codeInput');
-            const pos = textarea.selectionStart;
-            const text = textarea.value;
-            
-            let content = '';
-            if(tagType === 'BOGI') content = `\n[BOGI]\n내용을 입력하세요\n[/BOGI]\n`;
-            else if(tagType === 'T') content = `\n[T]\n내용을 입력하세요\n[/T]\n`;
-            
-            textarea.value = text.substring(0, pos) + content + text.substring(pos);
-            renderExam();
-        }
+    let examData = {
+        mainTitle: "VOCABULARY WORKBOOK",
+        subtitle: "Essential Words for High School Students",
+        author: "BOCABLE ACADEMY",
+        date: "2025 Winter Edition",
+        coverStyle: "style-classic",
+        content: [
+            { type: "cover" },
+            { type: "page", title: "DAY 01" },
+            { en: "propose", ko: "[동] 1. 제안하다 2. 청혼하다 3. (이론 등을) 제시하다" },
+            { en: "accomplish", ko: "성취하다, 완수하다, 해내다" },
+            { en: "significant", ko: "상당한, 중요한, 의미심장한" },
+            { en: "perspective", ko: "관점, 시각, 원근법" },
+            { type: "page", title: "DAY 02" },
+            { en: "alternative", ko: "대안, 대체 가능한" },
+            { en: "sustainable", ko: "지속가능한, 견딜 수 있는" }
+        ]
+    };
 
-        function insertImgLink() {
-            const url = prompt("이미지 주소(URL)를 입력하세요:");
-            if(url) {
-                const textarea = document.getElementById('codeInput');
-                const pos = textarea.selectionStart;
-                const text = textarea.value;
-                const imgTag = `\n[IMG]${url}[/IMG]\n`;
-                textarea.value = text.substring(0, pos) + imgTag + text.substring(pos);
-                renderExam();
-            }
-        }
+    window.onload = () => {
+        codeInput.value = JSON.stringify(examData, null, 4);
+        syncCoverModal();
+        updatePreview();
+    };
 
-        function handleFiles(files) {
-            document.getElementById('fileCount').innerText = `${files.length}개`;
-            for (let file of files) {
-                if (imageAssets[file.name]) URL.revokeObjectURL(imageAssets[file.name]);
-                imageAssets[file.name] = URL.createObjectURL(file);
-            }
-        }
+    function updatePreview() {
+        try {
+            const data = JSON.parse(codeInput.value);
+            const mode = testMode.value;
+            previewArea.innerHTML = '';
+            let currentPageContainer = null;
+            let currentBody = null;
+            let qCount = 0;
 
-        function createPage(pageIndex, totalPages, headerHtml, footerText) {
-            const pageDiv = document.createElement('div');
-            pageDiv.className = 'page-container';
-            pageDiv.setAttribute('data-page', pageIndex);
+            let instrMsg = "제시된 영어 단어의 정확한 한국어 의미를 기입하십시오.";
+            if (mode === "ko-en") instrMsg = "제시된 의미에 적합한 영어 단어를 정확한 철자로 기입하십시오.";
+            if (mode === "mixed") instrMsg = "제시된 단어의 정확한 의미 또는 영어 철자를 기입하십시오.";
 
-            const header = document.createElement('div');
-            header.className = 'exam-header';
-            header.innerHTML = headerHtml;
-            pageDiv.appendChild(header);
-
-            const body = document.createElement('div');
-            body.className = 'exam-body-content';
-            pageDiv.appendChild(body);
-
-            const footer = document.createElement('div');
-            footer.className = 'exam-footer';
-            footer.innerText = footerText.replace('PAGE_INDEX', pageIndex).replace('TOTAL_PAGES', totalPages);
-            pageDiv.appendChild(footer);
-
-            return { pageDiv, body };
-        }
-
-        function padNum(num) { return String(num).padStart(2, '0'); }
-
-        function createRowHtml(numContent, bodyContent) {
-            return `
-                <div class="layout-row">
-                    <div class="col-num">${numContent}</div>
-                    <div class="col-content">${bodyContent}</div>
-                </div>
-            `;
-        }
-
-        function renderExam() {
-            let raw = document.getElementById('codeInput').value;
-            const container = document.getElementById('examSheetContainer');
-            container.innerHTML = '';
-            
-            const measurementDiv = document.getElementById('measurementDiv');
-            measurementDiv.innerHTML = '';
-            measurementDiv.style.display = 'block';
-
-            const titleMatch = raw.match(/\[TITLE\]([\s\S]*?)\[\/TITLE\]/);
-            const title = titleMatch ? titleMatch[1].trim() : '시험 제목';
-            const subMatch = raw.match(/\[SUB\]([\s\S]*?)\[\/SUB\]/);
-            const sub = subMatch ? subMatch[1].trim() : '시험 정보';
-            const headerHtml = `<div class="h-title">${title}</div><div class="h-info">${sub}</div>`;
-            const footerTemplate = `PAGE_INDEX / TOTAL_PAGES`;
-            raw = raw.replace(titleMatch ? titleMatch[0] : '', '').replace(subMatch ? subMatch[0] : '', '');
-
-            const imgMapping = {};
-            const imgListMatch = raw.match(/\[IMAGE_LIST\]([\s\S]*?)\[\/IMAGE_LIST\]/);
-            if (imgListMatch) {
-                imgListMatch[1].trim().split('\n').forEach(line => {
-                    const parts = line.split(':');
-                    if (parts.length >= 2) imgMapping[parts[0].trim()] = parts.slice(1).join(':').trim();
-                });
-                raw = raw.replace(imgListMatch[0], '');
-            }
-
-            const questionBlocks = raw.split('[SEP]').map(q => q.trim()).filter(q => q.length > 0);
-            
-            let qCounter = 0;
-            let currentPageBody = null;
-            const pages = [];
-
-            const firstPage = createPage(1, 1, headerHtml, footerTemplate);
-            pages.push(firstPage);
-            currentPageBody = firstPage.body;
-
-            for (let qBlock of questionBlocks) {
-                let isQuestion = qBlock.includes('[Q]');
-                
-                let guideHtml = '';
-                let passageHtml = '';
-                let mainBodyHtml = qBlock;
-
-                // 1. 인라인 이미지
-                mainBodyHtml = mainBodyHtml.replace(/\[IMG\]([\s\S]*?)\[\/IMG\]/g, '<div class="inline-img-box"><img src="$1" alt="Image"></div>');
-
-                // 2. 밑줄 빈칸
-                mainBodyHtml = mainBodyHtml.replace(/__([\s\S]*?)__/g, '<span class="u-blank-inline">$1</span>');
-
-                // 3. 일반 태그
-                mainBodyHtml = mainBodyHtml.replace(/\[U\]([\s\S]*?)\[\/U\]/g, '<span class="u-text">$1</span>');
-                mainBodyHtml = mainBodyHtml.replace(/\[DOTUM\]([\s\S]*?)\[\/DOTUM\]/g, '<span class="font-dotum">$1</span>');
-                mainBodyHtml = mainBodyHtml.replace(/\[BATANG\]([\s\S]*?)\[\/BATANG\]/g, '<span class="font-batang">$1</span>');
-
-                // 4. [수정] 보기 박스 (BOGI) - 줄바꿈 처리 (\n -> <br>)
-                mainBodyHtml = mainBodyHtml.replace(/\[BOGI\]([\s\S]*?)\[\/BOGI\]/g, (match, content) => {
-                    // 핵심 수정: trim 후 \n을 <br>로 치환
-                    let formatted = content.trim().replace(/\n/g, '<br>');
-                    return `<div class="bogi-box"><span class="bogi-title">&lt; 보 기 &gt;</span>${formatted}</div>`;
-                });
-
-                // 5. GUIDE
-                if (mainBodyHtml.includes('[GUIDE]')) {
-                    mainBodyHtml = mainBodyHtml.replace(/\[GUIDE\]([\s\S]*?)\[\/GUIDE\]/g, (match, content) => {
-                        const rangeMatch = content.match(/\[\s*(\d+)\s*~\s*(\d+)\s*\](.*)/);
-                        let numPart = '';
-                        let textPart = content;
-                        if (rangeMatch) {
-                            numPart = `${padNum(rangeMatch[1])}~${padNum(rangeMatch[2])}`;
-                            textPart = rangeMatch[3].trim();
-                        }
-                        guideHtml = `
-                            <div class="guide-box">
-                                <span class="guide-num">${numPart}</span> ${textPart}
+            data.content.forEach((item) => {
+                if (item.type === "cover") {
+                    const cover = document.createElement('div');
+                    cover.className = `page-container cover-page ${data.coverStyle || 'style-classic'}`;
+                    cover.innerHTML = `
+                        <div class="cover-top">
+                            <div class="cover-badge">SPECIAL EDITION</div>
+                            <div class="cover-main-title">${data.mainTitle || '제목 없음'}</div>
+                            <div class="cover-sub-title">${data.subtitle || ''}</div>
+                        </div>
+                        <div class="cover-middle">
+                            <div class="info-grid">
+                                <div class="info-label">Scope</div>
+                                <div>${data.content.filter(i=>i.type==='page').map(i=>i.title).join(', ') || '전범위'}</div>
+                                <div class="info-label">Date</div>
+                                <div>${data.date || '2025-12-30'}</div>
+                                <div class="info-label">Author</div>
+                                <div>${data.author || 'BOCABLE'}</div>
                             </div>
-                        `;
-                        return '';
-                    });
+                        </div>
+                        <div class="cover-bottom">
+                            <div class="brand-logo">B O C A B L E</div>
+                            <div class="brand-tagline">Made by BOCABLE</div>
+                        </div>
+                    `;
+                    previewArea.appendChild(cover);
+                    return;
                 }
 
-                // 6. [수정] 지문 (T) - 줄바꿈 처리
-                if (mainBodyHtml.includes('[T]')) {
-                    mainBodyHtml = mainBodyHtml.replace(/\[T\]([\s\S]*?)\[\/T\]/g, (match, content) => {
-                        // 핵심 수정: \n을 <br>로 치환
-                        let formatted = content.trim().replace(/\n/g, '<br>');
-                        passageHtml += createRowHtml('', `<div class="common-box">${formatted}</div>`);
-                        return '';
-                    });
+                if (item.type === "page" || !currentPageContainer) {
+                    qCount = 0;
+                    currentPageContainer = document.createElement('div');
+                    currentPageContainer.className = 'page-container';
+                    const subTitle = item.type === "page" ? item.title : "Untitled";
+                    currentPageContainer.innerHTML = `
+                        <div class="exam-header">
+                            <div class="h-title">${data.mainTitle} <span style="font-size:14pt; opacity:0.6; font-weight:normal;">| ${subTitle}</span></div>
+                            <div class="h-info">성명: <b></b></div>
+                        </div>
+                        <div class="instr-tag">INSTRUCTIONS</div>
+                        <div class="instr-text">${instrMsg}</div>
+                        <div class="exam-body"></div>
+                        <div class="exam-footer">OFFICIAL PERFORMANCE ASSESSMENT &copy; BOCABLE 2025</div>
+                    `;
+                    previewArea.appendChild(currentPageContainer);
+                    currentBody = currentPageContainer.querySelector('.exam-body');
                 }
 
-                // 7. 표 (TABLE)
-                mainBodyHtml = mainBodyHtml.replace(/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g, function(match, content) {
-                    let rows = content.trim().split('\n');
-                    let tableHtml = '<table class="custom-table">';
-                    rows.forEach((row, idx) => {
-                        tableHtml += '<tr>';
-                        row.split('|').forEach(col => {
-                            let tag = idx === 0 ? 'th' : 'td';
-                            tableHtml += `<${tag}>${col.trim()}</${tag}>`;
-                        });
-                        tableHtml += '</tr>';
-                    });
-                    tableHtml += '</table>';
-                    return tableHtml;
-                });
-
-                mainBodyHtml = mainBodyHtml.replace(/\[LINE\]/g, '<div class="subjective-line"></div>');
-                mainBodyHtml = mainBodyHtml.replace(/_+/g, '<span class="blank-inline"></span>');
-                mainBodyHtml = mainBodyHtml.replace(/\[Q\]([\s\S]*?)\[\/Q\]/g, '<div class="q-text">$1</div>');
-                mainBodyHtml = mainBodyHtml.replace(/\[O\]([\s\S]*?)\[\/O\]/g, '<ul class="choices">$1</ul>');
-                mainBodyHtml = mainBodyHtml.replace(/\[I\]([\s\S]*?)\[\/I\]/g, '<li>$1</li>');
-
-                let questionRowHtml = '';
-                if(isQuestion) {
-                    qCounter++;
-                    let qNumStr = padNum(qCounter);
-                    let imgTag = '';
-                    if (imgMapping[qCounter]) {
-                        const src = imageAssets[imgMapping[qCounter]] || imgMapping[qCounter];
-                        if (src) imgTag = `<div class="q-image-area"><img src="${src}" alt="Q${qCounter}"></div>`;
-                    }
-                    questionRowHtml = createRowHtml(qNumStr, mainBodyHtml + imgTag);
-                } else {
-                    if (mainBodyHtml.trim().length > 0) {
-                        questionRowHtml = createRowHtml('', mainBodyHtml);
-                    }
+                if (item.en && item.ko) {
+                    qCount++;
+                    let displayQ = (mode === "en-ko") ? item.en : (mode === "ko-en") ? item.ko : (Math.random() > 0.5 ? item.en : item.ko);
+                    const block = document.createElement('div');
+                    block.className = 'q-block';
+                    block.innerHTML = `
+                        <div class="q-num">${qCount}.</div>
+                        <div class="q-content">
+                            <div class="q-text">${displayQ}</div>
+                            <div class="q-answer-line"></div>
+                        </div>
+                    `;
+                    currentBody.appendChild(block);
                 }
-
-                let finalBlockHtml = `
-                    <div class="question-block-wrapper">
-                        ${guideHtml}
-                        ${passageHtml}
-                        ${questionRowHtml}
-                    </div>
-                `;
-
-                measurementDiv.innerHTML = currentPageBody.innerHTML + finalBlockHtml;
-                if (measurementDiv.offsetHeight > PAGE_CONTENT_HEIGHT_PX) {
-                    const newPage = createPage(pages.length + 1, 1, headerHtml, footerTemplate);
-                    pages.push(newPage);
-                    currentPageBody = newPage.body;
-                    currentPageBody.innerHTML = finalBlockHtml;
-                    measurementDiv.innerHTML = finalBlockHtml;
-                } else {
-                    currentPageBody.innerHTML += finalBlockHtml;
-                }
-            }
-
-            pages.forEach((p, idx) => {
-                p.pageDiv.querySelector('.exam-footer').innerText = footerTemplate
-                    .replace('PAGE_INDEX', idx + 1)
-                    .replace('TOTAL_PAGES', pages.length);
-                container.appendChild(p.pageDiv);
             });
-            measurementDiv.style.display = 'none';
-        }
+        } catch (e) {}
+    }
 
-        window.onload = renderExam;
-    </script>
+    // Modal Control
+    function openInputModal() { document.getElementById('overlay').style.display = 'block'; document.getElementById('input-modal').style.display = 'block'; }
+    function openCoverModal() { 
+        syncCoverModal();
+        document.getElementById('overlay').style.display = 'block'; 
+        document.getElementById('cover-modal').style.display = 'block'; 
+    }
+    function closeModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+
+    function syncCoverModal() {
+        document.getElementById('cover-style-select').value = examData.coverStyle;
+        document.getElementById('cover-title-input').value = examData.mainTitle;
+        document.getElementById('cover-subtitle-input').value = examData.subtitle;
+        document.getElementById('cover-author-input').value = examData.author;
+    }
+
+    function applyCoverSettings() {
+        examData.coverStyle = document.getElementById('cover-style-select').value;
+        examData.mainTitle = document.getElementById('cover-title-input').value;
+        examData.subtitle = document.getElementById('cover-subtitle-input').value;
+        examData.author = document.getElementById('cover-author-input').value;
+        codeInput.value = JSON.stringify(examData, null, 4);
+        updatePreview();
+    }
+
+    function processInput() {
+        const text = document.getElementById('modal-textarea').value.trim();
+        if(!text) return;
+        const lines = text.split('\n');
+        const newContent = [];
+        lines.forEach(line => {
+            const t = line.trim();
+            if(!t) return;
+            if(t.toUpperCase() === '[COVER]') newContent.push({ type: "cover" });
+            else if(t.startsWith('[') && t.endsWith(']')) newContent.push({ type: "page", title: t.slice(1, -1) });
+            else {
+                const parts = t.includes(',') ? t.split(',') : t.split('=');
+                if(parts.length >= 2) newContent.push({ en: parts[0].trim(), ko: parts[1].trim() });
+            }
+        });
+        examData.content = newContent;
+        codeInput.value = JSON.stringify(examData, null, 4);
+        updatePreview();
+        closeModals();
+    }
+
+    function toggleEditor() {
+        editorPane.classList.toggle('collapsed');
+        const icon = document.getElementById('toggle-icon');
+        if (editorPane.classList.contains('collapsed')) {
+            toggleBtn.style.left = '0';
+            icon.innerText = 'chevron_right';
+        } else {
+            toggleBtn.style.left = '30%';
+            icon.innerText = 'chevron_left';
+        }
+    }
+
+    function shuffleWords() {
+        try {
+            let data = JSON.parse(codeInput.value);
+            let result = [];
+            let temp = [];
+            data.content.forEach(item => {
+                if(item.type === "page" || item.type === "cover") {
+                    if(temp.length > 0) result.push(...temp.sort(() => Math.random() - 0.5));
+                    result.push(item);
+                    temp = [];
+                } else temp.push(item);
+            });
+            if(temp.length > 0) result.push(...temp.sort(() => Math.random() - 0.5));
+            data.content = result;
+            codeInput.value = JSON.stringify(data, null, 4);
+            updatePreview();
+        } catch(e) {}
+    }
+</script>
+
 </body>
 </html>
