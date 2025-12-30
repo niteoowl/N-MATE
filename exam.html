@@ -16,14 +16,16 @@
             --table-border: #d1d5db;
         }
 
-        body { margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: #333; }
-        * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
+        /* Base UI Styles */
+        body { margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; background: #333; }
+        * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
         /* Toolbar */
         .toolbar { 
             background: #fff; padding: 0 20px; border-bottom: 1px solid #ccc; 
             display: flex; justify-content: space-between; align-items: center; 
             height: 60px; min-height: 60px; z-index: 100;
+            position: sticky; top: 0;
         }
         .toolbar-group { display: flex; gap: 8px; align-items: center; }
         .logo { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 1.1rem; margin-right: 15px; white-space: nowrap; }
@@ -35,115 +37,117 @@
         }
         button:hover { background: #f0f0f0; }
         .btn-primary { background-color: var(--accent-color); color: white; border: none; }
-        .btn-primary:hover { background-color: #0f2a50; }
-
+        
         /* Workspace Layout */
-        .workspace { display: flex; flex: 1; height: calc(100vh - 60px); position: relative; }
+        .workspace { display: flex; flex: 1; min-height: 0; position: relative; }
         
         /* Editor Pane */
         .editor-pane { 
             width: 30%; background: var(--editor-bg); display: flex; flex-direction: column; 
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+            transition: width 0.3s; position: sticky; top: 60px; height: calc(100vh - 60px); overflow: hidden;
         }
-        .editor-pane.collapsed { width: 0; }
-        
+        .editor-pane.collapsed { width: 0; min-width: 0; }
         textarea#codeInput { 
             flex: 1; width: 100%; background: transparent; color: #d4d4d4; border: none; 
-            padding: 20px; font-family: 'Consolas', 'Monaco', monospace; font-size: 13px; 
+            padding: 20px; font-family: 'Consolas', monospace; font-size: 13px; 
             line-height: 1.6; resize: none; outline: none; min-width: 300px;
         }
 
         /* Toggle Button */
         #toggle-btn {
-            position: absolute; left: 30%; top: 50%; transform: translate(-50%, -50%);
+            position: fixed; left: 30%; top: 50%; transform: translate(-50%, -50%);
             z-index: 150; width: 20px; height: 60px; background: #fff; border: 1px solid #ccc;
             border-radius: 0 6px 6px 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+            transition: left 0.3s; box-shadow: 2px 0 8px rgba(0,0,0,0.2);
         }
         .editor-pane.collapsed + #toggle-btn { left: 0; }
 
-        /* Preview Pane */
+        /* Preview Area */
         .preview-pane { 
             flex: 1; background: #525659; overflow-y: auto; padding: 30px; 
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* Paper Styles (A4) */
+        /* A4 Page Styling */
         .page-container {
-            width: 210mm; min-height: 297mm; background: white; padding: 15mm; margin-bottom: 25px; 
+            width: 210mm; min-height: 296mm; background: white; padding: 15mm; margin-bottom: 25px; 
             box-shadow: 0 0 20px rgba(0,0,0,0.4); font-family: var(--main-font); color: #111; 
             position: relative; display: flex; flex-direction: column;
-            page-break-after: always;
+            overflow: hidden;
         }
 
-        /* Normal Page Header */
+        /* Exam Header */
         .exam-header {
             width: 100%; border-top: 5px solid var(--accent-color); border-bottom: 1.5px solid #000;
-            padding: 15px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
+            padding: 10px 0 15px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
         }
-        .h-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 800; color: var(--accent-color); letter-spacing: -1.2px; }
+        .h-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 800; color: var(--accent-color); }
         .h-info { font-family: var(--sub-font); font-size: 10pt; text-align: right; line-height: 1.6; }
-        .h-info b { display: inline-block; width: 100px; background: #f2f2f2; text-align: center; margin-left: 5px; border: 1px solid #ccc; font-weight: 900; height: 24px; vertical-align: middle; }
+        .h-info b { display: inline-block; width: 100px; background: #f2f2f2; margin-left: 5px; border: 1px solid #ccc; height: 24px; vertical-align: middle; }
 
         .exam-body { column-count: 2; column-gap: 12mm; column-rule: 0.5px solid #eee; flex: 1; }
-
-        /* Question Elements */
-        .q-block { margin-bottom: 18px; break-inside: avoid; display: flex; flex-direction: row; align-items: flex-start; }
-        .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 11pt; width: 28px; flex-shrink: 0; margin-top: 2px; }
-        .q-content { flex: 1; display: flex; flex-direction: column; }
-        .q-text { font-family: var(--sub-font); font-weight: bold; font-size: 10.5pt; margin-bottom: 4px; word-break: keep-all; line-break: anywhere; line-height: 1.4; color: #222; }
+        .q-block { margin-bottom: 15px; break-inside: avoid; display: flex; }
+        .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); width: 28px; }
+        .q-text { font-family: var(--sub-font); font-weight: bold; font-size: 10.5pt; flex: 1; }
         .q-answer-line { border-bottom: 1px solid #000; height: 1.2em; width: 95%; margin-top: 2px; }
 
-        /* --- IMPROVED ANSWER KEY STYLES --- */
-        .answer-key-page { padding: 15mm; }
-        .answer-container { display: flex; flex-direction: column; gap: 20px; }
-        .answer-section { break-inside: avoid; margin-bottom: 10px; }
+        /* Answer Table Styling */
+        .answer-grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; }
+        .answer-section { margin-bottom: 20px; break-inside: avoid; }
         .answer-section-title { 
-            font-family: var(--sub-font); font-size: 12pt; font-weight: 900; 
-            color: #fff; background: var(--accent-color); padding: 4px 12px;
-            margin-bottom: 8px; display: inline-block; border-radius: 4px;
+            font-family: var(--sub-font); font-size: 11pt; font-weight: 900; color: #fff; 
+            background: var(--accent-color); padding: 3px 10px; margin-bottom: 5px; border-radius: 3px;
         }
-        
-        .answer-table { 
-            width: 100%; border-collapse: collapse; font-family: var(--sub-font); 
-            font-size: 9.5pt; table-layout: fixed; border: 1px solid var(--table-border);
-        }
-        .answer-table th, .answer-table td { 
-            border: 1px solid var(--table-border); padding: 6px 8px; text-align: left;
-        }
-        .answer-table th { background: #f3f4f6; font-weight: 800; color: #374151; width: 40px; text-align: center; }
-        .answer-table tr:nth-child(even) { background-color: #f9fafb; }
-        
-        /* 다단 레이아웃을 위한 그리드 */
-        .answer-grid-layout {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+        .answer-table { width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid var(--table-border); }
+        .answer-table th, .answer-table td { border: 1px solid var(--table-border); padding: 5px; text-align: left; }
+        .answer-table th { background: #f3f4f6; text-align: center; width: 30px; }
+
+        .instr-tag { display: inline-block; background: #000; color: #fff; font-size: 8pt; padding: 2px 8px; font-weight: bold; margin-bottom: 5px; }
+        .instr-text { font-size: 10pt; font-weight: bold; margin-bottom: 15px; }
+        .exam-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid #eee; text-align: center; font-size: 8pt; color: #aaa; }
+
+        /* --- CRITICAL PRINT STYLES --- */
+        @media print {
+            /* 1. Reset layout for print engine */
+            html, body { background: #fff !important; height: auto !important; min-height: 0 !important; overflow: visible !important; }
+            
+            /* 2. Hide all web UI elements */
+            .toolbar, .editor-pane, #toggle-btn, .modal-overlay, .modal { display: none !important; }
+            
+            /* 3. Re-flow container */
+            .workspace { display: block !important; }
+            .preview-pane { 
+                display: block !important; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                background: #fff !important; 
+                overflow: visible !important;
+                width: 100% !important;
+            }
+
+            /* 4. Fix page overlapping (The "Cabbage Leaf" issue) */
+            .page-container {
+                position: static !important; /* Remove fixed/absolute positioning */
+                margin: 0 !important; 
+                padding: 15mm !important;
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 210mm !important; 
+                height: 296mm !important; /* Force fixed height for pagination */
+                page-break-after: always !important; 
+                break-after: page !important;
+                display: flex !important;
+            }
+
+            /* 5. Ensure colors are printed */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
 
-        .instr-tag { display: inline-block; background: #000; color: #fff; font-family: var(--sub-font); font-size: 8pt; padding: 2px 8px; font-weight: bold; margin-bottom: 5px; }
-        .instr-text { font-family: var(--sub-font); font-size: 10pt; font-weight: bold; margin-bottom: 20px; color: #333; }
-        .exam-footer { margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; font-family: var(--sub-font); font-size: 8pt; color: #aaa; }
-
-        /* Modal Styles */
+        /* Modal */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 199; display: none; }
         .modal { 
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: #fff; width: 500px; padding: 30px; border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 200; display: none;
-            font-family: var(--sub-font);
-        }
-        .modal h3 { margin-top: 0; color: var(--accent-color); }
-        .modal-field { margin-bottom: 15px; }
-        .modal-field label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
-        .modal-field input, .modal-field select, .modal-field textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: var(--sub-font); }
-
-        @media print {
-            .toolbar, .editor-pane, #toggle-btn { display: none !important; }
-            body { background: #fff; overflow: visible; }
-            .preview-pane { display: block; padding: 0 !important; margin: 0 !important; background: #fff; width: 100%; }
-            .page-container { margin: 0; box-shadow: none; border: none; width: 210mm; }
-            @page { size: A4; margin: 0; }
+            background: #fff; width: 500px; padding: 30px; border-radius: 12px; z-index: 200; display: none;
         }
     </style>
 </head>
@@ -163,7 +167,7 @@
     <div class="toolbar-group">
         <div style="display: flex; align-items: center; gap: 5px; margin-right: 15px;">
             <input type="checkbox" id="include-answers" onchange="updatePreview()" checked>
-            <label for="include-answers" style="font-size: 12px; font-family: var(--sub-font); cursor: pointer;">답지 포함</label>
+            <label for="include-answers" style="font-size: 12px; cursor: pointer;">답지 포함</label>
         </div>
         <button class="btn-primary" onclick="window.print()"><span class="material-symbols-outlined">print</span>인쇄 / PDF</button>
     </div>
@@ -173,19 +177,16 @@
     <div class="editor-pane" id="editor-pane">
         <textarea id="codeInput" oninput="updatePreview()" spellcheck="false"></textarea>
     </div>
-
     <div id="toggle-btn" onclick="toggleEditor()">
         <span class="material-symbols-outlined" id="toggle-icon">chevron_left</span>
     </div>
-
     <div class="preview-pane" id="preview-area"></div>
 </div>
 
-<!-- Input Modal -->
 <div class="modal-overlay" id="overlay" onclick="closeModals()"></div>
 <div id="input-modal" class="modal">
-    <h3>단어 데이터 입력</h3>
-    <textarea id="modal-textarea" style="width:100%; height:250px; margin-bottom:15px;" placeholder="[DAY 01]&#10;apple,사과&#10;banana,바나나"></textarea>
+    <h3 style="margin-top:0;">단어 데이터 입력</h3>
+    <textarea id="modal-textarea" style="width:100%; height:250px; margin-bottom:15px; padding:10px;" placeholder="[DAY 01]&#10;apple,사과&#10;banana,바나나"></textarea>
     <div style="display: flex; gap: 10px;">
         <button class="btn-primary" style="flex: 1;" onclick="processInput()">생성</button>
         <button style="flex: 1;" onclick="closeModals()">취소</button>
@@ -213,7 +214,14 @@
             { type: "page", title: "DAY 02" },
             { en: "analyze", ko: "분석하다" },
             { en: "consistent", ko: "일관된" },
-            { en: "evaluate", ko: "평가하다" }
+            { en: "evaluate", ko: "평가하다" },
+            { en: "innovation", ko: "혁신" },
+            { type: "page", title: "DAY 03" },
+            { en: "generate", ko: "발생시키다" },
+            { en: "hypothesize", ko: "가설을 세우다" },
+            { type: "page", title: "DAY 04" },
+            { en: "justify", ko: "정당화하다" },
+            { en: "maximize", ko: "극대화하다" }
         ]
     };
 
@@ -231,8 +239,6 @@
             let currentPageContainer = null;
             let currentBody = null;
             let qCount = 0;
-            
-            // For Answer Key grouping
             const answerGroups = [];
             let currentGroup = null;
 
@@ -243,9 +249,8 @@
                     currentPageContainer.className = 'page-container';
                     const subTitle = item.type === "page" ? item.title : "Untitled";
                     
-                    let instrMsg = "제시된 영어 단어의 정확한 한국어 의미를 기입하십시오.";
-                    if (mode === "ko-en") instrMsg = "제시된 의미에 적합한 영어 단어를 기입하십시오.";
-                    if (mode === "mixed") instrMsg = "제시된 단어의 의미 또는 영어 철자를 기입하십시오.";
+                    let instrMsg = (mode === "en-ko") ? "제시된 영단어의 뜻을 적으시오." : 
+                                   (mode === "ko-en") ? "제시된 뜻에 맞는 영단어를 적으시오." : "알맞은 답을 적으시오.";
 
                     currentPageContainer.innerHTML = `
                         <div class="exam-header">
@@ -260,7 +265,6 @@
                     previewArea.appendChild(currentPageContainer);
                     currentBody = currentPageContainer.querySelector('.exam-body');
                     
-                    // Answer Key Grouping
                     currentGroup = { title: subTitle, items: [] };
                     answerGroups.push(currentGroup);
                 }
@@ -274,7 +278,7 @@
                     block.className = 'q-block';
                     block.innerHTML = `
                         <div class="q-num">${qCount}.</div>
-                        <div class="q-content">
+                        <div style="flex:1;">
                             <div class="q-text">${qText}</div>
                             <div class="q-answer-line"></div>
                         </div>
@@ -284,51 +288,38 @@
                 }
             });
 
-            // --- IMPROVED ANSWER KEY GENERATION ---
+            // --- ANSWER KEY (Max 3 sections per page) ---
             if (includeAnswers.checked && answerGroups.length > 0) {
-                const ansPage = document.createElement('div');
-                ansPage.className = 'page-container answer-key-page';
-                
-                let ansHTML = `
-                    <div class="exam-header">
-                        <div class="h-title">ANSWER KEY <span style="font-size:14pt; opacity:0.6; font-weight:normal;">| 정답표</span></div>
-                    </div>
-                    <div class="answer-container">
-                        <div class="answer-grid-layout">
-                `;
-                
-                answerGroups.forEach(group => {
-                    if(group.items.length === 0) return;
+                const validGroups = answerGroups.filter(g => g.items.length > 0);
+                for (let i = 0; i < validGroups.length; i += 3) {
+                    const ansPage = document.createElement('div');
+                    ansPage.className = 'page-container answer-key-page';
+                    const slice = validGroups.slice(i, i + 3);
                     
-                    ansHTML += `
-                        <div class="answer-section">
-                            <div class="answer-section-title">${group.title}</div>
-                            <table class="answer-table">
-                                ${group.items.map(i => `
-                                    <tr>
-                                        <th>${i.num}</th>
-                                        <td>${i.ans}</td>
-                                    </tr>
-                                `).join('')}
-                            </table>
+                    ansPage.innerHTML = `
+                        <div class="exam-header">
+                            <div class="h-title">ANSWER KEY <span style="font-size:14pt; opacity:0.6; font-weight:normal;">| ${Math.floor(i/3)+1}</span></div>
                         </div>
+                        <div class="answer-grid-layout">
+                            ${slice.map(g => `
+                                <div class="answer-section">
+                                    <div class="answer-section-title">${g.title}</div>
+                                    <table class="answer-table">
+                                        ${g.items.map(ans => `<tr><th>${ans.num}</th><td>${ans.ans}</td></tr>`).join('')}
+                                    </table>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="exam-footer">BOCABLE Vocabulary Answer Key</div>
                     `;
-                });
-                
-                ansHTML += `
-                        </div>
-                    </div>
-                    <div class="exam-footer" style="margin-top: auto;">이 페이지는 정답 확인용입니다. &copy; BOCABLE</div>
-                `;
-                ansPage.innerHTML = ansHTML;
-                previewArea.appendChild(ansPage);
+                    previewArea.appendChild(ansPage);
+                }
             }
-
-        } catch (e) { console.error(e); }
+        } catch (e) {}
     }
 
     function openInputModal() { document.getElementById('overlay').style.display = 'block'; document.getElementById('input-modal').style.display = 'block'; }
-    function closeModals() { document.getElementById('overlay').style.display = 'none'; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
+    function closeModals() { document.getElementById('overlay').style.display = 'none'; document.getElementById('input-modal').style.display = 'none'; }
 
     function processInput() {
         const text = document.getElementById('modal-textarea').value.trim();
@@ -352,26 +343,18 @@
 
     function toggleEditor() {
         editorPane.classList.toggle('collapsed');
-        const icon = document.getElementById('toggle-icon');
-        if (editorPane.classList.contains('collapsed')) {
-            toggleBtn.style.left = '0';
-            icon.innerText = 'chevron_right';
-        } else {
-            toggleBtn.style.left = '30%';
-            icon.innerText = 'chevron_left';
-        }
+        toggleBtn.style.left = editorPane.classList.contains('collapsed') ? '0' : '30%';
+        document.getElementById('toggle-icon').innerText = editorPane.classList.contains('collapsed') ? 'chevron_right' : 'chevron_left';
     }
 
     function shuffleWords() {
         try {
             let data = JSON.parse(codeInput.value);
-            let result = [];
-            let temp = [];
+            let result = [], temp = [];
             data.content.forEach(item => {
                 if(item.type === "page") {
                     if(temp.length > 0) result.push(...temp.sort(() => Math.random() - 0.5));
-                    result.push(item);
-                    temp = [];
+                    result.push(item); temp = [];
                 } else temp.push(item);
             });
             if(temp.length > 0) result.push(...temp.sort(() => Math.random() - 0.5));
