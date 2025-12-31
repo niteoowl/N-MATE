@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Website Builder with Gemini AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 마크다운 렌더링을 위한 라이브러리 추가 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        
+        /* Layout */
+        .preview-area { position: relative; height: 100%; background: #f1f5f9; border-radius: 12px; overflow: hidden; border: 2px solid #e2e8f0; }
+        #preview-iframe { width: 100%; height: 100%; border: none; background: white; }
+        
+        /* AI Chat Bubble with Markdown Support */
+        .ai-chat-bubble { border-radius: 16px 16px 16px 4px; background: #f3f4f6; padding: 16px; font-size: 0.95rem; line-height: 1.6; color: #1f2937; margin-top: 8px; border: 1px solid #e5e7eb; }
+        .ai-chat-bubble::before { content: "Gemini ✨"; display: block; font-weight: bold; font-size: 0.75rem; color: #4f46e5; margin-bottom: 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+        
+        /* Markdown Styling inside bubble */
+        .ai-chat-bubble h1, .ai-chat-bubble h2 { font-weight: bold; margin-top: 8px; margin-bottom: 4px; }
+        .ai-chat-bubble p { margin-bottom: 8px; white-space: pre-wrap; }
+        .ai-chat-bubble ul { list-style-type: disc; padding-left: 20px; margin-bottom: 8px; }
+        .ai-chat-bubble code { background: #e5e7eb; padding: 2px 4px; border-radius: 4px; font-size: 0.85em; }
+
+        /* Fullscreen styles */
+        #preview-container:fullscreen { width: 100vw; height: 100vh; background: white; border-radius: 0; padding: 0; }
+        #preview-container:fullscreen #preview-iframe { height: 100vh; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Mobile Responsive adjustments */
+        @media (max-width: 768px) {
+            .desktop-only { display: none; }
+            .mobile-full { width: 100% !important; height: auto !important; }
+            .main-content { flex-direction: column; overflow-y: auto; }
+            .preview-area { height: 400px; order: -1; margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+    <div class="flex h-screen flex-col">
+        <!-- Header -->
+        <header class="h-16 border-b bg-white flex items-center justify-between px-4 sm:px-6 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-600 rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
+                </div>
+                <h1 class="text-base sm:text-lg font-bold tracking-tight">AI Canvas Builder</h1>
+            </div>
+            <div class="flex gap-2">
+                <button id="copy-btn" class="desktop-only px-3 py-1.5 text-sm font-medium hover:bg-gray-100 rounded-md transition">코드 복사</button>
+                <button id="fullscreen-btn" class="px-4 py-1.5 text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 rounded-md shadow-sm transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+                    <span class="hidden sm:inline">전체화면 미리보기</span><span class="sm:hidden">전체화면</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-1 overflow-hidden main-content">
+            <!-- Sidebar: Input & AI Feedback -->
+            <aside class="w-full md:w-96 border-r bg-white p-4 sm:p-5 flex flex-col gap-5 overflow-y-auto shrink-0">
+                <div class="flex flex-col gap-3">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">채팅 및 프롬프트</label>
+                    <div class="relative">
+                        <textarea id="prompt" rows="4" class="w-full p-4 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm bg-gray-50 resize-none shadow-inner" placeholder="예: 깔끔한 화이트 톤의 카페 메뉴판 사이트를 만들어줘."></textarea>
+                        <button id="generate-btn" class="absolute bottom-3 right-3 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg active:scale-95 disabled:opacity-50">
+                            <div id="loader" class="loading-spinner hidden"></div>
+                            <svg id="sparkle-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Response Message (Gemini's explanation) -->
+                <div id="ai-response-container" class="flex flex-col gap-2">
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider">Gemini 설명</label>
+                    <div id="ai-explanation" class="ai-chat-bubble">
+                        사이트를 생성하면 상세한 설명이 여기에 마크다운 형식으로 나타납니다.
+                    </div>
+                </div>
+
+                <div class="mt-auto p-4 bg-indigo-50 rounded-xl border border-indigo-100 desktop-only">
+                    <p class="text-[11px] text-indigo-700 leading-relaxed font-medium">
+                        ✨ **Canvas Mode Active**<br>
+                        AI가 코드를 작성하고 설명을 제공합니다. 모바일에서는 미리보기와 채팅 위주로 구성됩니다.
+                    </p>
+                </div>
+            </aside>
+
+            <!-- Main Content: Preview -->
+            <main class="flex-1 p-4 sm:p-6 overflow-hidden flex flex-col">
+                <div id="preview-container" class="preview-area shadow-2xl bg-white flex-1">
+                    <div class="h-10 border-b bg-gray-50 flex items-center px-4 justify-between">
+                        <div class="flex gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-red-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-yellow-400"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-green-400"></div>
+                        </div>
+                        <div class="text-[10px] font-mono text-gray-400 truncate max-w-[150px]">preview_output.html</div>
+                        <div class="w-10"></div>
+                    </div>
+                    <iframe id="preview-iframe" title="Preview Viewport"></iframe>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-gray-900 text-white text-xs font-medium shadow-xl opacity-0 transition-all duration-300 pointer-events-none transform translate-y-4 z-50">
+        Message
+    </div>
+
+    <script>
+        const apiKey = ""; // Runtime automatically provides this
+        
+        const generateBtn = document.getElementById('generate-btn');
+        const promptInput = document.getElementById('prompt');
+        const loader = document.getElementById('loader');
+        const sparkleIcon = document.getElementById('sparkle-icon');
+        const previewIframe = document.getElementById('preview-iframe');
+        const previewContainer = document.getElementById('preview-container');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const aiExplanation = document.getElementById('ai-explanation');
+        const aiResponseContainer = document.getElementById('ai-response-container');
+        const toast = document.getElementById('toast');
+
+        let currentGeneratedCode = "";
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+                toast.classList.remove('opacity-100', 'translate-y-0');
+            }, 3000);
+        }
+
+        async function fetchGemini(prompt, systemPrompt) {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                html: { type: "STRING" },
+                                explanation: { type: "STRING" }
+                            },
+                            required: ["html", "explanation"]
+                        }
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('API request failed');
+            const data = await response.json();
+            return JSON.parse(data.candidates[0].content.parts[0].text);
+        }
+
+        async function generateSite() {
+            const promptValue = promptInput.value.trim();
+            if (!promptValue) {
+                showToast("요청 사항을 입력해주세요.");
+                return;
+            }
+
+            generateBtn.disabled = true;
+            loader.classList.remove('hidden');
+            sparkleIcon.classList.add('hidden');
+            
+            const systemPrompt = `You are a pro developer. Create a high-quality HTML site with Tailwind.
+            IMPORTANT: The 'explanation' field should be written in Korean using Markdown (bold, lists, etc.) to explain the features. 
+            Make it look like a helpful AI chat response.`;
+
+            let retryCount = 0;
+            const maxRetries = 5;
+
+            const makeRequest = async () => {
+                try {
+                    const result = await fetchGemini(promptValue, systemPrompt);
+                    
+                    // Display Markdown Explanation
+                    aiExplanation.innerHTML = marked.parse(result.explanation);
+                    
+                    // Render HTML
+                    currentGeneratedCode = result.html;
+                    const blob = new Blob([currentGeneratedCode], { type: 'text/html' });
+                    previewIframe.src = URL.createObjectURL(blob);
+                    
+                    showToast("제작 완료!");
+                } catch (error) {
+                    if (retryCount < maxRetries) {
+                        retryCount++;
+                        await new Promise(r => setTimeout(r, Math.pow(2, retryCount) * 1000));
+                        return makeRequest();
+                    }
+                    showToast("오류가 발생했습니다.");
+                } finally {
+                    generateBtn.disabled = false;
+                    loader.classList.add('hidden');
+                    sparkleIcon.classList.remove('hidden');
+                }
+            };
+
+            makeRequest();
+        }
+
+        // Fullscreen Logic
+        fullscreenBtn.addEventListener('click', () => {
+            if (!currentGeneratedCode) {
+                showToast("생성된 사이트가 없습니다.");
+                return;
+            }
+            if (previewContainer.requestFullscreen) {
+                previewContainer.requestFullscreen();
+            } else if (previewContainer.webkitRequestFullscreen) {
+                previewContainer.webkitRequestFullscreen();
+            }
+        });
+
+        generateBtn.addEventListener('click', generateSite);
+
+        copyBtn.addEventListener('click', () => {
+            if (!currentGeneratedCode) return;
+            const el = document.createElement('textarea');
+            el.value = currentGeneratedCode;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("코드가 복사되었습니다!");
+        });
+    </script>
+</body>
+</html>
