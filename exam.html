@@ -3,41 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOCABLE Exam Editor - 여백 최소화 버전</title>
+    <title>MATH-ABLE Exam Editor Pro - 고속 PDF 모드 지원</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --editor-bg: #1e1e1e;
-            --accent-color: #1a3c6e;
+            --accent-color: #2c3e50;
             --main-font: 'KoPub Batang', serif;
             --sub-font: 'KoPub Dotum', sans-serif;
-            --table-border: #d1d5db;
+            --math-font: 'Times New Roman', serif;
+            --grid-color: #e0e0e0;
         }
-
-        /* 기본 레이아웃 */
         body { margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; background: #333; overflow: hidden; }
         * { box-sizing: border-box; }
-
-        /* 툴바 */
+        
         .toolbar { 
-            background: #fff; padding: 0 20px; border-bottom: 1px solid #ccc; 
+            background: #fff; padding: 0 15px; border-bottom: 1px solid #ccc; 
             display: flex; justify-content: space-between; align-items: center; 
-            height: 60px; z-index: 100;
+            height: 70px; z-index: 100;
         }
         .toolbar-group { display: flex; gap: 8px; align-items: center; }
-        .logo { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 1.1rem; margin-right: 15px; }
+        .logo { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 1.1rem; margin-right: 10px; }
 
-        button, select { 
-            padding: 8px 12px; border: 1px solid #ccc; background: #fff; border-radius: 4px; 
-            cursor: pointer; font-size: 13px; font-weight: bold; display: flex; align-items: center; gap: 6px; 
+        .control-item { display: flex; flex-direction: column; gap: 2px; }
+        .control-label { font-size: 10px; color: #666; font-weight: bold; margin-left: 2px; }
+
+        button, select, input { 
+            padding: 6px 10px; border: 1px solid #ccc; background: #fff; border-radius: 4px; 
+            cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 4px; 
+            height: 32px;
         }
-        .btn-primary { background-color: var(--accent-color); color: white; border: none; }
+        input[type="number"] { width: 60px; cursor: text; }
+        .btn-primary { background-color: var(--accent-color); color: white; border: none; padding: 0 15px; }
+        .btn-success { background-color: #2e7d32; color: white; border: none; padding: 0 15px; }
+        .btn-fast { background-color: #f39c12; color: white; border: none; padding: 0 15px; }
         
-        /* 작업 영역 */
-        .workspace { display: flex; flex: 1; height: calc(100vh - 60px); overflow: hidden; position: relative; }
+        .workspace { display: flex; flex: 1; height: calc(100vh - 70px); overflow: hidden; position: relative; }
         
-        /* 에디터 패널 */
         .editor-pane { 
             width: 350px; background: var(--editor-bg); display: flex; flex-direction: column; 
             transition: transform 0.3s ease; border-right: 1px solid #000;
@@ -45,11 +51,10 @@
         .editor-pane.collapsed { transform: translateX(-350px); width: 0; }
         textarea#codeInput { 
             flex: 1; width: 100%; background: transparent; color: #d4d4d4; border: none; 
-            padding: 20px; font-family: 'Consolas', monospace; font-size: 13px; 
+            padding: 20px; font-family: 'Consolas', monospace; font-size: 12px; 
             line-height: 1.6; resize: none; outline: none;
         }
 
-        /* 토글 버튼 */
         #toggle-btn {
             position: absolute; left: 350px; top: 50%; transform: translateY(-50%);
             z-index: 150; width: 24px; height: 60px; background: #fff; border: 1px solid #ccc;
@@ -58,112 +63,120 @@
         }
         .editor-pane.collapsed + #toggle-btn { left: 0; }
 
-        /* 미리보기 영역 (회색 배경) */
         .preview-pane { 
             flex: 1; background: #525659; overflow-y: auto; padding: 20px 0; 
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* A4 Wrapper */
-        .page-wrapper {
-            width: 210mm;
-            margin-bottom: 20px;
-            flex-shrink: 0;
-            display: flex;
-            justify-content: center;
-            background: transparent;
+        #loading-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;
+            flex-direction: column; color: white;
         }
 
-        /* A4 Page */
+        .page-wrapper { width: 210mm; margin-bottom: 20px; flex-shrink: 0; display: flex; justify-content: center; }
         .page-container {
-            width: 210mm; 
-            height: 297mm; 
-            background: white; 
-            padding: 10mm 10mm 10mm 10mm; 
+            width: 210mm; height: 297mm; background: white; 
+            padding: 15mm 15mm 10mm 15mm;
             box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
             font-family: var(--main-font); color: #111; 
-            position: relative; 
-            display: flex; 
-            flex-direction: column;
-            overflow: hidden;
-            transform-origin: top center;
+            position: relative; display: flex; flex-direction: column;
+            overflow: hidden; transform-origin: top center;
         }
 
-        /* 시험지 헤더 */
         .exam-header {
             width: 100%; border-top: 3px solid var(--accent-color); border-bottom: 1.2px solid #000;
             padding: 8px 0; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end;
         }
-        .h-title { font-family: var(--sub-font); font-size: 20pt; font-weight: 800; color: var(--accent-color); }
+        .h-title { font-family: var(--sub-font); font-size: 18pt; font-weight: 800; color: var(--accent-color); }
         .h-info { font-family: var(--sub-font); font-size: 10.5pt; }
-        .h-info b { display: inline-block; width: 90px; border-bottom: 1px solid #000; margin-left: 5px; height: 1.2em; vertical-align: bottom; }
+        .h-info b { display: inline-block; width: 80px; border-bottom: 1px solid #000; margin-left: 5px; height: 1.2em; }
 
-        /* 시험지 바디 (2단 구성) */
-        .exam-body { column-count: 2; column-gap: 10mm; column-rule: 0.2px solid #eee; flex: 1; overflow: hidden; }
-        .q-block { margin-bottom: 12px; break-inside: avoid; display: flex; align-items: flex-start; }
-        .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); width: 28px; font-size: 10.5pt; }
-        .q-text { font-family: var(--sub-font); font-weight: bold; font-size: 10.5pt; flex: 1; line-height: 1.3; }
-        .q-answer-line { border-bottom: 0.5px solid #000; height: 1.3em; width: 92%; margin-top: 3px; }
+        .exam-body { column-count: 2; column-gap: 15mm; column-rule: 0.2px solid #eee; flex: 1; }
+        .q-block { margin-bottom: 30px; break-inside: avoid; position: relative; }
+        .q-num { font-family: var(--sub-font); font-weight: 900; color: var(--accent-color); font-size: 12pt; margin-bottom: 10px; }
+        
+        .vertical-division-wrapper { display: flex; flex-direction: column; margin-left: 5px; margin-top: 15px; }
+        .division-main-row { display: flex; align-items: center; font-family: var(--math-font); font-size: 24pt; line-height: 1; position: relative; }
+        .divisor { padding-right: 8px; text-align: right; min-width: 45px; }
+        .dividend-box { position: relative; padding: 8px 15px 5px 15px; letter-spacing: 5px; }
+        .division-svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+        .calc-grid {
+            margin-top: -5px; margin-left: 53px; width: 140px; height: 180px;
+            background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px), linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            background-size: 25px 30px; border-left: 1.5px solid #ccc; opacity: 0.6; position: relative;
+        }
 
-        /* 답지 스타일 */
-        .answer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .ans-table { width: 100%; border-collapse: collapse; font-size: 9pt; border: 1px solid var(--table-border); }
-        .ans-table th, .ans-table td { border: 1px solid var(--table-border); padding: 5px; }
-        .ans-table th { background: #f8f9fa; width: 30px; text-align: center; font-weight: bold; }
+        .math-horizontal { font-size: 22pt; font-family: var(--math-font); margin: 30px 0; letter-spacing: 2px; display: flex; align-items: center; }
+        .answer-area { margin-top: 20px; padding-top: 10px; border-top: 1px solid #f0f0f0; font-size: 10pt; color: #444; display: flex; gap: 15px; }
+        .ans-slot { border-bottom: 1px solid #999; width: 60px; display: inline-block; text-align: center; height: 1.2em; }
 
-        .instr-tag { display: inline-block; background: #000; color: #fff; font-size: 7.5pt; padding: 1px 6px; font-weight: bold; margin-bottom: 6px; }
-        .instr-text { font-size: 10pt; font-weight: bold; margin-bottom: 15px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
-        .exam-footer { margin-top: auto; padding-top: 8px; text-align: center; font-size: 8pt; color: #bbb; font-family: var(--sub-font); }
+        .instr-tag { display: inline-block; background: #000; color: #fff; font-size: 8pt; padding: 2px 8px; font-weight: bold; margin-bottom: 6px; }
+        .instr-text { font-size: 11pt; font-weight: bold; margin-bottom: 20px; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
+        .exam-footer { margin-top: auto; padding-top: 8px; text-align: center; font-size: 8pt; color: #bbb; }
 
-        /* --- 출력 최적화 --- */
+        .answer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        .ans-box { border: 1px solid #eee; padding: 8px; text-align: center; font-size: 10pt; border-radius: 4px; }
+        .ans-num { font-weight: bold; color: var(--accent-color); margin-right: 5px; }
+
         @media print {
             @page { size: A4; margin: 0 !important; }
             body { background: white !important; overflow: visible !important; }
-            .toolbar, .editor-pane, #toggle-btn { display: none !important; }
+            .toolbar, .editor-pane, #toggle-btn, #loading-overlay { display: none !important; }
             .workspace { display: block !important; height: auto !important; }
-            .preview-pane { display: block !important; padding: 0 !important; background: white !important; overflow: visible !important; width: 100% !important; }
-            .page-wrapper { margin: 0 !important; padding: 0 !important; width: 210mm !important; height: 297mm !important; page-break-after: always !important; }
-            .page-container { 
-                transform: none !important; 
-                box-shadow: none !important; 
-                border: none !important; 
-                width: 210mm !important; 
-                height: 297mm !important; 
-                margin: 0 !important;
-                padding: 10mm !important;
-            }
+            .preview-pane { display: block !important; padding: 0 !important; background: white !important; width: 100% !important; }
+            .page-wrapper { margin: 0 !important; width: 210mm !important; height: 297mm !important; page-break-after: always !important; display: block !important; }
+            .page-container { transform: none !important; box-shadow: none !important; width: 210mm !important; height: 297mm !important; margin: 0 !important; padding: 15mm !important; }
         }
-
-        /* 모달 */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: none; }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; width: 450px; padding: 25px; border-radius: 8px; z-index: 1001; display: none; }
     </style>
 </head>
 <body>
 
+<div id="loading-overlay">
+    <div id="loading-title" style="font-size: 24px; margin-bottom: 10px; font-weight: bold;">PDF 생성 중</div>
+    <div id="loading-progress" style="font-size: 16px; color: #aaa;">진행률: 0%</div>
+    <div style="margin-top: 15px; font-size: 12px; color: #888;">대량 페이지 작업 시 브라우저가 잠시 멈출 수 있습니다.</div>
+</div>
+
 <div class="toolbar">
     <div class="toolbar-group">
-        <div class="logo">BOCABLE</div>
-        <button onclick="openModal()"><span class="material-symbols-outlined">edit_note</span>단어 입력</button>
-        <select id="mode-select" onchange="updatePreview()">
-            <option value="en-ko">영문 → 국문</option>
-            <option value="ko-en">국문 → 영문</option>
-        </select>
-        <button onclick="shuffle()"><span class="material-symbols-outlined">shuffle</span>순서 섞기</button>
+        <div class="logo">MATH-ABLE Pro</div>
+        <div class="control-item">
+            <span class="control-label">문제 수</span>
+            <input type="number" id="count-input" value="12" min="1" max="1000">
+        </div>
+        <div class="control-item">
+            <span class="control-label">문제 유형</span>
+            <select id="type-select">
+                <option value="vertical">세로셈 (격자 포함)</option>
+                <option value="mix">유형 섞기</option>
+                <option value="horizontal">가로셈</option>
+            </select>
+        </div>
+        <button class="btn-primary" id="gen-btn" onclick="generateProblems()">
+            <span class="material-symbols-outlined">refresh</span>새 문제 생성
+        </button>
     </div>
     <div class="toolbar-group">
-        <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+        <label style="font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; margin-right: 10px;">
             <input type="checkbox" id="check-ans" checked onchange="updatePreview()"> 답안지 포함
         </label>
+        <button class="btn-fast" onclick="downloadPDFSequentially(true)">
+            <span class="material-symbols-outlined">bolt</span> 고속 저장 (저화질)
+        </button>
+        <button class="btn-success" onclick="downloadPDFSequentially(false)">
+            <span class="material-symbols-outlined">download</span> 정밀 저장 (고화질)
+        </button>
         <button class="btn-primary" onclick="window.print()">
-            <span class="material-symbols-outlined">picture_as_pdf</span> PDF 저장 / 인쇄
+            <span class="material-symbols-outlined">print</span> 인쇄 / 설정 저장
         </button>
     </div>
 </div>
 
 <div class="workspace">
     <div class="editor-pane" id="editor">
-        <textarea id="codeInput" oninput="updatePreview()" spellcheck="false"></textarea>
+        <div style="padding: 10px; color: #888; font-size: 11px; border-bottom: 1px solid #333;">EXAM DATA EDITOR</div>
+        <textarea id="codeInput" oninput="debouncedPreview()" spellcheck="false"></textarea>
     </div>
     <div id="toggle-btn" onclick="toggleEditor()">
         <span class="material-symbols-outlined" id="toggle-icon">chevron_left</span>
@@ -171,199 +184,201 @@
     <div class="preview-pane" id="preview-area"></div>
 </div>
 
-<div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
-<div class="modal" id="input-modal">
-    <h3 style="margin: 0 0 15px 0;">단어 데이터 추가</h3>
-    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">단어,뜻 (첫 번째 콤마 기준으로 구분됩니다)</p>
-    <textarea id="modal-input" style="width:100%; height:200px; padding:10px; margin-bottom:15px;" placeholder="[DAY 01]&#10;aware,알고 있는, 의식하는&#10;attribute,특성, 속성"></textarea>
-    <div style="display:flex; gap:10px;">
-        <button class="btn-primary" style="flex:1" onclick="applyInput()">확인</button>
-        <button style="flex:1" onclick="closeModal()">취소</button>
-    </div>
-</div>
-
 <script>
     const codeInput = document.getElementById('codeInput');
     const previewArea = document.getElementById('preview-area');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const loadingTitle = document.getElementById('loading-title');
+    const loadingProgress = document.getElementById('loading-progress');
+    const genBtn = document.getElementById('gen-btn');
     
     let examData = {
-        title: "WEEKLY VOCABULARY TEST",
-        content: [
-            { type: "page", title: "DAY 11-12" },
-            { en: "aware", ko: "알고 있는, 의식[인식]하는" },
-            { en: "vulnerable", ko: "취약한, 상처받기 쉬운" },
-            { en: "subsequent", ko: "그 다음의, 차후의" }
-        ]
+        title: "초등 나눗셈 정복 실전",
+        subtitle: "세 자릿수 ÷ 두 자릿수",
+        problems: []
     };
 
     window.onload = () => {
-        codeInput.value = JSON.stringify(examData, null, 4);
+        const saved = localStorage.getItem('math_able_data');
+        if(saved) examData = JSON.parse(saved);
+        else generateProblems();
+        
+        codeInput.value = JSON.stringify(examData, null, 2);
         updatePreview();
         window.addEventListener('resize', autoScale);
     };
 
+    function generateProblems() {
+        const count = parseInt(document.getElementById('count-input').value) || 12;
+        const typeMode = document.getElementById('type-select').value;
+        const newProblems = [];
+        for(let i=0; i<count; i++) {
+            let b = Math.floor(Math.random() * 89) + 10; 
+            let a = Math.floor(Math.random() * 899) + 100;
+            if (a < b * 2) a += b * 5; 
+            let type = typeMode === 'mix' ? (Math.random() > 0.7 ? 'horizontal' : 'vertical') : typeMode;
+            newProblems.push({ a, b, type });
+        }
+        examData.problems = newProblems;
+        codeInput.value = JSON.stringify(examData, null, 2);
+        updatePreview();
+    }
+
+    let previewTimer;
+    function debouncedPreview() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(updatePreview, 500);
+    }
+
     function autoScale() {
         const pane = document.querySelector('.preview-pane');
-        const wrappers = document.querySelectorAll('.page-wrapper');
         const pages = document.querySelectorAll('.page-container');
+        const wrappers = document.querySelectorAll('.page-wrapper');
         if(!pages.length) return;
-
-        const availableWidth = pane.clientWidth - 40;
-        const scale = Math.min(1, availableWidth / 794); 
-
+        const scale = Math.min(1, (pane.clientWidth - 40) / 794); 
         pages.forEach((page, i) => {
             page.style.transform = `scale(${scale})`;
-            wrappers[i].style.height = (1123 * scale) + 'px';
+            if (wrappers[i]) wrappers[i].style.height = (1123 * scale) + 'px';
         });
+    }
+
+    function getVerticalDivisionHtml(divisor, dividend) {
+        return `
+        <div class="vertical-division-wrapper">
+            <div class="division-main-row">
+                <div class="divisor">${divisor}</div>
+                <div class="dividend-box">
+                    <svg class="division-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <path d="M 12 92 Q -5 50 12 8 L 100 8" fill="none" stroke="black" stroke-width="2.5" />
+                    </svg>
+                    ${dividend}
+                </div>
+            </div>
+            <div class="calc-grid"></div>
+        </div>`;
     }
 
     function updatePreview() {
         try {
             const data = JSON.parse(codeInput.value);
-            const mode = document.getElementById('mode-select').value;
+            localStorage.setItem('math_able_data', codeInput.value);
             previewArea.innerHTML = '';
             
-            let currentPage = null;
-            let currentBody = null;
-            let count = 0;
-            const answers = [];
+            const problemsPerPage = 8;
+            for (let i = 0; i < data.problems.length; i += problemsPerPage) {
+                const chunk = data.problems.slice(i, i + problemsPerPage);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'page-wrapper';
+                const page = document.createElement('div');
+                page.className = 'page-container';
+                
+                let bodyHtml = '';
+                chunk.forEach((prob, idx) => {
+                    const qIdx = i + idx + 1;
+                    let content = prob.type === 'vertical' ? getVerticalDivisionHtml(prob.b, prob.a) : `<div class="math-horizontal">${prob.a} ÷ ${prob.b} = </div>`;
+                    bodyHtml += `
+                        <div class="q-block">
+                            <div class="q-num">${qIdx}.</div>
+                            <div class="math-container">${content}</div>
+                            <div class="answer-area"><span>몫: <span class="ans-slot"></span></span><span>나머지: <span class="ans-slot"></span></span></div>
+                        </div>`;
+                });
 
-            data.content.forEach(item => {
-                if (item.type === "page" || !currentPage) {
-                    count = 0;
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'page-wrapper';
-                    currentPage = document.createElement('div');
-                    currentPage.className = 'page-container';
-                    
-                    const pTitle = item.type === "page" ? item.title : "GENERAL";
-                    currentPage.innerHTML = `
-                        <div class="exam-header">
-                            <div class="h-title">${data.title} <span style="font-size:14pt; font-weight:400; color:#888;">| ${pTitle}</span></div>
-                            <div class="h-info">이름: <b></b></div>
-                        </div>
-                        <div class="instr-tag">INSTRUCTIONS</div>
-                        <div class="instr-text">${mode === 'en-ko' ? '다음 영단어의 뜻을 쓰시오.' : '다음 뜻에 알맞은 영단어를 쓰시오.'}</div>
-                        <div class="exam-body"></div>
-                        <div class="exam-footer">Designed by BOCABLE Standard Editor</div>
-                    `;
-                    wrapper.appendChild(currentPage);
-                    previewArea.appendChild(wrapper);
-                    currentBody = currentPage.querySelector('.exam-body');
-                    answers.push({ title: pTitle, list: [] });
-                }
-
-                if (item.en && item.ko) {
-                    count++;
-                    const q = mode === 'en-ko' ? item.en : item.ko;
-                    const a = mode === 'en-ko' ? item.ko : item.en;
-                    
-                    const qDiv = document.createElement('div');
-                    qDiv.className = 'q-block';
-                    qDiv.innerHTML = `
-                        <div class="q-num">${count}.</div>
-                        <div style="flex:1">
-                            <div class="q-text">${q}</div>
-                            <div class="q-answer-line"></div>
-                        </div>
-                    `;
-                    currentBody.appendChild(qDiv);
-                    answers[answers.length - 1].list.push({ n: count, a: a });
-                }
-            });
+                page.innerHTML = `
+                    <div class="exam-header"><div class="h-title">${data.title}</div><div class="h-info">이름: <b></b></div></div>
+                    <div class="instr-tag">계산 문제</div><div class="instr-text">정확하게 계산하시오.</div>
+                    <div class="exam-body">${bodyHtml}</div>
+                    <div class="exam-footer">MATH-ABLE Education System</div>`;
+                wrapper.appendChild(page);
+                previewArea.appendChild(wrapper);
+            }
 
             if (document.getElementById('check-ans').checked) {
                 const ansWrapper = document.createElement('div');
                 ansWrapper.className = 'page-wrapper';
                 const ansPage = document.createElement('div');
                 ansPage.className = 'page-container';
-                ansPage.innerHTML = `<div class="exam-header"><div class="h-title">정답지 (Answer Key)</div></div><div class="answer-grid"></div>`;
-                
-                const grid = ansPage.querySelector('.answer-grid');
-                answers.forEach(group => {
-                    const sec = document.createElement('div');
-                    sec.innerHTML = `<h4 style="margin:0 0 8px 0; border-bottom:1.5px solid #333; padding-bottom:3px; font-size:11pt;">${group.title}</h4>`;
-                    const table = document.createElement('table');
-                    table.className = 'ans-table';
-                    group.list.forEach(row => {
-                        table.innerHTML += `<tr><th>${row.n}</th><td>${row.a}</td></tr>`;
-                    });
-                    sec.appendChild(table);
-                    grid.appendChild(sec);
-                });
-                
+                let ansGridHtml = data.problems.map((prob, i) => `
+                    <div class="ans-box">
+                        <span class="ans-num">${i + 1}.</span><b>${Math.floor(prob.a / prob.b)}</b>
+                        ${prob.a % prob.b > 0 ? `<small style="color:red">…${prob.a % prob.b}</small>` : ''}
+                    </div>`).join('');
+                ansPage.innerHTML = `<div class="exam-header"><div class="h-title">정답지</div></div><div class="answer-grid">${ansGridHtml}</div>`;
                 ansWrapper.appendChild(ansPage);
                 previewArea.appendChild(ansWrapper);
             }
-
             setTimeout(autoScale, 50);
         } catch(e) {}
     }
 
+    /**
+     * PDF 순차 생성 함수 (고속 모드 옵션 추가)
+     */
+    async function downloadPDFSequentially(isFastMode = false) {
+        const pages = document.querySelectorAll('.page-container');
+        if (!pages.length) return;
+
+        loadingOverlay.style.display = 'flex';
+        loadingTitle.innerText = isFastMode ? "고속 PDF 생성 중 (저화질)" : "정밀 PDF 생성 중 (고화질)";
+        loadingProgress.innerText = `초기화 중...`;
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+
+        // 고속 모드 설정값
+        const canvasScale = isFastMode ? 1.2 : 2.0; // 스케일 대폭 축소
+        const imageQuality = isFastMode ? 0.75 : 0.95; // 품질 소폭 축소
+
+        for (let i = 0; i < pages.length; i++) {
+            loadingProgress.innerText = `페이지 처리 중: ${i + 1} / ${pages.length} (${Math.round(((i+1)/pages.length)*100)}%)`;
+            
+            const pageEl = pages[i];
+            const originalTransform = pageEl.style.transform;
+            pageEl.style.transform = 'none'; // 캡처를 위해 실제 크기로
+            
+            try {
+                const canvas = await html2canvas(pageEl, {
+                    scale: canvasScale, 
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    imageTimeout: 0
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', imageQuality);
+                
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+                
+                // 메모리 해제 지원 (Canvas 참조 제거)
+                canvas.width = 0;
+                canvas.height = 0;
+
+            } catch (err) {
+                console.error(`Page ${i+1} render error:`, err);
+            } finally {
+                pageEl.style.transform = originalTransform;
+            }
+
+            // 고속 모드일 때는 대기 시간을 더 줄임
+            if (i % 10 === 0) await new Promise(resolve => setTimeout(resolve, isFastMode ? 1 : 10));
+        }
+
+        loadingProgress.innerText = `파일 저장 중...`;
+        const fileName = isFastMode ? 'MATH_FAST_EXAM.pdf' : 'MATH_HQ_EXAM.pdf';
+        pdf.save(fileName);
+        
+        loadingOverlay.style.display = 'none';
+    }
+
     function toggleEditor() {
         const ed = document.getElementById('editor');
-        const btn = document.getElementById('toggle-btn');
-        const icon = document.getElementById('toggle-icon');
         ed.classList.toggle('collapsed');
-        btn.style.left = ed.classList.contains('collapsed') ? '0' : '350px';
-        icon.innerText = ed.classList.contains('collapsed') ? 'chevron_right' : 'chevron_left';
+        document.getElementById('toggle-btn').style.left = ed.classList.contains('collapsed') ? '0' : '350px';
+        document.getElementById('toggle-icon').innerText = ed.classList.contains('collapsed') ? 'chevron_right' : 'chevron_left';
         setTimeout(autoScale, 310);
-    }
-
-    function openModal() { document.getElementById('overlay').style.display = 'block'; document.getElementById('input-modal').style.display = 'block'; }
-    function closeModal() { document.getElementById('overlay').style.display = 'none'; document.getElementById('input-modal').style.display = 'none'; }
-    
-    function applyInput() {
-        const text = document.getElementById('modal-input').value.trim();
-        if(!text) return;
-        const lines = text.split('\n');
-        const newItems = [];
-        
-        lines.forEach(l => {
-            const line = l.trim();
-            if(!line) return;
-            
-            // 페이지 구분 감지
-            if(line.startsWith('[') && line.endsWith(']')) {
-                newItems.push({ type: "page", title: line.slice(1, -1) });
-            } else {
-                // 첫 번째 콤마(,) 또는 등호(=) 위치 찾기
-                const commaIdx = line.indexOf(',');
-                const equalIdx = line.indexOf('=');
-                
-                // 둘 중 먼저 나오는 기호를 구분자로 사용
-                let splitIdx = -1;
-                if(commaIdx !== -1 && equalIdx !== -1) splitIdx = Math.min(commaIdx, equalIdx);
-                else if(commaIdx !== -1) splitIdx = commaIdx;
-                else if(equalIdx !== -1) splitIdx = equalIdx;
-
-                if(splitIdx !== -1) {
-                    const en = line.substring(0, splitIdx).trim();
-                    const ko = line.substring(splitIdx + 1).trim();
-                    if(en && ko) newItems.push({ en, ko });
-                }
-            }
-        });
-        
-        examData.content = newItems;
-        codeInput.value = JSON.stringify(examData, null, 4);
-        updatePreview();
-        closeModal();
-    }
-
-    function shuffle() {
-        let current = JSON.parse(codeInput.value);
-        let result = [], temp = [];
-        current.content.forEach(item => {
-            if(item.type === "page") {
-                if(temp.length) result.push(...temp.sort(() => Math.random() - 0.5));
-                result.push(item); temp = [];
-            } else temp.push(item);
-        });
-        if(temp.length) result.push(...temp.sort(() => Math.random() - 0.5));
-        current.content = result;
-        codeInput.value = JSON.stringify(current, null, 4);
-        updatePreview();
     }
 </script>
 </body>
