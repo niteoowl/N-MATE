@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1시간 무설정 클라우드</title>
+    <style>
+        body { font-family: 'Apple SD Gothic Neo', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { color: #333; margin-top: 0; font-size: 1.2rem; }
+        textarea { width: 100%; height: 120px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; resize: none; margin-bottom: 1rem; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-bottom: 5px; }
+        .btn-save { background: #007bff; color: white; }
+        .btn-load { background: #28a745; color: white; }
+        .status { font-size: 0.85rem; text-align: center; margin-top: 10px; color: #666; min-height: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>⏳ 1시간 임시 저장소</h2>
+    <textarea id="box" placeholder="여기에 내용을 입력하세요..."></textarea>
+    <button class="btn-save" onclick="saveData()">클라우드에 저장</button>
+    <button class="btn-load" onclick="loadData()">저장된 내용 불러오기</button>
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+    // 사용자별 고유 통로를 만들기 위한 랜덤 ID (한 번 접속하면 브라우저에 고정)
+    let userKey = localStorage.getItem('cloud_key') || Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('cloud_key', userKey);
+
+    const API_URL = `https://kvdb.io/AnV97Q8jY6z7pL9u9mR8v4/${userKey}`;
+
+    async function saveData() {
+        const text = document.getElementById('box').value;
+        const status = document.getElementById('status');
+        if(!text) return alert("내용을 입력해주세요.");
+
+        status.innerText = "저장 중...";
+        
+        try {
+            // 3600초(1시간) TTL 설정
+            await fetch(API_URL, {
+                method: 'POST',
+                body: text
+            });
+            status.innerText = "✅ 저장 완료! (1시간 후 자동 파기)";
+            document.getElementById('box').value = ""; 
+        } catch (e) {
+            status.innerText = "❌ 저장 실패";
+        }
+    }
+
+    async function loadData() {
+        const status = document.getElementById('status');
+        status.innerText = "불러오는 중...";
+        
+        try {
+            const res = await fetch(API_URL);
+            if(res.ok) {
+                const data = await res.text();
+                document.getElementById('box').value = data;
+                status.innerText = "✅ 데이터를 불러왔습니다.";
+            } else {
+                status.innerText = "텅 비어있거나 만료되었습니다.";
+            }
+        } catch (e) {
+            status.innerText = "❌ 불러오기 실패";
+        }
+    }
+</script>
+
+</body>
+</html>
