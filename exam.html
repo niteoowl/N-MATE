@@ -1,11 +1,9 @@
-
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOCABLE Exam Editor - 여백 최소화 버전</title>
+    <title>BOCABLE Exam Editor - 특수구분자 버전</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-kopub@1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
@@ -176,8 +174,8 @@
 <div class="modal-overlay" id="overlay" onclick="closeModal()"></div>
 <div class="modal" id="input-modal">
     <h3 style="margin: 0 0 15px 0;">단어 데이터 추가</h3>
-    <p style="font-size: 12px; color: #666; margin-bottom: 10px;">단어,뜻 (첫 번째 콤마 기준으로 구분됩니다)</p>
-    <textarea id="modal-input" style="width:100%; height:200px; padding:10px; margin-bottom:15px;" placeholder="[DAY 01]&#10;aware,알고 있는, 의식하는&#10;attribute,특성, 속성"></textarea>
+    <p style="font-size: 12px; color: #666; margin-bottom: 10px;"><b>단어■뜻</b> 형식으로 입력하세요. (구분자: ■)</p>
+    <textarea id="modal-input" style="width:100%; height:200px; padding:10px; margin-bottom:15px;" placeholder="[DAY 01]&#10;reward■[명] 보상(금)[동] 보상하다, 보답하다&#10;aware■알고 있는, 의식하는"></textarea>
     <div style="display:flex; gap:10px;">
         <button class="btn-primary" style="flex:1" onclick="applyInput()">확인</button>
         <button style="flex:1" onclick="closeModal()">취소</button>
@@ -192,8 +190,8 @@
         title: "WEEKLY VOCABULARY TEST",
         content: [
             { type: "page", title: "DAY 11-12" },
+            { en: "reward", ko: "[명] 보상(금)[동] 보상하다, 보답하다" },
             { en: "aware", ko: "알고 있는, 의식[인식]하는" },
-            { en: "vulnerable", ko: "취약한, 상처받기 쉬운" },
             { en: "subsequent", ko: "그 다음의, 차후의" }
         ]
     };
@@ -325,20 +323,13 @@
             const line = l.trim();
             if(!line) return;
             
-            // 페이지 구분 감지
-            if(line.startsWith('[') && line.endsWith(']')) {
+            // 페이지 구분 감지 ([DAY 01] 형식)
+            if(line.startsWith('[') && line.endsWith(']') && !line.includes('■')) {
                 newItems.push({ type: "page", title: line.slice(1, -1) });
             } else {
-                // 첫 번째 콤마(,) 또는 등호(=) 위치 찾기
-                const commaIdx = line.indexOf(',');
-                const equalIdx = line.indexOf('=');
+                // 특정 구분자 '■'를 기준으로 분리
+                const splitIdx = line.indexOf('■');
                 
-                // 둘 중 먼저 나오는 기호를 구분자로 사용
-                let splitIdx = -1;
-                if(commaIdx !== -1 && equalIdx !== -1) splitIdx = Math.min(commaIdx, equalIdx);
-                else if(commaIdx !== -1) splitIdx = commaIdx;
-                else if(equalIdx !== -1) splitIdx = equalIdx;
-
                 if(splitIdx !== -1) {
                     const en = line.substring(0, splitIdx).trim();
                     const ko = line.substring(splitIdx + 1).trim();
