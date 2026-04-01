@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Fullscreen Tester</title>
+    <title>HTML Fullscreen Tester (Auto-save)</title>
     <style>
         body, html {
             margin: 0;
@@ -12,10 +12,11 @@
             height: 100%;
             overflow: hidden;
             background: #1e1e1e;
+            font-family: 'Malgun Gothic', sans-serif;
         }
 
-        /* 입력창 영역 */
-        #editor {
+        /* 에디터 영역 */
+        #editor-container {
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -30,11 +31,136 @@
             background: #252526;
             color: #d4d4d4;
             border: none;
-            font-family: 'Consolas', monospace;
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 16px;
             outline: none;
             resize: none;
         }
+
+        .btn-run {
+            height: 60px;
+            background: #007acc;
+            color: white;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-run:hover {
+            background: #005f9e;
+        }
+
+        /* 결과 미리보기 영역 (전체화면) */
+        #result-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            z-index: 9999;
+        }
+
+        #result-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 돌아가기 버튼 */
+        #back-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: background 0.2s;
+        }
+
+        #back-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 코드 입력 화면 -->
+    <div id="editor-container">
+        <textarea id="code-input" placeholder="여기에 HTML 코드를 붙여넣으세요..."></textarea>
+        <button class="btn-run" onclick="runCode()">실행하기 (Ctrl + Enter)</button>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-container">
+        <iframe id="result-frame"></iframe>
+        <button id="back-btn" onclick="closePreview()">← 에디터로 돌아가기 (ESC)</button>
+    </div>
+
+    <script>
+        const codeInput = document.getElementById('code-input');
+        const resultFrame = document.getElementById('result-frame');
+        const resultContainer = document.getElementById('result-container');
+        const STORAGE_KEY = 'saved_html_code';
+
+        // 1. 페이지 로드시 로컬 스토리지에서 데이터 불러오기
+        window.onload = function() {
+            const savedCode = localStorage.getItem(STORAGE_KEY);
+            if (savedCode) {
+                codeInput.value = savedCode;
+            }
+        };
+
+        // 2. 내용이 변경될 때마다 로컬 스토리지에 자동 저장
+        codeInput.addEventListener('input', function() {
+            localStorage.setItem(STORAGE_KEY, codeInput.value);
+        });
+
+        // 코드 실행 함수
+        function runCode() {
+            const code = codeInput.value;
+            
+            // iframe 내용 채우기
+            const doc = resultFrame.contentDocument || resultFrame.contentWindow.document;
+            doc.open();
+            doc.write(code);
+            doc.close();
+
+            // 화면 전환
+            resultContainer.style.display = 'block';
+        }
+
+        // 미리보기 닫기 함수
+        function closePreview() {
+            resultContainer.style.display = 'none';
+            // iframe 초기화 (비디오 소리 등이 계속 나는 것을 방지)
+            resultFrame.src = "about:blank";
+        }
+
+        // 단축키 설정
+        document.addEventListener('keydown', function(e) {
+            // 실행: Ctrl + Enter
+            if (e.ctrlKey && e.key === 'Enter') {
+                runCode();
+            }
+            // 닫기: Escape
+            if (e.key === 'Escape') {
+                closePreview();
+            }
+        });
+    </script>
+</body>
+</html>        }
 
         button {
             height: 60px;
