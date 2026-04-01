@@ -14,7 +14,7 @@
             background: #1e1e1e;
         }
 
-        #editor-container {
+        #editor {
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -35,7 +35,7 @@
             resize: none;
         }
 
-        .btn-run {
+        button {
             height: 60px;
             background: #007acc;
             color: white;
@@ -45,7 +45,7 @@
             cursor: pointer;
         }
 
-        #result-container {
+        #view {
             display: none;
             position: fixed;
             top: 0;
@@ -56,73 +56,62 @@
             z-index: 9999;
         }
 
-        #result-frame {
+        iframe {
             width: 100%;
             height: 100%;
             border: none;
-        }
-
-        #back-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            cursor: pointer;
-            z-index: 10000;
         }
     </style>
 </head>
 <body>
 
-    <div id="editor-container">
-        <textarea id="code-input" placeholder="여기에 HTML 코드를 붙여넣으세요..."></textarea>
-        <button class="btn-run" onclick="runCode()">실행하기 (전체화면)</button>
+    <div id="editor">
+        <textarea id="code" placeholder="HTML 코드를 여기에 붙여넣으세요."></textarea>
+        <button onclick="run()">전체화면으로 보기</button>
     </div>
 
-    <div id="result-container">
-        <iframe id="result-frame"></iframe>
-        <button id="back-btn" onclick="closePreview()">← 에디터로 돌아가기</button>
+    <div id="view">
+        <iframe id="preview"></iframe>
     </div>
 
     <script>
-        const input = document.getElementById('code-input');
+        const codeInput = document.getElementById('code');
 
-        // [추가] 페이지 로드시 저장된 코드 불러오기
+        // 페이지 로드 시 저장된 코드 불러오기
         window.onload = function() {
-            const saved = localStorage.getItem('html_code');
-            if (saved) {
-                input.value = saved;
+            const savedData = localStorage.getItem('html_tester_code');
+            if (savedData) {
+                codeInput.value = savedData;
             }
         };
 
-        // [추가] 입력할 때마다 로컬 스토리지에 저장
-        input.addEventListener('input', function() {
-            localStorage.setItem('html_code', input.value);
+        // 입력할 때마다 실시간 저장
+        codeInput.addEventListener('input', function() {
+            localStorage.setItem('html_tester_code', codeInput.value);
         });
 
-        function runCode() {
-            const code = input.value;
-            const resultFrame = document.getElementById('result-frame');
-            const resultContainer = document.getElementById('result-container');
+        function run() {
+            const code = codeInput.value;
+            const preview = document.getElementById('preview');
+            const view = document.getElementById('view');
 
-            const doc = resultFrame.contentDocument || resultFrame.contentWindow.document;
+            const doc = preview.contentDocument || preview.contentWindow.document;
             doc.open();
             doc.write(code);
             doc.close();
 
-            resultContainer.style.display = 'block';
+            view.style.display = 'block';
         }
 
-        function closePreview() {
-            document.getElementById('result-container').style.display = 'none';
-        }
-
+        // 단축키 설정
         document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.key === 'Enter') runCode();
-            if (e.key === 'Escape') closePreview();
+            if (e.ctrlKey && e.key === 'Enter') run();
+            
+            // Esc 누르면 다시 에디터로
+            if (e.key === 'Escape') {
+                document.getElementById('view').style.display = 'none';
+                document.getElementById('preview').src = "about:blank";
+            }
         });
     </script>
 </body>
