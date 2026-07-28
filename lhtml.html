@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>모바일 웹 에디터</title>
+    <!-- Ace Editor CDN (오픈소스 코드 에디터) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfSq63qF74ADkb53GoSfB8D8F7B59453C95ZecF945K65K/ca06c9eBvU27T3E71eN9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        /* 기본 스타일 초기화 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #1e1e1e;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 상단 헤더 영역 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 50px;
+            background-color: #2d2d2d;
+            padding: 0 10px;
+            border-bottom: 1px solid #3d3d3d;
+            z-index: 1001;
+        }
+        .header-left, .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .btn {
+            background-color: #444;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px;
+        }
+        .btn:active {
+            background-color: #555;
+        }
+        .btn-learn {
+            background-color: #4285f4;
+        }
+        .btn-learn:active {
+            background-color: #357ae8;
+        }
+
+        /* 메인 레이아웃 구역 */
+        .main-layout {
+            position: relative;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 50px);
+        }
+
+        /* 에디터 컨테이너 */
+        #editor-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #editor {
+            width: 100%;
+            height: 100%;
+            font-size: 14px;
+        }
+
+        /* 미리보기 컨테이너 (기본: 좌측 서랍식 슬라이드) */
+        #preview-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 85%;
+            height: 100%;
+            background-color: #ffffff;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.4);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+        #preview-container.open {
+            transform: translateX(0);
+        }
+        .preview-header {
+            background-color: #f1f1f1;
+            color: #333;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            height: 40px;
+        }
+        .preview-close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+            line-height: 1;
+        }
+        #preview-iframe {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background-color: #fff;
+        }
+
+        /* 서랍이 열렸을 때 화면 어둡게 처리하는 배경 */
+        .drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        .drawer-overlay.active {
+            display: block;
+        }
+
+        /* 상하 분할 모드 활성화 시 스타일 변경 */
+        .main-layout.split-mode #editor-container {
+            height: 50%;
+        }
+        .main-layout.split-mode #preview-container {
+            position: static;
+            width: 100%;
+            height: 50%;
+            transform: none;
+            box-shadow: none;
+            border-top: 3px solid #3d3d3d;
+            transition: none;
+            z-index: 1;
+        }
+        .main-layout.split-mode .preview-header {
+            display: none; /* 분할 모드에서는 공간 확보를 위해 헤더를 숨깁니다 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 상단 바 -->
+    <header>
+        <div class="header-left">
+            <button id="btn-open-drawer" class="btn">☰ 펼치기</button>
+        </div>
+        <div class="header-right">
+            <button id="btn-toggle-split" class="btn">⇅ 상하 분할</button>
+            <a href="https://gemini.google.com" target="_blank" class="btn btn-learn">배우기 ↗</a>
+        </div>
+    </header>
+
+    <!-- 에디터 및 미리보기 메인 영역 -->
+    <div class="main-layout" id="main-layout">
+        <!-- 모바일 터치 시 서랍 닫기용 오버레이 -->
+        <div class="drawer-overlay" id="drawer-overlay"></div>
+
+        <!-- 에디터 영역 -->
+        <div id="editor-container">
+            <div id="editor"></div>
+        </div>
+
+        <!-- 미리보기 영역 (기본적으로 서랍으로 숨어 있음) -->
+        <div id="preview-container" id="preview-container">
+            <div class="preview-header">
+                <span>미리보기 화면</span>
+                <button class="preview-close-btn" id="btn-close-preview">&times;</button>
+            </div>
+            <!-- 코드 실행 결과를 보여줄 iframe -->
+            <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // 기본 예제 코드 (화면에 처음 진입 시 나타날 코드)
+        const defaultCode = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px 15px;
+      background: #f7f9fc;
+      color: #333;
+    }
+    h1 {
+      color: #4285f4;
+      font-size: 24px;
+    }
+    p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #666;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 15px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    button:active {
+      background: #357ae8;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>안녕, 웹 코딩! 👋</h1>
+  <p>이곳은 모바일 에디터입니다.<br>코드를 수정하면 실시간으로 바뀝니다.</p>
+  
+  <button onclick="greet()">버튼을 눌러보세요</button>
+
+  <script>
+    function greet() {
+      alert('반가워요! 차근차근 같이 배워봅시다.');
+    }
+  <\/script>
+</body>
+</html>`;
+
+        // 요소 가져오기
+        const mainLayout = document.getElementById('main-layout');
+        const btnOpenDrawer = document.getElementById('btn-open-drawer');
+        const btnClosePreview = document.getElementById('btn-close-preview');
+        const btnToggleSplit = document.getElementById('btn-toggle-split');
+        const previewContainer = document.getElementById('preview-container');
+        const drawerOverlay = document.getElementById('drawer-overlay');
+        const previewIframe = document.getElementById('preview-iframe');
+
+        // 에디터 초기화 (Ace Editor)
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai"); // 코딩하기 편한 다크 테마
+        editor.session.setMode("ace/mode/html");
+        
+        // 모바일 최적화 설정
+        editor.setOptions({
+            fontSize: "14px",
+            showPrintMargin: false,
+            wrap: true, // 화면 너비에 맞게 자동 줄바꿈
+            indentedSoftWrap: false,
+            behavioursEnabled: true,
+            autoScrollEditorIntoView: true
+        });
+
+        // 로컬스토리지에 저장된 이전 작업물이 있다면 불러오고, 없으면 기본 예제를 채웁니다.
+        const savedCode = localStorage.getItem('mobile_code_data');
+        if (savedCode) {
+            editor.setValue(savedCode, -1);
+        } else {
+            editor.setValue(defaultCode, -1);
+        }
+
+        // 실시간 미리보기 업데이트 기능
+        function updatePreview() {
+            const code = editor.getValue();
+            // 로컬스토리지에 자동 저장 (작성 중에 새로고침해도 안 날아감)
+            localStorage.setItem('mobile_code_data', code);
+
+            const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(code);
+            iframeDoc.close();
+        }
+
+        // 에디터 글자 입력 시 실시간 업데이트
+        editor.on("change", updatePreview);
+        // 초기 실행 시 1회 렌더링
+        updatePreview();
+
+        // 1. 좌측 서랍 모드 제어
+        let isSplitMode = false;
+
+        btnOpenDrawer.addEventListener('click', () => {
+            if (!isSplitMode) {
+                previewContainer.classList.add('open');
+                drawerOverlay.classList.add('active');
+            }
+        });
+
+        function closeDrawer() {
+            previewContainer.classList.remove('open');
+            drawerOverlay.classList.remove('active');
+        }
+
+        btnClosePreview.addEventListener('click', closeDrawer);
+        drawerOverlay.addEventListener('click', closeDrawer);
+
+        // 2. 상하 분할 모드 제어
+        btnToggleSplit.addEventListener('click', () => {
+            isSplitMode = !isSplitMode;
+            
+            if (isSplitMode) {
+                // 분할 모드 활성화
+                mainLayout.classList.add('split-mode');
+                btnToggleSplit.textContent = '🗂️ 서랍 모드';
+                btnOpenDrawer.style.visibility = 'hidden'; // 분할 중에는 서랍 버튼 숨김
+                closeDrawer(); // 열려있던 서랍 정리
+            } else {
+                // 서랍 모드로 복귀
+                mainLayout.classList.remove('split-mode');
+                btnToggleSplit.textContent = '⇅ 상하 분할';
+                btnOpenDrawer.style.visibility = 'visible';
+            }
+            // 레이아웃 변경 시 에디터 크기 재계산 유도
+            setTimeout(() => {
+                editor.resize();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
