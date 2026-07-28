@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>모바일 웹 에디터</title>
-    <!-- Ace Editor CDN (오픈소스 코드 에디터) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" integrity="sha512-GZ1RIgZaSc8rnco/8CXfSq63qF74ADkb53GoSfB8D8F7B59453C95ZecF945K65K/ca06c9eBvU27T3E71eN9g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- 안정성이 높은 CDN 배포처를 사용합니다 -->
+    <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.7/src-min-noconflict/ace.min.js"></script>
     <style>
         /* 기본 스타일 초기화 */
         * {
@@ -186,19 +186,18 @@
             <div id="editor"></div>
         </div>
 
-        <!-- 미리보기 영역 (기본적으로 서랍으로 숨어 있음) -->
-        <div id="preview-container" id="preview-container">
+        <!-- 미리보기 영역 -->
+        <div id="preview-container">
             <div class="preview-header">
                 <span>미리보기 화면</span>
                 <button class="preview-close-btn" id="btn-close-preview">&times;</button>
             </div>
-            <!-- 코드 실행 결과를 보여줄 iframe -->
             <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
         </div>
     </div>
 
     <script>
-        // 기본 예제 코드 (화면에 처음 진입 시 나타날 코드)
+        // 기본 예제 코드
         const defaultCode = `<!DOCTYPE html>
 <html>
 <head>
@@ -211,38 +210,20 @@
       background: #f7f9fc;
       color: #333;
     }
-    h1 {
-      color: #4285f4;
-      font-size: 24px;
-    }
-    p {
-      font-size: 15px;
-      line-height: 1.6;
-      color: #666;
-    }
+    h1 { color: #4285f4; font-size: 24px; }
+    p { font-size: 15px; line-height: 1.6; color: #666; }
     button {
-      padding: 12px 24px;
-      font-size: 15px;
-      background: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 15px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 12px 24px; font-size: 15px; background: #4285f4;
+      color: white; border: none; border-radius: 8px; cursor: pointer;
+      margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    button:active {
-      background: #357ae8;
-    }
+    button:active { background: #357ae8; }
   </style>
 </head>
 <body>
-
   <h1>안녕, 웹 코딩! 👋</h1>
   <p>이곳은 모바일 에디터입니다.<br>코드를 수정하면 실시간으로 바뀝니다.</p>
-  
   <button onclick="greet()">버튼을 눌러보세요</button>
-
   <script>
     function greet() {
       alert('반가워요! 차근차근 같이 배워봅시다.');
@@ -251,7 +232,7 @@
 </body>
 </html>`;
 
-        // 요소 가져오기
+        // 1. UI 요소 및 레이아웃 제어 (에디터 로드 오류와 무관하게 동작 보장)
         const mainLayout = document.getElementById('main-layout');
         const btnOpenDrawer = document.getElementById('btn-open-drawer');
         const btnClosePreview = document.getElementById('btn-close-preview');
@@ -260,49 +241,9 @@
         const drawerOverlay = document.getElementById('drawer-overlay');
         const previewIframe = document.getElementById('preview-iframe');
 
-        // 에디터 초기화 (Ace Editor)
-        const editor = ace.edit("editor");
-        editor.setTheme("ace/theme/monokai"); // 코딩하기 편한 다크 테마
-        editor.session.setMode("ace/mode/html");
-        
-        // 모바일 최적화 설정
-        editor.setOptions({
-            fontSize: "14px",
-            showPrintMargin: false,
-            wrap: true, // 화면 너비에 맞게 자동 줄바꿈
-            indentedSoftWrap: false,
-            behavioursEnabled: true,
-            autoScrollEditorIntoView: true
-        });
-
-        // 로컬스토리지에 저장된 이전 작업물이 있다면 불러오고, 없으면 기본 예제를 채웁니다.
-        const savedCode = localStorage.getItem('mobile_code_data');
-        if (savedCode) {
-            editor.setValue(savedCode, -1);
-        } else {
-            editor.setValue(defaultCode, -1);
-        }
-
-        // 실시간 미리보기 업데이트 기능
-        function updatePreview() {
-            const code = editor.getValue();
-            // 로컬스토리지에 자동 저장 (작성 중에 새로고침해도 안 날아감)
-            localStorage.setItem('mobile_code_data', code);
-
-            const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-            iframeDoc.open();
-            iframeDoc.write(code);
-            iframeDoc.close();
-        }
-
-        // 에디터 글자 입력 시 실시간 업데이트
-        editor.on("change", updatePreview);
-        // 초기 실행 시 1회 렌더링
-        updatePreview();
-
-        // 1. 좌측 서랍 모드 제어
         let isSplitMode = false;
 
+        // 서랍 열기
         btnOpenDrawer.addEventListener('click', () => {
             if (!isSplitMode) {
                 previewContainer.classList.add('open');
@@ -310,35 +251,123 @@
             }
         });
 
+        // 서랍 닫기
         function closeDrawer() {
             previewContainer.classList.remove('open');
             drawerOverlay.classList.remove('active');
         }
 
-        btnClosePreview.addEventListener('click', closeDrawer);
-        drawerOverlay.addEventListener('click', closeDrawer);
+        if (btnClosePreview) btnClosePreview.addEventListener('click', closeDrawer);
+        if (drawerOverlay) drawerOverlay.addEventListener('click', closeDrawer);
 
-        // 2. 상하 분할 모드 제어
+        // 상하 분할 토글
         btnToggleSplit.addEventListener('click', () => {
             isSplitMode = !isSplitMode;
             
             if (isSplitMode) {
-                // 분할 모드 활성화
                 mainLayout.classList.add('split-mode');
                 btnToggleSplit.textContent = '🗂️ 서랍 모드';
-                btnOpenDrawer.style.visibility = 'hidden'; // 분할 중에는 서랍 버튼 숨김
-                closeDrawer(); // 열려있던 서랍 정리
+                btnOpenDrawer.style.visibility = 'hidden';
+                closeDrawer();
             } else {
-                // 서랍 모드로 복귀
                 mainLayout.classList.remove('split-mode');
                 btnToggleSplit.textContent = '⇅ 상하 분할';
                 btnOpenDrawer.style.visibility = 'visible';
             }
-            // 레이아웃 변경 시 에디터 크기 재계산 유도
-            setTimeout(() => {
-                editor.resize();
-            }, 100);
+            
+            // 에디터 크기 재조정 유도
+            if (!useFallback && editorInstance) {
+                setTimeout(() => {
+                    editorInstance.resize();
+                }, 100);
+            }
         });
+
+
+        // 2. 에디터 초기화 및 예외 처리 (오프라인/보안 차단 대비 fallback 구현)
+        let editorInstance = null;
+        let useFallback = false;
+
+        if (typeof ace !== 'undefined') {
+            try {
+                // 테마 및 모듈 경로를 강제로 CDN으로 지정하여 CORS 오류 방지
+                ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.32.7/src-min-noconflict/');
+                
+                editorInstance = ace.edit("editor");
+                editorInstance.setTheme("ace/theme/monokai");
+                editorInstance.session.setMode("ace/mode/html");
+                editorInstance.setOptions({
+                    fontSize: "14px",
+                    showPrintMargin: false,
+                    wrap: true,
+                    indentedSoftWrap: false,
+                    behavioursEnabled: true,
+                    autoScrollEditorIntoView: true
+                });
+            } catch (e) {
+                console.warn("Ace 에디터 초기화 실패, 기본 입력창으로 전환합니다.", e);
+                useFallback = true;
+            }
+        } else {
+            useFallback = true;
+        }
+
+        // 라이브러리 차단 시 일반 textarea로 전환하는 안전장치
+        if (useFallback) {
+            const editorDiv = document.getElementById('editor');
+            editorDiv.innerHTML = `<textarea id="textarea-editor" placeholder="여기에 HTML 코드를 입력하세요..." style="width:100%; height:100%; background:#1e1e1e; color:#fff; font-family:monospace; font-size:16px; border:none; padding:12px; resize:none; outline:none; box-sizing:border-box; line-height:1.5;"></textarea>`;
+        }
+
+        // 값 읽기 및 쓰기 헬퍼 함수
+        function getCodeValue() {
+            if (useFallback) {
+                return document.getElementById('textarea-editor').value;
+            } else {
+                return editorInstance.getValue();
+            }
+        }
+
+        function setCodeValue(val) {
+            if (useFallback) {
+                document.getElementById('textarea-editor').value = val;
+            } else {
+                editorInstance.setValue(val, -1);
+            }
+        }
+
+        // 3. 로컬 스토리지 데이터 동기화 및 렌더링
+        const savedCode = localStorage.getItem('mobile_code_data_v2');
+        if (savedCode) {
+            setCodeValue(savedCode);
+        } else {
+            setCodeValue(defaultCode);
+        }
+
+        // 미리보기 반영
+        function updatePreview() {
+            const code = getCodeValue();
+            localStorage.setItem('mobile_code_data_v2', code);
+
+            try {
+                const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(code);
+                iframeDoc.close();
+            } catch (err) {
+                console.error("미리보기 업데이트 실패:", err);
+            }
+        }
+
+        // 입력 감지 리스너 등록
+        if (useFallback) {
+            const textarea = document.getElementById('textarea-editor');
+            textarea.addEventListener('input', updatePreview);
+        } else {
+            editorInstance.on("change", updatePreview);
+        }
+
+        // 첫 구동 시 실행
+        updatePreview();
     </script>
 </body>
 </html>
