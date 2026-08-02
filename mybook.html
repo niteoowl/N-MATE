@@ -3,372 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Professional Hybrid Editor</title>
-    <!-- 라이브러리: 마크다운 파싱, HTML->MD 변환, 코드 하이라이팅 -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-
+    <title>Professional Mobile Editor V2</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             --bg: #ffffff;
-            --header-bg: #ffffff;
             --text-main: #191f28;
             --text-sub: #4e5968;
-            --border: #eff1f3;
+            --border: #e5e8eb;
             --accent: #3182f7;
             --danger: #f04452;
             --input-bg: #f2f4f6;
-            --code-bg: #f8f9fa;
         }
 
         [data-theme="dark"] {
             --bg: #111111;
-            --header-bg: #111111;
             --text-main: #f9fafb;
             --text-sub: #adb5bd;
             --border: #2c2c2e;
             --accent: #5499ff;
             --input-bg: #1c1c1e;
-            --code-bg: #2d2d2d;
         }
 
+        /* 초기화: 애니메이션/그림자 절대 금지 */
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+            font-family: -apple-system, "Apple SD Gothic Neo", sans-serif;
             transition: none !important;
             box-shadow: none !important;
         }
 
-        body { 
-            background-color: var(--bg); 
-            color: var(--text-main); 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
-            padding-top: 12px;
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            background-color: var(--bg); color: var(--text-main);
+            position: fixed; /* 키보드 팝업 시 너비 줄어듦 방지 */
         }
 
         header {
-            background: var(--header-bg);
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 20px; min-height: 44px; flex-shrink: 0;
+            padding: 12px 20px; height: 54px; border-bottom: 1px solid var(--border);
+            background: var(--bg);
         }
-        .logo { font-size: 15px; font-weight: 800; color: var(--text-main); letter-spacing: -0.3px; }
+        .logo { font-size: 14px; font-weight: 800; letter-spacing: -0.5px; }
 
-        /* 상단 모드 전환 탭 (3개로 확장) */
-        .mode-toggle {
-            display: flex; background: var(--input-bg); margin: 10px 20px;
-            border-radius: 8px; padding: 2px; flex-shrink: 0;
+        /* 워드 스타일 툴바 */
+        .toolbar {
+            display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px;
+            border-bottom: 1px solid var(--border); background: var(--bg);
+            align-items: center; -ms-overflow-style: none; scrollbar-width: none;
         }
-        .mode-btn {
-            flex: 1; border: none; background: transparent; padding: 8px;
-            font-size: 12px; font-weight: 600; color: var(--text-sub); border-radius: 6px;
-        }
-        .mode-btn.active {
-            background: var(--bg); color: var(--accent);
+        .toolbar::-webkit-scrollbar { display: none; }
+        
+        .tool-group {
+            display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center;
         }
 
-        .chapter-container {
-            display: flex; align-items: center; padding: 0 20px; 
-            gap: 8px; margin-bottom: 10px; flex-shrink: 0;
+        .px-select {
+            border: none; background: transparent; font-size: 11px; font-weight: 700;
+            padding: 4px 8px; color: var(--text-main); outline: none;
         }
+
+        .t-btn {
+            border: none; background: transparent; padding: 6px;
+            border-radius: 4px; color: var(--text-main); display: flex; align-items: center;
+        }
+        .t-btn svg { width: 16px; height: 16px; }
+
+        /* 챕터 네비게이션 */
         .chapter-nav {
-            display: flex; overflow-x: auto; flex: 1; gap: 8px;
-            -ms-overflow-style: none; scrollbar-width: none;
+            display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px;
+            border-bottom: 1px solid var(--border); background: var(--bg);
         }
-        .chapter-nav::-webkit-scrollbar { display: none; }
         .chapter-tab {
-            padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
-            font-size: 11px; color: var(--text-sub); white-space: nowrap; font-weight: 500;
+            padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700;
+            color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap;
         }
         .chapter-tab.active { background: var(--text-main); color: var(--bg); border-color: var(--text-main); }
 
-        #main-view { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-        .view-pane {
-            flex: 1; width: 100%; height: 100%; padding: 10px 20px;
-            overflow-y: auto; display: none;
-            outline: none;
+        /* 에디터 스크롤 영역 */
+        #editor-scroll-area {
+            flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 220px);
+            padding: 24px 20px 200px 20px; /* 하단 넉넉한 패딩 */
+            -webkit-overflow-scrolling: touch;
         }
-        .view-pane.active { display: block; }
-
-        /* 에디터 공통 스타일 */
-        .raw-editor {
-            width: 100%; height: 100%; border: none; background: transparent;
-            font-family: "SF Mono", Menlo, monospace;
-            font-size: 16px; line-height: 1.6; color: var(--text-main);
-            outline: none; resize: none;
+        .title-input {
+            width: 100%; border: none; outline: none; background: transparent;
+            font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 16px;
         }
-
-        .rich-editor {
-            width: 100%; min-height: 100%; border: none;
+        .content-editor {
+            width: 100%; min-height: 250px; outline: none;
             font-size: 17px; line-height: 1.8; color: var(--text-main);
-            word-break: break-all;
         }
+        .content-editor img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
 
-        /* 프리뷰 및 리치 에디터 내 서식 */
-        .preview-pane, .rich-editor { font-size: 16px; line-height: 1.8; }
-        .preview-pane h1, .rich-editor h1 { margin: 20px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        .preview-pane pre, .rich-editor pre { background: var(--code-bg); padding: 12px; border-radius: 8px; overflow-x: auto; margin: 10px 0; }
-        .preview-pane img, .rich-editor img { max-width: 100%; border-radius: 8px; }
-
-        /* 하단 툴바 */
-        .toolbar {
+        /* 하단 액션 바 */
+        .bottom-bar {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--header-bg); border-top: 1px solid var(--border);
-            padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
-            z-index: 1000;
+            background: var(--bg); border-top: 1px solid var(--border);
+            padding: 10px 20px calc(10px + env(safe-area-inset-bottom));
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
         }
-        .tool-row { display: flex; gap: 8px; overflow-x: auto; }
-        .tool-row::-webkit-scrollbar { display: none; }
-
         .btn {
-            background: var(--input-bg); border: none; border-radius: 6px;
-            color: var(--text-main); font-weight: 600; padding: 10px 14px;
-            font-size: 12px; white-space: nowrap; flex-shrink: 0;
+            border: none; background: var(--input-bg); padding: 8px 12px;
+            border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--text-main);
+            display: flex; align-items: center; gap: 4px;
         }
-        .btn-accent { background: var(--accent); color: white; }
+        .btn-blue { background: var(--accent); color: #fff; }
 
-        #searchOverlay {
+        /* 검색 팝업 */
+        #modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 2000; display: none; flex-direction: column;
-            padding-top: 20px;
         }
-        .search-bar { padding: 16px; display: flex; gap: 8px; }
-        .search-input { flex: 1; background: var(--input-bg); border: none; border-radius: 8px; padding: 12px; color: var(--text-main); outline: none; }
-        .search-results { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
-        .search-results img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+        .search-box { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); }
+        .search-input { flex: 1; border: none; background: var(--input-bg); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none; }
+        .img-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
+        .img-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">DOCUMENT</div>
-    <button class="btn" style="padding: 6px 12px; font-size: 11px;" onclick="toggleTheme()">다크모드 전환</button>
+    <div class="logo">TOSS WRITER PRO</div>
+    <button class="t-btn" onclick="toggleDarkMode()"><i data-lucide="moon"></i></button>
 </header>
 
-<div class="mode-toggle">
-    <button id="btn-md" class="mode-btn active" onclick="setView('md')">MD</button>
-    <button id="btn-rich" class="mode-btn" onclick="setView('rich')">일반</button>
-    <button id="btn-preview" class="mode-btn" onclick="setView('preview')">미리보기</button>
-</div>
-
-<div class="chapter-container">
-    <div class="chapter-nav" id="chapterNav"></div>
-    <button class="btn" style="padding: 6px 10px; font-size: 11px;" onclick="addChapter()">추가</button>
-</div>
-
-<div id="main-view">
-    <!-- 1. 마크다운 소스 에디터 -->
-    <div id="mdPane" class="view-pane active">
-        <input type="text" id="chTitle" style="width:100%; border:none; outline:none; background:transparent; font-size:20px; font-weight:700; margin-bottom:16px; color:var(--text-main);" placeholder="제목을 입력하세요" oninput="saveData()">
-        <textarea id="markdownInput" class="raw-editor" placeholder="마크다운 내용을 입력하세요..." oninput="saveData()"></textarea>
+<div class="toolbar">
+    <div class="tool-group">
+        <select class="px-select" id="fontSize" onchange="changeFontSize(this.value)">
+            <option value="12px">12px</option>
+            <option value="14px">14px</option>
+            <option value="16px" selected>16px</option>
+            <option value="18px">18px</option>
+            <option value="20px">20px</option>
+            <option value="24px">24px</option>
+            <option value="32px">32px</option>
+        </select>
+        <button class="t-btn" onclick="exec('bold')"><i data-lucide="bold"></i></button>
+        <button class="t-btn" onclick="exec('underline')"><i data-lucide="underline"></i></button>
     </div>
-    <!-- 2. 일반 편집기 (WYSIWYG) -->
-    <div id="richPane" class="view-pane rich-editor" contenteditable="true" oninput="saveDataFromRich()"></div>
-    <!-- 3. 미리보기 -->
-    <div id="previewPane" class="view-pane preview-pane"></div>
-</div>
-
-<div class="toolbar" id="bottomToolbar">
-    <div class="tool-row">
-        <button class="btn" onclick="execCmd('bold')">굵게</button>
-        <button class="btn" onclick="execCmd('code')">코드블록</button>
-        <button class="btn" onclick="openSearch()">이미지 삽입</button>
-        <button class="btn btn-accent" onclick="downloadTxt()">전체 저장</button>
-        <button class="btn" style="color:var(--danger)" onclick="deleteChapter()">삭제</button>
+    <div class="tool-group">
+        <button class="t-btn" onclick="exec('justifyLeft')"><i data-lucide="align-left"></i></button>
+        <button class="t-btn" onclick="exec('justifyCenter')"><i data-lucide="align-center"></i></button>
+        <button class="t-btn" onclick="openModal()"><i data-lucide="image"></i></button>
     </div>
 </div>
 
-<div id="searchOverlay">
-    <div class="search-bar">
-        <input type="text" id="imgSearchInput" class="search-input" placeholder="이미지 키워드 (영어)">
-        <button class="btn btn-accent" onclick="searchImages()">검색</button>
-        <button class="btn" onclick="closeSearch()">취소</button>
+<div class="chapter-nav" id="nav-area"></div>
+
+<main id="editor-scroll-area">
+    <input type="text" id="chapter-title" class="title-input" placeholder="제목을 입력하세요" oninput="saveData()">
+    <div id="editor-body" class="content-editor" contenteditable="true" oninput="saveData()"></div>
+</main>
+
+<footer class="bottom-bar" id="footer-bar">
+    <span style="font-size: 11px; font-weight: 700; color: var(--text-sub);" id="save-label">저장됨</span>
+    <div style="display: flex; gap: 6px;">
+        <button class="btn" style="color: var(--danger)" onclick="deleteChapter()">삭제</button>
+        <button class="btn btn-blue" onclick="exportData()">저장</button>
     </div>
-    <div id="searchResults" class="search-results"></div>
+</footer>
+
+<div id="modal">
+    <div class="search-box">
+        <input type="text" id="img-q" class="search-input" placeholder="검색어 (영어)">
+        <button class="btn btn-blue" onclick="searchImages()">검색</button>
+        <button class="btn" onclick="closeModal()">취소</button>
+    </div>
+    <div id="img-results" class="img-grid"></div>
 </div>
 
 <script>
-    let state = {
-        chapters: [{ id: Date.now(), title: "첫 번째 장", content: "# 안녕하세요\n두 가지 에디터를 모두 사용해보세요." }],
+    let book = {
         activeId: null,
-        currentMode: 'md' // md, rich, preview
+        chapters: [{ id: Date.now(), title: "무제", content: "" }]
     };
 
-    const mdInput = document.getElementById('markdownInput');
-    const richInput = document.getElementById('richPane');
-    const preview = document.getElementById('previewPane');
-    const toolbar = document.getElementById('bottomToolbar');
-    
-    // HTML -> MD 변환기 설정
-    const turndownService = new TurndownService({ headingStyle: 'atx' });
+    const titleEl = document.getElementById('chapter-title');
+    const bodyEl = document.getElementById('editor-body');
+    const footer = document.getElementById('footer-bar');
 
     window.onload = () => {
-        const saved = localStorage.getItem('hybrid_writer_v5');
-        if (saved) state = JSON.parse(saved);
-        if (!state.activeId) state.activeId = state.chapters[0].id;
+        const saved = localStorage.getItem('TOSS_WRITER_FINAL');
+        if (saved) book = JSON.parse(saved);
+        if (!book.activeId) book.activeId = book.chapters[0].id;
         
-        if(localStorage.getItem('theme') === 'dark') setTheme(true);
+        if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
         
-        renderTabs();
-        loadChapter();
-        initKeyboardFix();
+        renderNav();
+        updateUI(); // 초기 UI 로드
+        lucide.createIcons();
+        initKeyboardHandler();
     };
 
-    function initKeyboardFix() {
+    function initKeyboardHandler() {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
-                const viewport = window.visualViewport;
-                toolbar.style.bottom = (viewport.height < window.innerHeight) ? `${window.innerHeight - viewport.height}px` : '0px';
+                const vv = window.visualViewport;
+                const offset = window.innerHeight - vv.height;
+                footer.style.bottom = offset > 50 ? offset + 'px' : '0px';
             });
         }
     }
 
-    function setTheme(dark) {
-        document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
-        localStorage.setItem('theme', dark ? 'dark' : 'light');
-    }
-
-    function toggleTheme() {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
-        setTheme(!isDark);
-    }
-
-    // 뷰 전환 핵심 로직 (동기화 포함)
-    function setView(mode) {
-        // 이전 모드에서 데이터 동기화
-        if (state.currentMode === 'rich') {
-            mdInput.value = turndownService.turndown(richInput.innerHTML);
-        }
-
-        state.currentMode = mode;
-        const panes = { 'md': 'mdPane', 'rich': 'richPane', 'preview': 'previewPane' };
-        const btns = { 'md': 'btn-md', 'rich': 'btn-rich', 'preview': 'btn-preview' };
-
-        Object.values(panes).forEach(p => document.getElementById(p).classList.remove('active'));
-        Object.values(btns).forEach(b => document.getElementById(b).classList.remove('active'));
-
-        document.getElementById(panes[mode]).classList.add('active');
-        document.getElementById(btns[mode]).classList.add('active');
-
-        if (mode === 'rich') {
-            richInput.innerHTML = marked.parse(mdInput.value);
-        } else if (mode === 'preview') {
-            preview.innerHTML = marked.parse(mdInput.value);
-            Prism.highlightAllUnder(preview);
-        }
-        saveData();
-    }
-
-    function renderTabs() {
-        const nav = document.getElementById('chapterNav');
+    function renderNav() {
+        const nav = document.getElementById('nav-area');
         nav.innerHTML = '';
-        state.chapters.forEach(ch => {
+        book.chapters.forEach(ch => {
             const tab = document.createElement('div');
-            tab.className = `chapter-tab ${ch.id === state.activeId ? 'active' : ''}`;
+            tab.className = `chapter-tab ${ch.id === book.activeId ? 'active' : ''}`;
             tab.innerText = ch.title || '무제';
-            tab.onclick = () => { state.activeId = ch.id; loadChapter(); renderTabs(); };
+            tab.onclick = () => switchChapter(ch.id);
             nav.appendChild(tab);
         });
+        const addBtn = document.createElement('div');
+        addBtn.className = 'chapter-tab';
+        addBtn.innerText = '+ 추가';
+        addBtn.onclick = addChapter;
+        nav.appendChild(addBtn);
     }
 
-    function loadChapter() {
-        const ch = state.chapters.find(c => c.id === state.activeId);
-        document.getElementById('chTitle').value = ch.title;
-        mdInput.value = ch.content;
-        setView('md');
+    // 챕터 전환 시 덮어쓰기 방지 핵심 로직
+    function switchChapter(id) {
+        saveData(); // 이동 전 현재 내용 저장
+        book.activeId = id;
+        updateUI(); // 바뀐 ID로 UI 갱신
+        renderNav();
     }
 
-    // 저장 로직 (MD 기준)
+    function updateUI() {
+        const ch = book.chapters.find(c => c.id === book.activeId);
+        if (ch) {
+            titleEl.value = ch.title;
+            bodyEl.innerHTML = ch.content;
+        }
+    }
+
     function saveData() {
-        const ch = state.chapters.find(c => c.id === state.activeId);
-        ch.title = document.getElementById('chTitle').value;
-        ch.content = mdInput.value;
-        localStorage.setItem('hybrid_writer_v5', JSON.stringify(state));
+        const ch = book.chapters.find(c => c.id === book.activeId);
+        if (ch) {
+            ch.title = titleEl.value;
+            ch.content = bodyEl.innerHTML;
+        }
+        localStorage.setItem('TOSS_WRITER_FINAL', JSON.stringify(book));
         const activeTab = document.querySelector('.chapter-tab.active');
-        if (activeTab) activeTab.innerText = ch.title || '무제';
-    }
-
-    // 일반 편집기에서 입력 시 MD로 즉시 변환 저장
-    function saveDataFromRich() {
-        mdInput.value = turndownService.turndown(richInput.innerHTML);
-        saveData();
+        if (activeTab) activeTab.innerText = titleEl.value || '무제';
     }
 
     function addChapter() {
+        saveData(); // 새 챕터 만들기 전 기존 내용 저장
         const newId = Date.now();
-        state.chapters.push({ id: newId, title: "새 장", content: "" });
-        state.activeId = newId;
-        saveData(); renderTabs(); loadChapter();
+        const newChapter = { id: newId, title: "새로운 장", content: "" };
+        book.chapters.push(newChapter);
+        book.activeId = newId;
+        
+        // UI 즉시 초기화 (덮어쓰기 방지)
+        titleEl.value = newChapter.title;
+        bodyEl.innerHTML = newChapter.content;
+        
+        saveData();
+        renderNav();
     }
 
     function deleteChapter() {
-        if (state.chapters.length <= 1) return;
+        if (book.chapters.length <= 1) return;
         if (!confirm("삭제할까요?")) return;
-        state.chapters = state.chapters.filter(c => c.id !== state.activeId);
-        state.activeId = state.chapters[0].id;
-        saveData(); renderTabs(); loadChapter();
+        book.chapters = book.chapters.filter(c => c.id !== book.activeId);
+        book.activeId = book.chapters[0].id;
+        updateUI();
+        saveData();
+        renderNav();
     }
 
-    // 공통 명령 실행 (MD와 Rich 모두 지원)
-    function execCmd(type) {
-        if (state.currentMode === 'md') {
-            const start = mdInput.selectionStart;
-            const end = mdInput.selectionEnd;
-            let snippet = "";
-            if (type === 'bold') snippet = `**${mdInput.value.substring(start, end) || "강조"}**`;
-            if (type === 'code') snippet = `\n\`\`\`javascript\n${mdInput.value.substring(start, end) || "// code"}\n\`\`\`\n`;
-            mdInput.setRangeText(snippet, start, end, 'select');
-            saveData();
-        } else if (state.currentMode === 'rich') {
-            if (type === 'bold') document.execCommand('bold');
-            if (type === 'code') {
-                const codeBlock = `<pre><code>${window.getSelection()}</code></pre>`;
-                document.execCommand('insertHTML', false, codeBlock);
-            }
-            saveDataFromRich();
+    function exec(n, v = null) {
+        document.execCommand(n, false, v);
+        saveData();
+    }
+
+    function changeFontSize(size) {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            const span = document.createElement('span');
+            span.style.fontSize = size;
+            range.surroundContents(span);
         }
+        saveData();
     }
 
-    function openSearch() { document.getElementById('searchOverlay').style.display = 'flex'; }
-    function closeSearch() { document.getElementById('searchOverlay').style.display = 'none'; }
+    function toggleDarkMode() {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
+    }
+
+    function openModal() { document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
     async function searchImages() {
-        const query = document.getElementById('imgSearchInput').value || 'minimal';
-        const container = document.getElementById('searchResults');
-        container.innerHTML = '...';
+        const q = document.getElementById('img-q').value || 'paper';
+        const res = document.getElementById('img-results');
+        res.innerHTML = '검색 중...';
         let html = '';
-        for(let i=0; i<6; i++) {
-            const url = `https://loremflickr.com/500/500/${encodeURIComponent(query)}?lock=${i + Math.floor(Math.random()*100)}`;
+        for (let i = 0; i < 8; i++) {
+            const url = `https://loremflickr.com/600/600/${encodeURIComponent(q)}?lock=${i + Math.random()}`;
             html += `<img src="${url}" onclick="insertImg('${url}')">`;
         }
-        container.innerHTML = html;
+        res.innerHTML = html;
     }
 
     function insertImg(url) {
-        if (state.currentMode === 'md') {
-            const mdImg = `\n![img](${url})\n`;
-            mdInput.setRangeText(mdImg, mdInput.selectionStart, mdInput.selectionStart, 'end');
-        } else {
-            const imgHtml = `<img src="${url}"><br>`;
-            richInput.focus();
-            document.execCommand('insertHTML', false, imgHtml);
-        }
-        closeSearch(); saveDataFromRich();
+        bodyEl.focus();
+        document.execCommand('insertHTML', false, `<img src="${url}"><br>`);
+        closeModal();
+        saveData();
     }
 
-    function downloadTxt() {
-        let output = "";
-        state.chapters.forEach(ch => { output += `# ${ch.title}\n\n${ch.content}\n\n---\n\n`; });
-        const blob = new Blob([output], { type: 'text/markdown' });
+    function exportData() {
+        let text = "";
+        book.chapters.forEach(ch => {
+            text += `[${ch.title}]\n${ch.content.replace(/<[^>]*>?/gm, '')}\n\n`;
+        });
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'export.md';
+        a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+        a.download = 'book.txt';
         a.click();
     }
 </script>
