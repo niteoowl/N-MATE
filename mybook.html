@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Publisher Pro V3</title>
+    <title>Publisher Ultimate V4</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -27,63 +27,66 @@
         }
 
         /* RESET - No Shadow, No Animation */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; transition: none !important; box-shadow: none !important; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text-main); position: fixed; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; transition: none !important; box-shadow: none !important; }
+        html, body { width: 100vw; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text-main); position: fixed; }
 
-        /* UI Components */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; height: 50px; border-bottom: 1px solid var(--border); background: var(--bg); }
-        .logo { font-size: 14px; font-weight: 800; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: 50px; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .logo { font-size: 14px; font-weight: 900; }
 
+        /* Toolbar Grouping */
         .toolbar { display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; -ms-overflow-style: none; scrollbar-width: none; }
         .toolbar::-webkit-scrollbar { display: none; }
-        .tool-group { display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center; }
+        .tool-group { display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center; flex-shrink: 0; }
         
-        .px-select { border: none; background: transparent; font-size: 11px; font-weight: 700; padding: 4px 8px; color: var(--text-main); outline: none; border-right: 1px solid var(--border); }
+        .px-select { border: none; background: transparent; font-size: 12px; font-weight: 700; padding: 4px 8px; color: var(--text-main); outline: none; border-right: 1px solid var(--border); appearance: none; }
         .t-btn { border: none; background: transparent; padding: 6px; border-radius: 4px; color: var(--text-main); display: flex; align-items: center; }
-        .t-btn svg { width: 16px; height: 16px; }
+        .t-btn svg { width: 18px; height: 18px; }
         .t-btn.active { background: var(--bg); color: var(--accent); }
 
-        .chapter-nav { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; border-bottom: 1px solid var(--border); }
-        .chapter-tab { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap; }
+        /* Chapter Navigation */
+        .chapter-nav { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .chapter-tab { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap; background: var(--bg); }
         .chapter-tab.active { background: var(--text-main); color: var(--bg); border-color: var(--text-main); }
 
         /* Editor Area */
-        #editor-container { flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 210px); padding: 24px 20px 150px 20px; -webkit-overflow-scrolling: touch; }
+        #scroll-area { flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 210px); padding: 20px 20px 250px 20px; -webkit-overflow-scrolling: touch; }
         .title-input { width: 100%; border: none; outline: none; background: transparent; font-size: 26px; font-weight: 800; color: var(--text-main); margin-bottom: 20px; }
-        .content-editor { width: 100%; min-height: 200px; outline: none; font-size: 16px; line-height: 1.8; color: var(--text-main); }
+        .content-editor { width: 100%; min-height: 300px; outline: none; font-size: 16px; line-height: 1.8; color: var(--text-main); }
         
         /* Code Block */
-        .code-block { background: #2d2d2d; color: #f8f8f2; padding: 16px; border-radius: 8px; font-family: monospace; margin: 12px 0; white-space: pre; display: block; overflow-x: auto; }
+        .code-block-wrapper { background: #2d2d2d; color: #ccc; padding: 16px; border-radius: 8px; font-family: monospace; margin: 15px 0; white-space: pre; overflow-x: auto; display: block; }
         
         /* Bottom Bar */
         .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 20px calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
-        .btn { border: none; background: var(--input-bg); padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 4px; }
+        .btn { border: none; background: var(--input-bg); padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
         .btn-blue { background: var(--accent); color: #fff; }
 
-        /* Modal */
+        /* Image Search Modal */
         #img-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
         .search-box { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); }
         .img-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
         .img-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
 
-        /* Preview Mode Override */
+        /* Preview Mode */
         body.preview-mode .content-editor, body.preview-mode .title-input { pointer-events: none; }
-        body.preview-mode .toolbar, body.preview-mode .chapter-nav { opacity: 0.5; pointer-events: none; }
+        body.preview-mode .toolbar, body.preview-mode .chapter-nav { opacity: 0.3; pointer-events: none; }
     </style>
 </head>
-<body>
+<body id="body-main">
 
 <header>
-    <div class="logo" onclick="location.reload()">PUBLISHER PRO</div>
+    <div class="logo">TOSS PUBLISHER</div>
     <button class="t-btn" onclick="toggleDark()"><i data-lucide="moon"></i></button>
 </header>
 
-<div class="toolbar">
+<div class="toolbar" id="main-toolbar">
     <div class="tool-group">
-        <select class="px-select" onchange="changeFontSize(this.value)">
+        <!-- 폰트 사이즈 선택: 선택 즉시 변경 -->
+        <select class="px-select" id="size-selector" onchange="applyFontSize(this.value)">
+            <option value="" selected disabled>크기</option>
             <option value="12px">12px</option>
             <option value="14px">14px</option>
-            <option value="16px" selected>16px</option>
+            <option value="16px">16px</option>
             <option value="18px">18px</option>
             <option value="20px">20px</option>
             <option value="24px">24px</option>
@@ -97,63 +100,63 @@
         <button class="t-btn" onclick="exec('justifyCenter')"><i data-lucide="align-center"></i></button>
     </div>
     <div class="tool-group">
-        <button class="t-btn" onclick="insertCode()"><i data-lucide="code"></i></button>
+        <button class="t-btn" onclick="addCodeBlock()"><i data-lucide="code"></i></button>
         <button class="t-btn" onclick="openModal()"><i data-lucide="image"></i></button>
     </div>
     <div class="tool-group">
-        <button id="prev-btn" class="t-btn" onclick="togglePreview()"><i data-lucide="eye"></i><span style="font-size:10px;margin-left:4px">미리보기</span></button>
+        <button id="preview-toggle" class="t-btn" onclick="togglePreviewMode()"><i data-lucide="eye"></i><span style="font-size:10px;margin-left:4px">미리보기</span></button>
     </div>
 </div>
 
-<div class="chapter-nav" id="nav-bar"></div>
+<div class="chapter-nav" id="chapter-bar"></div>
 
-<main id="editor-container">
-    <input type="text" id="title-field" class="title-input" placeholder="장의 제목을 적으세요" oninput="save()">
-    <div id="body-field" class="content-editor" contenteditable="true" oninput="save()"></div>
+<main id="scroll-area">
+    <input type="text" id="title-field" class="title-input" placeholder="제목 없는 장" oninput="saveData()">
+    <div id="editor-field" class="content-editor" contenteditable="true" oninput="saveData()"></div>
 </main>
 
 <footer class="bottom-bar" id="bottom-bar">
-    <div id="save-status" style="font-size: 11px; font-weight: 700; color: var(--text-sub);">저장 완료</div>
+    <div id="save-status" style="font-size: 11px; font-weight: 800; color: var(--text-sub);">실시간 저장 중</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" style="color: var(--danger)" onclick="deleteChapter()">삭제</button>
-        <button class="btn btn-blue" onclick="exportFile()">내보내기</button>
+        <button class="btn btn-blue" onclick="exportFile()">TXT 저장</button>
     </div>
 </footer>
 
-<!-- Image Search -->
+<!-- Image Modal -->
 <div id="img-modal">
     <div class="search-box">
-        <input type="text" id="img-q" style="flex:1; border:none; background:var(--input-bg); padding:10px; border-radius:8px; outline:none;" placeholder="이미지 검색 (영어)">
-        <button class="btn btn-blue" onclick="search()">검색</button>
+        <input type="text" id="img-input" style="flex:1; border:none; background:var(--input-bg); padding:12px; border-radius:8px; outline:none;" placeholder="이미지 검색어 (영어)">
+        <button class="btn btn-blue" onclick="searchImages()">검색</button>
         <button class="btn" onclick="closeModal()">닫기</button>
     </div>
     <div id="img-results" class="img-grid"></div>
 </div>
 
 <script>
-    let db = {
+    let appState = {
         activeId: null,
-        chapters: [{ id: Date.now(), title: "무제", content: "" }]
+        chapters: [{ id: Date.now(), title: "프롤로그", content: "첫 문장을 입력하세요." }]
     };
     let isPreview = false;
 
-    const titleInput = document.getElementById('title-field');
-    const bodyField = document.getElementById('body-field');
+    const titleField = document.getElementById('title-field');
+    const editorField = document.getElementById('editor-field');
     const bottomBar = document.getElementById('bottom-bar');
 
     window.onload = () => {
-        const saved = localStorage.getItem('PUBLISHER_PRO_DATA_V3');
-        if (saved) db = JSON.parse(saved);
-        if (!db.activeId) db.activeId = db.chapters[0].id;
+        const saved = localStorage.getItem('TOSS_PUBLISHER_V4');
+        if (saved) appState = JSON.parse(saved);
+        if (!appState.activeId) appState.activeId = appState.chapters[0].id;
         if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-        renderNav();
-        updateUI();
+        renderChapters();
+        loadActiveChapter();
         lucide.createIcons();
-        initViewport();
+        initVisualViewport();
     };
 
-    function initViewport() {
+    function initVisualViewport() {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const vv = window.visualViewport;
@@ -163,174 +166,182 @@
         }
     }
 
-    function renderNav() {
-        const nav = document.getElementById('nav-bar');
-        nav.innerHTML = '';
-        db.chapters.forEach(ch => {
+    function renderChapters() {
+        const bar = document.getElementById('chapter-bar');
+        bar.innerHTML = '';
+        appState.chapters.forEach(ch => {
             const tab = document.createElement('div');
-            tab.className = `chapter-tab ${ch.id === db.activeId ? 'active' : ''}`;
-            tab.innerText = ch.title || '무제';
+            tab.className = `chapter-tab ${ch.id === appState.activeId ? 'active' : ''}`;
+            tab.innerText = ch.title || '제목 없음';
             tab.onclick = () => switchChapter(ch.id);
-            nav.appendChild(tab);
+            bar.appendChild(tab);
         });
-        const add = document.createElement('div');
-        add.className = 'chapter-tab';
-        add.innerText = '+ 추가';
-        add.onclick = addChapter;
-        nav.appendChild(add);
+        const addBtn = document.createElement('div');
+        addBtn.className = 'chapter-tab';
+        addBtn.innerText = '+ 추가';
+        addBtn.onclick = createChapter;
+        bar.appendChild(addBtn);
     }
 
     function switchChapter(id) {
-        if(isPreview) togglePreview();
-        save();
-        db.activeId = id;
-        updateUI();
-        renderNav();
+        if(isPreview) togglePreviewMode();
+        saveData();
+        appState.activeId = id;
+        loadActiveChapter();
+        renderChapters();
     }
 
-    function updateUI() {
-        const ch = db.chapters.find(c => c.id === db.activeId);
-        titleInput.value = ch.title;
-        bodyField.innerHTML = ch.content;
+    function loadActiveChapter() {
+        const ch = appState.chapters.find(c => c.id === appState.activeId);
+        titleField.value = ch.title;
+        editorField.innerHTML = ch.content;
     }
 
-    function save() {
+    function saveData() {
         if(isPreview) return;
-        const ch = db.chapters.find(c => c.id === db.activeId);
+        const ch = appState.chapters.find(c => c.id === appState.activeId);
         if (ch) {
-            ch.title = titleInput.value;
-            ch.content = bodyField.innerHTML;
+            ch.title = titleField.value;
+            ch.content = editorField.innerHTML;
         }
-        localStorage.setItem('PUBLISHER_PRO_DATA_V3', JSON.stringify(db));
+        localStorage.setItem('TOSS_PUBLISHER_V4', JSON.stringify(appState));
         const activeTab = document.querySelector('.chapter-tab.active');
-        if (activeTab) activeTab.innerText = titleInput.value || '무제';
+        if (activeTab) activeTab.innerText = titleField.value || '제목 없음';
     }
 
-    function addChapter() {
-        save();
+    function createChapter() {
+        saveData();
         const id = Date.now();
-        const newCh = { id: id, title: "새 챕터", content: "" };
-        db.chapters.push(newCh);
-        db.activeId = id;
+        const newCh = { id: id, title: "새로운 장", content: "" };
+        appState.chapters.push(newCh);
+        appState.activeId = id;
         
-        titleInput.value = ""; 
-        bodyField.innerHTML = ""; // 명시적 초기화 (복제 방지)
+        // 에디터 강제 초기화 (복제 방지)
+        titleField.value = newCh.title;
+        editorField.innerHTML = ""; 
         
-        save();
-        renderNav();
+        saveData();
+        renderChapters();
     }
 
     function deleteChapter() {
-        if (db.chapters.length <= 1) return;
-        if (!confirm("삭제할까요?")) return;
-        db.chapters = db.chapters.filter(c => c.id !== db.activeId);
-        db.activeId = db.chapters[0].id;
-        updateUI(); save(); renderNav();
+        if (appState.chapters.length <= 1) return;
+        if (!confirm("정말 삭제할까요?")) return;
+        appState.chapters = appState.chapters.filter(c => c.id !== appState.activeId);
+        appState.activeId = appState.chapters[0].id;
+        loadActiveChapter();
+        saveData();
+        renderChapters();
     }
 
-    // [핵심] PX 글꼴 크기 변경 함수
-    function changeFontSize(size) {
-        const sel = window.getSelection();
-        if (!sel.rangeCount) return;
-
-        const range = sel.getRangeAt(0);
-        if (range.collapsed) return; // 선택된 텍스트가 없으면 무시
-
-        // 이미 적용된 폰트 사이즈가 있는지 확인하고 처리하는 대신, 
-        // 가장 확실한 span wrapping 방식을 사용합니다.
-        const span = document.createElement('span');
-        span.style.fontSize = size;
+    /* [핵심 기능] 먹통 없는 PX 글꼴 크기 적용 함수 */
+    function applyFontSize(size) {
+        if (!size) return;
         
-        try {
-            // 선택된 영역을 span으로 감쌉니다.
-            range.surroundContents(span);
-        } catch (e) {
-            // 복잡한 선택 영역(여러 태그에 걸침)일 경우 execCommand와 병행
-            document.execCommand('fontSize', false, '7');
-            const fonts = bodyField.getElementsByTagName('font');
-            for (let f of fonts) {
-                if (f.size === "7") {
-                    f.removeAttribute('size');
-                    f.style.fontSize = size;
-                }
-            }
-        }
-        save();
+        // 1. 브라우저 기본 서식 엔진을 이용해 임시 마킹 (가장 큰 사이즈 7 적용)
+        document.execCommand('fontSize', false, '7');
+        
+        // 2. 에디터 내에서 'size=7'로 마킹된 모든 폰트 태그를 찾음
+        const fontTags = editorField.querySelectorAll('font[size="7"]');
+        
+        fontTags.forEach(tag => {
+            // 3. 폰트 태그를 span으로 교체하거나 스타일을 직접 주입
+            tag.removeAttribute('size');
+            tag.style.fontSize = size;
+            tag.style.lineHeight = "1.2"; // 폰트 크기에 따른 행간 최적화
+            
+            // span으로 변환하여 더 견고하게 만듦
+            const newSpan = document.createElement('span');
+            newSpan.style.fontSize = size;
+            newSpan.innerHTML = tag.innerHTML;
+            tag.parentNode.replaceChild(newSpan, tag);
+        });
+
+        // 선택 해제 및 초기화
+        document.getElementById('size-selector').value = "";
+        saveData();
     }
 
-    function exec(n, v = null) {
-        document.execCommand(n, false, v);
-        save();
+    function exec(cmd, val = null) {
+        document.execCommand(cmd, false, val);
+        saveData();
     }
 
-    function insertCode() {
-        const lang = prompt("언어 (예: js, html, python)", "javascript") || "javascript";
-        const codeHtml = `<div class="code-block" data-lang="${lang}" contenteditable="true"># ${lang} 코드를 입력하세요</div><p><br></p>`;
-        bodyField.focus();
-        document.execCommand('insertHTML', false, codeHtml);
-        save();
+    function addCodeBlock() {
+        const lang = prompt("프로그래밍 언어 (js, python, html...)", "javascript") || "javascript";
+        const html = `<div class="code-block-wrapper" data-lang="${lang}" contenteditable="true"># ${lang} 코드를 입력하세요</div><p><br></p>`;
+        editorField.focus();
+        document.execCommand('insertHTML', false, html);
+        saveData();
     }
 
-    function togglePreview() {
+    function togglePreviewMode() {
         isPreview = !isPreview;
-        const btn = document.getElementById('prev-btn');
+        const btn = document.getElementById('preview-toggle');
         if (isPreview) {
-            save();
+            saveData();
             document.body.classList.add('preview-mode');
             btn.classList.add('active');
-            // 프리뷰에서 코드 블록 렌더링
-            bodyField.querySelectorAll('.code-block').forEach(el => {
+            
+            // 코드 하이라이팅 적용
+            editorField.querySelectorAll('.code-block-wrapper').forEach(el => {
+                const lang = el.dataset.lang;
                 const pre = document.createElement('pre');
-                pre.className = `language-${el.dataset.lang}`;
+                pre.className = `language-${lang}`;
                 const code = document.createElement('code');
+                code.className = `language-${lang}`;
                 code.textContent = el.innerText;
                 pre.appendChild(code);
                 el.innerHTML = "";
                 el.appendChild(pre);
             });
-            Prism.highlightAllUnder(bodyField);
+            Prism.highlightAllUnder(editorField);
         } else {
             document.body.classList.remove('preview-mode');
             btn.classList.remove('active');
-            updateUI();
+            loadActiveChapter(); // 원본 데이터로 복구
         }
     }
 
     function openModal() { document.getElementById('img-modal').style.display = 'flex'; }
     function closeModal() { document.getElementById('img-modal').style.display = 'none'; }
 
-    async function search() {
-        const q = document.getElementById('img-q').value || 'minimal';
-        const res = document.getElementById('img-results');
-        res.innerHTML = '찾는 중...';
+    async function searchImages() {
+        const q = document.getElementById('img-input').value || 'work';
+        const grid = document.getElementById('img-results');
+        grid.innerHTML = '찾는 중...';
         let html = '';
         for (let i = 0; i < 6; i++) {
             const url = `https://loremflickr.com/600/600/${encodeURIComponent(q)}?lock=${i + Math.random()}`;
             html += `<img src="${url}" onclick="insertImg('${url}')">`;
         }
-        res.innerHTML = html;
+        grid.innerHTML = html;
     }
 
     function insertImg(url) {
-        bodyField.focus();
-        document.execCommand('insertHTML', false, `<img src="${url}" style="width:100%; border-radius:8px; margin:10px 0;"><br>`);
-        closeModal(); save();
+        editorField.focus();
+        document.execCommand('insertHTML', false, `<img src="${url}" style="width:100%; border-radius:12px; margin:15px 0;"><br>`);
+        closeModal();
+        saveData();
     }
 
     function toggleDark() {
-        const dark = document.body.getAttribute('data-theme') === 'dark';
-        document.body.setAttribute('data-theme', dark ? 'light' : 'dark');
-        localStorage.setItem('theme', dark ? 'light' : 'dark');
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+        localStorage.setItem('theme', isDark ? 'light' : 'dark');
     }
 
     function exportFile() {
         let text = "";
-        db.chapters.forEach(ch => {
-            text += `[${ch.title}]\n${ch.content.replace(/<[^>]*>?/gm, '')}\n\n`;
+        appState.chapters.forEach(ch => {
+            const temp = document.createElement('div');
+            temp.innerHTML = ch.content;
+            text += `[${ch.title}]\n${temp.innerText}\n\n`;
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-        a.download = 'my-book.txt'; a.click();
+        a.download = 'book_draft.txt';
+        a.click();
     }
 </script>
 </body>
