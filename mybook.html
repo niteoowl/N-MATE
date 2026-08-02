@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Publisher Ultimate V4</title>
+    <title>Publisher Mobile Ultimate</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -27,287 +27,279 @@
         }
 
         /* RESET - No Shadow, No Animation */
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; transition: none !important; box-shadow: none !important; }
-        html, body { width: 100vw; height: 100vh; overflow: hidden; background: var(--bg); color: var(--text-main); position: fixed; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, "Apple SD Gothic Neo", sans-serif; transition: none !important; box-shadow: none !important; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text-main); position: fixed; }
 
         header { display: flex; justify-content: space-between; align-items: center; padding: 0 20px; height: 50px; border-bottom: 1px solid var(--border); background: var(--bg); }
         .logo { font-size: 14px; font-weight: 900; }
 
-        /* Toolbar Grouping */
-        .toolbar { display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; -ms-overflow-style: none; scrollbar-width: none; }
+        /* Toolbar - 가로 스크롤 강화 */
+        .toolbar { display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; -webkit-overflow-scrolling: touch; }
         .toolbar::-webkit-scrollbar { display: none; }
-        .tool-group { display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center; flex-shrink: 0; }
+        .tool-group { display: flex; background: var(--input-bg); border-radius: 8px; padding: 2px; align-items: center; flex-shrink: 0; }
         
-        .px-select { border: none; background: transparent; font-size: 12px; font-weight: 700; padding: 4px 8px; color: var(--text-main); outline: none; border-right: 1px solid var(--border); appearance: none; }
-        .t-btn { border: none; background: transparent; padding: 6px; border-radius: 4px; color: var(--text-main); display: flex; align-items: center; }
+        /* PX 버튼 스타일 */
+        .size-btn { border: none; background: transparent; font-size: 11px; font-weight: 800; padding: 6px 8px; color: var(--text-main); border-right: 1px solid var(--border); }
+        .size-btn:last-child { border-right: none; }
+        
+        .t-btn { border: none; background: transparent; padding: 8px; border-radius: 6px; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
         .t-btn svg { width: 18px; height: 18px; }
-        .t-btn.active { background: var(--bg); color: var(--accent); }
+        .t-btn.active { background: var(--accent); color: white; }
 
         /* Chapter Navigation */
         .chapter-nav { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
-        .chapter-tab { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap; background: var(--bg); }
+        .chapter-tab { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap; background: var(--bg); }
         .chapter-tab.active { background: var(--text-main); color: var(--bg); border-color: var(--text-main); }
 
-        /* Editor Area */
-        #scroll-area { flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 210px); padding: 20px 20px 250px 20px; -webkit-overflow-scrolling: touch; }
+        /* Main Editor */
+        #editor-container { flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 210px); padding: 20px 20px 300px 20px; -webkit-overflow-scrolling: touch; }
         .title-input { width: 100%; border: none; outline: none; background: transparent; font-size: 26px; font-weight: 800; color: var(--text-main); margin-bottom: 20px; }
         .content-editor { width: 100%; min-height: 300px; outline: none; font-size: 16px; line-height: 1.8; color: var(--text-main); }
         
         /* Code Block */
-        .code-block-wrapper { background: #2d2d2d; color: #ccc; padding: 16px; border-radius: 8px; font-family: monospace; margin: 15px 0; white-space: pre; overflow-x: auto; display: block; }
-        
+        .code-block-item { background: #2d2d2d; color: #eee; padding: 16px; border-radius: 8px; font-family: monospace; margin: 16px 0; white-space: pre; overflow-x: auto; display: block; }
+
         /* Bottom Bar */
         .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 20px calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; z-index: 1000; }
         .btn { border: none; background: var(--input-bg); padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
         .btn-blue { background: var(--accent); color: #fff; }
 
-        /* Image Search Modal */
-        #img-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        .search-box { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); }
-        .img-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px; }
+        /* Modals */
+        #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
+        .img-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
         .img-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
 
-        /* Preview Mode */
-        body.preview-mode .content-editor, body.preview-mode .title-input { pointer-events: none; }
-        body.preview-mode .toolbar, body.preview-mode .chapter-nav { opacity: 0.3; pointer-events: none; }
+        /* Mode Overlay */
+        body.preview-active .content-editor, body.preview-active .title-input { pointer-events: none; }
+        body.preview-active .toolbar, body.preview-active .chapter-nav { opacity: 0.2; pointer-events: none; }
     </style>
 </head>
-<body id="body-main">
+<body>
 
 <header>
-    <div class="logo">TOSS PUBLISHER</div>
-    <button class="t-btn" onclick="toggleDark()"><i data-lucide="moon"></i></button>
+    <div class="logo">TOSS PUBLISHER PRO</div>
+    <button class="t-btn" onmousedown="event.preventDefault(); toggleDark()"><i data-lucide="moon"></i></button>
 </header>
 
-<div class="toolbar" id="main-toolbar">
+<div class="toolbar">
+    <!-- PX 크기 선택 그룹 (버튼형으로 변경하여 포커스 유지) -->
     <div class="tool-group">
-        <!-- 폰트 사이즈 선택: 선택 즉시 변경 -->
-        <select class="px-select" id="size-selector" onchange="applyFontSize(this.value)">
-            <option value="" selected disabled>크기</option>
-            <option value="12px">12px</option>
-            <option value="14px">14px</option>
-            <option value="16px">16px</option>
-            <option value="18px">18px</option>
-            <option value="20px">20px</option>
-            <option value="24px">24px</option>
-            <option value="32px">32px</option>
-        </select>
-        <button class="t-btn" onclick="exec('bold')"><i data-lucide="bold"></i></button>
-        <button class="t-btn" onclick="exec('underline')"><i data-lucide="underline"></i></button>
+        <button class="size-btn" onmousedown="event.preventDefault(); applyFontSize('14px')">14</button>
+        <button class="size-btn" onmousedown="event.preventDefault(); applyFontSize('18px')">18</button>
+        <button class="size-btn" onmousedown="event.preventDefault(); applyFontSize('24px')">24</button>
+        <button class="size-btn" onmousedown="event.preventDefault(); applyFontSize('32px')">32</button>
     </div>
+    <!-- 서식 그룹 -->
     <div class="tool-group">
-        <button class="t-btn" onclick="exec('justifyLeft')"><i data-lucide="align-left"></i></button>
-        <button class="t-btn" onclick="exec('justifyCenter')"><i data-lucide="align-center"></i></button>
+        <button class="t-btn" onmousedown="event.preventDefault(); doExec('bold')"><i data-lucide="bold"></i></button>
+        <button class="t-btn" onmousedown="event.preventDefault(); doExec('underline')"><i data-lucide="underline"></i></button>
     </div>
+    <!-- 도구 그룹 -->
     <div class="tool-group">
-        <button class="t-btn" onclick="addCodeBlock()"><i data-lucide="code"></i></button>
-        <button class="t-btn" onclick="openModal()"><i data-lucide="image"></i></button>
+        <button class="t-btn" onmousedown="event.preventDefault(); insertCode()"><i data-lucide="code"></i></button>
+        <button class="t-btn" onmousedown="event.preventDefault(); openImgModal()"><i data-lucide="image"></i></button>
     </div>
+    <!-- 프리뷰 -->
     <div class="tool-group">
-        <button id="preview-toggle" class="t-btn" onclick="togglePreviewMode()"><i data-lucide="eye"></i><span style="font-size:10px;margin-left:4px">미리보기</span></button>
+        <button id="preview-toggle" class="t-btn" onmousedown="event.preventDefault(); togglePreview()"><i data-lucide="eye"></i></button>
     </div>
 </div>
 
-<div class="chapter-nav" id="chapter-bar"></div>
+<div class="chapter-nav" id="nav-list"></div>
 
-<main id="scroll-area">
-    <input type="text" id="title-field" class="title-input" placeholder="제목 없는 장" oninput="saveData()">
-    <div id="editor-field" class="content-editor" contenteditable="true" oninput="saveData()"></div>
+<main id="editor-container">
+    <input type="text" id="chapter-title" class="title-input" placeholder="제목 없는 장" oninput="saveData()">
+    <div id="editor-body" class="content-editor" contenteditable="true" oninput="saveData()"></div>
 </main>
 
-<footer class="bottom-bar" id="bottom-bar">
-    <div id="save-status" style="font-size: 11px; font-weight: 800; color: var(--text-sub);">실시간 저장 중</div>
+<footer class="bottom-bar" id="footer-bar">
+    <div id="status-label" style="font-size: 11px; font-weight: 800; color: var(--text-sub);">실시간 저장 중</div>
     <div style="display: flex; gap: 8px;">
         <button class="btn" style="color: var(--danger)" onclick="deleteChapter()">삭제</button>
-        <button class="btn btn-blue" onclick="exportFile()">TXT 저장</button>
+        <button class="btn btn-blue" onclick="exportFile()">파일 저장</button>
     </div>
 </footer>
 
-<!-- Image Modal -->
-<div id="img-modal">
-    <div class="search-box">
-        <input type="text" id="img-input" style="flex:1; border:none; background:var(--input-bg); padding:12px; border-radius:8px; outline:none;" placeholder="이미지 검색어 (영어)">
+<!-- Modals -->
+<div id="modal-overlay">
+    <div style="padding:16px; display:flex; gap:8px; border-bottom:1px solid var(--border)">
+        <input type="text" id="img-query" style="flex:1; border:none; background:var(--input-bg); padding:12px; border-radius:8px; outline:none;" placeholder="이미지 키워드 (영어)">
         <button class="btn btn-blue" onclick="searchImages()">검색</button>
-        <button class="btn" onclick="closeModal()">닫기</button>
+        <button class="btn" onclick="closeImgModal()">닫기</button>
     </div>
     <div id="img-results" class="img-grid"></div>
 </div>
 
 <script>
-    let appState = {
+    let state = {
         activeId: null,
-        chapters: [{ id: Date.now(), title: "프롤로그", content: "첫 문장을 입력하세요." }]
+        chapters: [{ id: Date.now(), title: "프롤로그", content: "첫 줄을 시작하세요." }]
     };
     let isPreview = false;
+    let savedRange = null; // 선택 영역 보존 변수
 
-    const titleField = document.getElementById('title-field');
-    const editorField = document.getElementById('editor-field');
-    const bottomBar = document.getElementById('bottom-bar');
+    const titleInput = document.getElementById('chapter-title');
+    const editorBody = document.getElementById('editor-body');
+    const footer = document.getElementById('footer-bar');
 
     window.onload = () => {
-        const saved = localStorage.getItem('TOSS_PUBLISHER_V4');
-        if (saved) appState = JSON.parse(saved);
-        if (!appState.activeId) appState.activeId = appState.chapters[0].id;
+        const data = localStorage.getItem('TOSS_WRITER_V5');
+        if (data) state = JSON.parse(data);
+        if (!state.activeId) state.activeId = state.chapters[0].id;
         if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
 
-        renderChapters();
-        loadActiveChapter();
+        renderNav();
+        loadChapter();
         lucide.createIcons();
-        initVisualViewport();
+        
+        // [핵심] 선택 영역이 바뀔 때마다 위치를 저장함
+        document.onselectionchange = () => {
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) {
+                const range = sel.getRangeAt(0);
+                // 에디터 안에서 선택했을 때만 저장
+                if (editorBody.contains(range.commonAncestorContainer)) {
+                    savedRange = range.cloneRange();
+                }
+            }
+        };
+
+        initKeyboard();
     };
 
-    function initVisualViewport() {
+    function initKeyboard() {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
-                const vv = window.visualViewport;
-                const offset = window.innerHeight - vv.height;
-                bottomBar.style.bottom = offset > 50 ? offset + 'px' : '0px';
+                const offset = window.innerHeight - window.visualViewport.height;
+                footer.style.bottom = offset > 50 ? offset + 'px' : '0px';
             });
         }
     }
 
-    function renderChapters() {
-        const bar = document.getElementById('chapter-bar');
-        bar.innerHTML = '';
-        appState.chapters.forEach(ch => {
+    // 챕터 로직
+    function renderNav() {
+        const nav = document.getElementById('nav-list');
+        nav.innerHTML = '';
+        state.chapters.forEach(ch => {
             const tab = document.createElement('div');
-            tab.className = `chapter-tab ${ch.id === appState.activeId ? 'active' : ''}`;
+            tab.className = `chapter-tab ${ch.id === state.activeId ? 'active' : ''}`;
             tab.innerText = ch.title || '제목 없음';
-            tab.onclick = () => switchChapter(ch.id);
-            bar.appendChild(tab);
+            tab.onclick = () => { saveData(); state.activeId = ch.id; loadChapter(); renderNav(); };
+            nav.appendChild(tab);
         });
-        const addBtn = document.createElement('div');
-        addBtn.className = 'chapter-tab';
-        addBtn.innerText = '+ 추가';
-        addBtn.onclick = createChapter;
-        bar.appendChild(addBtn);
+        const add = document.createElement('div');
+        add.className = 'chapter-tab';
+        add.innerText = '+ 추가';
+        add.onclick = () => {
+            saveData();
+            const id = Date.now();
+            state.chapters.push({ id: id, title: "새로운 장", content: "" });
+            state.activeId = id;
+            loadChapter(); renderNav();
+        };
+        nav.appendChild(add);
     }
 
-    function switchChapter(id) {
-        if(isPreview) togglePreviewMode();
-        saveData();
-        appState.activeId = id;
-        loadActiveChapter();
-        renderChapters();
-    }
-
-    function loadActiveChapter() {
-        const ch = appState.chapters.find(c => c.id === appState.activeId);
-        titleField.value = ch.title;
-        editorField.innerHTML = ch.content;
+    function loadChapter() {
+        const ch = state.chapters.find(c => c.id === state.activeId);
+        titleInput.value = ch.title;
+        editorBody.innerHTML = ch.content;
     }
 
     function saveData() {
-        if(isPreview) return;
-        const ch = appState.chapters.find(c => c.id === appState.activeId);
+        if (isPreview) return;
+        const ch = state.chapters.find(c => c.id === state.activeId);
         if (ch) {
-            ch.title = titleField.value;
-            ch.content = editorField.innerHTML;
+            ch.title = titleInput.value;
+            ch.content = editorBody.innerHTML;
         }
-        localStorage.setItem('TOSS_PUBLISHER_V4', JSON.stringify(appState));
+        localStorage.setItem('TOSS_WRITER_V5', JSON.stringify(state));
         const activeTab = document.querySelector('.chapter-tab.active');
-        if (activeTab) activeTab.innerText = titleField.value || '제목 없음';
-    }
-
-    function createChapter() {
-        saveData();
-        const id = Date.now();
-        const newCh = { id: id, title: "새로운 장", content: "" };
-        appState.chapters.push(newCh);
-        appState.activeId = id;
-        
-        // 에디터 강제 초기화 (복제 방지)
-        titleField.value = newCh.title;
-        editorField.innerHTML = ""; 
-        
-        saveData();
-        renderChapters();
+        if (activeTab) activeTab.innerText = titleInput.value || '제목 없음';
     }
 
     function deleteChapter() {
-        if (appState.chapters.length <= 1) return;
-        if (!confirm("정말 삭제할까요?")) return;
-        appState.chapters = appState.chapters.filter(c => c.id !== appState.activeId);
-        appState.activeId = appState.chapters[0].id;
-        loadActiveChapter();
-        saveData();
-        renderChapters();
+        if (state.chapters.length <= 1) return;
+        if (!confirm("삭제할까요?")) return;
+        state.chapters = state.chapters.filter(c => c.id !== state.activeId);
+        state.activeId = state.chapters[0].id;
+        loadChapter(); renderNav();
     }
 
-    /* [핵심 기능] 먹통 없는 PX 글꼴 크기 적용 함수 */
+    /* [최종 해결책] PX 글꼴 크기 변경 함수 */
     function applyFontSize(size) {
-        if (!size) return;
-        
-        // 1. 브라우저 기본 서식 엔진을 이용해 임시 마킹 (가장 큰 사이즈 7 적용)
+        if (!savedRange) return;
+
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange); // 보존된 영역 복구
+
+        // 서식 적용
         document.execCommand('fontSize', false, '7');
-        
-        // 2. 에디터 내에서 'size=7'로 마킹된 모든 폰트 태그를 찾음
-        const fontTags = editorField.querySelectorAll('font[size="7"]');
-        
-        fontTags.forEach(tag => {
-            // 3. 폰트 태그를 span으로 교체하거나 스타일을 직접 주입
-            tag.removeAttribute('size');
-            tag.style.fontSize = size;
-            tag.style.lineHeight = "1.2"; // 폰트 크기에 따른 행간 최적화
-            
-            // span으로 변환하여 더 견고하게 만듦
-            const newSpan = document.createElement('span');
-            newSpan.style.fontSize = size;
-            newSpan.innerHTML = tag.innerHTML;
-            tag.parentNode.replaceChild(newSpan, tag);
+        const fonts = editorBody.querySelectorAll('font[size="7"]');
+        fonts.forEach(f => {
+            f.removeAttribute('size');
+            f.style.fontSize = size;
+            f.style.lineHeight = "1.4";
+            // 태그 정제
+            const span = document.createElement('span');
+            span.style.fontSize = size;
+            span.innerHTML = f.innerHTML;
+            f.parentNode.replaceChild(span, f);
         });
+        
+        saveData();
+        // 적용 후 다시 저장하여 연속 작업 가능케 함
+        const newRange = document.createRange();
+        newRange.selectNodeContents(editorBody); // 대략적 위치 유지
+        savedRange = sel.getRangeAt(0);
+    }
 
-        // 선택 해제 및 초기화
-        document.getElementById('size-selector').value = "";
+    function doExec(cmd) {
+        if (!savedRange) return;
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+        document.execCommand(cmd, false, null);
         saveData();
     }
 
-    function exec(cmd, val = null) {
-        document.execCommand(cmd, false, val);
-        saveData();
-    }
-
-    function addCodeBlock() {
-        const lang = prompt("프로그래밍 언어 (js, python, html...)", "javascript") || "javascript";
-        const html = `<div class="code-block-wrapper" data-lang="${lang}" contenteditable="true"># ${lang} 코드를 입력하세요</div><p><br></p>`;
-        editorField.focus();
+    function insertCode() {
+        const lang = prompt("언어 (js, python, html)", "javascript") || "javascript";
+        const html = `<div class="code-block-item" data-lang="${lang}" contenteditable="true"># ${lang} 코드를 입력하세요</div><p><br></p>`;
+        editorBody.focus();
         document.execCommand('insertHTML', false, html);
         saveData();
     }
 
-    function togglePreviewMode() {
+    function togglePreview() {
         isPreview = !isPreview;
         const btn = document.getElementById('preview-toggle');
         if (isPreview) {
             saveData();
-            document.body.classList.add('preview-mode');
+            document.body.classList.add('preview-active');
             btn.classList.add('active');
-            
-            // 코드 하이라이팅 적용
-            editorField.querySelectorAll('.code-block-wrapper').forEach(el => {
-                const lang = el.dataset.lang;
+            editorBody.querySelectorAll('.code-block-item').forEach(el => {
                 const pre = document.createElement('pre');
-                pre.className = `language-${lang}`;
+                pre.className = `language-${el.dataset.lang}`;
                 const code = document.createElement('code');
-                code.className = `language-${lang}`;
                 code.textContent = el.innerText;
                 pre.appendChild(code);
-                el.innerHTML = "";
-                el.appendChild(pre);
+                el.innerHTML = ""; el.appendChild(pre);
             });
-            Prism.highlightAllUnder(editorField);
+            Prism.highlightAllUnder(editorBody);
         } else {
-            document.body.classList.remove('preview-mode');
+            document.body.classList.remove('preview-active');
             btn.classList.remove('active');
-            loadActiveChapter(); // 원본 데이터로 복구
+            loadChapter();
         }
     }
 
-    function openModal() { document.getElementById('img-modal').style.display = 'flex'; }
-    function closeModal() { document.getElementById('img-modal').style.display = 'none'; }
+    function openImgModal() { document.getElementById('modal-overlay').style.display = 'flex'; }
+    function closeImgModal() { document.getElementById('modal-overlay').style.display = 'none'; }
 
     async function searchImages() {
-        const q = document.getElementById('img-input').value || 'work';
+        const q = document.getElementById('img-query').value || 'nature';
         const grid = document.getElementById('img-results');
         grid.innerHTML = '찾는 중...';
         let html = '';
@@ -319,10 +311,9 @@
     }
 
     function insertImg(url) {
-        editorField.focus();
+        editorBody.focus();
         document.execCommand('insertHTML', false, `<img src="${url}" style="width:100%; border-radius:12px; margin:15px 0;"><br>`);
-        closeModal();
-        saveData();
+        closeImgModal(); saveData();
     }
 
     function toggleDark() {
@@ -333,15 +324,13 @@
 
     function exportFile() {
         let text = "";
-        appState.chapters.forEach(ch => {
-            const temp = document.createElement('div');
-            temp.innerHTML = ch.content;
-            text += `[${ch.title}]\n${temp.innerText}\n\n`;
+        state.chapters.forEach(ch => {
+            const t = document.createElement('div'); t.innerHTML = ch.content;
+            text += `[${ch.title}]\n${t.innerText}\n\n`;
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-        a.download = 'book_draft.txt';
-        a.click();
+        a.download = 'book.txt'; a.click();
     }
 </script>
 </body>
