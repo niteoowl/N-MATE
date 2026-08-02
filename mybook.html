@@ -3,8 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Professional Mobile Editor V2</title>
+    <title>Ultimate Mobile Editor</title>
+    <!-- 라이브러리: 아이콘 및 코드 하이라이팅 -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+
     <style>
         :root {
             --bg: #ffffff;
@@ -14,6 +21,7 @@
             --accent: #3182f7;
             --danger: #f04452;
             --input-bg: #f2f4f6;
+            --code-bg: #2d2d2d;
         }
 
         [data-theme="dark"] {
@@ -25,7 +33,6 @@
             --input-bg: #1c1c1e;
         }
 
-        /* 초기화: 애니메이션/그림자 절대 금지 */
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -34,106 +41,62 @@
             box-shadow: none !important;
         }
 
-        html, body {
-            width: 100%; height: 100%; overflow: hidden;
-            background-color: var(--bg); color: var(--text-main);
-            position: fixed; /* 키보드 팝업 시 너비 줄어듦 방지 */
-        }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text-main); position: fixed; }
 
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 20px; height: 54px; border-bottom: 1px solid var(--border);
-            background: var(--bg);
-        }
-        .logo { font-size: 14px; font-weight: 800; letter-spacing: -0.5px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; height: 54px; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .logo { font-size: 14px; font-weight: 800; }
 
-        /* 워드 스타일 툴바 */
-        .toolbar {
-            display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px;
-            border-bottom: 1px solid var(--border); background: var(--bg);
-            align-items: center; -ms-overflow-style: none; scrollbar-width: none;
-        }
+        /* 툴바 그룹화 */
+        .toolbar { display: flex; overflow-x: auto; padding: 8px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); align-items: center; -ms-overflow-style: none; scrollbar-width: none; }
         .toolbar::-webkit-scrollbar { display: none; }
-        
-        .tool-group {
-            display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center;
-        }
-
-        .px-select {
-            border: none; background: transparent; font-size: 11px; font-weight: 700;
-            padding: 4px 8px; color: var(--text-main); outline: none;
-        }
-
-        .t-btn {
-            border: none; background: transparent; padding: 6px;
-            border-radius: 4px; color: var(--text-main); display: flex; align-items: center;
-        }
+        .tool-group { display: flex; background: var(--input-bg); border-radius: 6px; padding: 2px; align-items: center; }
+        .px-select { border: none; background: transparent; font-size: 11px; font-weight: 700; padding: 4px 8px; color: var(--text-main); outline: none; }
+        .t-btn { border: none; background: transparent; padding: 6px; border-radius: 4px; color: var(--text-main); display: flex; align-items: center; }
         .t-btn svg { width: 16px; height: 16px; }
+        .t-btn.active { background: var(--bg); color: var(--accent); }
 
         /* 챕터 네비게이션 */
-        .chapter-nav {
-            display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px;
-            border-bottom: 1px solid var(--border); background: var(--bg);
-        }
-        .chapter-tab {
-            padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700;
-            color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap;
-        }
+        .chapter-nav { display: flex; overflow-x: auto; padding: 10px 16px; gap: 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
+        .chapter-tab { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-sub); border: 1px solid var(--border); white-space: nowrap; }
         .chapter-tab.active { background: var(--text-main); color: var(--bg); border-color: var(--text-main); }
 
-        /* 에디터 스크롤 영역 */
-        #editor-scroll-area {
-            flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 220px);
-            padding: 24px 20px 200px 20px; /* 하단 넉넉한 패딩 */
-            -webkit-overflow-scrolling: touch;
-        }
-        .title-input {
-            width: 100%; border: none; outline: none; background: transparent;
-            font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 16px;
-        }
-        .content-editor {
-            width: 100%; min-height: 250px; outline: none;
-            font-size: 17px; line-height: 1.8; color: var(--text-main);
-        }
-        .content-editor img { max-width: 100%; border-radius: 8px; margin: 12px 0; }
+        /* 에디터 & 프리뷰 영역 */
+        #main-container { flex: 1; overflow-y: auto; width: 100%; height: calc(100% - 220px); padding: 24px 20px 200px 20px; -webkit-overflow-scrolling: touch; }
+        .title-input { width: 100%; border: none; outline: none; background: transparent; font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 16px; }
+        .content-editor { width: 100%; min-height: 250px; outline: none; font-size: 17px; line-height: 1.8; color: var(--text-main); }
+        
+        /* 프리뷰 모드 스타일 */
+        body.preview-mode .content-editor { pointer-events: none; }
+        body.preview-mode .title-input { pointer-events: none; }
 
-        /* 하단 액션 바 */
-        .bottom-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--bg); border-top: 1px solid var(--border);
-            padding: 10px 20px calc(10px + env(safe-area-inset-bottom));
-            display: flex; justify-content: space-between; align-items: center;
-            z-index: 100;
-        }
-        .btn {
-            border: none; background: var(--input-bg); padding: 8px 12px;
-            border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--text-main);
-            display: flex; align-items: center; gap: 4px;
-        }
+        /* 코드 블록 스타일 */
+        pre[class*="language-"] { margin: 15px 0; border-radius: 8px; font-size: 14px; }
+        code { font-family: 'Consolas', monospace; }
+        .editor-code-block { background: #2d2d2d; color: #ccc; padding: 15px; border-radius: 8px; font-family: monospace; margin: 10px 0; display: block; white-space: pre; }
+
+        /* 하단 바 */
+        .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg); border-top: 1px solid var(--border); padding: 10px 20px calc(10px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .btn { border: none; background: var(--input-bg); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 4px; }
         .btn-blue { background: var(--accent); color: #fff; }
 
-        /* 검색 팝업 */
-        #modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg); z-index: 2000; display: none; flex-direction: column;
-        }
+        /* 모달 */
+        #modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
         .search-box { padding: 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border); }
         .search-input { flex: 1; border: none; background: var(--input-bg); padding: 10px; border-radius: 8px; color: var(--text-main); outline: none; }
         .img-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
         .img-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
-
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">TOSS WRITER PRO</div>
+    <div class="logo" onclick="location.reload()">PRO PUBLISHER</div>
     <button class="t-btn" onclick="toggleDarkMode()"><i data-lucide="moon"></i></button>
 </header>
 
 <div class="toolbar">
     <div class="tool-group">
-        <select class="px-select" id="fontSize" onchange="changeFontSize(this.value)">
+        <select class="px-select" onchange="changeFontSize(this.value)">
             <option value="12px">12px</option>
             <option value="14px">14px</option>
             <option value="16px" selected>16px</option>
@@ -146,30 +109,33 @@
         <button class="t-btn" onclick="exec('underline')"><i data-lucide="underline"></i></button>
     </div>
     <div class="tool-group">
-        <button class="t-btn" onclick="exec('justifyLeft')"><i data-lucide="align-left"></i></button>
-        <button class="t-btn" onclick="exec('justifyCenter')"><i data-lucide="align-center"></i></button>
+        <button class="t-btn" onclick="insertCode()"><i data-lucide="code"></i></button>
         <button class="t-btn" onclick="openModal()"><i data-lucide="image"></i></button>
+    </div>
+    <div class="tool-group">
+        <button id="preview-btn" class="t-btn" onclick="togglePreview()"><i data-lucide="eye"></i><span style="font-size:10px;margin-left:4px">미리보기</span></button>
     </div>
 </div>
 
 <div class="chapter-nav" id="nav-area"></div>
 
-<main id="editor-scroll-area">
-    <input type="text" id="chapter-title" class="title-input" placeholder="제목을 입력하세요" oninput="saveData()">
+<main id="main-container">
+    <input type="text" id="chapter-title" class="title-input" placeholder="장의 제목" oninput="saveData()">
     <div id="editor-body" class="content-editor" contenteditable="true" oninput="saveData()"></div>
 </main>
 
 <footer class="bottom-bar" id="footer-bar">
-    <span style="font-size: 11px; font-weight: 700; color: var(--text-sub);" id="save-label">저장됨</span>
+    <span style="font-size: 11px; font-weight: 700; color: var(--text-sub);" id="save-status">자동 저장됨</span>
     <div style="display: flex; gap: 6px;">
         <button class="btn" style="color: var(--danger)" onclick="deleteChapter()">삭제</button>
         <button class="btn btn-blue" onclick="exportData()">저장</button>
     </div>
 </footer>
 
+<!-- 이미지 검색 모달 -->
 <div id="modal">
     <div class="search-box">
-        <input type="text" id="img-q" class="search-input" placeholder="검색어 (영어)">
+        <input type="text" id="img-q" class="search-input" placeholder="이미지 검색 (영어)">
         <button class="btn btn-blue" onclick="searchImages()">검색</button>
         <button class="btn" onclick="closeModal()">취소</button>
     </div>
@@ -181,25 +147,25 @@
         activeId: null,
         chapters: [{ id: Date.now(), title: "무제", content: "" }]
     };
+    let isPreview = false;
 
     const titleEl = document.getElementById('chapter-title');
     const bodyEl = document.getElementById('editor-body');
     const footer = document.getElementById('footer-bar');
 
     window.onload = () => {
-        const saved = localStorage.getItem('TOSS_WRITER_FINAL');
+        const saved = localStorage.getItem('TOSS_WRITER_ULTIMATE');
         if (saved) book = JSON.parse(saved);
         if (!book.activeId) book.activeId = book.chapters[0].id;
-        
         if (localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
         
         renderNav();
-        updateUI(); // 초기 UI 로드
+        updateUI();
         lucide.createIcons();
-        initKeyboardHandler();
+        initKeyboard();
     };
 
-    function initKeyboardHandler() {
+    function initKeyboard() {
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const vv = window.visualViewport;
@@ -221,48 +187,46 @@
         });
         const addBtn = document.createElement('div');
         addBtn.className = 'chapter-tab';
-        addBtn.innerText = '+ 추가';
+        addBtn.innerText = '+ 장 추가';
         addBtn.onclick = addChapter;
         nav.appendChild(addBtn);
     }
 
-    // 챕터 전환 시 덮어쓰기 방지 핵심 로직
     function switchChapter(id) {
-        saveData(); // 이동 전 현재 내용 저장
+        if(isPreview) togglePreview();
+        saveData();
         book.activeId = id;
-        updateUI(); // 바뀐 ID로 UI 갱신
+        updateUI();
         renderNav();
     }
 
     function updateUI() {
         const ch = book.chapters.find(c => c.id === book.activeId);
-        if (ch) {
-            titleEl.value = ch.title;
-            bodyEl.innerHTML = ch.content;
-        }
+        titleEl.value = ch.title;
+        bodyEl.innerHTML = ch.content;
     }
 
     function saveData() {
+        if(isPreview) return; // 프리뷰 모드에선 저장 안함
         const ch = book.chapters.find(c => c.id === book.activeId);
         if (ch) {
             ch.title = titleEl.value;
             ch.content = bodyEl.innerHTML;
         }
-        localStorage.setItem('TOSS_WRITER_FINAL', JSON.stringify(book));
+        localStorage.setItem('TOSS_WRITER_ULTIMATE', JSON.stringify(book));
         const activeTab = document.querySelector('.chapter-tab.active');
         if (activeTab) activeTab.innerText = titleEl.value || '무제';
     }
 
     function addChapter() {
-        saveData(); // 새 챕터 만들기 전 기존 내용 저장
+        saveData();
         const newId = Date.now();
-        const newChapter = { id: newId, title: "새로운 장", content: "" };
-        book.chapters.push(newChapter);
+        const newCh = { id: newId, title: "새로운 장", content: "" };
+        book.chapters.push(newCh);
         book.activeId = newId;
         
-        // UI 즉시 초기화 (덮어쓰기 방지)
-        titleEl.value = newChapter.title;
-        bodyEl.innerHTML = newChapter.content;
+        titleEl.value = newCh.title;
+        bodyEl.innerHTML = newCh.content;
         
         saveData();
         renderNav();
@@ -270,12 +234,49 @@
 
     function deleteChapter() {
         if (book.chapters.length <= 1) return;
-        if (!confirm("삭제할까요?")) return;
+        if (!confirm("이 장을 삭제할까요?")) return;
         book.chapters = book.chapters.filter(c => c.id !== book.activeId);
         book.activeId = book.chapters[0].id;
         updateUI();
         saveData();
         renderNav();
+    }
+
+    // 기능: 프리뷰 토글
+    function togglePreview() {
+        isPreview = !isPreview;
+        const btn = document.getElementById('preview-btn');
+        if (isPreview) {
+            saveData();
+            document.body.classList.add('preview-mode');
+            btn.classList.add('active');
+            // 코드 블록을 Prism 형식으로 변환
+            const codes = bodyEl.querySelectorAll('.editor-code-block');
+            codes.forEach(block => {
+                const lang = block.getAttribute('data-lang') || 'javascript';
+                const pre = document.createElement('pre');
+                pre.className = `language-${lang}`;
+                const code = document.createElement('code');
+                code.className = `language-${lang}`;
+                code.textContent = block.innerText;
+                pre.appendChild(code);
+                block.parentNode.replaceChild(pre, block);
+            });
+            Prism.highlightAllUnder(bodyEl);
+        } else {
+            document.body.classList.remove('preview-mode');
+            btn.classList.remove('active');
+            updateUI(); // 원래 에디터 상태로 복구
+        }
+    }
+
+    // 기능: 코드 블록 삽입
+    function insertCode() {
+        const lang = prompt("언어를 입력하세요 (js, python, html, css...)", "javascript") || "javascript";
+        const codeHtml = `<div class="editor-code-block" data-lang="${lang}" contenteditable="true">\n// 여기에 ${lang} 코드를 작성하세요\n</div><p><br></p>`;
+        bodyEl.focus();
+        document.execCommand('insertHTML', false, codeHtml);
+        saveData();
     }
 
     function exec(n, v = null) {
@@ -304,11 +305,11 @@
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
     async function searchImages() {
-        const q = document.getElementById('img-q').value || 'paper';
+        const q = document.getElementById('img-q').value || 'minimal';
         const res = document.getElementById('img-results');
         res.innerHTML = '검색 중...';
         let html = '';
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 6; i++) {
             const url = `https://loremflickr.com/600/600/${encodeURIComponent(q)}?lock=${i + Math.random()}`;
             html += `<img src="${url}" onclick="insertImg('${url}')">`;
         }
@@ -317,7 +318,7 @@
 
     function insertImg(url) {
         bodyEl.focus();
-        document.execCommand('insertHTML', false, `<img src="${url}"><br>`);
+        document.execCommand('insertHTML', false, `<img src="${url}" style="max-width:100%; border-radius:8px; margin:10px 0;"><br>`);
         closeModal();
         saveData();
     }
@@ -325,11 +326,13 @@
     function exportData() {
         let text = "";
         book.chapters.forEach(ch => {
-            text += `[${ch.title}]\n${ch.content.replace(/<[^>]*>?/gm, '')}\n\n`;
+            const temp = document.createElement('div');
+            temp.innerHTML = ch.content;
+            text += `[${ch.title}]\n${temp.innerText}\n\n`;
         });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
-        a.download = 'book.txt';
+        a.download = 'my-book.txt';
         a.click();
     }
 </script>
