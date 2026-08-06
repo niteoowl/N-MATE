@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+@font-face {
+    font-family: 'PartialSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-1@1.1/PartialSansKR-Regular.woff2') format('woff2');
+    font-weight: normal;
+    font-display: swap;
+}
+
+html, body{
+    margin:0;
+    width:100%;
+    height:100%;
+}
+
+body{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    background:transparent;
+}
+
+#logo{
+    font-family:'PartialSans',sans-serif;
+    white-space:pre;
+    line-height:1;
+    user-select:none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="logo"></div>
+
+<script>
+const p = new URLSearchParams(location.search);
+
+function get(name, def){
+    return p.get(name) ?? def;
+}
+
+function color(v){
+    if(!v) return "";
+    if(v==="transparent") return "transparent";
+    if(v.startsWith("#")) return v;
+    if(/^[0-9a-fA-F]{3,8}$/.test(v)) return "#"+v;
+    return v;
+}
+
+const logo=document.getElementById("logo");
+
+logo.textContent=get("text","PartialSans");
+
+logo.style.fontSize=(parseFloat(get("size","96"))||96)+"px";
+logo.style.color=color(get("color","ffffff"));
+logo.style.fontWeight=get("weight","400");
+logo.style.letterSpacing=(parseFloat(get("letterSpacing","0"))||0)+"px";
+
+document.body.style.background=color(get("bg","transparent"));
+
+if(get("shadow","0")==="1"){
+    logo.style.textShadow="0 4px 12px rgba(0,0,0,.35)";
+}
+</script>
+
+</body>
+</html>
