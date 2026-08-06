@@ -21,6 +21,9 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            /* 상단 및 하단 여백 추가 (모바일 상/하단 바 및 노치 대응) */
+            padding-top: env(safe-area-inset-top, 8px);
+            padding-bottom: env(safe-area-inset-bottom, 8px);
         }
 
         /* 상단 헤더 영역 */
@@ -33,6 +36,7 @@
             padding: 0 10px;
             border-bottom: 1px solid #3d3d3d;
             z-index: 1001;
+            flex-shrink: 0;
         }
         .header-left, .header-right {
             display: flex;
@@ -70,7 +74,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 50px);
+            min-height: 0;
         }
 
         /* 에디터 컨테이너 */
@@ -103,25 +107,79 @@
         #preview-container.open {
             transform: translateX(0);
         }
+
+        /* 미리보기 전체화면 스타일 (상/하단 여백 및 모바일 safe-area 반영) */
+        #preview-container.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
+            transform: translateX(0) !important;
+            z-index: 2000 !important;
+            background-color: #1e1e1e; /* 노치 및 하단 스피커/제스처 바 영역 어두운 테마 */
+            padding-top: env(safe-area-inset-top, 12px);
+            padding-bottom: env(safe-area-inset-bottom, 12px);
+        }
+
         .preview-header {
             background-color: #f1f1f1;
             color: #333;
-            padding: 8px 12px;
+            padding: 4px 12px;
             font-size: 13px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #ddd;
-            height: 40px;
+            height: 44px;
+            flex-shrink: 0;
         }
-        .preview-close-btn {
+        .preview-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .preview-btn-fullscreen {
+            background: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #333;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 34px;
+        }
+        .preview-btn-fullscreen:active {
+            background-color: #d0d0d0;
+        }
+        
+        /* 닫기 (X) 버튼 터치 영역 및 크기 대폭 확대 */
+        .preview-close-btn, .archive-close-btn {
             background: none;
             border: none;
-            font-size: 20px;
+            font-size: 28px;
+            font-weight: bold;
             cursor: pointer;
-            color: #666;
+            color: #555;
             line-height: 1;
+            min-width: 40px;
+            min-height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            -webkit-tap-highlight-color: transparent;
         }
+        .preview-close-btn:active {
+            background-color: rgba(0,0,0,0.1);
+            color: #000;
+        }
+
         #preview-iframe {
             flex: 1;
             width: 100%;
@@ -150,22 +208,21 @@
         .archive-header {
             background-color: #2d2d2d;
             color: #fff;
-            padding: 8px 12px;
+            padding: 4px 12px;
             font-size: 14px;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #3d3d3d;
-            height: 40px;
+            height: 44px;
         }
         .archive-close-btn {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
             color: #aaa;
-            line-height: 1;
+        }
+        .archive-close-btn:active {
+            background-color: rgba(255,255,255,0.15);
+            color: #fff;
         }
         .archive-body {
             flex: 1;
@@ -327,7 +384,10 @@
         <div id="preview-container">
             <div class="preview-header">
                 <span>미리보기 화면</span>
-                <button class="preview-close-btn" id="btn-close-preview">&times;</button>
+                <div class="preview-header-actions">
+                    <button class="preview-btn-fullscreen" id="btn-fullscreen-preview" title="전체화면">&lt;&gt;</button>
+                    <button class="preview-close-btn" id="btn-close-preview">&times;</button>
+                </div>
             </div>
             <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
         </div>
@@ -395,6 +455,7 @@
         const mainLayout = document.getElementById('main-layout');
         const btnOpenDrawer = document.getElementById('btn-open-drawer');
         const btnClosePreview = document.getElementById('btn-close-preview');
+        const btnFullscreenPreview = document.getElementById('btn-fullscreen-preview');
         const btnToggleSplit = document.getElementById('btn-toggle-split');
         const previewContainer = document.getElementById('preview-container');
         const drawerOverlay = document.getElementById('drawer-overlay');
@@ -416,10 +477,22 @@
             }
         });
 
+        // 미리보기 전체화면 토글 기능
+        btnFullscreenPreview.addEventListener('click', () => {
+            previewContainer.classList.toggle('fullscreen');
+            if (previewContainer.classList.contains('fullscreen')) {
+                btnFullscreenPreview.textContent = '><';
+            } else {
+                btnFullscreenPreview.textContent = '<>';
+            }
+        });
+
         // 우측 학습서랍 열기
         btnOpenArchive.addEventListener('click', () => {
             archiveContainer.classList.add('open');
             previewContainer.classList.remove('open'); // 반대쪽 서랍은 닫기
+            previewContainer.classList.remove('fullscreen');
+            btnFullscreenPreview.textContent = '<>';
             drawerOverlay.classList.add('active');
             renderSavedList(); // 열릴 때 목록 갱신
         });
@@ -427,6 +500,8 @@
         // 서랍 모두 닫기
         function closeAllDrawers() {
             previewContainer.classList.remove('open');
+            previewContainer.classList.remove('fullscreen');
+            if (btnFullscreenPreview) btnFullscreenPreview.textContent = '<>';
             archiveContainer.classList.remove('open');
             drawerOverlay.classList.remove('active');
         }
@@ -475,7 +550,8 @@
                     wrap: true,
                     indentedSoftWrap: false,
                     behavioursEnabled: true,
-                    autoScrollEditorIntoView: true
+                    autoScrollEditorIntoView: true,
+                    scrollPastEnd: 0.8 // 에디터 마지막 부분 여유 스크롤 설정
                 });
             } catch (e) {
                 console.warn("에디터 초기화 실패, 대체 입력창으로 구성합니다.", e);
@@ -487,7 +563,7 @@
 
         if (useFallback) {
             const editorDiv = document.getElementById('editor');
-            editorDiv.innerHTML = `<textarea id="textarea-editor" placeholder="여기에 HTML 코드를 입력하세요..." style="width:100%; height:100%; background:#1e1e1e; color:#fff; font-family:monospace; font-size:16px; border:none; padding:12px; resize:none; outline:none; box-sizing:border-box; line-height:1.5;"></textarea>`;
+            editorDiv.innerHTML = `<textarea id="textarea-editor" placeholder="여기에 HTML 코드를 입력하세요..." style="width:100%; height:100%; background:#1e1e1e; color:#fff; font-family:monospace; font-size:16px; border:none; padding:12px 12px 60px 12px; resize:none; outline:none; box-sizing:border-box; line-height:1.5;"></textarea>`;
         }
 
         // 값 읽기/쓰기 헬퍼
