@@ -182,15 +182,20 @@
             color: #000;
         }
 
-        #preview-iframe {
+        #preview-iframe-wrapper {
             flex: 1;
             width: 100%;
-            border: none;
+            position: relative;
             background-color: #fff;
             min-height: 0;
         }
+        #preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
 
-        /* [추가] 내장 콘솔 창 스타일 */
+        /* 내장 콘솔 창 스타일 */
         #preview-console {
             height: 160px;
             background-color: #181818;
@@ -243,7 +248,7 @@
         .console-log.warn { color: #fcca46; }
         .console-log.info { color: #4ea8de; }
 
-        /* [추가] 우측 학습 서랍 컨테이너 */
+        /* 우측 학습 서랍 컨테이너 */
         #archive-container {
             position: absolute;
             top: 0;
@@ -441,15 +446,20 @@
             <div class="preview-header">
                 <span>미리보기</span>
                 <div class="preview-header-actions">
-                    <!-- 콘솔 ON/OFF 토글 버튼 추가 -->
+                    <!-- [1번 요구사항] 새로고침 버튼 추가 -->
+                    <button class="preview-btn-action" id="btn-refresh-preview" title="새로고침">🔄</button>
+                    <!-- 콘솔 ON/OFF 토글 버튼 -->
                     <button class="preview-btn-action" id="btn-toggle-console">📟 콘솔 OFF</button>
                     <button class="preview-btn-action" id="btn-fullscreen-preview" title="전체화면">&lt;&gt;</button>
                     <button class="preview-close-btn" id="btn-close-preview">&times;</button>
                 </div>
             </div>
-            <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
             
-            <!-- [추가] JS 실행 로그를 출력할 콘솔 창 -->
+            <div id="preview-iframe-wrapper">
+                <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+            </div>
+            
+            <!-- JS 실행 로그를 출력할 콘솔 창 -->
             <div id="preview-console">
                 <div class="console-header">
                     <span>📟 JS Console Output</span>
@@ -484,7 +494,7 @@
     </div>
 
     <script>
-        // 기본 예제 코드 (console.log 예시 포함)
+        // 기본 예제 코드
         const defaultCode = `<!DOCTYPE html>
 <html>
 <head>
@@ -511,25 +521,26 @@
   <p>이곳은 모바일 에디터입니다.<br>코드를 수정하면 실시간으로 바뀝니다.</p>
   <button onclick="greet()">버튼을 눌러보세요</button>
   <script>
-    console.log("🚀 페이지가 정상적으로 로드되었습니다!");
+    console.log("🚀 페이지가 로드되었습니다.");
 
     function greet() {
       alert('반가워요! 차근차근 같이 배워봅시다.');
-      console.log('💡 버튼이 클릭되었습니다. 현재 시간:', new Date().toLocaleTimeString());
+      console.log('💡 버튼 클릭 시간:', new Date().toLocaleTimeString());
     }
   <\/script>
 </body>
 </html>`;
 
-        // 1. UI 요소 및 서랍 제어
+        // UI 요소
         const mainLayout = document.getElementById('main-layout');
         const btnOpenDrawer = document.getElementById('btn-open-drawer');
         const btnClosePreview = document.getElementById('btn-close-preview');
         const btnFullscreenPreview = document.getElementById('btn-fullscreen-preview');
+        const btnRefreshPreview = document.getElementById('btn-refresh-preview');
         const btnToggleSplit = document.getElementById('btn-toggle-split');
         const previewContainer = document.getElementById('preview-container');
         const drawerOverlay = document.getElementById('drawer-overlay');
-        const previewIframe = document.getElementById('preview-iframe');
+        const iframeWrapper = document.getElementById('preview-iframe-wrapper');
 
         // 학습서랍 관련 요소
         const btnOpenArchive = document.getElementById('btn-open-archive');
@@ -564,36 +575,34 @@
             consoleBody.innerHTML = '';
         });
 
-        // 좌측 미리보기 서랍 열기
+        // [1번] 새로고침 버튼 동작
+        btnRefreshPreview.addEventListener('click', () => {
+            updatePreview();
+        });
+
+        // 서랍 열기/닫기
         btnOpenDrawer.addEventListener('click', () => {
             if (!isSplitMode) {
                 previewContainer.classList.add('open');
-                archiveContainer.classList.remove('open'); // 반대쪽 서랍은 닫기
+                archiveContainer.classList.remove('open');
                 drawerOverlay.classList.add('active');
             }
         });
 
-        // 미리보기 전체화면 토글 기능
         btnFullscreenPreview.addEventListener('click', () => {
             previewContainer.classList.toggle('fullscreen');
-            if (previewContainer.classList.contains('fullscreen')) {
-                btnFullscreenPreview.textContent = '><';
-            } else {
-                btnFullscreenPreview.textContent = '<>';
-            }
+            btnFullscreenPreview.textContent = previewContainer.classList.contains('fullscreen') ? '><' : '<>';
         });
 
-        // 우측 학습서랍 열기
         btnOpenArchive.addEventListener('click', () => {
             archiveContainer.classList.add('open');
-            previewContainer.classList.remove('open'); // 반대쪽 서랍은 닫기
+            previewContainer.classList.remove('open');
             previewContainer.classList.remove('fullscreen');
             btnFullscreenPreview.textContent = '<>';
             drawerOverlay.classList.add('active');
-            renderSavedList(); // 열릴 때 목록 갱신
+            renderSavedList();
         });
 
-        // 서랍 모두 닫기
         function closeAllDrawers() {
             previewContainer.classList.remove('open');
             previewContainer.classList.remove('fullscreen');
@@ -606,10 +615,8 @@
         if (btnCloseArchive) btnCloseArchive.addEventListener('click', closeAllDrawers);
         if (drawerOverlay) drawerOverlay.addEventListener('click', closeAllDrawers);
 
-        // 상하 분할 기능
         btnToggleSplit.addEventListener('click', () => {
             isSplitMode = !isSplitMode;
-            
             if (isSplitMode) {
                 mainLayout.classList.add('split-mode');
                 btnToggleSplit.textContent = '🗂️ 서랍';
@@ -620,23 +627,19 @@
                 btnToggleSplit.textContent = '⇅ 분할';
                 btnOpenDrawer.style.visibility = 'visible';
             }
-            
             if (!useFallback && editorInstance) {
-                setTimeout(() => {
-                    editorInstance.resize();
-                }, 100);
+                setTimeout(() => editorInstance.resize(), 100);
             }
         });
 
 
-        // 2. 에디터 초기화 및 일반 텍스트 상자 대체 장치
+        // 에디터 설정
         let editorInstance = null;
         let useFallback = false;
 
         if (typeof ace !== 'undefined') {
             try {
                 ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.32.7/src-min-noconflict/');
-                
                 editorInstance = ace.edit("editor");
                 editorInstance.setTheme("ace/theme/monokai");
                 editorInstance.session.setMode("ace/mode/html");
@@ -650,7 +653,6 @@
                     scrollPastEnd: 0.8
                 });
             } catch (e) {
-                console.warn("에디터 초기화 실패, 대체 입력창으로 구성합니다.", e);
                 useFallback = true;
             }
         } else {
@@ -663,11 +665,7 @@
         }
 
         function getCodeValue() {
-            if (useFallback) {
-                return document.getElementById('textarea-editor').value;
-            } else {
-                return editorInstance.getValue();
-            }
+            return useFallback ? document.getElementById('textarea-editor').value : editorInstance.getValue();
         }
 
         function setCodeValue(val) {
@@ -679,9 +677,7 @@
         }
 
 
-        // 3. 콘솔 가로채기 스크립트 및 미리보기 업데이트 Logic
-        
-        // iframe 내부에서 발생한 console 함수를 부모창 콘솔 패널로 릴레이하는 주입용 스크립트
+        // 콘솔 감지용 인터셉터 스크립트
         const consoleInterceptorScript = `
         <script>
         (function() {
@@ -708,43 +704,50 @@
             console.info = function() { _info.apply(console, arguments); sendToParent('info', arguments); };
 
             window.onerror = function(msg, url, line, col, error) {
-                sendToParent('error', ['[Error] ' + msg + ' (Line: ' + line + ', Col: ' + col + ')']);
+                sendToParent('error', ['[Error] ' + msg + ' (Line: ' + line + ')']);
             };
         })();
         <\/script>
         `;
 
-        // 부모 창에서 postMessage 수신 처리
+        // [2번 문제해결] 부모 창 postMessage 수신 시 출처(active iframe) 검증
         window.addEventListener('message', (event) => {
+            const currentIframe = document.getElementById('preview-iframe');
+            // 이전 무한 루프나 죽지 않은 타이머에서 들어온 유령 메시지 방지
+            if (!currentIframe || event.source !== currentIframe.contentWindow) return;
+
             if (event.data && event.data.type === 'CONSOLE_LOG') {
                 const logItem = document.createElement('div');
                 logItem.className = `console-log ${event.data.logType}`;
                 logItem.textContent = event.data.message;
                 consoleBody.appendChild(logItem);
-                consoleBody.scrollTop = consoleBody.scrollHeight; // 최하단으로 스크롤 자동 이동
+                consoleBody.scrollTop = consoleBody.scrollHeight;
             }
         });
 
-        // 로컬 스토리지 데이터 동기화 및 렌더링
+        // 저장된 코드 불러오기
         const savedCode = localStorage.getItem('mobile_code_data_v2');
-        if (savedCode) {
-            setCodeValue(savedCode);
-        } else {
-            setCodeValue(defaultCode);
-        }
+        setCodeValue(savedCode || defaultCode);
 
+        // [2번 문제해결] 미리보기 실행 시 기존 Iframe을 완전히 파괴 후 재생성 (이전 타이머/무한루프 완벽 강제종료)
         function updatePreview() {
             const code = getCodeValue();
             localStorage.setItem('mobile_code_data_v2', code);
 
-            // 주입용 콘솔 인터셉터 스크립트를 사용자 코드 가장 위에 탑재
             const injectedCode = consoleInterceptorScript + code;
 
-            // 실행 시 콘솔 초기화
+            // 콘솔 창 초기화
             consoleBody.innerHTML = '';
 
+            // 기존 Iframe 제거 후 새로 생성하여 완전히 독립된 컨텍스트 보장
+            iframeWrapper.innerHTML = '';
+            const newIframe = document.createElement('iframe');
+            newIframe.id = 'preview-iframe';
+            newIframe.setAttribute('sandbox', 'allow-scripts allow-modals allow-same-origin');
+            iframeWrapper.appendChild(newIframe);
+
             try {
-                const iframeDoc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+                const iframeDoc = newIframe.contentDocument || newIframe.contentWindow.document;
                 iframeDoc.open();
                 iframeDoc.write(injectedCode);
                 iframeDoc.close();
@@ -753,17 +756,24 @@
             }
         }
 
-        if (useFallback) {
-            const textarea = document.getElementById('textarea-editor');
-            textarea.addEventListener('input', updatePreview);
-        } else {
-            editorInstance.on("change", updatePreview);
+        // [2번 문제해결] 입력 중 매 타자마다 폭포수 실행되는 것 방지 (0.6초 딜레이 디바운스)
+        let updateTimer = null;
+        function debouncedUpdatePreview() {
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(updatePreview, 600);
         }
 
+        if (useFallback) {
+            document.getElementById('textarea-editor').addEventListener('input', debouncedUpdatePreview);
+        } else {
+            editorInstance.on("change", debouncedUpdatePreview);
+        }
+
+        // 최초 1회 실행
         updatePreview();
 
 
-        // 4. 학습서랍 (저장 / 불러오기 / 삭제) 핵심 비즈니스 로직
+        // 4. 학습서랍 비즈니스 로직
         const saveNameInput = document.getElementById('save-name');
         const btnSaveCode = document.getElementById('btn-save-code');
         const savedListContainer = document.getElementById('saved-list');
