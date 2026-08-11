@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Google Quiz | ULTRA+ Mode</title>
+    <!-- Google Fonts & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Noto+Sans+KR:wght@300;400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+    <style>
+        /* --- Authentic Material Design 3 Tokens --- */
+        :root {
+            --md-sys-color-primary: #0b57d0;
+            --md-sys-color-on-primary: #ffffff;
+            --md-sys-color-primary-container: #d3e3fd;
+            --md-sys-color-on-primary-container: #041e49;
+            --md-sys-color-secondary: #00639b;
+            --md-sys-color-secondary-container: #c2e7ff;
+            --md-sys-color-on-secondary-container: #001d33;
+            --md-sys-color-tertiary: #6e41c0;
+            --md-sys-color-tertiary-container: #ebddff;
+            --md-sys-color-on-tertiary-container: #25005a;
+            
+            --md-sys-color-surface: #f8f9fa;
+            --md-sys-color-surface-container-lowest: #ffffff;
+            --md-sys-color-surface-container-low: #f0f4f9;
+            --md-sys-color-surface-container: #e9eef6;
+            --md-sys-color-surface-container-high: #e1e5ed;
+            --md-sys-color-surface-container-highest: #d6dae3;
+            
+            --md-sys-color-on-surface: #1f1f1f;
+            --md-sys-color-on-surface-variant: #444746;
+            --md-sys-color-outline: #747775;
+            --md-sys-color-outline-variant: #c4c7c5;
+            --md-sys-color-error: #ba1a1a;
+
+            --md-shape-corner-small: 8px;
+            --md-shape-corner-medium: 12px;
+            --md-shape-corner-large: 16px;
+            --md-shape-corner-extra-large: 28px;
+            --md-shape-corner-full: 9999px;
+
+            --md-elevation-1: 0px 1px 3px 1px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
+            --md-elevation-2: 0px 2px 6px 2px rgba(0, 0, 0, 0.08), 0px 1px 2px 0px rgba(0, 0, 0, 0.12);
+            --md-elevation-3: 0px 4px 12px 3px rgba(0, 0, 0, 0.12), 0px 1px 3px 0px rgba(0, 0, 0, 0.20);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0; padding: 0;
+            font-family: 'Google Sans', 'Noto Sans KR', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 3px; }
+
+        /* Top Header */
+        header {
+            height: 64px;
+            background-color: var(--md-sys-color-surface-container-lowest);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--md-sys-color-surface-container-high);
+            z-index: 10;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 12px; }
+
+        .icon-btn {
+            background: none; border: none; cursor: pointer;
+            color: var(--md-sys-color-on-surface-variant);
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .icon-btn:hover { background-color: var(--md-sys-color-surface-container); }
+
+        .brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 20px; font-weight: 500; color: var(--md-sys-color-on-surface);
+            cursor: pointer; user-select: none;
+        }
+
+        .url-badge {
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            font-size: 11px; padding: 4px 10px;
+            border-radius: var(--md-shape-corner-full);
+            font-weight: 700;
+        }
+
+        .prof-badge-pill {
+            background: linear-gradient(135deg, #312e81, #4c1d95, #0b57d0);
+            color: #ffffff; font-size: 11px; font-weight: 700;
+            padding: 6px 14px; border-radius: var(--md-shape-corner-full);
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: var(--md-elevation-1); cursor: pointer;
+        }
+
+        /* Layout */
+        .app-body { display: flex; flex: 1; height: calc(100vh - 64px); position: relative; }
+
+        sidebar {
+            width: 280px;
+            background-color: var(--md-sys-color-surface-container-lowest);
+            padding: 16px 12px;
+            display: flex; flex-direction: column; gap: 4px;
+            border-right: 1px solid var(--md-sys-color-surface-container-high);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-overlay {
+            display: none; position: fixed; top: 64px; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.32); z-index: 99; opacity: 0; transition: opacity 0.3s;
+        }
+
+        .fab-extended {
+            display: flex; align-items: center; gap: 12px;
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            padding: 16px 20px; border-radius: var(--md-shape-corner-large);
+            border: none; font-weight: 700; font-size: 14px; cursor: pointer;
+            box-shadow: var(--md-elevation-1); transition: all 0.2s; margin-bottom: 12px; width: 100%;
+        }
+        .fab-extended:hover { box-shadow: var(--md-elevation-2); background-color: #c2d7f9; }
+
+        .nav-section-title {
+            font-size: 11px; font-weight: 700; color: var(--md-sys-color-outline);
+            padding: 12px 16px 4px; text-transform: uppercase; letter-spacing: 0.8px;
+        }
+
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; border-radius: var(--md-shape-corner-full);
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s;
+        }
+        .nav-item.active { background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); font-weight: 700; }
+        .nav-item:hover:not(.active) { background-color: var(--md-sys-color-surface-container-low); }
+
+        main { flex: 1; padding: 28px; overflow-y: auto; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 920px; }
+        .view { display: none; }
+        .view.active { display: block; }
+
+        /* M3 Cards & ULTRA+ Hero Banner */
+        .m3-card {
+            background: var(--md-sys-color-surface-container-lowest);
+            border-radius: var(--md-shape-corner-extra-large);
+            padding: 24px; border: 1px solid var(--md-sys-color-outline-variant);
+            margin-bottom: 20px; box-shadow: var(--md-elevation-1);
+        }
+
+        .ultra-banner {
+            background: linear-gradient(135deg, #0f172a, #312e81, #4c1d95, #0b57d0);
+            color: white; border-radius: var(--md-shape-corner-extra-large);
+            padding: 32px; margin-bottom: 28px; position: relative; overflow: hidden;
+            box-shadow: var(--md-elevation-2);
+        }
+
+        .info-btn-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
+            color: #ffffff; padding: 6px 12px; border-radius: var(--md-shape-corner-full);
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        /* Inputs & Form Elements */
+        .m3-textfield { position: relative; margin-bottom: 20px; width: 100%; }
+        .m3-textfield input, .m3-textfield textarea {
+            width: 100%; padding: 16px; font-size: 15px;
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: var(--md-shape-corner-small);
+            background: transparent; outline: none; color: var(--md-sys-color-on-surface);
+            transition: border-color 0.2s;
+        }
+        .m3-textfield input:focus, .m3-textfield textarea:focus {
+            border-color: var(--md-sys-color-primary); border-width: 2px; padding: 15px;
+        }
+        .m3-textfield label {
+            position: absolute; left: 12px; top: -10px;
+            background: var(--md-sys-color-surface-container-lowest); padding: 0 6px;
+            font-size: 12px; color: var(--md-sys-color-primary); font-weight: 700;
+        }
+        .m3-textfield textarea { height: 160px; resize: vertical; line-height: 1.5; font-family: monospace; }
+
+        .m3-custom-select { position: relative; margin-bottom: 20px; }
+        .m3-select-trigger {
+            border: 1px solid var(--md-sys-color-outline); border-radius: var(--md-shape-corner-small);
+            padding: 16px; font-size: 15px; cursor: pointer; display: flex; align-items: center;
+            justify-content: space-between; background: var(--md-sys-color-surface-container-lowest);
+            color: var(--md-sys-color-on-surface);
+        }
+        .m3-select-menu {
+            display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: var(--md-sys-color-surface-container-high); border-radius: var(--md-shape-corner-small);
+            box-shadow: var(--md-elevation-2); z-index: 50; overflow: hidden; max-height: 200px; overflow-y: auto;
+        }
+        .m3-select-menu.open { display: block; }
+        .m3-select-option {
+            padding: 12px 16px; cursor: pointer; font-size: 14px;
+            transition: background 0.2s; color: var(--md-sys-color-on-surface);
+        }
+        .m3-select-option:hover { background: var(--md-sys-color-surface-container-highest); }
+        .m3-select-option.selected { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); font-weight: 700; }
+
+        /* Buttons */
+        .btn {
+            background: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary);
+            border: none; padding: 10px 24px; border-radius: var(--md-shape-corner-full);
+            font-weight: 500; font-size: 14px; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s; height: 40px;
+        }
+        .btn:hover { box-shadow: var(--md-elevation-1); opacity: 0.95; }
+        .btn-tonal { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); font-weight: 700; }
+        .btn-tertiary { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); font-weight: 700; }
+        .btn-ultra { background: linear-gradient(135deg, #4c1d95, #0b57d0); color: white; font-weight: 700; height: 46px; }
+        .btn-outlined { background: transparent; color: var(--md-sys-color-primary); border: 1px solid var(--md-sys-color-outline); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+
+        .set-card {
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-shape-corner-extra-large); padding: 20px;
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 160px;
+            transition: all 0.2s; box-shadow: var(--md-elevation-1); cursor: pointer;
+        }
+        .set-card:hover { border-color: var(--md-sys-color-primary); transform: translateY(-2px); box-shadow: var(--md-elevation-2); }
+
+        /* Quiz Hub Cards on Set Detail Page */
+        .quiz-hub-card {
+            background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: var(--md-shape-corner-large); padding: 18px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            cursor: pointer; transition: all 0.2s; min-height: 120px;
+        }
+        .quiz-hub-card:hover {
+            border-color: var(--md-sys-color-primary);
+            background: var(--md-sys-color-primary-container);
+            transform: translateY(-2px);
+        }
+
+        /* Quiz Stepper & Flashcards */
+        .stepper-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);
+            padding: 12px 20px; border-radius: var(--md-shape-corner-full); margin-bottom: 20px;
+            font-weight: 700; font-size: 14px;
+        }
+
+        .m3-progress-bar { height: 6px; background: var(--md-sys-color-surface-container-high); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+        .m3-progress-fill { height: 100%; background: var(--md-sys-color-primary); width: 0%; transition: width 0.3s ease; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .option-btn {
+            background: var(--md-sys-color-surface-container-lowest); border: 1px solid var(--md-sys-color-outline);
+            border-radius: var(--md-shape-corner-large); padding: 16px; font-size: 15px; font-weight: 500;
+            text-align: center; cursor: pointer; transition: all 0.2s; color: var(--md-sys-color-on-surface);
+        }
+        .option-btn:hover { border-color: var(--md-sys-color-primary); background: var(--md-sys-color-primary-container); }
+        .option-btn.correct { background: #d4edda !important; border-color: #28a745 !important; color: #155724 !important; font-weight: 700; }
+        .option-btn.wrong { background: #f8d7da !important; border-color: #dc3545 !important; color: #721c24 !important; font-weight: 700; }
+
+        /* Flashcard */
+        .flashcard { width: 100%; height: 280px; perspective: 1000px; cursor: pointer; margin-bottom: 20px; }
+        .flashcard-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s; border-radius: var(--md-shape-corner-extra-large); }
+        .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: var(--md-shape-corner-extra-large); background: var(--md-sys-color-surface-container-lowest);
+            border: 1px solid var(--md-sys-color-outline-variant); padding: 24px; box-shadow: var(--md-elevation-1);
+        }
+        .card-face.back { transform: rotateY(180deg); background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+
+        /* Match Pair Game Styles */
+        .match-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
+        .match-chip {
+            padding: 16px; border-radius: var(--md-shape-corner-medium); border: 1px solid var(--md-sys-color-outline);
+            background: var(--md-sys-color-surface-container-lowest); font-weight: 500; font-size: 15px;
+            text-align: center; cursor: pointer; transition: all 0.2s;
+        }
+        .match-chip.selected { border-color: var(--md-sys-color-primary); background: var(--md-sys-color-primary-container); font-weight: 700; }
+        .match-chip.matched { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        /* M3 Modals & Dialogs */
+        .modal-backdrop {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center;
+            padding: 20px; opacity: 0; transition: opacity 0.2s ease;
+        }
+        .modal-backdrop.active { display: flex; opacity: 1; }
+        .modal-dialog {
+            background: var(--md-sys-color-surface-container-high); border-radius: var(--md-shape-corner-extra-large);
+            max-width: 520px; width: 100%; padding: 28px; box-shadow: var(--md-elevation-3);
+            max-height: 85vh; overflow-y: auto; border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .m3-snackbar {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: #313033; color: #ffffff; padding: 14px 20px; border-radius: var(--md-shape-corner-small);
+            font-size: 14px; font-weight: 500; box-shadow: var(--md-elevation-2); transition: transform 0.3s;
+            z-index: 300; display: flex; align-items: center; gap: 8px;
+        }
+        .m3-snackbar.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 768px) {
+            sidebar { position: fixed; top: 64px; left: -290px; bottom: 0; z-index: 100; }
+            sidebar.open { transform: translateX(290px); }
+            .sidebar-overlay.active { display: block; opacity: 1; }
+            main { padding: 16px; }
+            .options-grid, .match-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <button class="icon-btn" onclick="toggleSidebar()"><span class="material-symbols-outlined">menu</span></button>
+            <div class="brand" onclick="switchView('workspace')">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Quiz</span>
+                <span class="url-badge">quiz.google.com</span>
+            </div>
+        </div>
+
+        <div class="prof-badge-pill" onclick="openProfessorInfoModal()">
+            <span class="material-symbols-outlined" style="font-size:16px;">school</span>
+            <span>교수진 1,051명 프로젝트</span>
+            <span class="material-symbols-outlined" style="font-size:16px;">info</span>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+        <!-- Sidebar Navigation -->
+        <sidebar id="sidebar">
+            <button class="fab-extended" onclick="switchView('create'); closeSidebar();">
+                <span class="material-symbols-outlined">add</span> 새 퀴즈 세트
+            </button>
+            <div class="nav-section-title">워크스페이스</div>
+            <div id="workspace-list"></div>
+            <a class="nav-item" onclick="openAddWorkspaceModal()" style="color: var(--md-sys-color-primary);">
+                <span class="material-symbols-outlined">add_circle</span> 워크스페이스 추가
+            </a>
+        </sidebar>
+
+        <!-- Main Content Canvas -->
+        <main>
+            <div class="container">
+
+                <!-- VIEW 1: Workspace Dashboard -->
+                <div id="view-workspace" class="view active">
+                    <div class="ultra-banner">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="material-symbols-outlined">rocket_launch</span>
+                                <span style="font-weight: 700; font-size: 12px; letter-spacing: 0.5px;">ULTRA+ MODE LOADED</span>
+                            </div>
+                            <button class="info-btn-badge" onclick="openProfessorInfoModal()">
+                                <span class="material-symbols-outlined" style="font-size:16px;">info</span>
+                                <span>교수진 1,051명 연구 프로젝트</span>
+                            </button>
+                        </div>
+                        <h2 style="font-size: 26px; font-weight: 700; margin-bottom: 8px;">Google Quiz ULTRA+</h2>
+                        <p style="opacity: 0.9; font-size: 14px; line-height: 1.6;">
+                            국내외 인지과학 교수진 1,051명이 참여한 초강력 암기 로테이션 엔진.<br>
+                            단어장을 선택하여 개별 퀴즈를 풀거나 ULTRA+ 전용 코스를 시작하세요.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 id="current-ws-title" style="font-size: 20px; font-weight: 500;">기본 워크스페이스</h3>
+                    </div>
+                    <div class="grid" id="quiz-set-grid"></div>
+                </div>
+
+                <!-- VIEW 2: Create Set -->
+                <div id="view-create" class="view">
+                    <h2 style="font-size: 22px; font-weight: 500; margin-bottom: 20px;">새 퀴즈 세트 생성</h2>
+                    <div class="m3-card">
+                        <div style="margin-bottom:20px;">
+                            <label style="font-size:12px; font-weight:700; color:var(--md-sys-color-primary); display:block; margin-bottom:6px;">워크스페이스 선택</label>
+                            <div class="m3-custom-select">
+                                <div class="m3-select-trigger" onclick="toggleCustomSelect()">
+                                    <span id="custom-select-label">기본 워크스페이스</span>
+                                    <span class="material-symbols-outlined">arrow_drop_down</span>
+                                </div>
+                                <div class="m3-select-menu" id="custom-select-menu"></div>
+                            </div>
+                        </div>
+
+                        <div class="m3-textfield">
+                            <label>퀴즈 세트 제목</label>
+                            <input type="text" id="set-title" placeholder="예: 토익 핵심 어휘 세트 1">
+                        </div>
+                        <div class="m3-textfield">
+                            <label>단어 붙여넣기 (영어: 한국어{어원})</label>
+                            <textarea id="set-raw-text" placeholder="persistent: 끈기 있는{per(통과) + sist(서다) = 끝까지 서 있는}&#10;innovation: 혁신{in(안으로) + nov(새로운) = 안으로 새로움을 들임}&#10;apple: 사과"></textarea>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                            <button class="btn btn-outlined" onclick="switchView('workspace')">취소</button>
+                            <button class="btn" onclick="saveQuizSet()">저장하기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: Set Detail Page (단어장 상세 페이지) -->
+                <div id="view-detail" class="view">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="icon-btn" onclick="switchView('workspace')"><span class="material-symbols-outlined">arrow_back</span></button>
+                            <div>
+                                <h2 id="detail-set-title" style="font-size: 22px; font-weight: 700;">단어장 제목</h2>
+                                <p id="detail-set-count" style="font-size: 13px; color: var(--md-sys-color-outline);">0개 단어 포함</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-ultra" id="detail-ultra-btn">
+                            <span class="material-symbols-outlined">rocket_launch</span> ULTRA+ 모드 시작
+                        </button>
+                    </div>
+
+                    <!-- Individual Quiz Launcher Lounge -->
+                    <div class="m3-card" style="margin-bottom: 24px;">
+                        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">sports_esports</span>
+                            개별 퀴즈 & 게임 모드 선택
+                        </h3>
+                        <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('flashcard')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">style</span>
+                                <div><div style="font-weight:700;">플래시카드</div><div style="font-size:12px; color:var(--md-sys-color-outline);">직관적 뒤집기</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('choice')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">quiz</span>
+                                <div><div style="font-weight:700;">4지선다 퀴즈</div><div style="font-size:12px; color:var(--md-sys-color-outline);">영 ➔ 한 선택</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('reverse')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">swap_horiz</span>
+                                <div><div style="font-weight:700;">역방향 퀴즈</div><div style="font-size:12px; color:var(--md-sys-color-outline);">한 ➔ 영 인출</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('tts')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">volume_up</span>
+                                <div><div style="font-weight:700;">원어민 리스닝</div><div style="font-size:12px; color:var(--md-sys-color-outline);">발음 듣고 선택</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('typing')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">keyboard</span>
+                                <div><div style="font-weight:700;">스펠링 타이핑</div><div style="font-size:12px; color:var(--md-sys-color-outline);">직접 입력 테스트</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('tf_game')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">published_with_changes</span>
+                                <div><div style="font-weight:700;">O/X 스피드 검증</div><div style="font-size:12px; color:var(--md-sys-color-outline);">빠른 참/거짓 판별</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('missing_letters')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">password</span>
+                                <div><div style="font-weight:700;">빈칸 철자 완성</div><div style="font-size:12px; color:var(--md-sys-color-outline);">빠진 스펠링 채우기</div></div>
+                            </div>
+                            <div class="quiz-hub-card" onclick="launchIndividualQuiz('match_game')">
+                                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">extension</span>
+                                <div><div style="font-weight:700;">짝맞추기 게임</div><div style="font-size:12px; color:var(--md-sys-color-outline);">카드 연결 게임</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Word Search & Inspection List -->
+                    <div class="m3-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="font-size: 16px; font-weight: 700;">단어 목록 및 어원 조회</h3>
+                            <div class="m3-textfield" style="margin:0; width: 220px;">
+                                <input type="text" id="detail-search-input" placeholder="단어 검색..." oninput="filterDetailWordList()">
+                            </div>
+                        </div>
+                        <div id="detail-word-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                    </div>
+                </div>
+
+                <!-- VIEW 4: Interactive Quiz Engine -->
+                <div id="view-quiz-engine" class="view">
+                    <div class="m3-progress-bar">
+                        <div class="m3-progress-fill" id="quiz-progress-bar"></div>
+                    </div>
+
+                    <div id="auto-stepper-header" class="stepper-header" style="display:none;">
+                        <span id="stepper-stage-title">STAGE 1: 뇌 자극 노출</span>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span id="stepper-stage-counter">1 / 12</span>
+                            <span class="material-symbols-outlined" style="cursor:pointer; font-size:20px;" onclick="openProfessorInfoModal()">info</span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 id="quiz-engine-title" style="font-size: 20px; font-weight: 500;">퀴즈 실행 중</h2>
+                        <button class="btn btn-outlined" onclick="switchView('detail')">중단</button>
+                    </div>
+
+                    <div id="quiz-render-area"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- M3 Modal Dialog: 1,051 Professors Project Info -->
+    <div class="modal-backdrop" id="prof-info-modal">
+        <div class="modal-dialog">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px; color:var(--md-sys-color-primary);">
+                    <span class="material-symbols-outlined">school</span>
+                    <h3 style="font-size:18px; font-weight:700;">1,051명 교수진 초대형 프로젝트</h3>
+                </div>
+                <button class="icon-btn" onclick="closeModal('prof-info-modal')"><span class="material-symbols-outlined">close</span></button>
+            </div>
+
+            <div style="background:linear-gradient(135deg, #0f172a, #312e81, #4c1d95); color:white; padding:20px; border-radius:18px; margin-bottom:20px;">
+                <div style="font-size:11px; font-weight:700; color:#a8c7fa; margin-bottom:4px;">PROVEN BY 1,051 PROFESSORS</div>
+                <div style="font-size:18px; font-weight:700; margin-bottom:6px;">Google Quiz ULTRA+ 인지 암기 알고리즘</div>
+                <p style="font-size:13px; opacity:0.85; line-height:1.5;">
+                    전 세계 1,051명의 교육학·뇌과학 교수진이 설계한 다감각 인지 자극 시스템으로 단어가 뇌의 장기 기억 영역에 직접 임프린팅됩니다.
+                </p>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                <div style="background:var(--md-sys-color-surface-container-lowest); padding:12px 14px; border-radius:12px; border:1px solid var(--md-sys-color-outline-variant); font-size:13px;">
+                    <b>1. 초인지 메타검증:</b> 유저 스스로 인지 여부 판단
+                </div>
+                <div style="background:var(--md-sys-color-surface-container-lowest); padding:12px 14px; border-radius:12px; border:1px solid var(--md-sys-color-outline-variant); font-size:13px;">
+                    <b>2. 교차 재인 & 회상:</b> 정방향 / 역방향 양방향 인출
+                </div>
+                <div style="background:var(--md-sys-color-surface-container-lowest); padding:12px 14px; border-radius:12px; border:1px solid var(--md-sys-color-outline-variant); font-size:13px;">
+                    <b>3. 청각 & 구조 재배치:</b> TTS 음성 및 애너그램 구조화
+                </div>
+                <div style="background:var(--md-sys-color-surface-container-lowest); padding:12px 14px; border-radius:12px; border:1px solid var(--md-sys-color-outline-variant); font-size:13px;">
+                    <b>4. 망각곡선 영점 루프:</b> 오답 제로 시까지 완전 정복 무한 순환
+                </div>
+            </div>
+
+            <div style="text-align:right;">
+                <button class="btn" onclick="closeModal('prof-info-modal')">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- M3 Modal Dialog: Etymology Sheet -->
+    <div class="modal-backdrop" id="etymology-modal">
+        <div class="modal-dialog">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div style="display:flex; align-items:center; gap:8px; color:var(--md-sys-color-primary);">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <h3 style="font-size:18px; font-weight:700;">어원 힌트 (User Etymology)</h3>
+                </div>
+                <button class="icon-btn" onclick="closeModal('etymology-modal')"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div style="font-size:22px; font-weight:700; color:var(--md-sys-color-on-surface); margin-bottom:12px;" id="etymology-word-title">word</div>
+            <div id="etymology-content" style="font-size:15px; line-height:1.6; color:var(--md-sys-color-on-surface-variant); background:var(--md-sys-color-primary-container); padding:18px; border-radius:var(--md-shape-corner-medium); border:1px solid var(--md-sys-color-outline-variant);"></div>
+            <div style="margin-top:20px; text-align:right;">
+                <button class="btn" onclick="closeModal('etymology-modal')">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- M3 Dialogs: Input & Confirm -->
+    <div class="modal-backdrop" id="input-modal">
+        <div class="modal-dialog">
+            <h3 style="font-size:20px; font-weight:500; margin-bottom:16px;">새 워크스페이스 추가</h3>
+            <div class="m3-textfield"><label>이름</label><input type="text" id="input-modal-value" placeholder="예: 토익 시험 대비"></div>
+            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                <button class="btn btn-outlined" onclick="closeModal('input-modal')">취소</button>
+                <button class="btn" id="input-modal-confirm-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="confirm-modal">
+        <div class="modal-dialog">
+            <h3 style="font-size:20px; font-weight:500; margin-bottom:12px;">확인</h3>
+            <p style="font-size:14px; color:var(--md-sys-color-on-surface-variant); margin-bottom:20px;" id="confirm-modal-msg">정말 삭제하시겠습니까?</p>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-outlined" onclick="closeModal('confirm-modal')">취소</button>
+                <button class="btn" id="confirm-modal-yes-btn">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- M3 Toast Snackbar -->
+    <div class="m3-snackbar" id="m3-snackbar">
+        <span class="material-symbols-outlined" style="font-size:18px; color:#a8c7fa;">info</span>
+        <span id="snackbar-text">메시지</span>
+    </div>
+
+    <script>
+        // Global App State
+        let state = {
+            workspaces: [
+                { id: 'ws_default', name: '기본 워크스페이스' }
+            ],
+            currentWorkspaceId: 'ws_default',
+            selectedWsForCreate: 'ws_default',
+            activeSetId: null,
+            quizSets: [
+                {
+                    id: 'set_1',
+                    workspaceId: 'ws_default',
+                    title: '교수진 검증 핵심 어휘 세트',
+                    items: [
+                        { en: 'persistent', kr: '끈기 있는, 집요한', etym: 'per(통과) + sist(서다) = 끝까지 서 있는' },
+                        { en: 'innovation', kr: '혁신, 새로운 변화', etym: 'in(안으로) + nov(새로운) = 안으로 새로움을 들임' },
+                        { en: 'sustain', kr: '유지하다, 지탱하다', etym: 'sus(아래) + tain(잡다) = 아래에서 지속해서 잡다' },
+                        { en: 'inspect', kr: '점검하다, 검사하다', etym: 'in(안을) + spect(보다) = 문제점을 유심히 들여다보다' }
+                    ]
+                }
+            ]
+        };
+
+        let session = {
+            mode: 'ultra', // 'ultra', 'single'
+            formatKey: null,
+            set: null,
+            items: [],
+            currentIndex: 0,
+            failedItems: [],
+            ultraStage: 1,
+            // Match game state
+            matchSelectedEn: null,
+            matchSelectedKr: null
+        };
+
+        // --- Multi-Fallback Speech Engine ---
+        function speak(text) {
+            text = text.trim();
+            if (!text) return;
+            let speechStarted = false;
+
+            if ('speechSynthesis' in window) {
+                try {
+                    window.speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    let voices = window.speechSynthesis.getVoices();
+                    let enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')));
+                    if (enVoice) utterance.voice = enVoice;
+                    utterance.onstart = () => { speechStarted = true; };
+                    window.speechSynthesis.speak(utterance);
+                } catch(e) {}
+            }
+
+            setTimeout(() => {
+                if (!speechStarted) playCdnAudioFallback(text);
+            }, 250);
+        }
+
+        function playCdnAudioFallback(text) {
+            const youdaoUrl = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(text)}&type=2`;
+            const audio = new Audio(youdaoUrl);
+            audio.play().catch(() => {
+                const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=en&client=tw-ob`;
+                const audio2 = new Audio(googleUrl);
+                audio2.play().catch(() => { showSnackbar('음성을 재생할 수 없습니다.'); });
+            });
+        }
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+        }
+
+        // --- Modals ---
+        function openProfessorInfoModal() { document.getElementById('prof-info-modal').classList.add('active'); }
+        function openUserEtymologyModal(word, etymText) {
+            document.getElementById('etymology-word-title').innerText = word;
+            document.getElementById('etymology-content').innerText = etymText || '작성된 어원 내용이 없습니다.';
+            document.getElementById('etymology-modal').classList.add('active');
+        }
+
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function showSnackbar(msg) {
+            const sb = document.getElementById('m3-snackbar');
+            document.getElementById('snackbar-text').innerText = msg;
+            sb.classList.add('show');
+            setTimeout(() => { sb.classList.remove('show'); }, 3000);
+        }
+
+        function openConfirmModal(msg, onConfirm) {
+            document.getElementById('confirm-modal-msg').innerText = msg;
+            document.getElementById('confirm-modal-yes-btn').onclick = () => {
+                onConfirm(); closeModal('confirm-modal');
+            };
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function openAddWorkspaceModal() {
+            const modal = document.getElementById('input-modal');
+            const input = document.getElementById('input-modal-value');
+            input.value = '';
+            document.getElementById('input-modal-confirm-btn').onclick = () => {
+                const val = input.value.trim();
+                if (val) {
+                    const newWs = { id: 'ws_' + Date.now(), name: val };
+                    state.workspaces.push(newWs);
+                    state.currentWorkspaceId = newWs.id;
+                    state.selectedWsForCreate = newWs.id;
+                    saveData();
+                    renderWorkspaceView();
+                    renderCustomSelectMenu();
+                    closeModal('input-modal'); closeSidebar();
+                    showSnackbar('새 워크스페이스가 추가되었습니다.');
+                }
+            };
+            modal.classList.add('active');
+        }
+
+        // Custom Dropdown
+        function renderCustomSelectMenu() {
+            const menu = document.getElementById('custom-select-menu');
+            menu.innerHTML = '';
+            state.workspaces.forEach(ws => {
+                const item = document.createElement('div');
+                item.className = `m3-select-option ${ws.id === state.selectedWsForCreate ? 'selected' : ''}`;
+                item.innerText = ws.name;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    state.selectedWsForCreate = ws.id;
+                    document.getElementById('custom-select-label').innerText = ws.name;
+                    menu.classList.remove('open');
+                    renderCustomSelectMenu();
+                };
+                menu.appendChild(item);
+            });
+        }
+        function toggleCustomSelect() { document.getElementById('custom-select-menu').classList.toggle('open'); }
+
+        document.addEventListener('click', (e) => {
+            const selectContainer = document.querySelector('.m3-custom-select');
+            if (selectContainer && !selectContainer.contains(e.target)) {
+                document.getElementById('custom-select-menu').classList.remove('open');
+            }
+        });
+
+        // Navigation
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('active');
+        }
+
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).classList.add('active');
+
+            if (viewName === 'workspace') renderWorkspaceView();
+            if (viewName === 'create') renderCreateView();
+            if (viewName === 'detail') renderSetDetailView();
+        }
+
+        function saveData() { localStorage.setItem('google_quiz_m3_ultra_data', JSON.stringify(state)); }
+        function loadData() {
+            const data = localStorage.getItem('google_quiz_m3_ultra_data');
+            if (data) state = JSON.parse(data);
+        }
+
+        // --- Workspace View ---
+        function renderWorkspaceView() {
+            const wsList = document.getElementById('workspace-list');
+            wsList.innerHTML = '';
+            state.workspaces.forEach(ws => {
+                const item = document.createElement('div');
+                item.className = `nav-item ${ws.id === state.currentWorkspaceId ? 'active' : ''}`;
+                item.onclick = () => {
+                    state.currentWorkspaceId = ws.id;
+                    renderWorkspaceView(); closeSidebar();
+                };
+                item.innerHTML = `<span class="material-symbols-outlined">folder</span>${ws.name}`;
+                wsList.appendChild(item);
+            });
+
+            const currentWs = state.workspaces.find(w => w.id === state.currentWorkspaceId);
+            document.getElementById('current-ws-title').innerText = currentWs ? currentWs.name : '워크스페이스';
+
+            const grid = document.getElementById('quiz-set-grid');
+            grid.innerHTML = '';
+            const filteredSets = state.quizSets.filter(s => s.workspaceId === state.currentWorkspaceId);
+
+            if (filteredSets.length === 0) {
+                grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--md-sys-color-outline); padding: 40px;">
+                    저장된 세트가 없습니다. 새 퀴즈 세트를 만들어보세요.
+                </div>`;
+                return;
+            }
+
+            filteredSets.forEach(set => {
+                const card = document.createElement('div');
+                card.className = 'set-card';
+                card.innerHTML = `
+                    <div onclick="openSetDetailPage('${set.id}')">
+                        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">${set.title}</h4>
+                        <p style="font-size: 12px; color: var(--md-sys-color-outline);">${set.items.length}개 단어</p>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn btn-ultra" style="width:100%;" onclick="event.stopPropagation(); startUltraPlusMode('${set.id}')">
+                            <span class="material-symbols-outlined">rocket_launch</span> ULTRA+ 모드 시작
+                        </button>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size:12px; color:var(--md-sys-color-primary); font-weight:700;" onclick="openSetDetailPage('${set.id}')">단어장 상세 ➔</span>
+                            <button class="icon-btn" style="color:var(--md-sys-color-error);" onclick="event.stopPropagation(); deleteSet('${set.id}')">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- Set Detail Page (단어장 상세 페이지) ---
+        function openSetDetailPage(setId) {
+            state.activeSetId = setId;
+            switchView('detail');
+        }
+
+        function renderSetDetailView() {
+            const set = state.quizSets.find(s => s.id === state.activeSetId);
+            if (!set) return switchView('workspace');
+
+            document.getElementById('detail-set-title').innerText = set.title;
+            document.getElementById('detail-set-count').innerText = `${set.items.length}개 단어 수록`;
+            document.getElementById('detail-ultra-btn').onclick = () => startUltraPlusMode(set.id);
+
+            renderDetailWordList();
+        }
+
+        function renderDetailWordList() {
+            const set = state.quizSets.find(s => s.id === state.activeSetId);
+            const listElem = document.getElementById('detail-word-list');
+            const searchVal = (document.getElementById('detail-search-input').value || '').toLowerCase();
+            listElem.innerHTML = '';
+
+            const filtered = set.items.filter(i => i.en.toLowerCase().includes(searchVal) || i.kr.toLowerCase().includes(searchVal));
+
+            filtered.forEach(item => {
+                const row = document.createElement('div');
+                row.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--md-sys-color-surface-container-lowest); border:1px solid var(--md-sys-color-outline-variant); border-radius:12px;";
+                row.innerHTML = `
+                    <div>
+                        <span style="font-weight:700; font-size:16px; margin-right:12px;">${item.en}</span>
+                        <span style="font-size:14px; color:var(--md-sys-color-on-surface-variant);">${item.kr}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <button class="icon-btn" onclick="speak('${item.en}')"><span class="material-symbols-outlined">volume_up</span></button>
+                        ${item.etym ? `<button class="btn btn-tertiary" style="height:32px; font-size:12px; padding:0 12px;" onclick="openUserEtymologyModal('${item.en}', '${item.etym.replace(/'/g, "\\'")}')">어원</button>` : ''}
+                    </div>
+                `;
+                listElem.appendChild(row);
+            });
+        }
+
+        function filterDetailWordList() { renderDetailWordList(); }
+
+        // --- ULTRA+ & Individual Quiz Launcher ---
+        function startUltraPlusMode(setId) {
+            const set = state.quizSets.find(s => s.id === setId);
+            if (!set || set.items.length === 0) return;
+
+            session = {
+                mode: 'ultra',
+                set: set,
+                items: [...set.items],
+                currentIndex: 0,
+                failedItems: [],
+                ultraStage: 1,
+                matchSelectedEn: null,
+                matchSelectedKr: null
+            };
+
+            switchView('quiz-engine');
+            renderUltraStage();
+        }
+
+        function launchIndividualQuiz(formatKey) {
+            const set = state.quizSets.find(s => s.id === state.activeSetId);
+            if (!set || set.items.length === 0) return;
+
+            session = {
+                mode: 'single',
+                formatKey: formatKey,
+                set: set,
+                items: [...set.items],
+                currentIndex: 0,
+                failedItems: [],
+                ultraStage: 1,
+                matchSelectedEn: null,
+                matchSelectedKr: null
+            };
+
+            document.getElementById('auto-stepper-header').style.display = 'none';
+            switchView('quiz-engine');
+            renderCurrentQuestion();
+        }
+
+        function renderUltraStage() {
+            const stepperHeader = document.getElementById('auto-stepper-header');
+            stepperHeader.style.display = 'flex';
+
+            const stagesInfo = [
+                "STAGE 1: 메타인지 초인지 노출 (Flashcards)",
+                "STAGE 2: O/X 참/거짓 초스피드 검증",
+                "STAGE 3: 수동 재인 4지선다 (EN ➔ KR)",
+                "STAGE 4: 능동 회상 역방향 (KR ➔ EN)",
+                "STAGE 5: 청각 연상 TTS 리스닝",
+                "STAGE 6: 빈칸 철자 구조 완성",
+                "STAGE 7: 스펠링 애너그램 재배치",
+                "STAGE 8: 짝맞추기 카드 게임",
+                "STAGE 9: 소근육 각인 타이핑",
+                "STAGE 10: 망각곡선 영점 정복 (Zero Loop)"
+            ];
+
+            document.getElementById('stepper-stage-title').innerText = stagesInfo[session.ultraStage - 1] || "STAGE: 완전 정복";
+            document.getElementById('stepper-stage-counter').innerText = `단계 ${session.ultraStage} / 9`;
+
+            renderCurrentQuestion();
+        }
+
+        function renderCurrentQuestion() {
+            const area = document.getElementById('quiz-render-area');
+            area.innerHTML = '';
+
+            const total = session.items.length;
+            const progress = ((session.currentIndex) / total) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
+
+            if (session.currentIndex >= total) {
+                handleStageComplete();
+                return;
+            }
+
+            const currentItem = session.items[session.currentIndex];
+
+            let activeFormat = session.formatKey;
+            if (session.mode === 'ultra') {
+                if (session.ultraStage === 1) activeFormat = 'flashcard';
+                else if (session.ultraStage === 2) activeFormat = 'tf_game';
+                else if (session.ultraStage === 3) activeFormat = 'choice';
+                else if (session.ultraStage === 4) activeFormat = 'reverse';
+                else if (session.ultraStage === 5) activeFormat = 'tts';
+                else if (session.ultraStage === 6) activeFormat = 'missing_letters';
+                else if (session.ultraStage === 7) activeFormat = 'anagram';
+                else if (session.ultraStage === 8) activeFormat = 'match_game';
+                else if (session.ultraStage === 9 || session.ultraStage === 10) activeFormat = 'typing';
+            }
+
+            // --- Render Format Routers ---
+            if (activeFormat === 'flashcard') {
+                area.innerHTML = `
+                    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard-inner">
+                            <div class="card-face">
+                                <div style="font-size:12px; color:var(--md-sys-color-outline); margin-bottom:8px;">ENGLISH</div>
+                                <div style="font-size:32px; font-weight:700;">${currentItem.en}</div>
+                                <div style="margin-top:16px; display:flex; gap:8px;">
+                                    <button class="btn btn-tonal" onclick="event.stopPropagation(); speak('${currentItem.en}')"><span class="material-symbols-outlined">volume_up</span> 발음</button>
+                                    ${currentItem.etym ? `<button class="btn btn-tertiary" onclick="event.stopPropagation(); openUserEtymologyModal('${currentItem.en}', '${currentItem.etym.replace(/'/g, "\\'")}')"><span class="material-symbols-outlined">menu_book</span> 어원</button>` : ''}
+                                </div>
+                            </div>
+                            <div class="card-face back">
+                                <div style="font-size:12px; opacity:0.8; margin-bottom:8px;">KOREAN</div>
+                                <div style="font-size:26px; font-weight:700;">${currentItem.kr}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <button class="btn btn-outlined" onclick="nextQuestion(false)">몰라요</button>
+                        <button class="btn" onclick="nextQuestion(true)">알아요!</button>
+                    </div>
+                `;
+            } else if (activeFormat === 'choice' || activeFormat === 'reverse') {
+                const isReverse = activeFormat === 'reverse';
+                const prompt = isReverse ? currentItem.kr : currentItem.en;
+                const correctAnswer = isReverse ? currentItem.en : currentItem.kr;
+
+                let options = [correctAnswer];
+                let allPossible = session.set.items.map(i => isReverse ? i.en : i.kr);
+                while (options.length < Math.min(4, allPossible.length)) {
+                    let rand = allPossible[Math.floor(Math.random() * allPossible.length)];
+                    if (!options.includes(rand)) options.push(rand);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                area.innerHTML = `
+                    <div class="m3-card" style="text-align:center;">
+                        <span style="font-size:12px; color:var(--md-sys-color-outline);">${isReverse ? '뜻을 보고 단어를 고르세요 (능동 회상)' : '단어의 뜻을 고르세요 (수동 재인)'}</span>
+                        <h2 style="font-size:36px; margin: 12px 0;">${prompt}</h2>
+                        <div style="display:flex; justify-content:center; gap:8px;">
+                            ${!isReverse ? `<button class="btn btn-tonal" onclick="speak('${currentItem.en}')"><span class="material-symbols-outlined">volume_up</span> 발음</button>` : ''}
+                            ${currentItem.etym ? `<button class="btn btn-tertiary" onclick="openUserEtymologyModal('${currentItem.en}', '${currentItem.etym.replace(/'/g, "\\'")}')"><span class="material-symbols-outlined">menu_book</span> 어원 힌트</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="options-grid">
+                        ${options.map(opt => `<button class="option-btn" onclick="checkChoiceAnswer(this, '${opt}', '${correctAnswer}')">${opt}</button>`).join('')}
+                    </div>
+                `;
+            } else if (activeFormat === 'tts') {
+                speak(currentItem.en);
+                let options = [currentItem.kr];
+                let allPossible = session.set.items.map(i => i.kr);
+                while (options.length < Math.min(4, allPossible.length)) {
+                    let rand = allPossible[Math.floor(Math.random() * allPossible.length)];
+                    if (!options.includes(rand)) options.push(rand);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                area.innerHTML = `
+                    <div class="m3-card" style="text-align:center;">
+                        <span style="font-size:12px; color:var(--md-sys-color-outline);">발음을 듣고 올바른 뜻을 고르세요</span>
+                        <div style="margin:20px 0;">
+                            <button class="btn" style="padding:20px; border-radius:50%; width:64px; height:64px;" onclick="speak('${currentItem.en}')">
+                                <span class="material-symbols-outlined" style="font-size:32px;">volume_up</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="options-grid">
+                        ${options.map(opt => `<button class="option-btn" onclick="checkChoiceAnswer(this, '${opt}', '${currentItem.kr}')">${opt}</button>`).join('')}
+                    </div>
+                `;
+            } else if (activeFormat === 'tf_game') {
+                const isTrue = Math.random() > 0.5;
+                let displayedMeaning = currentItem.kr;
+                if (!isTrue) {
+                    let others = session.set.items.filter(i => i.en !== currentItem.en);
+                    if (others.length > 0) displayedMeaning = others[Math.floor(Math.random() * others.length)].kr;
+                }
+
+                area.innerHTML = `
+                    <div class="m3-card" style="text-align:center;">
+                        <span style="font-size:12px; color:var(--md-sys-color-outline);">O/X 참/거짓 빠른 검증</span>
+                        <h2 style="font-size:36px; margin: 8px 0;">${currentItem.en}</h2>
+                        <p style="font-size:20px; color:var(--md-sys-color-primary); font-weight:700;">= ${displayedMeaning}</p>
+                    </div>
+                    <div style="display:flex; gap:16px;">
+                        <button class="btn" style="flex:1; height:60px; font-size:24px; background:#28a745;" onclick="checkTFAnswer(${isTrue}, true)">⭕ 참 (O)</button>
+                        <button class="btn" style="flex:1; height:60px; font-size:24px; background:#dc3545;" onclick="checkTFAnswer(${isTrue}, false)">❌ 거짓 (X)</button>
+                    </div>
+                `;
+            } else if (activeFormat === 'missing_letters') {
+                let en = currentItem.en;
+                let masked = en.split('').map((char, idx) => (idx % 3 === 1 ? '_' : char)).join(' ');
+
+                area.innerHTML = `
+                    <div class="m3-card">
+                        <span style="font-size:12px; color:var(--md-sys-color-outline);">빈칸 스펠링 채우기</span>
+                        <h2 style="font-size:32px; margin: 12px 0;">${currentItem.kr}</h2>
+                        <div style="font-size:36px; font-weight:700; letter-spacing:4px; color:var(--md-sys-color-primary); margin:16px 0;">${masked}</div>
+                        <div class="m3-textfield">
+                            <label>전체 영어 스펠링 입력</label>
+                            <input type="text" id="missing-input" autofocus autocomplete="off">
+                        </div>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn" onclick="checkTypingAnswer('${currentItem.en}')">확인</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('missing-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') checkTypingAnswer(currentItem.en);
+                });
+            } else if (activeFormat === 'anagram') {
+                let scrambled = currentItem.en.split('').sort(() => Math.random() - 0.5).join(' ');
+
+                area.innerHTML = `
+                    <div class="m3-card">
+                        <span style="font-size:12px; color:var(--md-sys-color-outline);">스펠링 재배치 (Anagram)</span>
+                        <h2 style="font-size:28px; margin: 10px 0;">${currentItem.kr}</h2>
+                        <div style="font-size:28px; font-weight:700; color:var(--md-sys-color-tertiary); margin:16px 0;">🧩 ${scrambled}</div>
+                        <div class="m3-textfield">
+                            <label>올바른 스펠링 조합</label>
+                            <input type="text" id="anagram-input" autofocus autocomplete="off">
+                        </div>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn" onclick="checkTypingAnswer('${currentItem.en}')">확인</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('anagram-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') checkTypingAnswer(currentItem.en);
+                });
+            } else if (activeFormat === 'match_game') {
+                renderMatchPairGame();
+            } else if (activeFormat === 'typing') {
+                area.innerHTML = `
+                    <div class="m3-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <span style="font-size:12px; color:var(--md-sys-color-outline);">정밀 부호화 타이핑</span>
+                            ${currentItem.etym ? `<button class="btn btn-tertiary" style="height:32px; font-size:12px; padding:0 12px;" onclick="openUserEtymologyModal('${currentItem.en}', '${currentItem.etym.replace(/'/g, "\\'")}')"><span class="material-symbols-outlined" style="font-size:16px;">menu_book</span> 어원 힌트</button>` : ''}
+                        </div>
+                        <h2 style="font-size:32px; margin-bottom: 16px;">${currentItem.kr}</h2>
+                        <div class="m3-textfield">
+                            <label>영어 단어 입력</label>
+                            <input type="text" id="typing-input" autofocus autocomplete="off">
+                        </div>
+                        <div style="display:flex; justify-content:flex-end;">
+                            <button class="btn" onclick="checkTypingAnswer('${currentItem.en}')">확인</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('typing-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') checkTypingAnswer(currentItem.en);
+                });
+            }
+        }
+
+        // Match Pair Game Logic
+        function renderMatchPairGame() {
+            const area = document.getElementById('quiz-render-area');
+            let batch = session.set.items.slice(0, 6); // Take up to 6 pairs
+
+            let enList = batch.map(i => ({ id: i.en, text: i.en, type: 'en' })).sort(() => Math.random() - 0.5);
+            let krList = batch.map(i => ({ id: i.en, text: i.kr, type: 'kr' })).sort(() => Math.random() - 0.5);
+
+            area.innerHTML = `
+                <div class="m3-card">
+                    <span style="font-size:12px; color:var(--md-sys-color-outline);">알맞은 영어 단어와 한국어 뜻을 연결하세요</span>
+                    <div class="match-grid">
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${enList.map(item => `<div class="match-chip" id="match-en-${item.id}" onclick="selectMatchChip('en', '${item.id}')">${item.text}</div>`).join('')}
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${krList.map(item => `<div class="match-chip" id="match-kr-${item.id}" onclick="selectMatchChip('kr', '${item.id}')">${item.text}</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectMatchChip(type, id) {
+            if (type === 'en') {
+                document.querySelectorAll('[id^="match-en-"]').forEach(el => el.classList.remove('selected'));
+                session.matchSelectedEn = id;
+                document.getElementById(`match-en-${id}`).classList.add('selected');
+            } else {
+                document.querySelectorAll('[id^="match-kr-"]').forEach(el => el.classList.remove('selected'));
+                session.matchSelectedKr = id;
+                document.getElementById(`match-kr-${id}`).classList.add('selected');
+            }
+
+            if (session.matchSelectedEn && session.matchSelectedKr) {
+                if (session.matchSelectedEn === session.matchSelectedKr) {
+                    let matchedId = session.matchSelectedEn;
+                    document.getElementById(`match-en-${matchedId}`).classList.add('matched');
+                    document.getElementById(`match-kr-${matchedId}`).classList.add('matched');
+                    session.matchSelectedEn = null; session.matchSelectedKr = null;
+
+                    let remaining = document.querySelectorAll('.match-chip:not(.matched)').length;
+                    if (remaining === 0) {
+                        setTimeout(() => { nextQuestion(true); }, 500);
+                    }
+                } else {
+                    showSnackbar('짝이 맞지 않습니다!');
+                    setTimeout(() => {
+                        document.querySelectorAll('.match-chip').forEach(el => el.classList.remove('selected'));
+                        session.matchSelectedEn = null; session.matchSelectedKr = null;
+                    }, 400);
+                }
+            }
+        }
+
+        function checkTFAnswer(isTrue, userChoice) {
+            const isCorrect = isTrue === userChoice;
+            if (!isCorrect) showSnackbar('오답입니다!');
+            nextQuestion(isCorrect);
+        }
+
+        function checkChoiceAnswer(btn, selected, correct) {
+            const isCorrect = selected === correct;
+            btn.classList.add(isCorrect ? 'correct' : 'wrong');
+            setTimeout(() => { nextQuestion(isCorrect); }, 600);
+        }
+
+        function checkTypingAnswer(correct) {
+            const inputVal = (document.getElementById('typing-input') || document.getElementById('missing-input') || document.getElementById('anagram-input')).value.trim().toLowerCase();
+            const isCorrect = inputVal === correct.toLowerCase();
+            if (!isCorrect) showSnackbar(`오답입니다! 정답: ${correct}`);
+            nextQuestion(isCorrect);
+        }
+
+        function nextQuestion(isCorrect) {
+            if (!isCorrect) session.failedItems.push(session.items[session.currentIndex]);
+            session.currentIndex++;
+            renderCurrentQuestion();
+        }
+
+        function handleStageComplete() {
+            if (session.mode === 'ultra') {
+                if (session.ultraStage < 9) {
+                    session.ultraStage++;
+                    session.currentIndex = 0;
+                    renderUltraStage();
+                } else if (session.failedItems.length > 0) {
+                    session.ultraStage = 10;
+                    session.items = [...session.failedItems];
+                    session.failedItems = [];
+                    session.currentIndex = 0;
+                    showSnackbar('망각곡선 영점 루프! 틀린 단어를 완전 정복합니다.');
+                    renderUltraStage();
+                } else {
+                    showSnackbar('🎉 [Google Quiz ULTRA+] 1,051명 교수진 설계 완전 암기 코스를 달성했습니다!');
+                    switchView('detail');
+                }
+            } else {
+                showSnackbar('개별 학습 완료!');
+                switchView('detail');
+            }
+        }
+
+        // --- Parser for "영어: 한국어{어원}" ---
+        function parseInputText(rawText) {
+            const lines = rawText.split('\n');
+            const items = [];
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || !line.includes(':')) return;
+
+                const parts = line.split(':');
+                const en = parts[0].trim();
+                let rest = parts.slice(1).join(':').trim();
+
+                let etym = null;
+                const match = rest.match(/^(.*?)\{([^}]+)\}\s*$/);
+                if (match) {
+                    rest = match[1].trim();
+                    etym = match[2].trim();
+                }
+
+                if (en && rest) {
+                    items.push({ en, kr: rest, etym: etym || null });
+                }
+            });
+
+            return items;
+        }
+
+        function saveQuizSet() {
+            const wsId = state.selectedWsForCreate;
+            const title = document.getElementById('set-title').value.trim();
+            const rawText = document.getElementById('set-raw-text').value.trim();
+
+            if (!title || !rawText) { showSnackbar('모든 필드를 입력해주세요.'); return; }
+
+            const parsed = parseInputText(rawText);
+
+            if (parsed.length === 0) { showSnackbar('형식이 올바르지 않습니다. (예: apple: 사과{어원})'); return; }
+
+            state.quizSets.push({ id: 'set_' + Date.now(), workspaceId: wsId, title: title, items: parsed });
+            saveData();
+            switchView('workspace');
+            showSnackbar('새 퀴즈 세트가 저장되었습니다.');
+        }
+
+        function deleteSet(id) {
+            openConfirmModal('이 퀴즈 세트를 정말 삭제하시겠습니까?', () => {
+                state.quizSets = state.quizSets.filter(s => s.id !== id);
+                saveData();
+                renderWorkspaceView();
+                showSnackbar('퀴즈 세트가 삭제되었습니다.');
+            });
+        }
+
+        function renderCreateView() {
+            const currentWs = state.workspaces.find(w => w.id === state.selectedWsForCreate) || state.workspaces[0];
+            document.getElementById('custom-select-label').innerText = currentWs.name;
+            renderCustomSelectMenu();
+        }
+
+        window.onload = () => {
+            loadData();
+            renderWorkspaceView();
+        };
+    </script>
+</body>
+</html>
