@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>모바일 웹 에디터</title>
+    <title>모바일 웹 에디터 & WowView</title>
     <!-- 안정성이 높은 CDN 배포처를 사용합니다 -->
     <script src="https://cdn.jsdelivr.net/npm/ace-builds@1.32.7/src-min-noconflict/ace.min.js"></script>
     <style>
@@ -416,6 +416,83 @@
         .main-layout.split-mode .preview-header {
             display: flex;
         }
+
+        /* --- [추가] WowView 전용 스타일 --- */
+        #wowview-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0f0f0f;
+            z-index: 1500;
+            display: none; /* 기본 숨김 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #wowview-container.active { display: flex; }
+        .wv-input-group {
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+        .wv-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: white;
+        }
+        .wv-btn {
+            padding: 10px 20px;
+            background: #ff0000;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #wv-video-stage {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            display: none;
+        }
+        #wv-video-stage iframe { width: 100%; height: 100%; border: none; }
+        #wv-exit-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 10000;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 8px 15px;
+            border: 1px solid #fff;
+            border-radius: 4px;
+        }
+        /* 세로 모드에서 가로 회전 */
+        @media screen and (orientation: portrait) {
+            .theater-mode #wv-video-stage {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                width: 100vh;
+                height: 100vw;
+                transform: translate(-50%, -50%) rotate(90deg);
+                max-width: none;
+                z-index: 9999;
+                display: block;
+            }
+            .wv-input-group, #wv-exit-btn { z-index: 10001; }
+        }
+        .theater-mode #wv-exit-btn { display: block; }
     </style>
 </head>
 <body>
@@ -426,6 +503,7 @@
             <button id="btn-open-drawer" class="btn">☰ 실행</button>
         </div>
         <div class="header-right">
+            <button id="btn-wowview-open" class="btn" style="background-color: #ff0000;">📺 WowView</button>
             <button id="btn-toggle-split" class="btn">⇅ 분할</button>
             <button id="btn-open-archive" class="btn">📁 서랍</button>
             <a href="https://gemini.google.com" target="_blank" class="btn btn-learn">🎓 배우기</a>
@@ -441,14 +519,25 @@
             <div id="editor"></div>
         </div>
 
+        <!-- [추가] WowView 컨테이너 -->
+        <div id="wowview-container">
+            <div class="wv-input-group" id="wv-controls">
+                <input type="text" id="wv-video-url" class="wv-input" placeholder="유튜브 링크를 붙여넣으세요">
+                <button class="wv-btn" onclick="loadWVVideo()">감상하기</button>
+                <button class="wv-btn" style="background:#444;" onclick="closeWowView()">닫기</button>
+            </div>
+            <div id="wv-video-stage">
+                <div id="wv-player"></div>
+            </div>
+            <button id="wv-exit-btn" onclick="exitWVTheater()">돌아가기</button>
+        </div>
+
         <!-- 미리보기 영역 (좌측 서랍) -->
         <div id="preview-container">
             <div class="preview-header">
                 <span>미리보기</span>
                 <div class="preview-header-actions">
-                    <!-- [1번 요구사항] 새로고침 버튼 추가 -->
                     <button class="preview-btn-action" id="btn-refresh-preview" title="새로고침">🔄</button>
-                    <!-- 콘솔 ON/OFF 토글 버튼 -->
                     <button class="preview-btn-action" id="btn-toggle-console">📟 콘솔 OFF</button>
                     <button class="preview-btn-action" id="btn-fullscreen-preview" title="전체화면">&lt;&gt;</button>
                     <button class="preview-close-btn" id="btn-close-preview">&times;</button>
@@ -459,7 +548,6 @@
                 <iframe id="preview-iframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
             </div>
             
-            <!-- JS 실행 로그를 출력할 콘솔 창 -->
             <div id="preview-console">
                 <div class="console-header">
                     <span>📟 JS Console Output</span>
@@ -485,53 +573,35 @@
                 </div>
                 <div class="list-box">
                     <h3>저장된 학습 코드</h3>
-                    <div id="saved-list">
-                        <!-- 동적으로 채워짐 -->
-                    </div>
+                    <div id="saved-list"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 기본 예제 코드
         const defaultCode = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 30px 15px;
-      background: #f7f9fc;
-      color: #333;
-    }
+    body { font-family: sans-serif; text-align: center; padding: 30px 15px; background: #f7f9fc; color: #333; }
     h1 { color: #4285f4; font-size: 24px; }
     p { font-size: 15px; line-height: 1.6; color: #666; }
-    button {
-      padding: 12px 24px; font-size: 15px; background: #4285f4;
-      color: white; border: none; border-radius: 8px; cursor: pointer;
-      margin-top: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
+    button { padding: 12px 24px; font-size: 15px; background: #4285f4; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 15px; }
   </style>
 </head>
 <body>
   <h1>안녕, 웹 코딩! 👋</h1>
-  <p>이곳은 모바일 에디터입니다.<br>코드를 수정하면 실시간으로 바뀝니다.</p>
+  <p>이곳은 모바일 에디터입니다.</p>
   <button onclick="greet()">버튼을 눌러보세요</button>
   <script>
     console.log("🚀 페이지가 로드되었습니다.");
-
-    function greet() {
-      alert('반가워요! 차근차근 같이 배워봅시다.');
-      console.log('💡 버튼 클릭 시간:', new Date().toLocaleTimeString());
-    }
+    function greet() { alert('반가워요!'); console.log('💡 클릭:', new Date().toLocaleTimeString()); }
   <\/script>
 </body>
 </html>`;
 
-        // UI 요소
         const mainLayout = document.getElementById('main-layout');
         const btnOpenDrawer = document.getElementById('btn-open-drawer');
         const btnClosePreview = document.getElementById('btn-close-preview');
@@ -541,13 +611,9 @@
         const previewContainer = document.getElementById('preview-container');
         const drawerOverlay = document.getElementById('drawer-overlay');
         const iframeWrapper = document.getElementById('preview-iframe-wrapper');
-
-        // 학습서랍 관련 요소
         const btnOpenArchive = document.getElementById('btn-open-archive');
         const btnCloseArchive = document.getElementById('btn-close-archive');
         const archiveContainer = document.getElementById('archive-container');
-
-        // 콘솔 관련 UI 요소
         const btnToggleConsole = document.getElementById('btn-toggle-console');
         const previewConsole = document.getElementById('preview-console');
         const consoleBody = document.getElementById('console-body');
@@ -556,7 +622,6 @@
         let isSplitMode = false;
         let isConsoleOpen = false;
 
-        // 콘솔 ON/OFF 토글
         btnToggleConsole.addEventListener('click', () => {
             isConsoleOpen = !isConsoleOpen;
             if (isConsoleOpen) {
@@ -570,17 +635,9 @@
             }
         });
 
-        // 콘솔 초기화 버튼
-        btnClearConsole.addEventListener('click', () => {
-            consoleBody.innerHTML = '';
-        });
+        btnClearConsole.addEventListener('click', () => { consoleBody.innerHTML = ''; });
+        btnRefreshPreview.addEventListener('click', () => { updatePreview(); });
 
-        // [1번] 새로고침 버튼 동작
-        btnRefreshPreview.addEventListener('click', () => {
-            updatePreview();
-        });
-
-        // 서랍 열기/닫기
         btnOpenDrawer.addEventListener('click', () => {
             if (!isSplitMode) {
                 previewContainer.classList.add('open');
@@ -598,7 +655,6 @@
             archiveContainer.classList.add('open');
             previewContainer.classList.remove('open');
             previewContainer.classList.remove('fullscreen');
-            btnFullscreenPreview.textContent = '<>';
             drawerOverlay.classList.add('active');
             renderSavedList();
         });
@@ -606,14 +662,13 @@
         function closeAllDrawers() {
             previewContainer.classList.remove('open');
             previewContainer.classList.remove('fullscreen');
-            if (btnFullscreenPreview) btnFullscreenPreview.textContent = '<>';
             archiveContainer.classList.remove('open');
             drawerOverlay.classList.remove('active');
         }
 
-        if (btnClosePreview) btnClosePreview.addEventListener('click', closeAllDrawers);
-        if (btnCloseArchive) btnCloseArchive.addEventListener('click', closeAllDrawers);
-        if (drawerOverlay) drawerOverlay.addEventListener('click', closeAllDrawers);
+        btnClosePreview.addEventListener('click', closeAllDrawers);
+        btnCloseArchive.addEventListener('click', closeAllDrawers);
+        drawerOverlay.addEventListener('click', closeAllDrawers);
 
         btnToggleSplit.addEventListener('click', () => {
             isSplitMode = !isSplitMode;
@@ -627,95 +682,53 @@
                 btnToggleSplit.textContent = '⇅ 분할';
                 btnOpenDrawer.style.visibility = 'visible';
             }
-            if (!useFallback && editorInstance) {
-                setTimeout(() => editorInstance.resize(), 100);
-            }
+            if (!useFallback && editorInstance) { setTimeout(() => editorInstance.resize(), 100); }
         });
 
-
-        // 에디터 설정
         let editorInstance = null;
         let useFallback = false;
-
         if (typeof ace !== 'undefined') {
             try {
                 ace.config.set('basePath', 'https://cdn.jsdelivr.net/npm/ace-builds@1.32.7/src-min-noconflict/');
                 editorInstance = ace.edit("editor");
                 editorInstance.setTheme("ace/theme/monokai");
                 editorInstance.session.setMode("ace/mode/html");
-                editorInstance.setOptions({
-                    fontSize: "14px",
-                    showPrintMargin: false,
-                    wrap: true,
-                    indentedSoftWrap: false,
-                    behavioursEnabled: true,
-                    autoScrollEditorIntoView: true,
-                    scrollPastEnd: 0.8
-                });
-            } catch (e) {
-                useFallback = true;
-            }
-        } else {
-            useFallback = true;
-        }
+                editorInstance.setOptions({ fontSize: "14px", showPrintMargin: false, wrap: true, indentedSoftWrap: false, behavioursEnabled: true, autoScrollEditorIntoView: true, scrollPastEnd: 0.8 });
+            } catch (e) { useFallback = true; }
+        } else { useFallback = true; }
 
         if (useFallback) {
             const editorDiv = document.getElementById('editor');
-            editorDiv.innerHTML = `<textarea id="textarea-editor" placeholder="여기에 HTML 코드를 입력하세요..." style="width:100%; height:100%; background:#1e1e1e; color:#fff; font-family:monospace; font-size:16px; border:none; padding:12px 12px 60px 12px; resize:none; outline:none; box-sizing:border-box; line-height:1.5;"></textarea>`;
+            editorDiv.innerHTML = `<textarea id="textarea-editor" style="width:100%; height:100%; background:#1e1e1e; color:#fff; font-family:monospace; font-size:16px; border:none; padding:12px; resize:none; outline:none;"></textarea>`;
         }
 
-        function getCodeValue() {
-            return useFallback ? document.getElementById('textarea-editor').value : editorInstance.getValue();
-        }
+        function getCodeValue() { return useFallback ? document.getElementById('textarea-editor').value : editorInstance.getValue(); }
+        function setCodeValue(val) { if (useFallback) { document.getElementById('textarea-editor').value = val; } else { editorInstance.setValue(val, -1); } }
 
-        function setCodeValue(val) {
-            if (useFallback) {
-                document.getElementById('textarea-editor').value = val;
-            } else {
-                editorInstance.setValue(val, -1);
-            }
-        }
-
-
-        // 콘솔 감지용 인터셉터 스크립트
         const consoleInterceptorScript = `
         <script>
         (function() {
             function sendToParent(type, args) {
                 try {
                     var messages = Array.from(args).map(function(arg) {
-                        if (typeof arg === 'object') {
-                            try { return JSON.stringify(arg, null, 2); } catch(e) { return String(arg); }
-                        }
+                        if (typeof arg === 'object') { try { return JSON.stringify(arg, null, 2); } catch(e) { return String(arg); } }
                         return String(arg);
                     });
-                    window.parent.postMessage({
-                        type: 'CONSOLE_LOG',
-                        logType: type,
-                        message: messages.join(' ')
-                    }, '*');
+                    window.parent.postMessage({ type: 'CONSOLE_LOG', logType: type, message: messages.join(' ') }, '*');
                 } catch(e) {}
             }
-
             var _log = console.log, _error = console.error, _warn = console.warn, _info = console.info;
             console.log = function() { _log.apply(console, arguments); sendToParent('log', arguments); };
             console.error = function() { _error.apply(console, arguments); sendToParent('error', arguments); };
             console.warn = function() { _warn.apply(console, arguments); sendToParent('warn', arguments); };
             console.info = function() { _info.apply(console, arguments); sendToParent('info', arguments); };
-
-            window.onerror = function(msg, url, line, col, error) {
-                sendToParent('error', ['[Error] ' + msg + ' (Line: ' + line + ')']);
-            };
+            window.onerror = function(msg, url, line) { sendToParent('error', ['[Error] ' + msg + ' (Line: ' + line + ')']); };
         })();
-        <\/script>
-        `;
+        <\/script>`;
 
-        // [2번 문제해결] 부모 창 postMessage 수신 시 출처(active iframe) 검증
         window.addEventListener('message', (event) => {
             const currentIframe = document.getElementById('preview-iframe');
-            // 이전 무한 루프나 죽지 않은 타이머에서 들어온 유령 메시지 방지
             if (!currentIframe || event.source !== currentIframe.contentWindow) return;
-
             if (event.data && event.data.type === 'CONSOLE_LOG') {
                 const logItem = document.createElement('div');
                 logItem.className = `console-log ${event.data.logType}`;
@@ -725,154 +738,102 @@
             }
         });
 
-        // 저장된 코드 불러오기
-        const savedCode = localStorage.getItem('mobile_code_data_v2');
-        setCodeValue(savedCode || defaultCode);
-
-        // [2번 문제해결] 미리보기 실행 시 기존 Iframe을 완전히 파괴 후 재생성 (이전 타이머/무한루프 완벽 강제종료)
         function updatePreview() {
             const code = getCodeValue();
             localStorage.setItem('mobile_code_data_v2', code);
-
             const injectedCode = consoleInterceptorScript + code;
-
-            // 콘솔 창 초기화
             consoleBody.innerHTML = '';
-
-            // 기존 Iframe 제거 후 새로 생성하여 완전히 독립된 컨텍스트 보장
             iframeWrapper.innerHTML = '';
             const newIframe = document.createElement('iframe');
             newIframe.id = 'preview-iframe';
             newIframe.setAttribute('sandbox', 'allow-scripts allow-modals allow-same-origin');
             iframeWrapper.appendChild(newIframe);
-
             try {
                 const iframeDoc = newIframe.contentDocument || newIframe.contentWindow.document;
                 iframeDoc.open();
                 iframeDoc.write(injectedCode);
                 iframeDoc.close();
-            } catch (err) {
-                console.error("미리보기 동기화 오류:", err);
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // [2번 문제해결] 입력 중 매 타자마다 폭포수 실행되는 것 방지 (0.6초 딜레이 디바운스)
         let updateTimer = null;
-        function debouncedUpdatePreview() {
-            clearTimeout(updateTimer);
-            updateTimer = setTimeout(updatePreview, 600);
-        }
+        function debouncedUpdatePreview() { clearTimeout(updateTimer); updateTimer = setTimeout(updatePreview, 600); }
+        if (useFallback) { document.getElementById('textarea-editor').addEventListener('input', debouncedUpdatePreview); }
+        else { editorInstance.on("change", debouncedUpdatePreview); }
 
-        if (useFallback) {
-            document.getElementById('textarea-editor').addEventListener('input', debouncedUpdatePreview);
-        } else {
-            editorInstance.on("change", debouncedUpdatePreview);
-        }
-
-        // 최초 1회 실행
+        const savedCode = localStorage.getItem('mobile_code_data_v2');
+        setCodeValue(savedCode || defaultCode);
         updatePreview();
 
-
-        // 4. 학습서랍 비즈니스 로직
+        // 학습 서랍 로직
         const saveNameInput = document.getElementById('save-name');
         const btnSaveCode = document.getElementById('btn-save-code');
         const savedListContainer = document.getElementById('saved-list');
-
-        function getSavedCodes() {
-            const raw = localStorage.getItem('mobile_editor_saved_list');
-            return raw ? JSON.parse(raw) : [];
-        }
-
-        function saveSavedCodes(arr) {
-            localStorage.setItem('mobile_editor_saved_list', JSON.stringify(arr));
-        }
+        function getSavedCodes() { const raw = localStorage.getItem('mobile_editor_saved_list'); return raw ? JSON.parse(raw) : []; }
+        function saveSavedCodes(arr) { localStorage.setItem('mobile_editor_saved_list', JSON.stringify(arr)); }
 
         btnSaveCode.addEventListener('click', () => {
             const name = saveNameInput.value.trim();
-            if (!name) {
-                alert('저장할 이름을 입력해 주세요.');
-                return;
-            }
-
-            const code = getCodeValue();
+            if (!name) return alert('이름을 입력하세요.');
             const savedList = getSavedCodes();
-
-            const newItem = {
-                id: Date.now(),
-                name: name,
-                code: code,
-                date: new Date().toLocaleDateString('ko-KR', { hour: '2-digit', minute: '2-digit' })
-            };
-
-            savedList.unshift(newItem);
+            savedList.unshift({ id: Date.now(), name, code: getCodeValue(), date: new Date().toLocaleString() });
             saveSavedCodes(savedList);
-
             saveNameInput.value = '';
             renderSavedList();
-            alert('"' + name + '" 이름으로 코드가 저장되었습니다.');
         });
 
         function renderSavedList() {
             const savedList = getSavedCodes();
-            savedListContainer.innerHTML = '';
-
-            if (savedList.length === 0) {
-                savedListContainer.innerHTML = '<div class="empty-list">저장된 코드가 없습니다.<br>학습한 내용을 저장해 두세요.</div>';
-                return;
-            }
-
+            savedListContainer.innerHTML = savedList.length ? '' : '<div class="empty-list">저장된 코드가 없습니다.</div>';
             savedList.forEach(item => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'saved-item';
-                itemEl.innerHTML = `
-                    <div class="saved-info">
-                        <div class="saved-title">${escapeHTML(item.name)}</div>
-                        <div class="saved-date">${item.date}</div>
-                    </div>
+                itemEl.innerHTML = `<div class="saved-info"><div class="saved-title">${item.name}</div></div>
                     <div class="saved-actions">
                         <button class="btn-action btn-load" onclick="loadSavedCode(${item.id})">불러오기</button>
                         <button class="btn-action btn-del" onclick="deleteSavedCode(${item.id})">삭제</button>
-                    </div>
-                `;
+                    </div>`;
                 savedListContainer.appendChild(itemEl);
             });
         }
 
-        function escapeHTML(str) {
-            return str.replace(/[&<>'"]/g, 
-                tag => ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    "'": '&#39;',
-                    '"': '&quot;'
-                }[tag] || tag)
-            );
+        window.loadSavedCode = (id) => {
+            const target = getSavedCodes().find(i => i.id === id);
+            if (target && confirm('코드를 불러올까요?')) { setCodeValue(target.code); updatePreview(); closeAllDrawers(); }
+        };
+        window.deleteSavedCode = (id) => {
+            let list = getSavedCodes();
+            if (confirm('삭제할까요?')) { saveSavedCodes(list.filter(i => i.id !== id)); renderSavedList(); }
+        };
+
+        // --- [추가] WowView 비즈니스 로직 ---
+        const wvContainer = document.getElementById('wowview-container');
+        document.getElementById('btn-wowview-open').addEventListener('click', () => {
+            wvContainer.classList.add('active');
+        });
+        function closeWowView() {
+            wvContainer.classList.remove('active');
+            exitWVTheater();
         }
-
-        window.loadSavedCode = function(id) {
-            const savedList = getSavedCodes();
-            const target = savedList.find(item => item.id === id);
-            if (target) {
-                if (confirm(`"${target.name}" 코드를 불러올까요?\n현재 화면의 내용이 대체됩니다.`)) {
-                    setCodeValue(target.code);
-                    updatePreview();
-                    closeAllDrawers();
-                }
-            }
-        };
-
-        window.deleteSavedCode = function(id) {
-            const savedList = getSavedCodes();
-            const targetIndex = savedList.findIndex(item => item.id === id);
-            if (targetIndex !== -1) {
-                if (confirm(`"${savedList[targetIndex].name}" 저장 기록을 삭제하시겠습니까?`)) {
-                    savedList.splice(targetIndex, 1);
-                    saveSavedCodes(savedList);
-                    renderSavedList();
-                }
-            }
-        };
+        function extractWVID(url) {
+            const reg = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(reg);
+            return (match && match[7].length == 11) ? match[7] : false;
+        }
+        function loadWVVideo() {
+            const val = document.getElementById('wv-video-url').value;
+            const vid = extractWVID(val);
+            if (vid) {
+                document.getElementById('wv-player').innerHTML = `<iframe src="https://www.youtube.com/embed/${vid}?autoplay=1" allow="autoplay; fullscreen"></iframe>`;
+                document.getElementById('wv-video-stage').style.display = 'block';
+                document.body.classList.add('theater-mode');
+            } else { alert('올바른 주소를 입력하세요.'); }
+        }
+        function exitWVTheater() {
+            document.body.classList.remove('theater-mode');
+            document.getElementById('wv-video-stage').style.display = 'none';
+            document.getElementById('wv-player').innerHTML = '';
+        }
     </script>
 </body>
 </html>
