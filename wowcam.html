@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WowView.Com</title>
+    <style>
+        /* 기본 스타일 초기화 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html {
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden; /* 스크롤 절대 금지 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+        }
+
+        /* 메인 입력 UI */
+        #ui-layer {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #111;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .logo { font-size: 2.5rem; font-weight: bold; color: #ff0000; margin-bottom: 30px; }
+        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+        input { padding: 15px; border: none; border-radius: 5px; background: #222; color: #fff; text-align: center; }
+        button { padding: 15px; background: #ff0000; color: #fff; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        /* 비디오 레이어 - 화면 전체 점유 */
+        #video-layer {
+            display: none; /* 재생 전까지 숨김 */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 200;
+            /* Flex로 중앙 정렬 보장 */
+            display: none; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        /* 영상이 담길 박스 */
+        #video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 핵심: 세로 모드일 때 영상을 강제로 90도 돌려 중앙 배치 */
+        @media screen and (orientation: portrait) {
+            #video-wrapper {
+                /* 화면의 가로세로를 반전시켜서 꽉 채움 */
+                width: 100vh; 
+                height: 100vw;
+                transform: rotate(90deg);
+                transform-origin: center center;
+            }
+        }
+
+        /* 닫기 버튼 - 시청 방해 안 되게 아주 작게 */
+        #close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 300;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: 1px solid #444;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 입력부 -->
+    <div id="ui-layer">
+        <div class="logo">WowView.Com</div>
+        <div class="input-group">
+            <input type="text" id="url-input" placeholder="유튜브 주소를 입력하세요">
+            <button onclick="startView()">가로 모드로 감상하기</button>
+        </div>
+    </div>
+
+    <!-- 출력부 -->
+    <div id="video-layer">
+        <button id="close-btn" onclick="closeView()">닫기</button>
+        <div id="video-wrapper">
+            <div id="player" style="width:100%; height:100%;"></div>
+        </div>
+    </div>
+
+    <script>
+        function startView() {
+            const val = document.getElementById('url-input').value;
+            const videoId = extractId(val);
+
+            if (!videoId) {
+                alert("주소를 다시 확인해주세요.");
+                return;
+            }
+
+            // UI 숨기고 비디오 레이어 Flex로 표시 (중앙 정렬)
+            document.getElementById('ui-layer').style.display = 'none';
+            const vLayer = document.getElementById('video-layer');
+            vLayer.style.display = 'flex';
+
+            // 아이프레임 생성
+            document.getElementById('player').innerHTML = `
+                <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>`;
+            
+            // 전체화면 시도
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        }
+
+        function closeView() {
+            document.getElementById('ui-layer').style.display = 'flex';
+            document.getElementById('video-layer').style.display = 'none';
+            document.getElementById('player').innerHTML = '';
+            
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function extractId(url) {
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[7].length == 11) ? match[7] : false;
+        }
+
+        // 엔터키 지원
+        document.getElementById('url-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') startView();
+        });
+    </script>
+</body>
+</html>
