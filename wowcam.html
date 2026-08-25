@@ -2,166 +2,125 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>WowView.Com</title>
     <style>
-        /* 기본 스타일 초기화 */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body, html {
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            overflow: hidden; /* 스크롤 절대 금지 */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: sans-serif;
+        /* [0] 초기화: 여백 제로, 배경 블랙 */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { 
+            width: 100%; height: 100%; 
+            background: #000; overflow: hidden; 
+            position: fixed; /* 스크롤 절대 방지 */
         }
 
-        /* 메인 입력 UI */
+        /* [1] 입력 UI: 무조건 정중앙 */
         #ui-layer {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #111;
-            z-index: 100;
-            padding: 20px;
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: #0f0f0f; z-index: 100;
         }
+        .logo { font-size: 2.5rem; font-weight: 900; color: red; margin-bottom: 2rem; }
+        input { padding: 15px; width: 80%; max-width: 350px; border-radius: 8px; border: none; background: #222; color: #fff; margin-bottom: 10px; text-align: center; }
+        button { padding: 15px; width: 80%; max-width: 350px; background: red; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        .logo { font-size: 2.5rem; font-weight: bold; color: #ff0000; margin-bottom: 30px; }
-        .input-group { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
-        input { padding: 15px; border: none; border-radius: 5px; background: #222; color: #fff; text-align: center; }
-        button { padding: 15px; background: #ff0000; color: #fff; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-
-        /* 비디오 레이어 - 화면 전체 점유 */
+        /* [2] 비디오 컨테이너: 어떤 상황에서도 정중앙 고정 */
         #video-layer {
-            display: none; /* 재생 전까지 숨김 */
+            display: none; /* 재생 시 활성 */
             position: fixed;
             top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%; height: 100%;
+            background: #000; z-index: 200;
+        }
+
+        /* 16:9 박스: 수학적 절대 중앙 배치 */
+        .video-box {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%); /* 중심점 이동 */
             background: #000;
-            z-index: 200;
-            /* Flex로 중앙 정렬 보장 */
-            display: none; 
-            align-items: center; 
-            justify-content: center; 
         }
 
-        /* 영상이 담길 박스 */
-        #video-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* [핵심] 가로 모드 (PC나 가로 기기) */
+        @media screen and (orientation: landscape) {
+            .video-box {
+                width: 100vw;
+                height: 56.25vw; /* 16:9 비율 */
+                max-height: 100vh;
+                max-width: 177.77vh;
+            }
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* 핵심: 세로 모드일 때 영상을 강제로 90도 돌려 중앙 배치 */
+        /* [핵심] 세로 모드 (모바일 세로 들기) */
         @media screen and (orientation: portrait) {
-            #video-wrapper {
-                /* 화면의 가로세로를 반전시켜서 꽉 채움 */
+            .video-box {
+                /* 너비 늘려! 기기 높이를 영상 너비로 사용 */
                 width: 100vh; 
-                height: 100vw;
-                transform: rotate(90deg);
+                height: 56.25vh; /* 16:9 비율 유지 */
+                /* 90도 회전 후 중앙 정렬 유지 */
+                transform: translate(-50%, -50%) rotate(90deg);
                 transform-origin: center center;
             }
         }
 
-        /* 닫기 버튼 - 시청 방해 안 되게 아주 작게 */
-        #close-btn {
+        iframe { width: 100%; height: 100%; border: none; }
+
+        /* [3] 나가기 버튼 */
+        #exit-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 300;
-            background: rgba(0,0,0,0.5);
-            color: #fff;
-            border: 1px solid #444;
-            padding: 5px 10px;
-            font-size: 12px;
-            cursor: pointer;
-            border-radius: 3px;
+            top: 20px; left: 20px;
+            padding: 8px 15px; background: rgba(255,255,255,0.2);
+            color: #fff; border: 1px solid #666; border-radius: 5px;
+            z-index: 300; font-size: 12px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <!-- 입력부 -->
     <div id="ui-layer">
         <div class="logo">WowView.Com</div>
-        <div class="input-group">
-            <input type="text" id="url-input" placeholder="유튜브 주소를 입력하세요">
-            <button onclick="startView()">가로 모드로 감상하기</button>
-        </div>
+        <input type="text" id="v-url" placeholder="유튜브 주소를 입력하세요">
+        <button onclick="play()">영상 실행</button>
     </div>
 
-    <!-- 출력부 -->
     <div id="video-layer">
-        <button id="close-btn" onclick="closeView()">닫기</button>
-        <div id="video-wrapper">
-            <div id="player" style="width:100%; height:100%;"></div>
-        </div>
+        <button id="exit-btn" onclick="quit()">닫기</button>
+        <div class="video-box" id="player-area"></div>
     </div>
 
     <script>
-        function startView() {
-            const val = document.getElementById('url-input').value;
-            const videoId = extractId(val);
+        function play() {
+            const url = document.getElementById('v-url').value;
+            const id = extractId(url);
+            if(!id) return alert("링크 오류");
 
-            if (!videoId) {
-                alert("주소를 다시 확인해주세요.");
-                return;
-            }
-
-            // UI 숨기고 비디오 레이어 Flex로 표시 (중앙 정렬)
             document.getElementById('ui-layer').style.display = 'none';
-            const vLayer = document.getElementById('video-layer');
-            vLayer.style.display = 'flex';
+            document.getElementById('video-layer').style.display = 'block';
 
-            // 아이프레임 생성
-            document.getElementById('player').innerHTML = `
-                <iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" 
+            // 중앙 배치 보장형 아이프레임 주입
+            document.getElementById('player-area').innerHTML = `
+                <iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&controls=1" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen></iframe>`;
             
-            // 전체화면 시도
+            // 주소창 강제 숨기기 시도 (전체화면)
             if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen();
+                document.documentElement.requestFullscreen().catch(()=>{});
             }
         }
 
-        function closeView() {
+        function quit() {
             document.getElementById('ui-layer').style.display = 'flex';
             document.getElementById('video-layer').style.display = 'none';
-            document.getElementById('player').innerHTML = '';
-            
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            }
+            document.getElementById('player-area').innerHTML = '';
+            if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
         }
 
         function extractId(url) {
-            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-            const match = url.match(regExp);
+            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
             return (match && match[7].length == 11) ? match[7] : false;
         }
-
-        // 엔터키 지원
-        document.getElementById('url-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') startView();
-        });
     </script>
 </body>
 </html>
