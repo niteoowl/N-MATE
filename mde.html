@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <title>계층형 문서 뷰어</title>
+  
+  <!-- 구글 머티리얼 아이콘 -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <!-- 마크다운 파서 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #ffffff;
+      color: #202124;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    /* 다크모드 */
+    body.dark-mode {
+      background-color: #121212;
+      color: #f1f3f4;
+    }
+
+    .material-symbols-outlined {
+      font-size: 22px;
+      user-select: none;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      color: inherit;
+      transition: background-color 0.2s ease, transform 0.15s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* 상단 상태바 (모바일 Safe Area 반영) */
+    .top-status-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(56px + env(safe-area-inset-top));
+      padding-top: env(safe-area-inset-top);
+      padding-left: 16px;
+      padding-right: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark-mode .top-status-bar {
+      background: rgba(18, 18, 18, 0.85);
+    }
+
+    /* 하단 플로팅 탭바 3개 */
+    .bottom-tab-bar {
+      position: fixed;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      width: calc(100% - 32px);
+      max-width: 380px;
+      height: 60px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      z-index: 100;
+      padding: 0 10px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    body.dark-mode .bottom-tab-bar {
+      background: rgba(28, 28, 28, 0.92);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888888;
+      font-size: 11px;
+      font-family: inherit;
+      padding: 6px 0;
+      outline: none;
+      transition: color 0.2s ease, transform 0.15s ease;
+    }
+
+    .tab-btn.active, .tab-btn:active {
+      color: #202124;
+      transform: scale(0.94);
+    }
+
+    body.dark-mode .tab-btn.active, body.dark-mode .tab-btn:active {
+      color: #f1f3f4;
+    }
+
+    /* 본문 마크다운 영역 */
+    .main-content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: calc(72px + env(safe-area-inset-top)) 24px calc(96px + env(safe-area-inset-bottom));
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .main-content h1, .main-content h2, .main-content h3 {
+      margin: 1.2em 0 0.6em;
+    }
+
+    .main-content p {
+      margin-bottom: 1em;
+    }
+
+    .main-content pre {
+      background: #f4f4f4;
+      padding: 14px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+
+    body.dark-mode .main-content pre {
+      background: #222222;
+    }
+
+    .main-content code {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    body.dark-mode .main-content code {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* 사이드바 */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 200;
+    }
+
+    .overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 320px;
+      height: 100vh;
+      background-color: #ffffff;
+      box-shadow: 2px 0 16px rgba(0,0,0,0.1);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease, background-color 0.3s ease;
+      z-index: 210;
+      display: flex;
+      flex-direction: column;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    body.dark-mode .sidebar {
+      background-color: #1e1e1e;
+      box-shadow: 2px 0 16px rgba(0,0,0,0.5);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    body.dark-mode .sidebar-header {
+      border-bottom-color: #333333;
+    }
+
+    .sidebar-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 6px;
+    }
+
+    /* 계층 트리 항목 */
+    .sidebar-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      margin-bottom: 2px;
+      border-radius: 6px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease;
+    }
+
+    .sidebar-item:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    body.dark-mode .sidebar-item:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .sidebar-item.dragging {
+      opacity: 0.35;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-item.drag-target-inside {
+      background-color: rgba(66, 133, 244, 0.15) !important;
+      outline: 1.5px dashed #4285f4;
+    }
+
+    /* 토글 화살표 & 아이콘 */
+    .toggle-arrow {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-right: 2px;
+      flex-shrink: 0;
+    }
+
+    .toggle-arrow:hover {
+      background-color: rgba(0,0,0,0.08);
+    }
+
+    .item-icon {
+      margin-right: 6px;
+      opacity: 0.75;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .item-title {
+      flex: 1;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 드롭다운 메뉴 */
+    .dropdown-menu {
+      position: absolute;
+      right: 8px;
+      top: 36px;
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      border-radius: 8px;
+      display: none;
+      flex-direction: column;
+      z-index: 230;
+      min-width: 140px;
+      overflow: hidden;
+      border: 1px solid #e0e0e0;
+    }
+
+    body.dark-mode .dropdown-menu {
+      background: #252525;
+      border-color: #383838;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+
+    .dropdown-menu.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      padding: 9px 12px;
+      font-size: 13px;
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .dropdown-item:hover {
+      background-color: rgba(0,0,0,0.05);
+    }
+
+    body.dark-mode .dropdown-item:hover {
+      background-color: rgba(255,255,255,0.08);
+    }
+
+    .dropdown-item.delete {
+      color: #e53935;
+    }
+
+    /* 전체화면 작성/수정 모달 */
+    .fullscreen-modal {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, visibility 0.25s ease, background-color 0.3s ease;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    body.dark-mode .fullscreen-modal {
+      background: #121212;
+      color: #f1f3f4;
+    }
+
+    .fullscreen-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    body.dark-mode .modal-topbar {
+      border-bottom-color: #2b2b2b;
+    }
+
+    .btn-save {
+      background: #202124;
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    body.dark-mode .btn-save {
+      background: #f1f3f4;
+      color: #121212;
+    }
+
+    .modal-editor-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      gap: 16px;
+    }
+
+    .title-input {
+      font-size: 22px;
+      font-weight: bold;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      padding: 6px 0;
+      border-bottom: 1px solid #eee;
+      font-family: inherit;
+    }
+
+    body.dark-mode .title-input {
+      border-bottom-color: #333;
+    }
+
+    .content-textarea {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font-size: 16px;
+      line-height: 1.6;
+      resize: none;
+      font-family: inherit;
+    }
+
+    /* 루트 드롭 안내 영역 */
+    .root-drop-zone {
+      padding: 12px;
+      margin: 8px 4px;
+      border: 1.5px dashed rgba(0,0,0,0.15);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      display: none;
+    }
+
+    body.dark-mode .root-drop-zone {
+      border-color: rgba(255,255,255,0.15);
+      color: #aaa;
+    }
+
+    .root-drop-zone.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 상단 상태바 영역 -->
+  <header class="top-status-bar">
+    <button id="menuToggle" class="icon-btn" aria-label="메뉴 열기">
+      <span class="material-symbols-outlined">menu</span>
+    </button>
+    <button id="themeToggle" class="icon-btn" aria-label="테마 전환">
+      <span class="material-symbols-outlined" id="themeIcon">dark_mode</span>
+    </button>
+  </header>
+
+  <!-- 메인 뷰어 -->
+  <main id="mainContent" class="main-content"></main>
+
+  <!-- 하단 3개 탭바 -->
+  <nav class="bottom-tab-bar">
+    <button id="tabHome" class="tab-btn active">
+      <span class="material-symbols-outlined">home</span>
+      <span>홈</span>
+    </button>
+    <button id="tabAdd" class="tab-btn">
+      <span class="material-symbols-outlined">add_circle</span>
+      <span>작성</span>
+    </button>
+    <button id="tabList" class="tab-btn">
+      <span class="material-symbols-outlined">folder</span>
+      <span>목록</span>
+    </button>
+  </nav>
+
+  <!-- 오버레이 -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- 사이드바 -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <span style="font-weight: 600; font-size: 17px;">탐색기</span>
+      <div style="display: flex; gap: 2px;">
+        <button id="addRootDocBtn" class="icon-btn" title="새 문서">
+          <span class="material-symbols-outlined">note_add</span>
+        </button>
+        <button id="addRootFolderBtn" class="icon-btn" title="새 폴더">
+          <span class="material-symbols-outlined">create_new_folder</span>
+        </button>
+        <button id="closeSidebar" class="icon-btn" title="닫기">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+    </div>
+
+    <ul id="sidebarList" class="sidebar-list"></ul>
+    <!-- 최상단(루트)으로 꺼내기 위한 드롭존 -->
+    <div id="rootDropZone" class="root-drop-zone">여기에 놓으면 최상단(루트)으로 이동</div>
+  </aside>
+
+  <!-- 전체화면 에디터 모달 -->
+  <div id="fullscreenModal" class="fullscreen-modal">
+    <div class="modal-topbar">
+      <button id="closeModalBtn" class="icon-btn" title="뒤로가기">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <span id="modalModeTitle" style="font-size: 16px; font-weight: 600;">새 문서 작성</span>
+      <button id="saveBtn" class="btn-save">확인</button>
+    </div>
+    <div class="modal-editor-body">
+      <input type="text" id="titleInput" class="title-input" placeholder="제목을 입력하세요" />
+      <textarea id="contentInput" class="content-textarea" placeholder="마크다운 내용을 작성하거나 붙여넣으세요..."></textarea>
+    </div>
+  </div>
+
+  <script>
+    // 항목 데이터 구조: { id, type: 'doc'|'folder', title, content, parentId, isExpanded }
+    let items = [];
+    let currentEditId = null;
+    let targetParentId = null;
+    let activeDocId = null;
+    let draggedItemId = null;
+
+    // DOM 요소
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const closeSidebar = document.getElementById('closeSidebar');
+    const addRootDocBtn = document.getElementById('addRootDocBtn');
+    const addRootFolderBtn = document.getElementById('addRootFolderBtn');
+    const fullscreenModal = document.getElementById('fullscreenModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalModeTitle = document.getElementById('modalModeTitle');
+    const saveBtn = document.getElementById('saveBtn');
+    const titleInput = document.getElementById('titleInput');
+    const contentInput = document.getElementById('contentInput');
+    const sidebarList = document.getElementById('sidebarList');
+    const mainContent = document.getElementById('mainContent');
+    const rootDropZone = document.getElementById('rootDropZone');
+
+    const tabHome = document.getElementById('tabHome');
+    const tabAdd = document.getElementById('tabAdd');
+    const tabList = document.getElementById('tabList');
+
+    // 1. 테마 토글
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.classList.toggle('dark-mode');
+      themeIcon.textContent = isDark ? 'light_mode' : 'dark_mode';
+    });
+
+    // 2. 사이드바 열기/닫기
+    function toggleSidebar(open) {
+      if (open) {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        setActiveTab(tabList);
+      } else {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        closeAllDropdowns();
+        setActiveTab(tabHome);
+      }
+    }
+
+    menuToggle.addEventListener('click', () => toggleSidebar(true));
+    closeSidebar.addEventListener('click', () => toggleSidebar(false));
+    overlay.addEventListener('click', () => toggleSidebar(false));
+
+    function setActiveTab(target) {
+      [tabHome, tabAdd, tabList].forEach(t => t.classList.remove('active'));
+      target.classList.add('active');
+    }
+
+    tabHome.addEventListener('click', () => {
+      toggleSidebar(false);
+      setActiveTab(tabHome);
+    });
+
+    tabAdd.addEventListener('click', () => {
+      setActiveTab(tabAdd);
+      openDocEditor(null, null);
+    });
+
+    tabList.addEventListener('click', () => toggleSidebar(true));
+
+    // 3. 에디터 모달 (문서 추가/수정)
+    function openDocEditor(docId = null, parentId = null) {
+      currentEditId = docId;
+      targetParentId = parentId;
+      closeAllDropdowns();
+
+      if (docId) {
+        const targetDoc = items.find(d => d.id === docId);
+        modalModeTitle.textContent = '문서 수정';
+        titleInput.value = targetDoc.title;
+        contentInput.value = targetDoc.content;
+      } else {
+        modalModeTitle.textContent = parentId ? '하위 문서 작성' : '새 문서 작성';
+        titleInput.value = '';
+        contentInput.value = '';
+      }
+
+      fullscreenModal.classList.add('active');
+      titleInput.focus();
+    }
+
+    function closeEditor() {
+      fullscreenModal.classList.remove('active');
+      currentEditId = null;
+      targetParentId = null;
+      setActiveTab(tabHome);
+    }
+
+    closeModalBtn.addEventListener('click', closeEditor);
+
+    // 저장 버튼
+    saveBtn.addEventListener('click', () => {
+      const title = titleInput.value.trim() || '무제';
+      const content = contentInput.value;
+
+      if (currentEditId) {
+        const doc = items.find(d => d.id === currentEditId);
+        if (doc) {
+          doc.title = title;
+          doc.content = content;
+          if (activeDocId === currentEditId) {
+            renderMainContent(doc);
+          }
+        }
+      } else {
+        const newDoc = {
+          id: 'doc_' + Date.now(),
+          type: 'doc',
+          title: title,
+          content: content,
+          parentId: targetParentId,
+          isExpanded: true
+        };
+        items.push(newDoc);
+
+        // 부모가 접혀있다면 펼치기
+        if (targetParentId) {
+          const parent = items.find(i => i.id === targetParentId);
+          if (parent) parent.isExpanded = true;
+        }
+
+        renderMainContent(newDoc);
+      }
+
+      renderTree();
+      closeEditor();
+    });
+
+    // 폴더 생성
+    function createFolder(parentId = null) {
+      closeAllDropdowns();
+      const folderName = prompt('폴더 이름을 입력하세요:', '새 폴더');
+      if (folderName !== null && folderName.trim() !== '') {
+        const newFolder = {
+          id: 'folder_' + Date.now(),
+          type: 'folder',
+          title: folderName.trim(),
+          content: '',
+          parentId: parentId,
+          isExpanded: true
+        };
+        items.push(newFolder);
+
+        if (parentId) {
+          const parent = items.find(i => i.id === parentId);
+          if (parent) parent.isExpanded = true;
+        }
+        renderTree();
+      }
+    }
+
+    addRootDocBtn.addEventListener('click', () => openDocEditor(null, null));
+    addRootFolderBtn.addEventListener('click', () => createFolder(null));
+
+    // 4. 본문 렌더링
+    function renderMainContent(doc) {
+      if (doc.type === 'folder') return;
+      activeDocId = doc.id;
+      mainContent.innerHTML = marked.parse(doc.content || '');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 5. 계층 트리 렌더링 & 드래그 앤 드롭
+    function renderTree() {
+      sidebarList.innerHTML = '';
+      renderChildNodes(null, 0);
+    }
+
+    function renderChildNodes(parentId, depth) {
+      const children = items.filter(item => item.parentId === parentId);
+
+      children.forEach(item => {
+        const hasChildren = items.some(i => i.parentId === item.id);
+        const li = document.createElement('li');
+        li.className = 'sidebar-item';
+        li.draggable = true;
+        li.dataset.id = item.id;
+        li.style.paddingLeft = `${8 + depth * 16}px`;
+
+        // 접기/펼치기 화살표
+        const arrow = document.createElement('span');
+        arrow.className = 'toggle-arrow';
+        if (hasChildren || item.type === 'folder') {
+          arrow.innerHTML = `<span class="material-symbols-outlined" style="font-size: 18px;">${item.isExpanded ? 'expand_more' : 'chevron_right'}</span>`;
+          arrow.addEventListener('click', (e) => {
+            e.stopPropagation();
+            item.isExpanded = !item.isExpanded;
+            renderTree();
+          });
+        }
+        li.appendChild(arrow);
+
+        // 아이콘 (폴더 / 문서)
+        const icon = document.createElement('span');
+        icon.className = 'item-icon';
+        if (item.type === 'folder') {
+          icon.innerHTML = `<span class="material-symbols-outlined" style="font-size: 20px;">${item.isExpanded ? 'folder_open' : 'folder'}</span>`;
+        } else {
+          icon.innerHTML = `<span class="material-symbols-outlined" style="font-size: 20px;">description</span>`;
+        }
+        li.appendChild(icon);
+
+        // 이름
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'item-title';
+        titleSpan.textContent = item.title;
+        titleSpan.addEventListener('click', () => {
+          if (item.type === 'doc') {
+            renderMainContent(item);
+            toggleSidebar(false);
+          } else {
+            item.isExpanded = !item.isExpanded;
+            renderTree();
+          }
+        });
+        li.appendChild(titleSpan);
+
+        // 점 세개 버튼 & 드롭다운
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'icon-btn';
+        moreBtn.style.padding = '2px';
+        moreBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>';
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown-menu';
+
+        // 1) 하위 문서 추가
+        const addChildDocBtn = document.createElement('button');
+        addChildDocBtn.className = 'dropdown-item';
+        addChildDocBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">note_add</span>하위 문서 추가';
+        addChildDocBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openDocEditor(null, item.id);
+        });
+        dropdown.appendChild(addChildDocBtn);
+
+        // 2) 하위 폴더 추가
+        const addChildFolderBtn = document.createElement('button');
+        addChildFolderBtn.className = 'dropdown-item';
+        addChildFolderBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">create_new_folder</span>하위 폴더 추가';
+        addChildFolderBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          createFolder(item.id);
+        });
+        dropdown.appendChild(addChildFolderBtn);
+
+        // 3) 문서 수정 (문서일 경우만)
+        if (item.type === 'doc') {
+          const editBtn = document.createElement('button');
+          editBtn.className = 'dropdown-item';
+          editBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">edit</span>내용 수정';
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openDocEditor(item.id, item.parentId);
+          });
+          dropdown.appendChild(editBtn);
+        }
+
+        // 4) 이름 변경
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'dropdown-item';
+        renameBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">drive_file_rename_outline</span>이름 변경';
+        renameBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeAllDropdowns();
+          const newName = prompt('새 이름을 입력하세요:', item.title);
+          if (newName !== null && newName.trim() !== '') {
+            item.title = newName.trim();
+            renderTree();
+          }
+        });
+        dropdown.appendChild(renameBtn);
+
+        // 5) 삭제
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'dropdown-item delete';
+        deleteBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span>삭제';
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm(`'${item.title}' 및 포함된 모든 하위 항목을 삭제하시겠습니까?`)) {
+            deleteItemRecursive(item.id);
+            renderTree();
+          }
+        });
+        dropdown.appendChild(deleteBtn);
+
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = dropdown.classList.contains('show');
+          closeAllDropdowns();
+          if (!isOpen) dropdown.classList.add('show');
+        });
+
+        li.appendChild(moreBtn);
+        li.appendChild(dropdown);
+
+        // 드래그 앤 드롭 이벤트
+        li.addEventListener('dragstart', (e) => {
+          e.stopPropagation();
+          draggedItemId = item.id;
+          li.classList.add('dragging');
+          rootDropZone.classList.add('active');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+
+        li.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (draggedItemId && draggedItemId !== item.id && !isDescendant(draggedItemId, item.id)) {
+            li.classList.add('drag-target-inside');
+          }
+        });
+
+        li.addEventListener('dragleave', (e) => {
+          e.stopPropagation();
+          li.classList.remove('drag-target-inside');
+        });
+
+        li.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          li.classList.remove('drag-target-inside');
+
+          if (draggedItemId && draggedItemId !== item.id && !isDescendant(draggedItemId, item.id)) {
+            const dragged = items.find(i => i.id === draggedItemId);
+            if (dragged) {
+              dragged.parentId = item.id;
+              item.isExpanded = true;
+              renderTree();
+            }
+          }
+        });
+
+        li.addEventListener('dragend', () => {
+          draggedItemId = null;
+          li.classList.remove('dragging');
+          rootDropZone.classList.remove('active');
+          document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('drag-target-inside'));
+        });
+
+        sidebarList.appendChild(li);
+
+        // 하위 노드 재귀 호출
+        if (hasChildren && item.isExpanded) {
+          renderChildNodes(item.id, depth + 1);
+        }
+      });
+    }
+
+    // 최상단(루트) 드롭존 이벤트
+    rootDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      rootDropZone.style.borderColor = '#4285f4';
+    });
+    rootDropZone.addEventListener('dragleave', () => {
+      rootDropZone.style.borderColor = '';
+    });
+    rootDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      rootDropZone.style.borderColor = '';
+      if (draggedItemId) {
+        const dragged = items.find(i => i.id === draggedItemId);
+        if (dragged) {
+          dragged.parentId = null;
+          renderTree();
+        }
+      }
+    });
+
+    // 연쇄 삭제 (하위 모든 자식까지 함께 제거)
+    function deleteItemRecursive(id) {
+      const childIds = items.filter(i => i.parentId === id).map(i => i.id);
+      childIds.forEach(childId => deleteItemRecursive(childId));
+
+      if (activeDocId === id) {
+        mainContent.innerHTML = '';
+        activeDocId = null;
+      }
+      items = items.filter(i => i.id !== id);
+    }
+
+    // 부모를 자신의 하위 자식 안으로 넣지 못하도록 방지
+    function isDescendant(parentId, targetId) {
+      if (parentId === targetId) return true;
+      const children = items.filter(i => i.parentId === parentId);
+      for (const child of children) {
+        if (isDescendant(child.id, targetId)) return true;
+      }
+      return false;
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll('.dropdown-menu').forEach(menu => menu.classList.remove('show'));
+    }
+
+    document.addEventListener('click', closeAllDropdowns);
+  </script>
+</body>
+</html>
